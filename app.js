@@ -10,10 +10,12 @@ import { initCompetitions } from './competitions.js';
 import { initPractice } from './practice.js';
 import { initOnCourse } from './oncourse.js';
 import { AppState } from './state.js';
+import { initSocialFeed } from './social.js';
+import { initNotifications } from './notifications.js';
 
 // Import db for admin/coach generic calls that don't fit perfectly elsewhere
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc, addDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc, addDoc, serverTimestamp, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
 function bootstrapApplication() {
@@ -28,8 +30,14 @@ function bootstrapApplication() {
     bindAdminTools();
     bindAdminInvite();
     bindCoachTools();
+    bindCoachDashboard();
     bindAiGenerator();
     populatePlayerSelect();
+    initNotifications();
+
+    // Feed tab — init when first opened
+    const feedBtn = document.getElementById('tab-btn-feed');
+    if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
 }
 
 // Kickoff Authentication Flow
@@ -348,131 +356,444 @@ window.removeCoach = async function (cid) {
 };
 
 // ==========================================
-// AI Coach Prompt Generator
+// Coach Dashboard (Redesigned)
 // ==========================================
+let _coachViewUid = null;
+
+function bindCoachDashboard() {
+    if (!window.currentUserIsCoach && !window.currentUserIsAdmin) return;
+
+    const rosterEl = document.getElementById('coach-roster-list');
+    const rosterCount = document.getElementById('coach-roster-count');
+    const playerView = document.getElementById('coach-player-view');
+    const rosterSection = rosterEl?.parentElement;
+
+    // Back button
+    const btnBack = document.getElementById('btn-coach-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', () => {
+            playerView?.classList.add('hidden');
+            rosterSection?.classList.remove('hidden');
+            _coachViewUid = null;
+        });
+    }
+
+    // AI Lesson Plan from Coach View
+    const btnAiPlan = document.getElementById('btn-coach-ai-plan');
+    if (btnAiPlan) {
+        btnAiPlan.addEventListener('click', () => {
+            if (_coachViewUid) generateAIResponse(_coachViewUid, 'coach');
+        });
+    }
+
+    // Coach Notes
+    const btnSaveNote = document.getElementById('btn-save-coach-note');
+    if (btnSaveNote) {
+        btnSaveNote.addEventListener('click', async () => {
+            if (!_coachViewUid) return;
+            const text = document.getElementById('coach-note-input')?.value.trim();
+            if (!text) return;
+            await addDoc(collection(db, 'users', _coachViewUid, 'coachNotes'), {
+                coachUid: AppState.currentUser.uid,
+                text,
+                createdAt: serverTimestamp()
+            });
+            document.getElementById('coach-note-input').value = '';
+            loadCoachNotes(_coachViewUid);
+        });
+    }
+
+    // Drill Assignment
+    const btnAssign = document.getElementById('btn-assign-drill');
+    if (btnAssign) {
+        btnAssign.addEventListener('click', async () => {
+            if (!_coachViewUid) return;
+            const name = document.getElementById('coach-drill-assign-name')?.value.trim();
+            const notes = document.getElementById('coach-drill-assign-notes')?.value.trim();
+            if (!name) return;
+            const msgEl = document.getElementById('assign-drill-msg');
+            try {
+                await addDoc(collection(db, 'users', _coachViewUid, 'assignedDrills'), {
+                    drillName: name,
+                    notes: notes || '',
+                    assignedBy: AppState.currentUser.uid,
+                    assignedAt: serverTimestamp(),
+                    completed: false
+                });
+                if (msgEl) { msgEl.textContent = '📌 Drill assigned!'; msgEl.style.color = '#10b981'; }
+                document.getElementById('coach-drill-assign-name').value = '';
+                document.getElementById('coach-drill-assign-notes').value = '';
+            } catch (e) {
+                if (msgEl) { msgEl.textContent = `❌ ${e.message}`; msgEl.style.color = '#ef4444'; }
+            }
+        });
+    }
+
+    // Load the roster
+    loadCoachRoster();
+
+    async function loadCoachRoster() {
+        if (!rosterEl) return;
+        const myUid = AppState.currentUser.uid;
+
+        // Find all users that have granted this coach access
+        const allUsersSnap = await getDocs(collection(db, 'users'));
+        const athletes = [];
+        allUsersSnap.forEach(d => {
+            const data = d.data();
+            if (!data.isApproved || d.id === myUid) return;
+            const coaches = data.coaches || [];
+            if (window.currentUserIsAdmin || coaches.includes(myUid)) {
+                athletes.push({ uid: d.id, ...data });
+            }
+        });
+
+        if (rosterCount) rosterCount.textContent = `${athletes.length} athlete${athletes.length !== 1 ? 's' : ''}`;
+
+        if (!athletes.length) {
+            rosterEl.innerHTML = '<p style="color:#94a3b8;">No athletes have granted you access yet. Share your email with players so they can add you as a coach from the WHS tab.</p>';
+            return;
+        }
+
+        rosterEl.innerHTML = '';
+        for (const athlete of athletes) {
+            const hiSnap = await getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid)));
+            let rounds = [];
+            hiSnap.forEach(d => {
+                const r = d.data();
+                rounds.push({ diff: (113 / r.slope) * (r.adjustedGross - r.rating), date: r.date?.toDate?.() || new Date() });
+            });
+            rounds.sort((a, b) => b.date - a.date);
+
+            // Trend badge
+            let trendBadge = '';
+            if (rounds.length >= 4) {
+                const half = Math.floor(Math.min(rounds.length, 10) / 2);
+                const recent = rounds.slice(0, half).reduce((a, b) => a + b.diff, 0) / half;
+                const older = rounds.slice(half, half * 2).reduce((a, b) => a + b.diff, 0) / half;
+                const delta = recent - older;
+                if (delta < -0.5) trendBadge = '<span style="background:#d1fae5;color:#059669;padding:2px 8px;border-radius:12px;font-size:0.75rem;">📉 Improving</span>';
+                else if (delta > 0.5) trendBadge = '<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:12px;font-size:0.75rem;">📈 Declining</span>';
+                else trendBadge = '<span style="background:#f0f9ff;color:#0284c7;padding:2px 8px;border-radius:12px;font-size:0.75rem;">→ Stable</span>';
+            }
+
+            // Flag if HI increased >2 in last round
+            let flagBadge = '';
+            if (rounds.length >= 2) {
+                const hiChange = rounds[0].diff - rounds[1].diff;
+                if (hiChange > 2) flagBadge = '<span style="background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:12px;font-size:0.75rem;margin-left:4px;">⚠️ HI spike</span>';
+            }
+
+            const lastRoundDate = rounds.length ? rounds[0].date.toLocaleDateString('en-AU') : 'No rounds';
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:box-shadow 0.2s;';
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3867d6,#4b7bec);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;">
+                        ${(athlete.displayName || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <div style="font-weight:700;">${athlete.displayName || athlete.email}</div>
+                        <div style="font-size:0.8rem;color:#64748b;">Last round: ${lastRoundDate} ${trendBadge}${flagBadge}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:1.6rem;font-weight:800;color:#3867d6;">${athlete.handicapIndex ?? '--'}</div>
+                    <div style="font-size:0.75rem;color:#64748b;">HI</div>
+                </div>
+            `;
+            card.addEventListener('click', () => loadCoachPlayerView(athlete));
+            card.addEventListener('mouseenter', () => card.style.boxShadow = '0 4px 12px rgba(56,103,214,0.15)');
+            card.addEventListener('mouseleave', () => card.style.boxShadow = 'none');
+            rosterEl.appendChild(card);
+        }
+    }
+
+    async function loadCoachPlayerView(athlete) {
+        _coachViewUid = athlete.uid;
+        rosterSection?.classList.add('hidden');
+        playerView?.classList.remove('hidden');
+
+        document.getElementById('coach-view-name').textContent = athlete.displayName || athlete.email;
+
+        // Load rounds
+        const roundsSnap = await getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10)));
+        const tbodyWhs = document.getElementById('coach-whs-tbody');
+        if (tbodyWhs) {
+            tbodyWhs.innerHTML = '';
+            let putts = [], fwy = [], gir = [];
+            let diffs = [];
+            roundsSnap.forEach(d => {
+                const r = d.data();
+                const diff = ((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1);
+                diffs.push(+diff);
+                const date = r.date?.toDate ? r.date.toDate().toLocaleDateString('en-AU') : '--';
+                if (r.stats?.putts) putts.push(r.stats.putts);
+                if (r.stats?.fwy) fwy.push(r.stats.fwy);
+                if (r.stats?.gir) gir.push(r.stats.gir);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${date}</td><td>${r.course}</td><td>${r.adjustedGross}</td><td>${diff}</td><td>${r.stats?.putts ?? '--'}</td><td>${r.stats?.fwy ?? '--'}</td><td>${r.stats?.gir ?? '--'}</td>`;
+                tbodyWhs.appendChild(tr);
+            });
+            // Stats
+            const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : '--';
+            document.getElementById('coach-stat-putts').textContent = avg(putts);
+            document.getElementById('coach-stat-fwy').textContent = fwy.length ? avg(fwy) + '/14' : '--';
+            document.getElementById('coach-stat-gir').textContent = gir.length ? avg(gir) + '/18' : '--';
+
+            // Trend
+            const trendEl = document.getElementById('coach-view-trend');
+            if (diffs.length >= 4) {
+                const half = Math.floor(diffs.length / 2);
+                const recentAvg = diffs.slice(0, half).reduce((a, b) => a + b, 0) / half;
+                const olderAvg = diffs.slice(half).reduce((a, b) => a + b, 0) / half;
+                const delta = recentAvg - olderAvg;
+                if (delta < -0.5) trendEl.innerHTML = '<span style="color:#059669;">📉 Improving trend</span>';
+                else if (delta > 0.5) trendEl.innerHTML = '<span style="color:#dc2626;">📈 Declining trend</span>';
+                else trendEl.innerHTML = '<span style="color:#0284c7;">→ Stable trend</span>';
+            }
+
+            // HI display
+            document.getElementById('coach-view-hi').textContent = athlete.handicapIndex ?? '--';
+        }
+
+        // Load practice
+        const pracSnap = await getDocs(query(collection(db, 'practice_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10)));
+        const tbodyPrac = document.getElementById('coach-practice-tbody');
+        if (tbodyPrac) {
+            tbodyPrac.innerHTML = '';
+            pracSnap.forEach(d => {
+                const p = d.data();
+                const date = p.date?.toDate ? p.date.toDate().toLocaleDateString('en-AU') : '--';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${date}</td><td>${p.drillName}</td><td>${p.score}</td>`;
+                tbodyPrac.appendChild(tr);
+            });
+        }
+
+        loadCoachNotes(athlete.uid);
+    }
+}
+
+async function loadCoachNotes(athleteUid) {
+    const notesEl = document.getElementById('coach-notes-list');
+    if (!notesEl) return;
+    const snap = await getDocs(query(collection(db, 'users', athleteUid, 'coachNotes'), orderBy('createdAt', 'desc'), limit(10)));
+    notesEl.innerHTML = '';
+    if (snap.empty) {
+        notesEl.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No notes yet.</p>';
+        return;
+    }
+    snap.forEach(d => {
+        const n = d.data();
+        const date = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('en-AU') : 'Just now';
+        const row = document.createElement('div');
+        row.style.cssText = 'padding:8px;background:#f8fafc;border-radius:6px;margin-bottom:6px;border-left:3px solid #3867d6;';
+        row.innerHTML = `<div style="font-size:0.78rem;color:#64748b;margin-bottom:2px;">${date}</div><div>${n.text}</div>`;
+        notesEl.appendChild(row);
+    });
+}
+
+// ==========================================
+// AI Coach — Live Gemini Integration
+// ==========================================
+import { GEMINI_API_URL } from './config.js';
+
+
+let _lastAiUid = null;
+let _lastAiRole = null;
+
 function bindAiGenerator() {
     const btnAiPlayer = document.getElementById('btn-ai-player');
     const btnAiCoach = document.getElementById('btn-ai-coach');
+    const btnRegenerate = document.getElementById('btn-regenerate-ai');
 
     if (btnAiPlayer) {
-        btnAiPlayer.addEventListener('click', () => generateAIPrompt(AppState.currentUser.uid, 'player'));
+        btnAiPlayer.addEventListener('click', () => {
+            _lastAiUid = AppState.currentUser.uid;
+            _lastAiRole = 'player';
+            generateAIResponse(_lastAiUid, _lastAiRole);
+        });
     }
     if (btnAiCoach) {
         btnAiCoach.addEventListener('click', () => {
             const uid = document.getElementById('player-select').value;
             if (!uid) return alert('Select a player first');
-            generateAIPrompt(uid, 'coach');
+            _lastAiUid = uid;
+            _lastAiRole = 'coach';
+            generateAIResponse(_lastAiUid, _lastAiRole);
         });
     }
-    if (UI.btnCopyAiPrompt) {
-        UI.btnCopyAiPrompt.addEventListener('click', () => {
-            UI.aiPromptTextarea.select();
-            document.execCommand('copy');
-            UI.btnCopyAiPrompt.textContent = "Copied!";
-            setTimeout(() => UI.btnCopyAiPrompt.textContent = "Copy to Clipboard", 2000);
+    if (btnRegenerate) {
+        btnRegenerate.addEventListener('click', () => {
+            if (_lastAiUid) generateAIResponse(_lastAiUid, _lastAiRole);
         });
     }
     if (UI.btnCloseAiModal) {
-        UI.btnCloseAiModal.addEventListener('click', () => {
-            UI.aiModalOverlay.classList.add('hidden');
-        });
+        UI.btnCloseAiModal.addEventListener('click', () => UI.aiModalOverlay.classList.add('hidden'));
     }
-    // Wire second close button
     const btnClose2 = document.getElementById('btn-close-ai-modal-2');
     if (btnClose2) {
-        btnClose2.addEventListener('click', () => {
-            UI.aiModalOverlay.classList.add('hidden');
-        });
+        btnClose2.addEventListener('click', () => UI.aiModalOverlay.classList.add('hidden'));
     }
 }
 
-async function generateAIPrompt(uid, role) {
-    if (!UI.aiModalTitle) return;
-    if (role === 'player') UI.aiModalTitle.textContent = "Your Custom Training AI Prompt";
-    else UI.aiModalTitle.textContent = "Lesson Plan AI Generator Prompt";
+function markdownToHtml(md) {
+    return md
+        .replace(/^### (.+)/gm, '<h3 style="margin:16px 0 6px;color:#6d28d9;">$1</h3>')
+        .replace(/^## (.+)/gm, '<h2 style="margin:20px 0 8px;color:#4c1d95;border-bottom:2px solid #ede9fe;padding-bottom:6px;">$1</h2>')
+        .replace(/^# (.+)/gm, '<h1 style="margin:0 0 16px;color:#3b0764;">$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^- (.+)/gm, '<li style="margin:4px 0;">$1</li>')
+        .replace(/(<li.*<\/li>)/gs, '<ul style="padding-left:20px;margin:8px 0;">$1</ul>')
+        .replace(/\n\n/g, '</p><p style="margin:10px 0;">')
+        .replace(/^(?!<[hul])/gm, '')
+        .trim();
+}
 
-    UI.aiPromptTextarea.value = "Gathering data...";
+async function generateAIResponse(uid, role) {
+    if (!UI.aiModalOverlay) return;
+
+    // Show modal with loading state
     UI.aiModalOverlay.classList.remove('hidden');
+    document.getElementById('ai-loading').classList.remove('hidden');
+    document.getElementById('ai-response-area').classList.add('hidden');
+    document.getElementById('ai-error-area').classList.add('hidden');
+    document.getElementById('btn-regenerate-ai').disabled = true;
+
+    const titleEl = document.getElementById('ai-modal-title');
+    const subtitleEl = document.getElementById('ai-modal-subtitle');
+    if (titleEl) titleEl.textContent = role === 'player' ? '✨ Your AI Training Plan' : '✨ Lesson Plan Generator';
+    if (subtitleEl) subtitleEl.textContent = 'Powered by Gemini — Analysing your data...';
 
     try {
-        // Fetch recent WHS rounds for this student
-        const qRounds = query(collection(db, "whs_rounds"), where("uid", "==", uid));
-        const roundsSnap = await getDocs(qRounds);
-        let diffsList = [];
-        let puttsList = [];
-        let fwyList = [];
-        let girList = [];
-        let rDate;
+        // ── Gather data ──────────────────────────────────────────────
+        const [roundsSnap, pracSnap, shotsSnap] = await Promise.all([
+            getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', uid))),
+            getDocs(query(collection(db, 'practice_rounds'), where('uid', '==', uid))),
+            getDocs(query(collection(db, 'shots'), where('uid', '==', uid)))
+        ]);
 
+        // Process rounds
+        let rounds = [];
         roundsSnap.forEach(d => {
             const r = d.data();
-            const diff = ((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1);
-            diffsList.push(diff);
-            if (r.stats) {
-                if (r.stats.putts) puttsList.push(r.stats.putts);
-                if (r.stats.fwy) fwyList.push(r.stats.fwy);
-                if (r.stats.gir) girList.push(r.stats.gir);
-            }
+            const diff = ((113 / r.slope) * (r.adjustedGross - r.rating));
+            rounds.push({ diff, date: r.date?.toDate?.() || new Date(r.date), stats: r.stats || null });
         });
+        rounds.sort((a, b) => b.date - a.date);
+        const recent5 = rounds.slice(0, 5).map(r => r.diff.toFixed(1));
+        const recent10 = rounds.slice(0, 10).map(r => r.diff);
 
-        const qPrac = query(collection(db, "practice_rounds"), where("uid", "==", uid));
-        const pracSnap = await getDocs(qPrac);
-        let pracList = [];
+        // Trend: compare first half vs second half of last 10
+        let trend = 'insufficient data to determine trend';
+        if (recent10.length >= 4) {
+            const half = Math.floor(recent10.length / 2);
+            const recentAvg = recent10.slice(0, half).reduce((a, b) => a + b, 0) / half;
+            const olderAvg = recent10.slice(half).reduce((a, b) => a + b, 0) / half;
+            const delta = recentAvg - olderAvg;
+            if (delta < -0.5) trend = `IMPROVING (differential has dropped ${Math.abs(delta).toFixed(1)} strokes recently)`;
+            else if (delta > 0.5) trend = `DECLINING (differential has increased ${delta.toFixed(1)} strokes recently — needs attention)`;
+            else trend = 'STABLE (no significant change)';
+        }
+
+        // Stats averages
+        const puttsList = rounds.filter(r => r.stats?.putts).map(r => r.stats.putts);
+        const fwyList = rounds.filter(r => r.stats?.fwy).map(r => r.stats.fwy);
+        const girList = rounds.filter(r => r.stats?.gir).map(r => r.stats.gir);
+        const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : null;
+
+        // Identify weakest stat
+        const statsData = [];
+        if (avg(puttsList)) statsData.push({ name: 'Putting', value: +avg(puttsList), benchmark: 32, higherIsBad: true });
+        if (avg(fwyList)) statsData.push({ name: 'Fairways Hit', value: +avg(fwyList), benchmark: 7, higherIsBad: false });
+        if (avg(girList)) statsData.push({ name: 'Greens in Regulation', value: +avg(girList), benchmark: 9, higherIsBad: false });
+        const weakest = statsData.length
+            ? statsData.sort((a, b) => {
+                const aGap = a.higherIsBad ? a.value - a.benchmark : a.benchmark - a.value;
+                const bGap = b.higherIsBad ? b.value - b.benchmark : b.benchmark - b.value;
+                return bGap - aGap;
+            })[0]
+            : null;
+
+        // Practice drills
+        let pracSummary = [];
         pracSnap.forEach(d => {
             const p = d.data();
-            pracList.push(`${p.drillName}: ${p.score}`);
+            pracSummary.push(`${p.drillName} (score: ${p.score})`);
         });
 
-        const qShots = query(collection(db, "shots"), where("uid", "==", uid));
-        const shotsSnap = await getDocs(qShots);
+        // Shot shapes
         let misses = {};
         shotsSnap.forEach(d => {
             const s = d.data();
-            if (s.curve) {
-                if (!misses[s.curve]) misses[s.curve] = 0;
-                misses[s.curve]++;
-            }
+            if (s.curve) { misses[s.curve] = (misses[s.curve] || 0) + 1; }
+        });
+        const topMiss = Object.entries(misses).sort((a, b) => b[1] - a[1])[0];
+
+        // ── Build enriched prompt ────────────────────────────────────
+        let prompt = '';
+        if (role === 'player') {
+            prompt = `You are an elite PGA Tour-level golf coach. Analyse the following player data and generate a highly specific, actionable 45-minute solo practice plan. Focus on their single biggest weakness, not generic advice.\n\n`;
+            prompt += `**Player Stats:**\n`;
+        } else {
+            prompt = `You are a senior Director of Coaching at an elite golf academy. A junior coach needs a detailed 60-minute in-person lesson plan for their student. Base it strictly on the data below and be specific.\n\n`;
+            prompt += `**Student Stats:**\n`;
+        }
+
+        prompt += `- Recent Differentials (newest first): [${recent5.join(', ')}]\n`;
+        prompt += `- Trend: ${trend}\n`;
+        prompt += `- Avg Putts/Round: ${avg(puttsList) || 'Not tracked yet'}\n`;
+        prompt += `- Avg Fairways Hit: ${avg(fwyList) ? avg(fwyList) + '/14' : 'Not tracked yet'}\n`;
+        prompt += `- Avg GIR: ${avg(girList) ? avg(girList) + '/18' : 'Not tracked yet'}\n`;
+        if (weakest) prompt += `- **Identified Weakest Area: ${weakest.name}** (avg ${weakest.value} vs benchmark ~${weakest.benchmark})\n`;
+        if (topMiss) prompt += `- Most common miss: ${topMiss[0]} (${topMiss[1]} shots)\n`;
+        prompt += `\n**Practice Drills Logged (recent):**\n`;
+        prompt += pracSummary.length ? pracSummary.slice(0, 6).join(', ') : 'No drills logged yet.';
+        prompt += `\n\n`;
+
+        if (role === 'player') {
+            prompt += `Generate a 45-minute practice plan with:\n1. Exactly which area to focus on and why (cite the stats)\n2. 3 specific drills with exact reps/constraints\n3. How to measure success before leaving the range\n\nFormat with clear Markdown headers and bullet points.`;
+        } else {
+            prompt += `Generate a 60-minute lesson plan with:\n1. The single biggest leak identified from the data (cite exactly why)\n2. Three blocks: Warm-up/Discovery (10 min), Skill Acquisition (35 min), Pressure Testing (15 min)\n3. 2–3 discovery questions to ask the student at the start\n4. Specific drills for each block with constraints\n\nFormat with clear Markdown headers. Be concise and practical.`;
+        }
+
+        // ── Call Gemini API ─────────────────────────────────────────
+        const response = await fetch(GEMINI_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 1200 }
+            })
         });
 
-        let promptText = "";
-
-        if (role === 'player') {
-            promptText += `Act as a world-class PGA Golf Coach structuring a personalized practice session for me.\n\n`;
-            promptText += `Here is my recent data:\n`;
-        } else {
-            promptText += `Act as a senior Director of Coaching for an elite golf academy. I am one of your junior coaches, and I need you to help me design a 60-minute in-person lesson plan for my student based on their recent scoring data.\n\n`;
-            promptText += `Here is my student's recent data:\n`;
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error?.message || `API error ${response.status}`);
         }
 
-        promptText += `- Handicap Index Differentials (Trend): [${diffsList.slice(0, 5).join(', ')}]\n`;
-        promptText += `- Putts per round avg: ${puttsList.length ? (puttsList.reduce((a, b) => a + b, 0) / puttsList.length).toFixed(1) : 'Unknown'}\n`;
-        promptText += `- Fairways hit avg: ${fwyList.length ? (fwyList.reduce((a, b) => a + b, 0) / fwyList.length).toFixed(1) : 'Unknown'}\n`;
-        promptText += `- Greens in Reg avg: ${girList.length ? (girList.reduce((a, b) => a + b, 0) / girList.length).toFixed(1) : 'Unknown'}\n`;
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+        const html = markdownToHtml(rawText);
 
-        promptText += `\nRecent Practice Drills Logging:\n`;
-        promptText += pracList.length ? pracList.slice(0, 5).join(', ') + '\n' : 'No practice data logged recently.\n';
-
-        promptText += `\nShot Shape Tendencies:\n`;
-        const missKeys = Object.keys(misses);
-        if (missKeys.length) {
-            missKeys.forEach(k => { promptText += `- ${k}: ${misses[k]} shots\n` });
-        } else {
-            promptText += `Not much live ball flight data logged yet.\n`;
-        }
-
-        if (role === 'player') {
-            promptText += `\nBased on this data, provide a structured 45-minute practice session focused strictly on my weakest area. Include specific drills, exact constraints, and how I should measure success. Do not give generic swing advice, focus on how to practice effectively. Provide the response in clear Markdown.`;
-        } else {
-            promptText += `\nBased on this data, identify the single largest leak in their scoring. Then, break down a 60-minute lesson plan into 3 distinct blocks (Warmup/Discovery, Skill Acquisition, Pressure Testing) addressing that leak. Include questions I should ask the student during the discovery phase. Format in clear Markdown.`;
-        }
-
-        UI.aiPromptTextarea.value = promptText;
+        // ── Display response ─────────────────────────────────────────
+        document.getElementById('ai-loading').classList.add('hidden');
+        document.getElementById('ai-response-area').classList.remove('hidden');
+        document.getElementById('ai-response-content').innerHTML = `<p style="margin:10px 0;">${html}</p>`;
+        if (subtitleEl) subtitleEl.textContent = 'Powered by Gemini · Tap Regenerate for a fresh plan';
 
     } catch (e) {
-        console.error(e);
-        UI.aiPromptTextarea.value = "Error generating prompt. Ensure you are connected to the network.";
+        console.error('Gemini API error:', e);
+        document.getElementById('ai-loading').classList.add('hidden');
+        document.getElementById('ai-error-area').classList.remove('hidden');
+        document.getElementById('ai-error-msg').textContent = `❌ ${e.message}`;
+    } finally {
+        document.getElementById('btn-regenerate-ai').disabled = false;
     }
 }
+
 
 // ==========================================
 // Admin Invite User Flow + CSV Import

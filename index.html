@@ -13,6 +13,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <!-- Chart.js for Handicap Trend -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -97,10 +99,13 @@
             <button class="tab-btn" data-target="tab-comp">Custom Competitions</button>
             <button class="tab-btn" data-target="tab-practice">Practice Drills</button>
             <button class="tab-btn" data-target="tab-oncourse">On Course</button>
+            <button class="tab-btn hidden" id="tab-btn-feed" data-target="tab-feed">👥 Feed</button>
             <button class="tab-btn hidden" id="tab-btn-coach" data-target="tab-coach"
                 style="background-color: #d1d8e0; color: #3867d6;">Coach Portal</button>
             <button class="tab-btn hidden" id="tab-btn-admin" data-target="tab-admin"
                 style="background-color: #ffeaa7; color: #d35400;">Admin Dashboard</button>
+            <button class="tab-btn" id="tab-btn-settings" data-target="tab-settings" style="margin-left:auto;">⚙️
+                Settings</button>
         </div>
 
         <!-- ========================================== -->
@@ -272,7 +277,6 @@
                 </section>
             </div>
 
-            <!-- Round History -->
             <section class="card history-section">
                 <div class="history-header">
                     <h2>WHS Scoring Record (<span id="record-player-name"></span>)</h2>
@@ -301,6 +305,18 @@
                 </div>
                 <div id="loading-state" class="empty-state">
                     <p>Loading WHS data...</p>
+                </div>
+            </section>
+
+            <!-- Handicap Trend Chart -->
+            <section class="card" id="handicap-chart-section" style="padding:20px;">
+                <h2 style="margin-bottom:8px;">📈 Handicap Index Trend</h2>
+                <p class="section-desc" style="margin-bottom:16px;">Your handicap index over time — lower is better.</p>
+                <div style="position:relative;height:220px;">
+                    <canvas id="handicap-chart"></canvas>
+                </div>
+                <div id="chart-no-data" class="empty-state hidden">
+                    <p>Log at least 3 rounds to see your trend chart.</p>
                 </div>
             </section>
         </div> <!-- End WHS Tab -->
@@ -1154,39 +1170,71 @@
         <!-- ON COURSE TRACKER TAB END -->
 
         <!-- ========================================== -->
-        <!-- COACH DASHBOARD TAB                        -->
+        <!-- COACH DASHBOARD TAB (Redesigned)           -->
         <!-- ========================================== -->
         <div id="tab-coach" class="tab-content hidden">
-            <header class="header" style="background: linear-gradient(135deg, #3867d6 0%, #4b7bec 100%);">
+            <header class="header" style="background:linear-gradient(135deg,#3867d6 0%,#4b7bec 100%);">
                 <div class="header-content">
                     <div class="branding">
-                        <h1>Coach Portal</h1>
-                        <p>Select a student to view their metrics.</p>
+                        <h1>Coach Dashboard</h1>
+                        <p>Your athlete roster and performance overview.</p>
                     </div>
                 </div>
             </header>
 
-            <div class="player-management-bar" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px;">
-                <div class="player-selector" style="flex: 1;">
-                    <label for="coach-student-select">Viewing Student Data:</label>
-                    <select id="coach-student-select" style="width: 100%;">
-                        <option value="">-- Waiting for students to grant access --</option>
-                    </select>
+            <!-- Player Roster -->
+            <section class="card" style="margin-top:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <h2 style="margin:0;">Your Athletes</h2>
+                    <span id="coach-roster-count" style="font-size:0.85rem;color:#64748b;"></span>
                 </div>
-                <button id="btn-coach-ai-plan" class="btn btn-primary btn-sm hidden"
-                    style="background-color: #8b5cf6; border-color: #8b5cf6; margin: 0; height: fit-content; align-self: flex-end;">✨
-                    Generate AI Lesson Plan</button>
-            </div>
+                <div id="coach-roster-list" style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#94a3b8;">Loading athlete roster...</p>
+                </div>
+            </section>
 
-            <div id="coach-student-data" class="hidden">
+            <!-- Per-Player Coaching View -->
+            <div id="coach-player-view" class="hidden" style="margin-top:20px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <button id="btn-coach-back" class="btn btn-secondary btn-sm" style="width:auto;">← Back to
+                        Roster</button>
+                    <h2 id="coach-view-name" style="margin:0;color:#3867d6;"></h2>
+                    <button id="btn-coach-ai-plan" class="btn btn-primary btn-sm"
+                        style="width:auto;background:#8b5cf6;border-color:#8b5cf6;margin:0;">✨ AI Lesson Plan</button>
+                </div>
+
                 <div class="dashboard-grid">
-                    <!-- WHS Summary -->
+                    <!-- HI Summary Card -->
+                    <section class="card" style="text-align:center;">
+                        <p style="color:#64748b;font-size:0.85rem;margin-bottom:4px;">Handicap Index</p>
+                        <div id="coach-view-hi" style="font-size:2.5rem;font-weight:800;color:#3867d6;">--</div>
+                        <div id="coach-view-trend" style="font-size:0.85rem;margin-top:4px;"></div>
+                    </section>
+
+                    <!-- Stats Card -->
+                    <section class="card">
+                        <h3 style="margin-bottom:12px;font-size:0.95rem;">Season Averages</h3>
+                        <div id="coach-view-stats"
+                            style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+                            <div>
+                                <div style="font-size:1.4rem;font-weight:700;" id="coach-stat-putts">--</div>
+                                <div style="font-size:0.75rem;color:#64748b;">Putts</div>
+                            </div>
+                            <div>
+                                <div style="font-size:1.4rem;font-weight:700;" id="coach-stat-fwy">--</div>
+                                <div style="font-size:0.75rem;color:#64748b;">FIR</div>
+                            </div>
+                            <div>
+                                <div style="font-size:1.4rem;font-weight:700;" id="coach-stat-gir">--</div>
+                                <div style="font-size:0.75rem;color:#64748b;">GIR</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Rounds Table -->
                     <section class="card two-span">
-                        <h2>Handicap Index: <span id="coach-student-index"
-                                style="color: var(--primary-color);">--</span>
-                        </h2>
-                        <p class="section-desc">Recent WHS Score Differentials</p>
-                        <div style="overflow-x: auto;">
+                        <h3>Recent Rounds</h3>
+                        <div style="overflow-x:auto;">
                             <table class="history-table">
                                 <thead>
                                     <tr>
@@ -1194,6 +1242,9 @@
                                         <th>Course</th>
                                         <th>Score</th>
                                         <th>Diff.</th>
+                                        <th>Putts</th>
+                                        <th>FIR</th>
+                                        <th>GIR</th>
                                     </tr>
                                 </thead>
                                 <tbody id="coach-whs-tbody"></tbody>
@@ -1201,10 +1252,10 @@
                         </div>
                     </section>
 
-                    <!-- Practice Summary -->
+                    <!-- Practice Drills -->
                     <section class="card two-span">
-                        <h2>Recent Practice Drills</h2>
-                        <div style="overflow-x: auto;">
+                        <h3>Practice Drill History</h3>
+                        <div style="overflow-x:auto;">
                             <table class="history-table">
                                 <thead>
                                     <tr>
@@ -1217,10 +1268,166 @@
                             </table>
                         </div>
                     </section>
+
+                    <!-- Coach Notes -->
+                    <section class="card">
+                        <h3>Coach Notes</h3>
+                        <div id="coach-notes-list"
+                            style="max-height:200px;overflow-y:auto;margin-bottom:12px;font-size:0.88rem;"></div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <textarea id="coach-note-input" placeholder="Add a note for this athlete..." rows="3"
+                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;resize:vertical;"></textarea>
+                        </div>
+                        <button id="btn-save-coach-note" class="btn btn-primary btn-sm" style="width:auto;">Save
+                            Note</button>
+                    </section>
+
+                    <!-- Drill Assignment -->
+                    <section class="card">
+                        <h3>Assign Drill</h3>
+                        <p class="section-desc">Assign a specific drill for this athlete to focus on next session.</p>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <input type="text" id="coach-drill-assign-name" placeholder="Drill name..."
+                                style="width:100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <textarea id="coach-drill-assign-notes" rows="2"
+                                placeholder="Instructions / target score..."
+                                style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;resize:vertical;"></textarea>
+                        </div>
+                        <button id="btn-assign-drill" class="btn btn-primary btn-sm" style="width:auto;">📌 Assign
+                            Drill</button>
+                        <div id="assign-drill-msg" style="margin-top:8px;font-size:0.85rem;"></div>
+                    </section>
                 </div>
             </div>
         </div>
         <!-- COACH DASHBOARD TAB END -->
+
+        <!-- ========================================== -->
+        <!-- FRIENDS / FEED TAB                         -->
+        <!-- ========================================== -->
+        <div id="tab-feed" class="tab-content hidden">
+            <header class="header" style="background:linear-gradient(135deg,#0f766e,#14b8a6);">
+                <div class="header-content">
+                    <div class="branding">
+                        <h1>Activity Feed</h1>
+                        <p>See recent rounds from players you follow.</p>
+                    </div>
+                </div>
+            </header>
+            <div class="dashboard-grid" style="margin-top:20px;">
+                <!-- Find Players -->
+                <section class="card">
+                    <h2>Find &amp; Follow Players</h2>
+                    <div style="display:flex;gap:10px;margin-bottom:12px;">
+                        <input type="text" id="feed-search-input" placeholder="Search by display name..."
+                            style="flex:1;">
+                        <button id="btn-feed-search" class="btn btn-primary btn-sm"
+                            style="width:auto;margin:0;">Search</button>
+                    </div>
+                    <div id="feed-search-results" style="font-size:0.875rem;"></div>
+                </section>
+
+                <!-- Following List -->
+                <section class="card">
+                    <h2>People You Follow</h2>
+                    <ul id="feed-following-list" style="list-style:none;padding:0;margin:0;font-size:0.875rem;">
+                        <p style="color:#94a3b8;">Loading...</p>
+                    </ul>
+                </section>
+
+                <!-- Activity Feed -->
+                <section class="card two-span">
+                    <h2>Recent Activity</h2>
+                    <div id="feed-activity-list" style="display:flex;flex-direction:column;gap:12px;">
+                        <p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <!-- FEED TAB END -->
+
+        <!-- ========================================== -->
+        <!-- SETTINGS TAB                               -->
+        <!-- ========================================== -->
+        <div id="tab-settings" class="tab-content hidden">
+            <header class="header" style="background:linear-gradient(135deg,#475569,#64748b);">
+                <div class="header-content">
+                    <div class="branding">
+                        <h1>Settings</h1>
+                        <p>Notifications &amp; account preferences.</p>
+                    </div>
+                </div>
+            </header>
+            <div class="dashboard-grid" style="margin-top:20px;">
+                <!-- Notification Preferences -->
+                <section class="card two-span">
+                    <h2>🔔 Notification Preferences</h2>
+                    <p class="section-desc">Choose which events you'd like to be notified about. Requires browser
+                        notification permission.</p>
+                    <div id="notif-permission-banner" class="hidden"
+                        style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin-bottom:16px;font-size:0.88rem;">
+                        ⚠️ Browser notifications are <strong>not enabled</strong>. <button id="btn-enable-notifs"
+                            class="btn btn-secondary btn-sm" style="width:auto;margin:0 0 0 8px;">Enable
+                            Notifications</button>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:16px;">
+                        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                            <div>
+                                <strong>Handicap Index Change</strong>
+                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">Get notified when your HI
+                                    changes after a new round.</p>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" id="notif-hi-change" checked><span
+                                    class="toggle-slider"></span></label>
+                        </label>
+                        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                            <div>
+                                <strong>Friend Posts a Round</strong>
+                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When someone you follow logs
+                                    a new round.</p>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" id="notif-friend-round"><span
+                                    class="toggle-slider"></span></label>
+                        </label>
+                        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                            <div>
+                                <strong>Coach Leaves a Note</strong>
+                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When your coach adds feedback
+                                    to your profile.</p>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" id="notif-coach-note" checked><span
+                                    class="toggle-slider"></span></label>
+                        </label>
+                        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                            <div>
+                                <strong>Drill Assigned by Coach</strong>
+                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When a coach assigns a
+                                    practice drill to you.</p>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" id="notif-drill-assign" checked><span
+                                    class="toggle-slider"></span></label>
+                        </label>
+                    </div>
+                    <button id="btn-save-notif-prefs" class="btn btn-primary" style="margin-top:20px;width:auto;">Save
+                        Preferences</button>
+                    <div id="notif-prefs-msg" class="hidden" style="margin-top:8px;font-size:0.88rem;"></div>
+                </section>
+
+                <!-- Account Info -->
+                <section class="card">
+                    <h2>👤 Account</h2>
+                    <p class="section-desc">Your account details.</p>
+                    <div id="settings-account-info" style="font-size:0.9rem;line-height:1.8;"></div>
+                    <button id="btn-change-password" class="btn btn-secondary" style="margin-top:16px;width:auto;">Send
+                        Password Reset Email</button>
+                    <div id="settings-pw-msg" class="hidden" style="margin-top:8px;font-size:0.88rem;"></div>
+                </section>
+            </div>
+        </div>
+        <!-- SETTINGS TAB END -->
+
 
         <!-- ========================================== -->
         <!-- ADMIN DASHBOARD TAB                        -->
@@ -1343,28 +1550,53 @@
         <!-- ADMIN DASHBOARD TAB END -->
     </div>
 
-    <!-- AI Prompt Overlay Modal -->
+    <!-- AI Coach Live Response Modal -->
     <div id="ai-modal-overlay" class="hidden"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px;">
+        style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:2000;display:flex;justify-content:center;align-items:center;padding:20px;">
         <div class="card"
-            style="width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column;">
-            <h2 id="ai-modal-title" style="margin-bottom: 10px; color: #8b5cf6;">✨ AI Coach Prompt Generated</h2>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
-                Copy the text below and paste it into your favorite AI tool (like ChatGPT or Gemini) to get your
-                personalized coaching plan!
-            </p>
-            <textarea id="ai-prompt-textarea" readonly
-                style="flex: 1; min-height: 300px; width: 100%; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); font-family: monospace; font-size: 0.85rem; resize: none; margin-bottom: 15px; background-color: #f8f9fa;"></textarea>
-
-            <div style="display: flex; gap: 10px;">
-                <button id="btn-copy-ai-prompt" class="btn btn-primary"
-                    style="flex: 2; margin-top: 0; background-color: #8b5cf6;">Copy to Clipboard</button>
-                <button id="btn-close-ai-modal" class="btn btn-secondary" style="flex: 1;">Close</button>
-                <button id="btn-close-ai-modal-2" class="btn btn-secondary"
-                    style="flex: 1; display:none;">Close</button>
+            style="width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;border-radius:16px;">
+            <!-- Header -->
+            <div
+                style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <h2 id="ai-modal-title" style="margin:0;color:white;font-size:1.2rem;">✨ AI Coach</h2>
+                    <p id="ai-modal-subtitle" style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:0.82rem;">
+                        Powered by Gemini</p>
+                </div>
+                <button id="btn-close-ai-modal"
+                    style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+            <!-- Loading State -->
+            <div id="ai-loading" class="hidden" style="padding:40px;text-align:center;">
+                <div
+                    style="width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#8b5cf6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;">
+                </div>
+                <p style="color:#64748b;font-size:0.95rem;">Gemini is analysing your stats and generating a personalised
+                    coaching plan...</p>
+            </div>
+            <!-- Response Area -->
+            <div id="ai-response-area" class="hidden" style="flex:1;overflow-y:auto;padding:24px;">
+                <div id="ai-response-content" style="font-size:0.92rem;line-height:1.7;color:#1e293b;"></div>
+            </div>
+            <!-- Error State -->
+            <div id="ai-error-area" class="hidden" style="padding:24px;text-align:center;color:#ef4444;">
+                <p id="ai-error-msg"></p>
+            </div>
+            <!-- Footer -->
+            <div style="padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;background:#f8fafc;">
+                <button id="btn-regenerate-ai" class="btn btn-primary"
+                    style="flex:1;margin:0;background:#8b5cf6;border-color:#8b5cf6;">🔄 Regenerate</button>
+                <button id="btn-close-ai-modal-2" class="btn btn-secondary" style="flex:1;margin:0;">Close</button>
             </div>
         </div>
     </div>
+    <style>
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+    </style>
 
     <!-- Delete Competition Confirmation Modal -->
     <div id="delete-comp-modal"

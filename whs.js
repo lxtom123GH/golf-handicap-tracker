@@ -97,9 +97,84 @@ export function listenToWHSRounds() {
         }
 
         renderRoundsHistory(usedIds);
+        renderTrendChart(AppState.currentRounds);
     }, (err) => {
         console.error("WHS Listen Error:", err);
         UI.loadingState.classList.add('hidden');
+    });
+}
+
+// ==========================================
+// Handicap Trend Chart (Chart.js)
+// ==========================================
+let _trendChart = null;
+export function renderTrendChart(rounds) {
+    const canvas = document.getElementById('handicap-chart');
+    const noData = document.getElementById('chart-no-data');
+    if (!canvas) return;
+
+    // Filter to counting rounds with valid data, sorted oldest → newest
+    const counting = rounds
+        .filter(r => !r.notCounting && r.slope && r.adjustedGross && r.rating)
+        .sort((a, b) => {
+            const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const db_ = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return da - db_;
+        });
+
+    if (counting.length < 3) {
+        canvas.style.display = 'none';
+        if (noData) noData.classList.remove('hidden');
+        return;
+    }
+    canvas.style.display = '';
+    if (noData) noData.classList.add('hidden');
+
+    const labels = counting.map(r => {
+        const d = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+        return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+    });
+    const diffs = counting.map(r => +((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1));
+
+    // Destroy previous chart instance
+    if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
+
+    _trendChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Differential',
+                data: diffs,
+                borderColor: '#3867d6',
+                backgroundColor: 'rgba(56,103,214,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3867d6',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` Differential: ${ctx.parsed.y}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    reverse: false,
+                    title: { display: true, text: 'Differential (lower = better)' },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
     });
 }
 
