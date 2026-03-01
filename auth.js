@@ -135,7 +135,8 @@ export function setupAuthUI(onAppReady) {
 
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
-                    if (userData.isApproved === true) {
+                    // Implicitly approve legacy users and explicit admins
+                    if (userData.isApproved === true || userData.isApproved === undefined || userData.isAdmin === true) {
                         // Allowed
                         UI.authOverlay.classList.add('hidden');
                         UI.authPending.classList.add('hidden');
