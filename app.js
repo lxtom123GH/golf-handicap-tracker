@@ -597,7 +597,7 @@ async function loadCoachNotes(athleteUid) {
 // ==========================================
 // AI Coach — Live Gemini Integration
 // ==========================================
-import { GEMINI_API_URL } from './config.js';
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
 
 
 let _lastAiUid = null;
@@ -769,23 +769,12 @@ async function generateAIResponse(uid, role) {
             prompt += `Generate a 60-minute lesson plan with:\n1. The single biggest leak identified from the data (cite exactly why)\n2. Three blocks: Warm-up/Discovery (10 min), Skill Acquisition (35 min), Pressure Testing (15 min)\n3. 2–3 discovery questions to ask the student at the start\n4. Specific drills for each block with constraints\n\nFormat with clear Markdown headers. Be concise and practical.`;
         }
 
-        // ── Call Gemini API ─────────────────────────────────────────
-        const response = await fetch(GEMINI_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.7, maxOutputTokens: 1200 }
-            })
-        });
+        // ── Call Secure Backend Cloud Function ──────────────────────────────
+        const functions = getFunctions();
+        const askAiCoach = httpsCallable(functions, 'askAiCoach');
 
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error?.message || `API error ${response.status}`);
-        }
-
-        const data = await response.json();
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+        const response = await askAiCoach({ prompt: prompt });
+        const rawText = response.data.answer || 'No response received.';
         const html = markdownToHtml(rawText);
 
         // ── Display response ─────────────────────────────────────────
