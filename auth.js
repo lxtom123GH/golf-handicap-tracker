@@ -6,7 +6,7 @@
 import { auth, db } from './firebase-config.js';
 import {
     onAuthStateChanged, createUserWithEmailAndPassword,
-    signInWithEmailAndPassword, signOut, updateProfile
+    signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { doc, getDoc, getDocFromServer, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 import { UI } from './ui.js';
@@ -87,6 +87,36 @@ export function setupAuthUI(onAppReady) {
 
     if (UI.btnLogout) UI.btnLogout.addEventListener('click', () => signOut(auth));
     if (UI.btnPendingLogout) UI.btnPendingLogout.addEventListener('click', () => signOut(auth));
+
+    // Forgot Password
+    const linkForgotPassword = document.getElementById('link-forgot-password');
+    const forgotPasswordSection = document.getElementById('forgot-password-section');
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const forgotPasswordMsg = document.getElementById('forgot-password-msg');
+
+    if (linkForgotPassword && forgotPasswordSection) {
+        linkForgotPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordSection.classList.toggle('hidden');
+        });
+    }
+
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value.trim();
+            if (!email) return;
+            try {
+                await sendPasswordResetEmail(auth, email);
+                forgotPasswordMsg.textContent = '✅ Reset email sent! Check your inbox.';
+                forgotPasswordMsg.style.color = '#10b981';
+            } catch (err) {
+                forgotPasswordMsg.textContent = '❌ ' + err.message;
+                forgotPasswordMsg.style.color = '#ef4444';
+            }
+            forgotPasswordMsg.classList.remove('hidden');
+        });
+    }
 
     // Listen for state changes
     onAuthStateChanged(auth, async (user) => {

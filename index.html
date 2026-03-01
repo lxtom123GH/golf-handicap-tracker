@@ -45,6 +45,21 @@
                     <button type="submit" id="btn-login" class="btn btn-primary">Login</button>
                     <button type="button" id="btn-register" class="btn btn-secondary">Register New Account</button>
                 </div>
+                <div style="text-align:center;margin-top:10px;">
+                    <a href="#" id="link-forgot-password" style="font-size:0.85rem;color:var(--secondary-color);">Forgot
+                        password?</a>
+                </div>
+                <div id="forgot-password-section" class="hidden"
+                    style="margin-top:15px;padding:15px;background:#f8f9fa;border-radius:8px;">
+                    <form id="forgot-password-form">
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label for="forgot-email">Enter your email address</label>
+                            <input type="email" id="forgot-email" placeholder="you@example.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="width:100%;">Send Reset Link</button>
+                    </form>
+                    <div id="forgot-password-msg" class="hidden" style="margin-top:8px;font-size:0.9rem;"></div>
+                </div>
                 <div class="auth-switch hidden" id="auth-switch-back">
                     <a href="#" id="link-back-login">Back to Login</a>
                 </div>
@@ -222,6 +237,26 @@
                                     Handicap)</label>
                             </div>
                         </div>
+                        <!-- Optional Advanced Stats -->
+                        <details style="margin-top:12px;">
+                            <summary
+                                style="cursor:pointer;font-weight:600;color:var(--secondary-color);font-size:0.9rem;">📊
+                                Optional: Add Advanced Stats</summary>
+                            <div class="form-row" style="margin-top:10px;">
+                                <div class="form-group">
+                                    <label for="stat-putts">Total Putts</label>
+                                    <input type="number" id="stat-putts" min="10" max="60" placeholder="e.g. 32">
+                                </div>
+                                <div class="form-group">
+                                    <label for="stat-fwy">Fairways Hit (of 14)</label>
+                                    <input type="number" id="stat-fwy" min="0" max="14" placeholder="e.g. 8">
+                                </div>
+                                <div class="form-group">
+                                    <label for="stat-gir">Greens in Reg. (of 18)</label>
+                                    <input type="number" id="stat-gir" min="0" max="18" placeholder="e.g. 6">
+                                </div>
+                            </div>
+                        </details>
                         <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Save Round</button>
                     </form>
                 </section>
@@ -1213,6 +1248,7 @@
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Approved?</th>
+                                    <th>Coach?</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-users-list">
@@ -1250,6 +1286,56 @@
                         </table>
                     </div>
                 </section>
+
+                <!-- Admin Invite New User -->
+                <section class="card">
+                    <h2>📧 Invite New User</h2>
+                    <p class="section-desc">Create an account for a new player or coach. They'll receive an email with a
+                        link to set their password.</p>
+                    <form id="admin-invite-form" class="round-form">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="invite-email">Email Address</label>
+                                <input type="email" id="invite-email" required placeholder="player@example.com">
+                            </div>
+                            <div class="form-group flex-2">
+                                <label for="invite-name">Display Name</label>
+                                <input type="text" id="invite-name" required placeholder="Jane Smith">
+                            </div>
+                            <div class="form-group">
+                                <label for="invite-role">Role</label>
+                                <select id="invite-role">
+                                    <option value="player">Player</option>
+                                    <option value="coach">Coach</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:auto;">Send Invitation</button>
+                    </form>
+                    <div id="invite-msg" class="hidden" style="margin-top:10px;font-size:0.9rem;"></div>
+                </section>
+
+                <!-- Admin CSV Import -->
+                <section class="card">
+                    <h2>📂 Import Historical Rounds (CSV)</h2>
+                    <p class="section-desc">Bulk import historical rounds for any user. Download the template, fill it
+                        in, and upload.</p>
+                    <a id="btn-download-csv-template" href="#" class="btn btn-secondary btn-sm"
+                        style="width:auto;margin-bottom:15px;" download="round_import_template.csv">⬇️ Download CSV
+                        Template</a>
+                    <div class="form-row" style="align-items:flex-end;gap:10px;">
+                        <div class="form-group flex-2">
+                            <label for="import-player-select">Import For User</label>
+                            <select id="import-player-select"></select>
+                        </div>
+                        <div class="form-group flex-2">
+                            <label for="csv-file-input">Select CSV File</label>
+                            <input type="file" id="csv-file-input" accept=".csv">
+                        </div>
+                    </div>
+                    <button id="btn-import-csv" class="btn btn-primary" style="width:auto;">Import Rounds</button>
+                    <div id="import-msg" style="margin-top:10px;font-size:0.9rem;"></div>
+                </section>
             </div>
         </div>
         <!-- ADMIN DASHBOARD TAB END -->
@@ -1274,6 +1360,8 @@
                 <button id="btn-copy-ai-prompt" class="btn btn-primary"
                     style="flex: 2; margin-top: 0; background-color: #8b5cf6;">Copy to Clipboard</button>
                 <button id="btn-close-ai-modal" class="btn btn-secondary" style="flex: 1;">Close</button>
+                <button id="btn-close-ai-modal-2" class="btn btn-secondary"
+                    style="flex: 1; display:none;">Close</button>
             </div>
         </div>
     </div>
@@ -1311,8 +1399,9 @@
     <!-- Global Version Footer -->
     <div
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-        Golf Handicap Tracker v3.2.0
+        Golf Handicap Tracker v4.0.0
     </div>
+
 
     <script type="module" src="app.js"></script>
     <script>

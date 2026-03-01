@@ -188,17 +188,21 @@ export function renderRoundsHistory(usedIds = []) {
     }
 }
 
-export async function addRound(course, rating, slope, adjustedGross) {
+export async function addRound(course, rating, slope, adjustedGross, stats = null) {
     try {
-        await addDoc(collection(db, "whs_rounds"), {
-            uid: AppState.currentUser.uid, // Always save to current user
+        const roundData = {
+            uid: AppState.currentUser.uid,
             course: course,
             rating: rating,
             slope: slope,
             adjustedGross: adjustedGross,
             date: serverTimestamp(),
             notCounting: false
-        });
+        };
+        if (stats && (stats.putts || stats.fwy || stats.gir)) {
+            roundData.stats = stats;
+        }
+        await addDoc(collection(db, "whs_rounds"), roundData);
         return true;
     } catch (e) {
         console.error("Error adding document: ", e);

@@ -13,7 +13,8 @@ import { AppState } from './state.js';
 
 // Import db for admin/coach generic calls that don't fit perfectly elsewhere
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc, addDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
 function bootstrapApplication() {
     console.log("App Ready: Bootstrapping modules...");
@@ -25,6 +26,7 @@ function bootstrapApplication() {
 
     bindWHSForm();
     bindAdminTools();
+    bindAdminInvite();
     bindCoachTools();
     bindAiGenerator();
     populatePlayerSelect();
@@ -48,19 +50,25 @@ function bindWHSForm() {
                 return;
             }
 
-            const course = document.getElementById('whs-course').value;
-            const rating = parseFloat(document.getElementById('whs-rating').value);
-            const slope = parseFloat(document.getElementById('whs-slope').value);
-            const score = parseInt(document.getElementById('whs-score').value);
+            const course = document.getElementById('course-name').value;
+            const rating = parseFloat(document.getElementById('course-rating').value);
+            const slope = parseFloat(document.getElementById('slope-rating').value);
+            const score = parseInt(document.getElementById('score').value);
+
+            // Collect optional stats
+            const putts = parseInt(document.getElementById('stat-putts').value) || null;
+            const fwy = parseInt(document.getElementById('stat-fwy').value) || null;
+            const gir = parseInt(document.getElementById('stat-gir').value) || null;
+            const stats = (putts || fwy || gir) ? { putts, fwy, gir } : null;
 
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.textContent = 'Saving...';
 
-            const success = await addRound(course, rating, slope, score);
+            const success = await addRound(course, rating, slope, score, stats);
 
             btn.disabled = false;
-            btn.textContent = 'Add Round';
+            btn.textContent = 'Save Round';
 
             if (success) UI.addRoundForm.reset();
             else alert("Failed to log round");
@@ -181,13 +189,19 @@ function bindAdminTools() {
                 tr.innerHTML = `
                     <td>${data.displayName || 'N/A'}</td>
                     <td>${data.email}</td>
+                    <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
                     <td>
                         <label class="toggle-switch">
                             <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${d.id}', this.checked)">
                             <span class="toggle-slider"></span>
                         </label>
                     </td>
-                    <td>${data.isAdmin ? 'Admin' : 'User'}</td>
+                    <td>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${d.id}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </td>
                 `;
                 UI.adminUsersList.appendChild(tr);
             });
@@ -239,6 +253,16 @@ window.toggleUserApproval = async function (uid, isApproved) {
         console.error(e);
     }
 };
+window.toggleCoachRole = async function (uid, isCoach) {
+    if (!window.currentUserIsAdmin) return;
+    try {
+        await updateDoc(doc(db, "users", uid), { isCoach: isCoach });
+    } catch (e) {
+        alert("Failed to update coach role.");
+        console.error(e);
+    }
+};
+
 window.removePreapprovedEmail = async function (email) {
     if (!window.currentUserIsAdmin) return;
     try {
@@ -353,6 +377,13 @@ function bindAiGenerator() {
             UI.aiModalOverlay.classList.add('hidden');
         });
     }
+    // Wire second close button
+    const btnClose2 = document.getElementById('btn-close-ai-modal-2');
+    if (btnClose2) {
+        btnClose2.addEventListener('click', () => {
+            UI.aiModalOverlay.classList.add('hidden');
+        });
+    }
 }
 
 async function generateAIPrompt(uid, role) {
@@ -440,5 +471,141 @@ async function generateAIPrompt(uid, role) {
     } catch (e) {
         console.error(e);
         UI.aiPromptTextarea.value = "Error generating prompt. Ensure you are connected to the network.";
+    }
+}
+
+// ==========================================
+// Admin Invite User Flow + CSV Import
+// ==========================================
+function bindAdminInvite() {
+    if (!window.currentUserIsAdmin) return;
+
+    // --- CSV Template Download ---
+    const btnTemplate = document.getElementById('btn-download-csv-template');
+    if (btnTemplate) {
+        const csvContent = 'date,course,holes,adjustedGross,courseRating,slopeRating,isCounting\n2024-01-15,Royal Melbourne,18,82,72.3,135,true\n2024-01-22,Kingston Heath,18,79,73.1,138,true';
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        btnTemplate.href = URL.createObjectURL(blob);
+    }
+
+    // --- Populate Import Player Dropdown ---
+    const importSelect = document.getElementById('import-player-select');
+    if (importSelect) {
+        getDocs(collection(db, 'users')).then(snap => {
+            snap.forEach(d => {
+                const data = d.data();
+                if (data.isApproved) {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = data.displayName || data.email;
+                    importSelect.appendChild(opt);
+                }
+            });
+        });
+    }
+
+    // --- Invite Form ---
+    const inviteForm = document.getElementById('admin-invite-form');
+    const inviteMsg = document.getElementById('invite-msg');
+    if (inviteForm && inviteMsg) {
+        inviteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!window.currentUserIsAdmin) return;
+            const email = document.getElementById('invite-email').value.trim().toLowerCase();
+            const name = document.getElementById('invite-name').value.trim();
+            const role = document.getElementById('invite-role').value;
+
+            const btn = inviteForm.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                // 1. Pre-approve the email
+                await setDoc(doc(db, 'preapproved_emails', email), {
+                    addedAt: new Date().toISOString(),
+                    displayName: name,
+                    role: role
+                });
+
+                // 2. Send Firebase password reset email as invitation
+                await sendPasswordResetEmail(auth, email);
+
+                inviteMsg.textContent = `✅ Invitation sent to ${email}. They'll receive a link to set their password.`;
+                inviteMsg.style.color = '#10b981';
+                inviteForm.reset();
+            } catch (err) {
+                // Firebase requires the account to exist first for password reset
+                // If user doesn't exist yet, we just pre-approve and tell admin
+                if (err.code === 'auth/user-not-found') {
+                    inviteMsg.textContent = `✅ ${email} pre-approved. They can now register and will be auto-approved on first login.`;
+                    inviteMsg.style.color = '#10b981';
+                    inviteForm.reset();
+                } else {
+                    inviteMsg.textContent = `❌ Error: ${err.message}`;
+                    inviteMsg.style.color = '#ef4444';
+                }
+            }
+            inviteMsg.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Send Invitation';
+        });
+    }
+
+    // --- CSV Import ---
+    const btnImport = document.getElementById('btn-import-csv');
+    const importMsgEl = document.getElementById('import-msg');
+    if (btnImport) {
+        btnImport.addEventListener('click', async () => {
+            const fileInput = document.getElementById('csv-file-input');
+            const targetUid = importSelect ? importSelect.value : null;
+            if (!fileInput.files.length || !targetUid) {
+                importMsgEl.textContent = '❌ Please select a user and a CSV file.';
+                importMsgEl.style.color = '#ef4444';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const text = await file.text();
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+
+            let imported = 0, errors = 0;
+            importMsgEl.textContent = 'Importing...';
+            importMsgEl.style.color = '#64748b';
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = values[idx]; });
+
+                const gross = parseFloat(row.adjustedGross);
+                const cr = parseFloat(row.courseRating);
+                const sr = parseFloat(row.slopeRating);
+                const holes = parseInt(row.holes) || 18;
+
+                if (!row.date || !row.course || isNaN(gross) || isNaN(cr) || isNaN(sr)) {
+                    errors++;
+                    continue;
+                }
+
+                try {
+                    await addDoc(collection(db, 'whs_rounds'), {
+                        uid: targetUid,
+                        course: row.course,
+                        rating: cr,
+                        slope: sr,
+                        adjustedGross: gross,
+                        holes: holes,
+                        notCounting: row.isCounting === 'false',
+                        date: new Date(row.date),
+                        importedAt: serverTimestamp()
+                    });
+                    imported++;
+                } catch (_) { errors++; }
+            }
+
+            importMsgEl.textContent = `✅ Import complete: ${imported} rounds added${errors > 0 ? `, ${errors} rows skipped (invalid data)` : ''}.`;
+            importMsgEl.style.color = errors > 0 ? '#f59e0b' : '#10b981';
+        });
     }
 }
