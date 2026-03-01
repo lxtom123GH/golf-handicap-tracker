@@ -608,6 +608,16 @@ function bindAiGenerator() {
     const btnAiCoach = document.getElementById('btn-ai-coach');
     const btnRegenerate = document.getElementById('btn-regenerate-ai');
 
+    // Coach users must never see or access the AI Coach feature
+    if (window.currentUserIsCoach && !window.currentUserIsAdmin) {
+        if (btnAiPlayer) btnAiPlayer.closest('section, div')?.style && (btnAiPlayer.style.display = 'none');
+        if (btnAiCoach) btnAiCoach.style.display = 'none';
+        // Also hide the AI coach button in the Coach Dashboard per-player view
+        const btnCoachAiPlan = document.getElementById('btn-coach-ai-plan');
+        if (btnCoachAiPlan) btnCoachAiPlan.style.display = 'none';
+        return; // Don't bind any AI event listeners
+    }
+
     if (btnAiPlayer) {
         btnAiPlayer.addEventListener('click', () => {
             _lastAiUid = AppState.currentUser.uid;

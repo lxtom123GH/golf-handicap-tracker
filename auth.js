@@ -143,6 +143,7 @@ export function setupAuthUI(onAppReady) {
                         UI.loggedInUserNameEl.textContent = user.displayName || user.email;
                         AppState.viewingPlayerId = user.uid;
                         window.currentUserIsAdmin = userData.isAdmin === true;
+                        window.currentUserIsCoach = userData.isCoach === true;
 
                         if (userData.isAdmin) {
                             UI.tabBtnAdmin.classList.remove('hidden');
@@ -154,6 +155,16 @@ export function setupAuthUI(onAppReady) {
                             document.getElementById('tab-btn-coach').classList.remove('hidden');
                         } else {
                             document.getElementById('tab-btn-coach').classList.add('hidden');
+                        }
+
+                        // Show Feed tab for all approved users
+                        const feedTabBtn = document.getElementById('tab-btn-feed');
+                        if (feedTabBtn) feedTabBtn.classList.remove('hidden');
+
+                        // Hide AI Coach section entirely for coach-role users
+                        if (userData.isCoach && !userData.isAdmin) {
+                            const aiSection = document.getElementById('ai-coach-section');
+                            if (aiSection) aiSection.style.display = 'none';
                         }
 
                         // Bootstrap the rest of the app logic
