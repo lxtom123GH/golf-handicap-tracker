@@ -25,7 +25,9 @@ const initialState = {
     currentHole: 1,
     currentShotData: {},
     currentLiveCompId: null,
-    currentLiveCompRules: []
+    currentLiveCompRules: [],
+    currentHoleShots: [],
+    activeRoundId: null
 };
 
 /**

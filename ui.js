@@ -91,7 +91,16 @@ export const UI = {
     ocLinkComp: document.getElementById('oc-link-comp'),
     btnOcStart: document.getElementById('btn-oc-start'),
 
-    // Modals
+    // Sequential Shots & Review
+    btnWizardPrev: document.getElementById('btn-wizard-prev'),
+    btnWizardNext: document.getElementById('btn-wizard-next'),
+    btnOcReviewRound: document.getElementById('btn-oc-review-round'),
+    reviewRoundModal: document.getElementById('review-round-modal'),
+    reviewContent: document.getElementById('review-content'),
+    btnCloseReview: document.getElementById('btn-close-review'),
+    btnReviewFinished: document.getElementById('btn-review-finished'),
+
+    // Modals (Other)
     aiModalOverlay: document.getElementById('ai-modal-overlay'),
     aiModalTitle: document.getElementById('ai-modal-title'),
     aiPromptTextarea: document.getElementById('ai-prompt-textarea'),

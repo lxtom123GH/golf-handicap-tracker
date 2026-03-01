@@ -1,7 +1,7 @@
 {
   "name": "golf_handicap_tracker",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.1.0",
+  "description": "Golf Handicap Tracker with Sequential Shot Tracking",
   "main": "app.js",
   "scripts": {
     "test:unit": "vitest run tests/unit",

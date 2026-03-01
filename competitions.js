@@ -356,7 +356,7 @@ function bindCompetitionCreation() {
     if (UI.createCompForm) {
         UI.createCompForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('new-comp-name').value.trim();
+            const name = document.getElementById('comp-name').value.trim();
             if (!name) return;
 
             const spRoundEnable = document.getElementById('sp-round-enable').checked;
@@ -366,7 +366,7 @@ function bindCompetitionCreation() {
                 name,
                 ownerId: AppState.currentUser.uid,
                 createdAt: serverTimestamp(),
-                visibility: 'public', // Default to public for now
+                visibility: document.querySelector('input[name="comp-visibility"]:checked')?.value || 'public',
                 rules: rules,
                 startingPoints: {
                     round: {

@@ -153,7 +153,7 @@
                 <div class="header-content">
                     <div class="branding">
                         <h1>Handicap Tracker <span
-                                style="font-size:0.5em; color:#94a3b8; font-weight:normal; vertical-align:middle; margin-left:8px;">v4.3.0</span>
+                                style="font-size:0.5em; color:#94a3b8; font-weight:normal; vertical-align:middle; margin-left:8px;">v4.5.0</span>
                         </h1>
                         <p>World Handicap System (WHS)</p>
                     </div>
@@ -960,12 +960,17 @@
             <div id="oncourse-wizard" class="card hidden">
                 <div id="wizard-header"
                     style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                    <h3 id="wizard-title" style="margin:0;">Select Club</h3>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" id="btn-wizard-prev" class="btn btn-secondary btn-sm"
+                            style="padding:4px 8px;">&larr;</button>
+                        <h3 id="wizard-title" style="margin:0;">Select Club</h3>
+                        <button type="button" id="btn-wizard-next" class="btn btn-secondary btn-sm"
+                            style="padding:4px 8px;">&rarr;</button>
+                    </div>
                     <button type="button" id="btn-wizard-cancel" class="btn-text"
                         style="color: #ef4444; padding:0; font-weight:bold;">Cancel</button>
                 </div>
 
-                <!-- Screen A: Club -->
                 <div id="wizard-step-club" class="wizard-step">
                     <div class="mobile-grid">
                         <button class="btn-grid" data-val="Driver">Driver</button>
@@ -1071,7 +1076,8 @@
             <!-- Finish Round Modal -->
             <div id="oc-finish-modal" class="card hidden" style="border: 2px solid var(--primary-color);">
                 <h2>Round Complete?</h2>
-                <p>Do you want to save this round's scores to the WHS database for all players? Your shot data will be
+                <p>Do you want to save this round's scores to the WHS database for all players? Your shot data will
+                    be
                     saved securely regardless.</p>
                 <div class="form-group" style="margin-top:20px;">
                     <label>Confirm Holes Played</label>
@@ -1081,10 +1087,15 @@
                     </select>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                    <button type="button" id="btn-oc-review-round" class="btn btn-secondary"
+                        style="padding:15px; background-color: #f1f5f9; color: #1e3c72; border-color: #cbd5e1;">Review
+                        Round
+                        Summary</button>
                     <button type="button" id="btn-oc-save-whs" class="btn btn-primary"
                         style="padding:15px; font-size:1.1rem;">Save to WHS Database</button>
                     <button type="button" id="btn-oc-discard" class="btn btn-secondary"
-                        style="padding:15px; color:#ef4444; border-color:#ef4444;">Discard Scores (Keep Shots)</button>
+                        style="padding:15px; color:#ef4444; border-color:#ef4444;">Discard Scores (Keep
+                        Shots)</button>
                     <button type="button" id="btn-oc-cancel-finish" class="btn-text"
                         style="font-weight:bold; margin-top:10px;">Back to Round</button>
                 </div>
@@ -1124,7 +1135,8 @@
                         Roster</button>
                     <h2 id="coach-view-name" style="margin:0;color:#3867d6;"></h2>
                     <button id="btn-coach-ai-plan" class="btn btn-primary btn-sm"
-                        style="width:auto;background:#8b5cf6;border-color:#8b5cf6;margin:0;">✨ AI Lesson Plan</button>
+                        style="width:auto;background:#8b5cf6;border-color:#8b5cf6;margin:0;">✨ AI Lesson
+                        Plan</button>
                 </div>
 
                 <div class="dashboard-grid">
@@ -1209,7 +1221,8 @@
                     <!-- Drill Assignment -->
                     <section class="card">
                         <h3>Assign Drill</h3>
-                        <p class="section-desc">Assign a specific drill for this athlete to focus on next session.</p>
+                        <p class="section-desc">Assign a specific drill for this athlete to focus on next session.
+                        </p>
                         <div class="form-group" style="margin-bottom:8px;">
                             <input type="text" id="coach-drill-assign-name" placeholder="Drill name..."
                                 style="width:100%;">
@@ -1309,7 +1322,8 @@
                         <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
                             <div>
                                 <strong>Friend Posts a Round</strong>
-                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When someone you follow logs
+                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When someone you follow
+                                    logs
                                     a new round.</p>
                             </div>
                             <label class="toggle-switch"><input type="checkbox" id="notif-friend-round"><span
@@ -1318,7 +1332,8 @@
                         <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
                             <div>
                                 <strong>Coach Leaves a Note</strong>
-                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When your coach adds feedback
+                                <p style="font-size:0.82rem;color:#64748b;margin:2px 0 0;">When your coach adds
+                                    feedback
                                     to your profile.</p>
                             </div>
                             <label class="toggle-switch"><input type="checkbox" id="notif-coach-note" checked><span
@@ -1369,7 +1384,8 @@
             <div style="text-align:center; margin-bottom:20px;">
                 <div style="font-size:2.5rem; margin-bottom:8px;">🗑️</div>
                 <h2 style="color:#dc3545; margin:0 0 8px;">Permanently Delete?</h2>
-                <p style="color:#666; font-size:0.9rem; margin:0;">This cannot be undone. All competition data will be
+                <p style="color:#666; font-size:0.9rem; margin:0;">This cannot be undone. All competition data will
+                    be
                     removed.</p>
             </div>
             <div
@@ -1390,14 +1406,26 @@
             </div>
         </div>
     </div>
-
+    <!-- Review Round Modal -->
+    <div id="review-round-modal" class="auth-overlay hidden" style="z-index: 10001; background: rgba(0,0,0,0.85);">
+        <div class="card" style="width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="margin:0;">Round Review</h2>
+                <button id="btn-close-review" class="btn-text" style="font-size: 1.5rem;">✕</button>
+            </div>
+            <div id="review-content" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Dynamically populated -->
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="btn-review-finished" class="btn btn-primary" style="width:100%;">Done Reviewing</button>
+            </div>
+        </div>
+    </div>
     <!-- Global Version Footer -->
     <div
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-        Golf Handicap Tracker v4.4.0
+        Golf Handicap Tracker v4.5.0
     </div>
-
-
     <script type="module" src="app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
