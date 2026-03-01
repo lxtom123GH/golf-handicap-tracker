@@ -88,7 +88,7 @@ service cloud.firestore {
                     request.resource.data.uid == request.auth.uid &&
                     hasFields(request.resource.data, ['course', 'adjustedGross', 'rating', 'slope', 'date']) &&
                     isValidString(request.resource.data.course, 1, 100) &&
-                    isValidNumber(request.resource.data.adjustedGross, 50, 200) &&
+                    isValidNumber(request.resource.data.adjustedGross, 20, 200) &&
                     isValidNumber(request.resource.data.rating, 30, 90) &&
                     isValidNumber(request.resource.data.slope, 50, 155);
       allow update, delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
@@ -138,9 +138,9 @@ service cloud.firestore {
       allow read, list: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
-                    hasFields(request.resource.data, ['hole', 'club', 'curve']) &&
+                    hasFields(request.resource.data, ['hole', 'club']) &&
                     isValidNumber(request.resource.data.hole, 1, 18);
-      allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
     }
   }
 }
