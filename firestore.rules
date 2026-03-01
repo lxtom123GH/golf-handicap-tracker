@@ -22,14 +22,18 @@ service cloud.firestore {
     function isValidNumber(val, minVal, maxVal) {
       return (val is int || val is float) && val >= minVal && val <= maxVal;
     }
+    function hasFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
 
     // Users Collection
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId && 
+                    hasFields(request.resource.data, ['email', 'isAdmin']) &&
                     request.resource.data.isAdmin == false &&
                     (
-                      request.resource.data.isApproved == false ||
+                      request.resource.data.get('isApproved', false) == false ||
                       exists(/databases/$(database)/documents/preapproved_emails/$(request.resource.data.email))
                     );
       allow update: if request.auth != null && (
@@ -53,20 +57,23 @@ service cloud.firestore {
       // Coach Notes Subcollection
       match /coachNotes/{noteId} {
         allow read: if request.auth != null && isApproved() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
-        allow write: if request.auth != null && isApproved() && (isCoachOf(userId) || isAdmin());
+        allow write: if request.auth != null && isApproved() && (isCoachOf(userId) || isAdmin()) &&
+                     hasFields(request.resource.data, ['coachUid', 'text', 'createdAt']);
       }
       
       // Coach Assigned Drills Subcollection
       match /assignedDrills/{drillId} {
         allow read: if request.auth != null && isApproved() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
-        allow write: if request.auth != null && isApproved() && (isCoachOf(userId) || isAdmin());
+        allow write: if request.auth != null && isApproved() && (isCoachOf(userId) || isAdmin()) &&
+                     hasFields(request.resource.data, ['drillName', 'assignedBy', 'assignedAt']);
       }
     }
     
     // Profiles Collection (Handicap array)
     match /profiles/{userId} {
       allow read: if request.auth != null && isApproved();
-      allow write: if request.auth != null && isApproved() && request.auth.uid == userId;
+      allow write: if request.auth != null && isApproved() && request.auth.uid == userId &&
+                   hasFields(request.resource.data, ['handicapHistory']);
     }
     
     // WHS Rounds Collection
@@ -74,6 +81,7 @@ service cloud.firestore {
       allow read: if request.auth != null && isApproved();
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
+                    hasFields(request.resource.data, ['course', 'adjustedGross', 'rating', 'slope', 'date']) &&
                     isValidString(request.resource.data.course, 1, 100) &&
                     isValidNumber(request.resource.data.adjustedGross, 50, 200) &&
                     isValidNumber(request.resource.data.rating, 30, 90) &&
@@ -89,14 +97,18 @@ service cloud.firestore {
         request.auth.uid in resource.data.get('invitedUIDs', []) ||
         isAdmin()
       );
-      allow create: if request.auth != null && isApproved() && request.resource.data.ownerId == request.auth.uid;
+      allow create: if request.auth != null && isApproved() && 
+                    hasFields(request.resource.data, ['name', 'ownerId', 'rules']) &&
+                    request.resource.data.ownerId == request.auth.uid;
       allow update, delete: if request.auth != null && isApproved() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
     
     // Competition Rounds Collection
     match /comp_rounds/{compRoundId} {
       allow read: if request.auth != null && isApproved();
-      allow create: if request.auth != null && isApproved() && request.resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && isApproved() && 
+                    hasFields(request.resource.data, ['compId', 'uid', 'score']) &&
+                    request.resource.data.uid == request.auth.uid;
       allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
     }
 
@@ -105,7 +117,8 @@ service cloud.firestore {
       allow read: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
-                    isValidString(request.resource.data.drillId, 1, 50);
+                    hasFields(request.resource.data, ['drillName', 'score', 'date']) &&
+                    isValidString(request.resource.data.drillName, 1, 100);
       allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
     }
 
@@ -120,6 +133,7 @@ service cloud.firestore {
       allow read: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
+                    hasFields(request.resource.data, ['hole', 'club', 'curve']) &&
                     isValidNumber(request.resource.data.hole, 1, 18);
       allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
     }

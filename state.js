@@ -1,9 +1,9 @@
 // ==========================================
 // state.js
-// Centralized Application State
+// Centralized, Reactive Application State
 // ==========================================
 
-export const AppState = {
+const initialState = {
     currentUser: null,
     profileUsersMap: {}, // Maps uid to displayName
     allUsersCache: null, // Used to cache the full list of users to prevent repeated DB reads
@@ -27,3 +27,33 @@ export const AppState = {
     currentLiveCompId: null,
     currentLiveCompRules: []
 };
+
+/**
+ * AppState Proxy
+ * Intercepts property assignments and dispatches a 'stateChange' custom event.
+ * Listener: window.addEventListener('stateChange', (e) => { ... })
+ */
+export const AppState = new Proxy(initialState, {
+    set(target, prop, value) {
+        const oldValue = target[prop];
+        target[prop] = value;
+
+        // Only dispatch if the value actually changed
+        if (oldValue !== value) {
+            const event = new CustomEvent('stateChange', {
+                detail: {
+                    property: prop,
+                    oldValue: oldValue,
+                    newValue: value
+                }
+            });
+            window.dispatchEvent(event);
+
+            // Console logging for debugging in development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log(`[State] ${String(prop)} changed:`, value);
+            }
+        }
+        return true;
+    }
+});
