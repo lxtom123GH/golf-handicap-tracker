@@ -1,0 +1,8 @@
+node_modules/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+firestore-debug.log
+ui-debug.log
+firebase-debug.log
+.env
+.DS_Store

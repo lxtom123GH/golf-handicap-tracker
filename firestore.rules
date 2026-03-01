@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    function isApproved() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true;
+    }
+    
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Schema Validation Helpers
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+    function isValidNumber(val, minVal, maxVal) {
+      return (val is int || val is float) && val >= minVal && val <= maxVal;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId && 
+                    request.resource.data.isAdmin == false &&
+                    (
+                      request.resource.data.isApproved == false ||
+                      exists(/databases/$(database)/documents/preapproved_emails/$(request.resource.data.email))
+                    );
+      allow update: if request.auth != null && (
+        isAdmin() || 
+        (request.auth.uid == userId && 
+         request.resource.data.get('isApproved', false) == resource.data.get('isApproved', false) &&
+         request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false))
+      );
+    }
+    
+    // Profiles Collection (Handicap array)
+    match /profiles/{userId} {
+      allow read: if request.auth != null && isApproved();
+      allow write: if request.auth != null && isApproved() && request.auth.uid == userId;
+    }
+    
+    // WHS Rounds Collection
+    match /whs_rounds/{roundId} {
+      allow read: if request.auth != null && isApproved();
+      allow create: if request.auth != null && isApproved() && 
+                    request.resource.data.uid == request.auth.uid &&
+                    isValidString(request.resource.data.course, 1, 100) &&
+                    isValidNumber(request.resource.data.adjustedGross, 50, 200) &&
+                    isValidNumber(request.resource.data.rating, 30, 90) &&
+                    isValidNumber(request.resource.data.slope, 50, 155);
+      allow update, delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+    }
+
+    // Competitions Collection
+    match /competitions/{compId} {
+      allow read: if request.auth != null && isApproved() && (
+        resource.data.get('visibility', 'public') == 'public' ||
+        resource.data.ownerId == request.auth.uid ||
+        request.auth.uid in resource.data.get('invitedUIDs', []) ||
+        isAdmin()
+      );
+      allow create: if request.auth != null && isApproved() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null && isApproved() && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+    
+    // Competition Rounds Collection
+    match /comp_rounds/{compRoundId} {
+      allow read: if request.auth != null && isApproved();
+      allow create: if request.auth != null && isApproved() && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+    }
+
+    // Practice Rounds Collection
+    match /practice_rounds/{practiceId} {
+      allow read: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && isApproved() && 
+                    request.resource.data.uid == request.auth.uid &&
+                    isValidString(request.resource.data.drillId, 1, 50);
+      allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+    }
+
+    // Pre-Approved Emails Collection
+    match /preapproved_emails/{emailId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // Shot Tracker Collection
+    match /shots/{shotId} {
+      allow read: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && isApproved() && 
+                    request.resource.data.uid == request.auth.uid &&
+                    isValidNumber(request.resource.data.hole, 1, 18);
+      allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+    }
+  }
+}
