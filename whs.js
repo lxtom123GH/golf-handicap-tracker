@@ -21,9 +21,43 @@ export function getAdjustmentFactor(count) {
     if (count >= 12 && count <= 14) return { use: 4, adj: 0 };
     if (count >= 15 && count <= 16) return { use: 5, adj: 0 };
     if (count >= 17 && count <= 18) return { use: 6, adj: 0 };
-    if (count === 19) return { use: 7, adj: 0 };
     return { use: 8, adj: 0 }; // 20 scores
 }
+
+// -------------------------------------------------------------------------------- //
+// NEW WHS STABLEFORD & AGS CALCULATIONS
+// -------------------------------------------------------------------------------- //
+
+export function calculateDailyHandicap(handicapIndex, slopeRating) {
+    if (handicapIndex === undefined || handicapIndex === null || isNaN(handicapIndex) || !slopeRating) return 0;
+    // Australian Daily Handicap = Handicap Index x (Slope Rating / 113)
+    return Math.round(handicapIndex * (slopeRating / 113));
+}
+
+export function calculateHoleStableford(grossScore, holePar, holeStrokeIndex, dailyHandicap) {
+    if (!grossScore || isNaN(grossScore) || grossScore === 0) return 0;
+    if (!holePar || !holeStrokeIndex) return 0;
+
+    let strokesReceived = Math.floor(dailyHandicap / 18);
+    let remainder = dailyHandicap % 18;
+
+    // If Stroke Index is <= remainder, the player gets an extra stroke
+    if (holeStrokeIndex <= remainder) {
+        strokesReceived += 1;
+    }
+
+    let netScore = grossScore - strokesReceived;
+    let points = holePar - netScore + 2;
+    return Math.max(0, points);
+}
+
+export function convertStablefordToAGS(totalStableford, dailyHandicap, coursePar) {
+    // AGS = Par + Daily Handicap - (Stableford Points - 36)
+    return coursePar + dailyHandicap - (totalStableford - 36);
+}
+
+// -------------------------------------------------------------------------------- //
+
 
 export function calculateIndex(rounds) {
     // Return early if no rounds at all

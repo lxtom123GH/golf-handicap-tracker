@@ -206,29 +206,23 @@
                     <p class="section-desc">You are logging this round to your official WHS profile.</p>
                     <form id="add-round-form" class="round-form">
                         <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="course-select">Course</label>
+                                <select id="course-select" required>
+                                    <option value="" disabled selected>Select Course...</option>
+                                    <!-- Injected by JS -->
+                                </select>
+                            </div>
+                            <div class="form-group flex-2 hidden" id="course-name-custom-group">
+                                <label for="course-name">Course Name</label>
+                                <input type="text" id="course-name" placeholder="e.g. Royal Melbourne">
+                            </div>
                             <div class="form-group">
                                 <label for="date">Date Played</label>
                                 <input type="date" id="date" required>
                             </div>
-                            <div class="form-group flex-2">
-                                <label for="course-name">Course Name</label>
-                                <input type="text" id="course-name" placeholder="e.g. Royal Melbourne" required>
-                            </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="holes">Holes Played</label>
-                                <select id="holes" required>
-                                    <option value="18">18 Holes</option>
-                                    <option value="9">9 Holes (Combine 2)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="score">Adjusted Gross Score</label>
-                                <input type="number" id="score" min="50" max="200" required>
-                                <small>Max hole score is Net Double Bogey</small>
-                            </div>
-                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="course-rating">Course Rating (CR)</label>
@@ -238,7 +232,68 @@
                                 <label for="slope-rating">Slope Rating (SR)</label>
                                 <input type="number" id="slope-rating" min="55" max="155" required>
                             </div>
+                            <div class="form-group">
+                                <label for="course-par">Course Par</label>
+                                <input type="number" id="course-par" min="50" max="80" required>
+                            </div>
                         </div>
+
+                        <div class="form-row" style="margin-top: 15px; margin-bottom: 15px;">
+                            <div class="form-group" style="width: 100%;">
+                                <label>Score Entry Mode</label>
+                                <div
+                                    style="display: flex; flex-wrap: wrap; gap: 15px; background: #e9ecef; padding: 10px; border-radius: 6px;">
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
+                                        <input type="radio" name="entry-mode" value="hole-by-hole" checked> Hole-by-Hole
+                                        (Auto Stableford)
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
+                                        <input type="radio" name="entry-mode" value="total-stableford"> Total Stableford
+                                        (Quick)
+                                    </label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
+                                        <input type="radio" name="entry-mode" value="manual-ags"> Manual AGS (Legacy)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="mode-hole-by-hole" class="mode-container">
+                            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Enter your gross
+                                strokes. Daily Handicap and Stroke Index applies.</p>
+                            <div id="hole-grid-container"
+                                style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 15px;">
+                                <!-- Hole inputs injected by JS -->
+                            </div>
+                            <div
+                                style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                                <strong style="color: var(--primary-color);">Estimated Stableford: <span
+                                        id="calc-stableford-pts">0</span> pts</strong>
+                            </div>
+                        </div>
+
+                        <div id="mode-total-stableford" class="mode-container hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="total-stableford-pts">Total Stableford Points</label>
+                                    <input type="number" id="total-stableford-pts" min="0" max="60">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="mode-manual-ags" class="mode-container hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="score">Adjusted Gross Score</label>
+                                    <input type="number" id="score" min="50" max="200" required>
+                                    <small>Manual entry or calculated from above</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-row" style="margin-top: 10px;">
                             <div class="form-group checkbox-group"
                                 style="flex-direction: row; align-items: center; gap: 8px;">
@@ -247,6 +302,7 @@
                                     Handicap)</label>
                             </div>
                         </div>
+
                         <!-- Optional Advanced Stats -->
                         <details style="margin-top:12px;">
                             <summary
@@ -267,7 +323,8 @@
                                 </div>
                             </div>
                         </details>
-                        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Save Round</button>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Save Round to
+                            Profile</button>
                     </form>
                 </section>
 

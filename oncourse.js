@@ -8,6 +8,9 @@ import { AppState } from './state.js';
 import { UI } from './ui.js';
 import { COURSE_DATA } from './course-data.js';
 
+import { initNotifications } from './notifications.js';
+import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
+
 export function initOnCourse() {
     bindSetupToggles();
     bindCourseSelect();
@@ -201,6 +204,14 @@ function bindStartRound() {
             AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
 
+            // Fetch Daily Handicaps for all players
+            const teeData = COURSE_DATA[courseName]?.[UI.ocTeeSelect.value] || {};
+            for (let p of AppState.liveRoundGroups) {
+                const hi = await getPlayerHandicap(p.uid);
+                p.handicapIndex = hi;
+                p.dailyHandicap = Math.round(hi * ((teeData.slope || 113) / 113) + ((teeData.rating || 72) - totalPar));
+            }
+
             document.body.classList.add('round-active');
             document.getElementById('oncourse-setup').classList.add('hidden');
             document.getElementById('oncourse-hub').classList.remove('hidden');
@@ -289,8 +300,8 @@ function loadHole() {
         }
     }
 
-    if (AppState.currentUser && !AppState.currentHoleShots) {
-        AppState.currentHoleShots = [];
+    if (AppState.currentUser) {
+        AppState.currentHoleShots = []; // Clear for new hole
     }
 
     const scoresContainer = document.getElementById('oc-group-scores');
@@ -439,13 +450,38 @@ async function saveRoundToDatabase() {
     const holesPlayedStr = document.getElementById('oc-finish-holes').value;
     const manualCR = document.getElementById('oc-manual-cr');
     const manualSR = document.getElementById('oc-manual-sr');
+    const manualPar = document.getElementById('oc-manual-par');
+
     const cr = manualCR ? parseFloat(manualCR.value) : 72;
     const sr = manualSR ? parseFloat(manualSR.value) : 113;
+    const par = manualPar ? parseFloat(manualPar.value) : 72;
+
+    const courseName = AppState.currentRoundCourseName;
+    const teeName = UI.ocTeeSelect.value;
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
 
     try {
         for (let p of AppState.liveRoundGroups) {
             let totalGross = 0;
-            for (const h in p.scores) totalGross += p.scores[h];
+            let totalStableford = 0;
+
+            for (const h in p.scores) {
+                const gross = p.scores[h];
+                totalGross += gross;
+
+                // Calculate Stableford if we have hole data
+                if (teeData.pars && teeData.strokeIndex) {
+                    const holeIdx = parseInt(h) - 1;
+                    const hPar = teeData.pars[holeIdx];
+                    const hSI = teeData.strokeIndex[holeIdx];
+                    if (hPar && hSI) {
+                        totalStableford += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
+                    }
+                }
+            }
+
+            // Convert to AGS (Adjusted Gross Score)
+            const adjustedGross = convertStablefordToAGS(totalStableford, p.dailyHandicap, par);
 
             let sumPutts = 0, sumGIR = 0, sumFwy = 0;
             for (const h in p.simpleStats) {
@@ -459,7 +495,10 @@ async function saveRoundToDatabase() {
                 course: AppState.currentRoundCourseName + ` (${holesPlayedStr}H)`,
                 rating: cr,
                 slope: sr,
-                adjustedGross: totalGross,
+                adjustedGross: adjustedGross, // Saved as WHS Adjusted Gross
+                totalGross: totalGross,
+                totalStableford: totalStableford,
+                dailyHandicap: p.dailyHandicap,
                 date: serverTimestamp(),
                 isLiveTracked: true,
                 liveRoundsMode: AppState.currentTrackingMode,
@@ -608,17 +647,89 @@ function showToast(message) {
 
 function bindReviewModal() {
     if (UI.btnOcReviewRound) {
-        UI.btnOcReviewRound.addEventListener('click', () => {
+        UI.btnOcReviewRound.addEventListener('click', async () => {
             if (!UI.reviewRoundModal || !UI.reviewContent) return;
             UI.reviewRoundModal.classList.remove('hidden');
+            UI.reviewContent.innerHTML = '<p style="text-align:center; padding:20px; color:#64748b;">Generating detailed review...</p>';
+
+            const courseName = AppState.currentRoundCourseName;
+            const teeName = UI.ocTeeSelect.value;
+            const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+            const manualPar = document.getElementById('oc-manual-par');
+            const par = manualPar ? parseFloat(manualPar.value) : (teeData.par || 72);
+
+            const shotsQuery = query(
+                collection(db, "shots"),
+                where("roundId", "==", AppState.activeRoundId)
+            );
+
+            // Fetch and organize shots
+            let allRoundShots = [];
+            try {
+                const snap = await getDocs(shotsQuery);
+                snap.forEach(d => allRoundShots.push(d.data()));
+                allRoundShots.sort((a, b) => (a.hole - b.hole) || (a.shotNumber - b.shotNumber));
+            } catch (e) { console.error("Error fetching shots for review:", e); }
+
             UI.reviewContent.innerHTML = '';
+
             AppState.liveRoundGroups.forEach(p => {
-                const div = document.createElement('div');
-                div.style.cssText = 'border-bottom:1px solid #e2e8f0; padding:10px 0;';
-                let total = 0;
-                for (let h in p.scores) total += p.scores[h];
-                div.innerHTML = `<strong>${p.name}</strong>: ${total} strokes`;
-                UI.reviewContent.appendChild(div);
+                let totalGross = 0;
+                let totalStableford = 0;
+                const pShots = allRoundShots.filter(s => s.uid === p.uid);
+
+                for (let h = 1; h <= (AppState.currentRoundHoles || 9); h++) {
+                    const gross = p.scores[h] || 0;
+                    totalGross += gross;
+
+                    if (teeData.pars && teeData.strokeIndex) {
+                        const holeIdx = h - 1;
+                        const hPar = teeData.pars[holeIdx];
+                        const hSI = teeData.strokeIndex[holeIdx];
+                        if (hPar && hSI && gross > 0) {
+                            totalStableford += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
+                        }
+                    }
+                }
+
+                const ags = convertStablefordToAGS(totalStableford, p.dailyHandicap, par);
+
+                const playerCard = document.createElement('div');
+                playerCard.className = 'card';
+                playerCard.style.cssText = 'padding:15px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);';
+
+                let shotsHtml = '';
+                if (pShots.length > 0) {
+                    shotsHtml = `<details style="margin-top:10px; border-top:1px solid #f1f5f9; padding-top:10px;">
+                        <summary style="cursor:pointer; font-size:0.85rem; color:var(--secondary-color); font-weight:600;">View Shot History (${pShots.length})</summary>
+                        <div style="font-size:0.8rem; margin-top:8px; color:#475569;">
+                            ${pShots.map(s => `<div>H${s.hole} S${s.shotNumber}: ${s.club || 'Club'} → ${s.outcome || 'Result'}</div>`).join('')}
+                        </div>
+                    </details>`;
+                }
+
+                playerCard.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <strong style="font-size:1.15rem; color:var(--primary-color);">${p.name}</strong>
+                        <span style="font-size:0.85rem; background:#f1f5f9; padding:2px 8px; border-radius:12px; color:#64748b;">DH: ${p.dailyHandicap}</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; text-align:center; background:#f8fafc; padding:10px; border-radius:8px;">
+                        <div>
+                            <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Gross</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#1e293b;">${totalGross}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Pts</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:var(--primary-color);">${totalStableford}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">AGS</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#334155;">${ags || totalGross}</div>
+                        </div>
+                    </div>
+                    ${shotsHtml}
+                `;
+                UI.reviewContent.appendChild(playerCard);
             });
         });
     }
