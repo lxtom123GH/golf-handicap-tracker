@@ -3,8 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
   
     function isApproved() {
-      let user = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return user.get('isApproved', true) == true || user.get('isAdmin', false) == true;
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(userPath) && (
+        get(userPath).data.get('isApproved', true) == true || 
+        get(userPath).data.get('isAdmin', false) == true
+      );
     }
     
     function isAdmin() {
