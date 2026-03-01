@@ -291,8 +291,201 @@ function bindLeaderboardSortHandlers() {
     });
 }
 
-window.deleteCompRound = async function (id) {
-    if (confirm("Are you sure you want to delete this round?")) {
-        await deleteDoc(doc(db, "comp_rounds", id));
+
+function bindCompetitionCreation() {
+    let rules = [];
+    const rulesListEl = document.getElementById('comp-rules-list');
+    const addRuleBtn = document.getElementById('btn-add-rule');
+
+    // Toggle form
+    const btnShowCreateComp = document.getElementById('btn-show-create-comp');
+    if (btnShowCreateComp) {
+        btnShowCreateComp.addEventListener('click', () => {
+            UI.createCompContainer.classList.remove('hidden');
+            btnShowCreateComp.classList.add('hidden');
+        });
     }
+
+    if (UI.btnCancelComp) {
+        UI.btnCancelComp.addEventListener('click', () => {
+            UI.createCompContainer.classList.add('hidden');
+            if (btnShowCreateComp) btnShowCreateComp.classList.remove('hidden');
+            UI.createCompForm.reset();
+            rules = [];
+            renderRulesList();
+        });
+    }
+
+    // Add Rule
+    if (addRuleBtn) {
+        addRuleBtn.addEventListener('click', () => {
+            const name = document.getElementById('new-rule-name').value.trim();
+            const pts = parseFloat(document.getElementById('new-rule-points').value) || 0;
+            if (!name) return;
+
+            rules.push({ name, pts });
+            document.getElementById('new-rule-name').value = '';
+            document.getElementById('new-rule-points').value = '1';
+            renderRulesList();
+        });
+    }
+
+    function renderRulesList() {
+        if (!rulesListEl) return;
+        if (rules.length === 0) {
+            rulesListEl.innerHTML = '<div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added yet.</div>';
+            return;
+        }
+        rulesListEl.innerHTML = rules.map((r, i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0;">
+                <span><strong>${r.name}</strong>: ${r.pts} pts</span>
+                <button type="button" class="btn-text del-rule" data-index="${i}" style="color:#ef4444; padding:0;">✕</button>
+            </div>
+        `).join('');
+
+        rulesListEl.querySelectorAll('.del-rule').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                rules.splice(idx, 1);
+                renderRulesList();
+            });
+        });
+    }
+
+    // Submit Comp
+    if (UI.createCompForm) {
+        UI.createCompForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-comp-name').value.trim();
+            if (!name) return;
+
+            const spRoundEnable = document.getElementById('sp-round-enable').checked;
+            const spHoleEnable = document.getElementById('sp-hole-enable').checked;
+
+            const payload = {
+                name,
+                ownerId: AppState.currentUser.uid,
+                createdAt: serverTimestamp(),
+                visibility: 'public', // Default to public for now
+                rules: rules,
+                startingPoints: {
+                    round: {
+                        enabled: spRoundEnable,
+                        type: document.querySelector('input[name="sp-round-type"]:checked')?.value || 'fixed',
+                        value: parseFloat(document.getElementById('sp-round-value').value) || 0
+                    },
+                    hole: {
+                        enabled: spHoleEnable,
+                        type: document.querySelector('input[name="sp-hole-type"]:checked')?.value || 'fixed',
+                        value: parseFloat(document.getElementById('sp-hole-value').value) || 0
+                    }
+                }
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, "competitions"), payload);
+                UI.createCompForm.reset();
+                rules = [];
+                renderRulesList();
+                UI.createCompContainer.classList.add('hidden');
+                if (btnShowCreateComp) btnShowCreateComp.classList.remove('hidden');
+
+                // Switch to the newly created comp
+                UI.compSelect.value = docRef.id;
+                setActiveCompetition(docRef.id);
+            } catch (err) {
+                console.error("Error creating competition:", err);
+                alert("Failed to create competition. Check console for details.");
+            }
+        });
+    }
+
+    // Toggle starting point configs
+    const spRoundEnable = document.getElementById('sp-round-enable');
+    const spHoleEnable = document.getElementById('sp-hole-enable');
+    if (spRoundEnable) {
+        spRoundEnable.addEventListener('change', (e) => {
+            document.getElementById('sp-round-config').classList.toggle('hidden', !e.target.checked);
+        });
+    }
+    if (spHoleEnable) {
+        spHoleEnable.addEventListener('change', (e) => {
+            document.getElementById('sp-hole-config').classList.toggle('hidden', !e.target.checked);
+        });
+    }
+}
+
+function bindCompetitionLogging() {
+    if (!UI.logCompRoundForm) return;
+
+    UI.logCompRoundForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!activeCompId || !AppState.currentCompData) return;
+
+        const playerSelect = document.getElementById('comp-player-select');
+        const targetUid = playerSelect.value;
+        const playerName = playerSelect.options[playerSelect.selectedIndex].text;
+        const score = parseInt(document.getElementById('comp-score').value);
+        const date = document.getElementById('comp-date').value;
+
+        if (!targetUid || isNaN(score)) return;
+
+        // Calculate dynamic rule points
+        let totalPoints = 0;
+        const ruleCounts = {};
+        document.querySelectorAll('.dynamic-rule-input').forEach(input => {
+            const count = parseInt(input.value) || 0;
+            const ptsPer = parseFloat(input.getAttribute('data-rulepts')) || 0;
+            const ruleName = input.getAttribute('data-rulename');
+
+            ruleCounts[ruleName] = count;
+            totalPoints += (count * ptsPer);
+        });
+
+        // Add starting points if enabled
+        const sp = AppState.currentCompData.startingPoints || {};
+        if (sp.round?.enabled) {
+            totalPoints += sp.round.value || 0;
+        }
+        if (sp.hole?.enabled) {
+            totalPoints += (sp.hole.value || 0) * 18;
+        }
+
+        const payload = {
+            compId: activeCompId,
+            uid: targetUid,
+            playerName: playerName,
+            totalPoints: totalPoints,
+            score: score,
+            date: new Date(date),
+            ruleCounts: ruleCounts,
+            createdAt: serverTimestamp()
+        };
+
+        try {
+            await addDoc(collection(db, "comp_rounds"), payload);
+            UI.logCompRoundForm.reset();
+            // Reset dynamic inputs to 0
+            document.querySelectorAll('.dynamic-rule-input').forEach(i => i.value = 0);
+        } catch (err) {
+            console.error("Error logging round:", err);
+            alert("Failed to log round.");
+        }
+    });
+
+    // Populate player select (use the same logic as elsewhere)
+    getDocs(collection(db, 'users')).then(snap => {
+        const select = document.getElementById('comp-player-select');
+        if (!select) return;
+        snap.forEach(d => {
+            const data = d.data();
+            if (data.isApproved) {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = data.displayName || data.email;
+                if (d.id === AppState.currentUser?.uid) opt.selected = true;
+                select.appendChild(opt);
+            }
+        });
+    });
 }
