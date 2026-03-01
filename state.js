@@ -6,6 +6,7 @@
 export const AppState = {
     currentUser: null,
     profileUsersMap: {}, // Maps uid to displayName
+    allUsersCache: null, // Used to cache the full list of users to prevent repeated DB reads
     viewingPlayerId: null,
     currentRounds: [], // Array of round objects for the currently viewed WHS player
 

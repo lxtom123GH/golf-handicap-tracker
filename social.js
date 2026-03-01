@@ -20,14 +20,18 @@ export function initSocialFeed() {
         resultsEl.textContent = 'Searching...';
 
         try {
-            const snap = await getDocs(collection(db, 'users'));
+            if (!AppState.allUsersCache) {
+                const snap = await getDocs(collection(db, 'users'));
+                AppState.allUsersCache = [];
+                snap.forEach(d => AppState.allUsersCache.push({ uid: d.id, ...d.data() }));
+            }
+
             const matches = [];
-            snap.forEach(d => {
-                const data = d.data();
-                if (d.id === AppState.currentUser.uid) return;
+            AppState.allUsersCache.forEach(data => {
+                if (data.uid === AppState.currentUser.uid) return;
                 if (!data.isApproved) return;
                 const name = (data.displayName || '').toLowerCase();
-                if (name.includes(term)) matches.push({ uid: d.id, ...data });
+                if (name.includes(term)) matches.push(data);
             });
 
             if (!matches.length) {

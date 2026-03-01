@@ -879,6 +879,20 @@ async function saveShotData() {
     try {
         await addDoc(collection(db, "shots"), payload);
         showToast("Shot Logged ⛳");
+
+        // Auto-increment the score for the current user
+        const groupIndex = AppState.liveRoundGroups.findIndex(p => p.uid === AppState.currentUser.uid);
+        if (groupIndex !== -1) {
+            const p = AppState.liveRoundGroups[groupIndex];
+            if (!p.scores[AppState.currentHole]) p.scores[AppState.currentHole] = 0;
+            p.scores[AppState.currentHole] += 1;
+
+            // Re-render the hole so the score counter updates visually!
+            loadHole();
+
+            showToast("Score auto-incremented.");
+        }
+
     } catch (err) {
         console.error("Failed to log shot", err);
         showToast("Error saving shot.");

@@ -152,7 +152,9 @@
             <header class="header">
                 <div class="header-content">
                     <div class="branding">
-                        <h1>Handicap Tracker</h1>
+                        <h1>Handicap Tracker <span
+                                style="font-size:0.5em; color:#94a3b8; font-weight:normal; vertical-align:middle; margin-left:8px;">v4.2.0</span>
+                        </h1>
                         <p>World Handicap System (WHS)</p>
                     </div>
                     <div class="index-display">
@@ -655,92 +657,11 @@
                             Goal is to get the lowest score possible.</p>
 
                         <form id="form-log-practice">
-                            <input type="hidden" id="pf-hidden-type" value="prox">
-                            <!-- Proximity Inputs (Bunker, Inside 30, Putting 9) -->
-                            <div id="pf-prox-group">
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">Within 1 Club Length <span
-                                            style="font-weight: normal; color: #10b981; font-size: 0.85rem; margin-left: 5px;">(Birdie:
-                                            -1 pt)</span></div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="prox-in-1" min="0" placeholder="0"
-                                            style="padding: 8px;">
-                                    </div>
-                                </div>
-
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">Within 2 Club Lengths <span
-                                            style="font-weight: normal; color: #3b82f6; font-size: 0.85rem; margin-left: 5px;">(Par:
-                                            0 pts)</span></div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="prox-in-2" min="0" placeholder="0"
-                                            style="padding: 8px;">
-                                    </div>
-                                </div>
-
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">Outside 2 Club Lengths <span
-                                            style="font-weight: normal; color: #ef4444; font-size: 0.85rem; margin-left: 5px;">(Double:
-                                            +2 pts)</span></div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="prox-out-2" min="0" placeholder="0"
-                                            style="padding: 8px;">
-                                    </div>
-                                </div>
+                            <div id="practice-dynamic-inputs">
+                                <!-- Dynamically generated fields per drill -->
                             </div>
-
-                            <!-- Up/Down Inputs -->
-                            <div id="pf-updown-group" class="hidden">
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">Chip In <span
-                                            style="font-weight: normal; color: #10b981; font-size: 0.85rem; margin-left: 5px;">(Birdie:
-                                            -1 pt)</span></div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="ud-chip-in" min="0" placeholder="0"
-                                            style="padding: 8px;">
-                                    </div>
-                                </div>
-
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">Chip + 1 Putt <span
-                                            style="font-weight: normal; color: #3b82f6; font-size: 0.85rem; margin-left: 5px;">(Par:
-                                            0 pts)</span></div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="ud-up-down" min="0" placeholder="0"
-                                            style="padding: 8px;">
-                                    </div>
-                                </div>
-
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">More than 1 Putt <span
-                                            style="font-weight: normal; color: #ef4444; font-size: 0.85rem; margin-left: 5px;">(Double:
-                                            +2 pts)</span></div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="ud-more" min="0" placeholder="0" style="padding: 8px;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Total Score Inputs (Strokes Gained Putting) -->
-                            <div id="pf-total-group" class="hidden">
-                                <div class="form-row"
-                                    style="align-items: center; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                    <div style="flex: 2; font-weight: 600;">Total Score <span
-                                            style="font-weight: normal; color: var(--text-muted); font-size: 0.85rem; margin-left: 5px;">(Number)</span>
-                                    </div>
-                                    <div class="form-group" style="margin: 0; flex: 1;">
-                                        <input type="number" id="sg-total" placeholder="0" style="padding: 8px;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Save Drill Score</button>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Save
+                                Drill Score</button>
                         </form>
                     </div>
                 </div>

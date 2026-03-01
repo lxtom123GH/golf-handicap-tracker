@@ -14,6 +14,8 @@ let activeCompId = null;
 export function initCompetitions() {
     listenToCompetitions();
     bindLeaderboardSortHandlers();
+    bindCompetitionCreation();
+    bindCompetitionLogging();
 }
 
 function listenToCompetitions() {

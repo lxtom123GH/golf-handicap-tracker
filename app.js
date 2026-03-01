@@ -17,6 +17,7 @@ import { initNotifications } from './notifications.js';
 import { db, auth } from './firebase-config.js';
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc, addDoc, serverTimestamp, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
 
 function bootstrapApplication() {
     console.log("App Ready: Bootstrapping modules...");
@@ -437,14 +438,20 @@ function bindCoachDashboard() {
         const myUid = AppState.currentUser.uid;
 
         // Find all users that have granted this coach access
-        const allUsersSnap = await getDocs(collection(db, 'users'));
+        let allUsers = AppState.allUsersCache;
+        if (!allUsers) {
+            const snap = await getDocs(collection(db, 'users'));
+            allUsers = [];
+            snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
+            AppState.allUsersCache = allUsers;
+        }
+
         const athletes = [];
-        allUsersSnap.forEach(d => {
-            const data = d.data();
-            if (!data.isApproved || d.id === myUid) return;
+        allUsers.forEach(data => {
+            if (!data.isApproved || data.uid === myUid) return;
             const coaches = data.coaches || [];
             if (window.currentUserIsAdmin || coaches.includes(myUid)) {
-                athletes.push({ uid: d.id, ...data });
+                athletes.push(data);
             }
         });
 
@@ -597,9 +604,6 @@ async function loadCoachNotes(athleteUid) {
 // ==========================================
 // AI Coach — Live Gemini Integration
 // ==========================================
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
-
-
 let _lastAiUid = null;
 let _lastAiRole = null;
 
