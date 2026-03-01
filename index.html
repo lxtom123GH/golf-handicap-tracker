@@ -15,6 +15,8 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <!-- Chart.js for Handicap Trend -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- SheetJS for Excel Bulk Import -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -854,19 +856,19 @@
                     <select id="oc-course-select">
                         <option value="">-- Select Course --</option>
                         <optgroup label="Keperra Country Golf Club">
-                            <option value="keperra-old-9h">Keperra – Old Course (9 holes)</option>
-                            <option value="keperra-north-9h">Keperra – North Course (9 holes)</option>
-                            <option value="keperra-west-9h">Keperra – West Course (9 holes)</option>
+                            <option value="Keperra – Old Course (9 holes)">Keperra – Old Course (9 holes)</option>
+                            <option value="Keperra – North Course (9 holes)">Keperra – North Course (9 holes)</option>
+                            <option value="Keperra – West Course (9 holes)">Keperra – West Course (9 holes)</option>
                         </optgroup>
                         <optgroup label="Keperra – 18 Hole Combinations" id="oc-keperra-18h-group" class="hidden">
-                            <option value="keperra-old-north-18h">Keperra – Old + North (Par 72)</option>
-                            <option value="keperra-north-west-18h">Keperra – North + West (Par 71)</option>
-                            <option value="keperra-west-north-18h">Keperra – West + North (Par 71)</option>
+                            <option value="Keperra – Old + North (Par 72)">Keperra – Old + North (Par 72)</option>
+                            <option value="Keperra – North + West (Par 71)">Keperra – North + West (Par 71)</option>
+                            <option value="Keperra – West + Old (Par 71)">Keperra – West + Old (Par 71)</option>
                         </optgroup>
-                        <option value="ashgrove">Ashgrove GC</option>
-                        <option value="mcleod">McLeod GC</option>
-                        <option value="bulimba">Bulimba Course</option>
-                        <option value="custom">Custom Course…</option>
+                        <option value="Ashgrove GC">Ashgrove GC</option>
+                        <option value="McLeod GC">McLeod GC</option>
+                        <option value="Bulimba Course">Bulimba Course</option>
+                        <option value="Custom Course">Custom Course…</option>
                     </select>
                 </div>
 
@@ -1525,8 +1527,8 @@
                 <!-- Admin CSV Import -->
                 <section class="card">
                     <h2>📂 Import Historical Rounds (CSV)</h2>
-                    <p class="section-desc">Bulk import historical rounds for any user. Download the template, fill it
-                        in, and upload.</p>
+                    <p class="section-desc">Bulk import historical rounds for any user. Supports both 18-hole Adjusted
+                        Gross logic and 9/18-hole Stableford scoring mapping.</p>
                     <a id="btn-download-csv-template" href="#" class="btn btn-secondary btn-sm"
                         style="width:auto;margin-bottom:15px;" download="round_import_template.csv">⬇️ Download CSV
                         Template</a>
@@ -1542,6 +1544,27 @@
                     </div>
                     <button id="btn-import-csv" class="btn btn-primary" style="width:auto;">Import Rounds</button>
                     <div id="import-msg" style="margin-top:10px;font-size:0.9rem;"></div>
+                </section>
+
+                <!-- Automated Bulk Excel Import -->
+                <section class="card" style="border: 2px solid #10b981;">
+                    <h2>📈 Automated Bulk Excel Import</h2>
+                    <p class="section-desc">Upload the official <strong>myscores.xlsx</strong> spreadsheet. The system
+                        will automatically iterate through all tabs, match the tab names (email addresses) to registered
+                        users, reverse-calculate their Adjusted Gross using WHS Gross Differentials, and bulk upload
+                        their complete playing histories.</p>
+
+                    <div class="form-row" style="align-items:flex-end;gap:10px;">
+                        <div class="form-group flex-2">
+                            <label for="excel-file-input">Select <strong
+                                    style="color:var(--primary-color)">myscores.xlsx</strong> File</label>
+                            <input type="file" id="excel-file-input" accept=".xlsx,.xls">
+                        </div>
+                    </div>
+                    <button id="btn-import-excel" class="btn btn-primary"
+                        style="width:auto; background-color: #10b981; border-color: #10b981;">🚀 Start Automated Bulk
+                        Import</button>
+                    <div id="excel-import-msg" style="margin-top:10px;font-size:0.9rem;white-space:pre-wrap;"></div>
                 </section>
             </div>
         </div>

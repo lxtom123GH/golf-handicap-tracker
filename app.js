@@ -909,10 +909,20 @@ function bindAdminInvite() {
                 const row = {};
                 headers.forEach((h, idx) => { row[h] = values[idx]; });
 
-                const gross = parseFloat(row.adjustedGross);
+                let gross = parseFloat(row.adjustedGross);
                 const cr = parseFloat(row.courseRating);
                 const sr = parseFloat(row.slopeRating);
                 const holes = parseInt(row.holes) || 18;
+
+                // Support new Stableford CSV columns
+                if (isNaN(gross) && row.stablefordPoints && row.dailyHandicap) {
+                    const stbf = parseInt(row.stablefordPoints);
+                    const dh = parseInt(row.dailyHandicap);
+                    const par = parseInt(row.par) || 72; // Default to Men's Standard Par
+                    if (!isNaN(stbf) && !isNaN(dh)) {
+                        gross = par + dh + 36 - stbf;
+                    }
+                }
 
                 if (!row.date || !row.course || isNaN(gross) || isNaN(cr) || isNaN(sr)) {
                     errors++;
@@ -937,6 +947,114 @@ function bindAdminInvite() {
 
             importMsgEl.textContent = `✅ Import complete: ${imported} rounds added${errors > 0 ? `, ${errors} rows skipped (invalid data)` : ''}.`;
             importMsgEl.style.color = errors > 0 ? '#f59e0b' : '#10b981';
+        });
+    }
+
+    // --- Automated Excel Bulk Import ---
+    const btnExcelImport = document.getElementById('btn-import-excel');
+    const excelMsgEl = document.getElementById('excel-import-msg');
+
+    if (btnExcelImport) {
+        btnExcelImport.addEventListener('click', async () => {
+            const fileInput = document.getElementById('excel-file-input');
+            if (!fileInput.files.length) {
+                excelMsgEl.textContent = '❌ Please select the myscores.xlsx file.';
+                excelMsgEl.style.color = '#ef4444';
+                return;
+            }
+
+            try {
+                const file = fileInput.files[0];
+                const data = await file.arrayBuffer();
+                const workbook = window.XLSX.read(data, { type: 'array', cellDates: true });
+
+                let totalImported = 0;
+                let logMsg = "Import log:\n";
+                excelMsgEl.textContent = 'Processing workbook... Please wait...';
+                excelMsgEl.style.color = '#64748b';
+
+                for (const sheetName of workbook.SheetNames) {
+                    if (sheetName.toLowerCase() === 'legend') continue; // Skip legend tab
+
+                    const emailToMatch = sheetName.toLowerCase().trim();
+                    const q = query(collection(db, 'users'), where('email', '==', emailToMatch));
+                    const snap = await getDocs(q);
+
+                    if (snap.empty) {
+                        logMsg += `⚠️ Skipped tab '${sheetName}': No registered user found with this email.\n`;
+                        continue;
+                    }
+                    const targetUid = snap.docs[0].id;
+                    logMsg += `✅ Found user for tab '${sheetName}' (UID: ${targetUid}).\n`;
+
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = window.XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    let tabImported = 0;
+                    let tabErrors = 0;
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const r = rows[i];
+                        if (!r || r.length < 8) continue;
+
+                        const dateVal = r[0]; // Can be Date object if cellDates:true, or serial number
+                        const course = r[1];
+                        const scratch = parseFloat(r[3]);
+                        const slope = parseFloat(r[4]);
+                        const grossDiff = parseFloat(r[7]);
+
+                        // Check if this looks like a valid data row (Gross Diff and Date must exist)
+                        if (!course || isNaN(scratch) || isNaN(slope) || isNaN(grossDiff)) {
+                            continue;
+                        }
+
+                        let parsedDate = null;
+                        if (dateVal instanceof Date) {
+                            parsedDate = dateVal;
+                        } else if (!isNaN(parseInt(dateVal))) { // Excel serial date
+                            parsedDate = new Date((parseInt(dateVal) - 25569) * 86400 * 1000);
+                        } else {
+                            parsedDate = new Date(dateVal); // Try normal date string parsing
+                        }
+
+                        if (!parsedDate || isNaN(parsedDate.getTime())) continue; // Invalid date
+
+                        // Reverse calculate Adjusted Gross directly from the WHS Differential formula components
+                        // Diff = (AdjustedGross - Rating) * 113 / Slope --> AdjustedGross = (Diff * Slope / 113) + Rating
+                        const adjustedGross = Math.round((grossDiff * slope / 113) + scratch);
+
+                        try {
+                            await addDoc(collection(db, 'whs_rounds'), {
+                                uid: targetUid,
+                                course: course,
+                                rating: scratch,
+                                slope: slope,
+                                adjustedGross: adjustedGross,
+                                holes: 18, // Assume differentials strictly calculate out to 18-hole normalized stats
+                                notCounting: false,
+                                date: parsedDate,
+                                importedAt: serverTimestamp(),
+                                isAutoImported: true,
+                                originalGrossDiff: grossDiff
+                            });
+                            tabImported++;
+                            totalImported++;
+                        } catch (e) {
+                            tabErrors++;
+                        }
+                    }
+                    logMsg += `   -> Imported ${tabImported} rounds (${tabErrors} errors).\n`;
+                }
+
+                logMsg += `\n🎉 Finished! Total rounds imported: ${totalImported}`;
+                excelMsgEl.textContent = logMsg;
+                excelMsgEl.style.color = '#10b981';
+
+            } catch (err) {
+                console.error("Excel processing error", err);
+                excelMsgEl.textContent = '❌ Failed to process workbook. Ensure SheetJS loaded correctly.';
+                excelMsgEl.style.color = '#ef4444';
+            }
         });
     }
 }

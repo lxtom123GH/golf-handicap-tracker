@@ -51,28 +51,28 @@ export const UI = {
     dhValue: document.getElementById('dh-value'),
 
     // Competitions
-    tabBtnComp: document.getElementById('tab-btn-comp'),
-    btnCreateCompContainer: document.getElementById('btn-create-comp-container'),
+    tabBtnComp: document.getElementById('tab-btn-comp'), // may be null if data-target is used
+    btnCreateCompContainer: document.getElementById('btn-show-create-comp'),
     createCompContainer: document.getElementById('create-comp-container'),
     createCompForm: document.getElementById('create-comp-form'),
     btnCancelComp: document.getElementById('btn-cancel-comp'),
     compSelect: document.getElementById('comp-select'),
-    logCompRoundContainer: document.getElementById('log-comp-round-container'),
+    logCompRoundContainer: document.getElementById('log-comp-round-form') ? document.getElementById('log-comp-round-form').closest('.card') : null,
     logCompRoundForm: document.getElementById('log-comp-round-form'),
     compRecentRoundsTbody: document.getElementById('comp-recent-rounds-tbody'),
     compLeaderboardHead: document.getElementById('comp-leaderboard-head'),
     compLeaderboardTbody: document.getElementById('comp-leaderboard-tbody'),
-    compRulesDesc: document.getElementById('comp-rules-desc'),
+    compRulesDesc: document.getElementById('active-comp-rules-summary'),
 
     // Practice Module
-    tabBtnPractice: document.getElementById('tab-btn-practice'),
-    practiceSelect: document.getElementById('practice-select'),
-    btnLogPracticeContainer: document.getElementById('btn-log-practice-container'),
-    logPracticeContainer: document.getElementById('log-practice-container'),
-    logPracticeForm: document.getElementById('log-practice-form'),
-    btnCancelPractice: document.getElementById('btn-cancel-practice'),
-    practiceDashboardResults: document.getElementById('practice-dashboard-results'),
-    practiceRecentTbody: document.getElementById('practice-recent-tbody'),
+    tabBtnPractice: document.querySelector('[data-target="tab-practice"]'),
+    practiceSelect: document.getElementById('drill-select'),
+    btnLogPracticeContainer: document.getElementById('practice-form-container'),
+    logPracticeContainer: document.getElementById('practice-form-container'),
+    logPracticeForm: document.getElementById('form-log-practice'),
+    btnCancelPractice: document.getElementById('btn-cancel-practice'), // Missing in HTML, safe if null
+    practiceDashboardResults: document.getElementById('practice-best-score') ? document.getElementById('practice-best-score').parentElement.parentElement : null,
+    practiceRecentTbody: document.getElementById('practice-history-tbody'),
 
     // On-Course Tracker
     tabBtnOncourse: document.getElementById('tab-btn-oncourse'),
