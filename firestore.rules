@@ -11,11 +11,13 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(userPath) && get(userPath).data.get('isAdmin', false) == true;
     }
     
     function isCoachOf(studentId) {
-      return request.auth.uid in get(/databases/$(database)/documents/users/$(studentId)).data.coaches;
+      let userPath = /databases/$(database)/documents/users/$(studentId);
+      return exists(userPath) && request.auth.uid in get(userPath).data.get('coaches', []);
     }
 
     // Schema Validation Helpers
@@ -81,7 +83,7 @@ service cloud.firestore {
     
     // WHS Rounds Collection
     match /whs_rounds/{roundId} {
-      allow read: if request.auth != null && isApproved();
+      allow read, list: if request.auth != null && isApproved();
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
                     hasFields(request.resource.data, ['course', 'adjustedGross', 'rating', 'slope', 'date']) &&
@@ -94,7 +96,7 @@ service cloud.firestore {
 
     // Competitions Collection
     match /competitions/{compId} {
-      allow read: if request.auth != null && isApproved() && (
+      allow read, list: if request.auth != null && isApproved() && (
         resource.data.get('visibility', 'public') == 'public' ||
         resource.data.ownerId == request.auth.uid ||
         request.auth.uid in resource.data.get('invitedUIDs', []) ||
@@ -108,7 +110,7 @@ service cloud.firestore {
     
     // Competition Rounds Collection
     match /comp_rounds/{compRoundId} {
-      allow read: if request.auth != null && isApproved();
+      allow read, list: if request.auth != null && isApproved();
       allow create: if request.auth != null && isApproved() && 
                     hasFields(request.resource.data, ['compId', 'uid', 'score']) &&
                     request.resource.data.uid == request.auth.uid;
@@ -117,7 +119,7 @@ service cloud.firestore {
 
     // Practice Rounds Collection
     match /practice_rounds/{practiceId} {
-      allow read: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+      allow read, list: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
                     hasFields(request.resource.data, ['drillName', 'score', 'date']) &&
@@ -133,7 +135,7 @@ service cloud.firestore {
 
     // Shot Tracker Collection
     match /shots/{shotId} {
-      allow read: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+      allow read, list: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
       allow create: if request.auth != null && isApproved() && 
                     request.resource.data.uid == request.auth.uid &&
                     hasFields(request.resource.data, ['hole', 'club', 'curve']) &&
