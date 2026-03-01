@@ -17,7 +17,39 @@ const DRILL_TEMPLATES = {
         inputs: [{ id: "score", label: "Total Score (Par 18)", type: "number", default: 18, isMainScore: true }],
         scoringMath: "lower_is_better"
     },
-    // Future templates go here
+    "inside_30": {
+        name: "Inside 30 Yards (Proximity)",
+        desc: "Hit 9 shots from inside 30 yards. Within 1 club length = Birdie (-1). Within 2 = Par (0). Outside 2 = Double (+2).",
+        inputs: [
+            { id: "prox_in_1", label: "Within 1 Club Length (-1 pt)", type: "number", default: 0 },
+            { id: "prox_in_2", label: "Within 2 Club Lengths (0 pts)", type: "number", default: 0 },
+            { id: "prox_out_2", label: "Outside 2 Club Lengths (+2 pts)", type: "number", default: 0 },
+            { id: "score", label: "Total Points", type: "number", default: 0, isMainScore: true }
+        ],
+        scoringMath: "lower_is_better"
+    },
+    "putting_9": {
+        name: "Putting 9-Hole Course",
+        desc: "Play 9 holes on the putting green. 1-putt = Birdie (-1). 2-putt = Par (0). 3-putt = Double (+2).",
+        inputs: [
+            { id: "putts_1", label: "1-Putts (-1 pt)", type: "number", default: 0 },
+            { id: "putts_2", label: "2-Putts (0 pts)", type: "number", default: 0 },
+            { id: "putts_3", label: "3+ Putts (+2 pts)", type: "number", default: 0 },
+            { id: "score", label: "Total Points", type: "number", default: 0, isMainScore: true }
+        ],
+        scoringMath: "lower_is_better"
+    },
+    "up_down": {
+        name: "Up & Down Challenge",
+        desc: "Play 9 shots around the green. Chip in = Birdie (-1). Chip + 1 putt = Par (0). More than 1 putt = Double (+2).",
+        inputs: [
+            { id: "ud_chip_in", label: "Chip Ins (-1 pt)", type: "number", default: 0 },
+            { id: "ud_up_down", label: "Up & Downs (0 pts)", type: "number", default: 0 },
+            { id: "ud_more", label: "Failed Up & Downs (+2 pts)", type: "number", default: 0 },
+            { id: "score", label: "Total Points", type: "number", default: 0, isMainScore: true }
+        ],
+        scoringMath: "lower_is_better"
+    }
 };
 
 export function initPractice() {
