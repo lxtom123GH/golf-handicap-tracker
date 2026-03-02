@@ -186,12 +186,16 @@ export const UI = {
 const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
 
 export function setupTabs() {
+    // Re-query within the function to ensure we have the latest DOM state (fixing potential unresponsive buttons)
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
     const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
     if (savedTabId) {
-        const savedBtn = Array.from(UI.tabBtns).find(b => b.getAttribute('data-target') === savedTabId);
+        const savedBtn = Array.from(tabBtns).find(b => b.getAttribute('data-target') === savedTabId);
         if (savedBtn) {
-            UI.tabBtns.forEach(b => b.classList.remove('active'));
-            UI.tabContents.forEach(c => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => {
                 c.classList.add('hidden');
                 c.classList.remove('active');
             });
@@ -205,10 +209,11 @@ export function setupTabs() {
         }
     }
 
-    UI.tabBtns.forEach(btn => {
+    tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            UI.tabBtns.forEach(b => b.classList.remove('active'));
-            UI.tabContents.forEach(c => {
+            console.log(`[Navigation] Tab clicked: ${btn.textContent.trim()} -> ${btn.getAttribute('data-target')}`);
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => {
                 c.classList.add('hidden');
                 c.classList.remove('active');
             });
@@ -223,6 +228,22 @@ export function setupTabs() {
             }
         });
     });
+
+    // Explicitly fix settings button unreachable cases
+    const settingsBtn = document.getElementById('tab-btn-settings');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            // Re-trigger the logic if for some reason the global listener didn't catch it
+            const target = settingsBtn.getAttribute('data-target');
+            const content = document.getElementById(target);
+            if (content && content.classList.contains('hidden')) {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.add('hidden'));
+                settingsBtn.classList.add('active');
+                content.classList.remove('hidden');
+            }
+        });
+    }
 }
 
 // ==========================================
