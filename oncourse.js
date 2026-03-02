@@ -3,7 +3,7 @@
 // Live Round Tracking & Shot UI Engine
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
 import { COURSE_DATA } from './course-data.js';
@@ -574,6 +574,19 @@ function bindShotWizard() {
         if (step) step.classList.remove('hidden');
         const titleEl = document.getElementById('wizard-title');
         if (titleEl) titleEl.textContent = title;
+
+        // Show/Hide Delete button based on whether we're editing an existing shot
+        if (UI.btnWizardDelete) {
+            if (AppState.currentShotData?.id) {
+                UI.btnWizardDelete.classList.remove('hidden');
+            } else {
+                UI.btnWizardDelete.classList.add('hidden');
+            }
+        }
+    }
+
+    if (UI.btnWizardDelete) {
+        UI.btnWizardDelete.addEventListener('click', deleteShotData);
     }
 
     // Bind Grid Buttons
@@ -634,6 +647,32 @@ async function saveShotData() {
         showToast("Shot Logged ⛳");
     } catch (e) {
         showToast("Error saving shot.");
+    }
+}
+
+async function deleteShotData() {
+    if (!AppState.currentUser || !AppState.currentShotData.id) return;
+    if (!confirm("Are you sure you want to delete this shot?")) return;
+
+    document.getElementById('oncourse-wizard').classList.add('hidden');
+    try {
+        await deleteDoc(doc(db, "shots", AppState.currentShotData.id));
+
+        // Remove from local state
+        AppState.currentHoleShots = AppState.currentHoleShots.filter(s => s.id !== AppState.currentShotData.id);
+
+        // Update player score
+        const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
+        if (p) {
+            p.scores[AppState.currentHole] = Math.max(0, (p.scores[AppState.currentHole] || 0) - 1);
+            loadHole();
+        }
+
+        showToast("Shot Deleted 🗑️");
+        AppState.currentShotData = {};
+    } catch (e) {
+        console.error(e);
+        showToast("Error deleting shot.");
     }
 }
 

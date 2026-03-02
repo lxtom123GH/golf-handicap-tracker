@@ -94,6 +94,7 @@ export const UI = {
     // Sequential Shots & Review
     btnWizardPrev: document.getElementById('btn-wizard-prev'),
     btnWizardNext: document.getElementById('btn-wizard-next'),
+    btnWizardDelete: document.getElementById('btn-wizard-delete'),
     btnOcReviewRound: document.getElementById('btn-oc-review-round'),
     reviewRoundModal: document.getElementById('review-round-modal'),
     reviewContent: document.getElementById('review-content'),

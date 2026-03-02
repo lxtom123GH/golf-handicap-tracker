@@ -179,7 +179,7 @@ function bindWHSForm() {
             }
 
             const hi = parseFloat(UI.handicapIndexEl.textContent);
-            const dailyHandicap = isNaN(hi) ? 0 : calculateDailyHandicap(hi, sr);
+            const dailyHandicap = isNaN(hi) ? 0 : Math.round(hi * (sr / 113) + (parseFloat(crInput.value || 72) - par));
 
             let totalPts = 0;
             if (mode === 'hole-by-hole' && courseSelect.value !== "Custom" && courseSelect.value !== "") {
