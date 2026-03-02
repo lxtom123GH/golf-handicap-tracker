@@ -69,6 +69,11 @@ function bindSetupToggles() {
             if (wizard) wizard.classList.add('hidden');
         } else {
             if (btnTrack) btnTrack.classList.remove('hidden');
+            // Ensure hub is visible if in detailed
+            const hub = document.getElementById('oncourse-hub');
+            if (hub && !hub.classList.contains('hidden')) {
+                btnTrack.classList.remove('hidden');
+            }
         }
     }
 
@@ -755,7 +760,7 @@ function toggleGPS() {
                 showToast(msg);
                 toggleGPS(); // Turn off
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
     }
 }
@@ -1205,7 +1210,15 @@ function loadExistingShotData(shotNum, allowNew = false) {
 function renderBagButtons() {
     if (!UI.bagButtonsGrid) return;
     UI.bagButtonsGrid.innerHTML = '';
-    const bag = AppState.myBag || { driver: true, putter: true };
+
+    const defaultBag = {
+        driver: true,
+        woods: ['3 Wood'],
+        irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
+        wedges: ['56°'],
+        putter: true
+    };
+    const bag = (AppState.myBag && Object.keys(AppState.myBag).length > 0) ? AppState.myBag : defaultBag;
 
     const categories = [
         { key: 'driver', label: 'Driver', standalone: true },

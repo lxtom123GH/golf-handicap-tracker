@@ -304,6 +304,13 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
         div.appendChild(btnRemove);
         UI.ocAddedPlayersList.appendChild(div);
     });
+
+    // Auto-scroll to the bottom of the list when players are added to avoid them being hidden on mobile
+    if (groups.length > 0) {
+        setTimeout(() => {
+            UI.ocAddedPlayersList.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    }
 }
 
 let _trendChart = null;
