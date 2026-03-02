@@ -10,6 +10,8 @@ import { COURSE_DATA } from './course-data.js';
 
 import { initNotifications } from './notifications.js';
 import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
+import { httpsCallable } from "firebase/functions";
+import { functions } from './firebase-config.js';
 
 export function initOnCourse() {
     bindSetupToggles();
@@ -844,9 +846,14 @@ async function processVoiceQuery(text) {
 }
 
 async function queryRulesAI(text) {
-    return new Promise(r => setTimeout(() => {
-        r("Based on the Rules of Golf (Rule 16.1), you are entitled to free relief if your ball, stance, or area of intended swing is interfered with by an Immovable Obstruction. Find the nearest point of complete relief, not nearer the hole, and drop within one club-length.");
-    }, 2000));
+    try {
+        const rulesFn = httpsCallable(functions, 'processRulesQuery');
+        const result = await rulesFn({ query: text });
+        return result.data.answer;
+    } catch (e) {
+        console.error("AI Rules Query Error:", e);
+        return "Rules engine is currently unavailable. Please check the USGA handbook manually.";
+    }
 }
 
 function bindHoleNav() {

@@ -18,3 +18,6 @@ export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
     localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
 });
+
+import { getFunctions } from "firebase/functions";
+export const functions = getFunctions(app);

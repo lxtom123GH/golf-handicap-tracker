@@ -9,35 +9,43 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 exports.askAiCoach = onCall({ secrets: ["GEMINI_API_KEY"] }, async (request) => {
-    // 1. Authenticate Request
-    if (!request.auth) {
-        throw new HttpsError('unauthenticated', 'You must be logged in to use the AI Coach.');
-    }
-
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
     const prompt = request.data.prompt;
-    if (!prompt) {
-        throw new HttpsError('invalid-argument', 'No prompt provided.');
-    }
+    if (!prompt) throw new HttpsError('invalid-argument', 'No prompt provided.');
 
     try {
-        // 2. Initialize securely using the Secret Manager injection
         const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new HttpsError('failed-precondition', 'Server is missing the AI configuration key.');
-        }
-
-        const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1beta" });
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-        // 3. Make the API Call
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(prompt);
+        return { answer: result.response.text() };
+    } catch (e) {
+        throw new HttpsError('internal', e.message);
+    }
+});
+
+/**
+ * Rules Assistant Function
+ * Enforces strict USGA/R&A Rules grounding.
+ */
+exports.processRulesQuery = onCall({ secrets: ["GEMINI_API_KEY"] }, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
+    const query = request.data.query;
+    if (!query) throw new HttpsError('invalid-argument', 'No query provided.');
+
+    try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            systemInstruction: "You are an expert, certified USGA and R&A Rules of Golf official. Answer the user's golf rules question concisely. Cite the specific rule number. If the question is not about the rules of golf, reply strictly with: 'I can only assist with official USGA/R&A Rules of Golf inquiries.'"
+        });
+
+        const result = await model.generateContent(query);
         const text = result.response.text();
-
-        // 4. Return result back to the frontend Client
         return { answer: text };
-
     } catch (error) {
-        console.error("AI execution error:", error);
-        throw new HttpsError('internal', 'Failed to generate AI response: ' + error.message);
+        console.error("Rules Engine Error:", error);
+        throw new HttpsError('internal', 'Rules Assistant encountered an error.');
     }
 });
