@@ -130,7 +130,39 @@ export const UI = {
     aiModalTitle: document.getElementById('ai-modal-title'),
     aiPromptTextarea: document.getElementById('ai-prompt-textarea'),
     btnCopyAiPrompt: document.getElementById('btn-copy-ai-prompt'),
-    btnCloseAiModal: document.getElementById('btn-close-ai-modal')
+    btnCloseAiModal: document.getElementById('btn-close-ai-modal'),
+
+    // My Bag and Overhauled Wizard
+    bagChecks: document.querySelectorAll('.bag-check'),
+    btnSaveBag: document.getElementById('btn-save-bag'),
+    bagButtonsGrid: document.getElementById('bag-buttons-grid'),
+    btnShotPrev: document.getElementById('btn-shot-prev'),
+    btnShotNext: document.getElementById('btn-shot-next'),
+    btnBackToHole: document.getElementById('btn-back-to-hole'),
+    btnSaveShotFinal: document.getElementById('btn-save-shot-final'),
+    btnWizardPenalty: document.getElementById('btn-wizard-penalty'),
+    btnPuttOnGreen: document.getElementById('btn-putt-on-green'),
+    btnPuttFringe: document.getElementById('btn-putt-fringe'),
+    penaltyModal: document.getElementById('penalty-modal'),
+
+    // Round Review Summary
+    sumTotalShots: document.getElementById('sum-total-shots'),
+    sumTotalPoints: document.getElementById('sum-total-points'),
+    sumTotalPutts: document.getElementById('sum-total-putts'),
+    sumTotalFir: document.getElementById('sum-total-fir'),
+    sumTotalGir: document.getElementById('sum-total-gir'),
+    sumTotalPen: document.getElementById('sum-total-pen'),
+    btnOcEditReview: document.getElementById('btn-oc-edit-review'),
+
+    // Detailed Review & Hole Editor
+    ocDetailedReviewModal: document.getElementById('oc-detailed-review-modal'),
+    ocDetailedTbody: document.getElementById('oc-detailed-tbody'),
+    ocHoleEditorModal: document.getElementById('oc-hole-editor-modal'),
+    editorScoreVal: document.getElementById('editor-score-val'),
+    editorPuttsVal: document.getElementById('editor-putts-val'),
+    editorPenVal: document.getElementById('editor-pen-val'),
+    btnEditorSave: document.getElementById('btn-editor-save'),
+    btnEditorCancel: document.getElementById('btn-editor-cancel')
 };
 
 // ==========================================

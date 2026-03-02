@@ -19,12 +19,18 @@ export function initOnCourse() {
     bindStartRound();
     bindGlobalRoundActions();
     bindReviewModal();
+    bindBagSettings();
+    bindPenaltyModal();
+    bindReviewActions();
 
     // Default init
     if (typeof updateModeVisibility === 'function') updateModeVisibility();
     if (UI.ocCourseSelect && UI.ocCourseSelect.value) {
         UI.ocCourseSelect.dispatchEvent(new Event('change'));
     }
+
+    const dateInput = document.getElementById('oc-round-date');
+    if (dateInput) dateInput.valueAsDate = new Date();
 }
 
 function bindSetupToggles() {
@@ -188,9 +194,11 @@ function bindStartRound() {
                     AppState.currentLiveCompRules = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
                 } catch (e) { }
             } else {
-                AppState.currentLiveCompId = null;
                 AppState.currentLiveCompRules = [];
             }
+
+            const dateInput = document.getElementById('oc-round-date');
+            AppState.currentRoundDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
 
             AppState.currentHole = 1;
             AppState.activeRoundId = `round_${Date.now()}`;
@@ -215,7 +223,11 @@ function bindStartRound() {
 
     const abortBtn = document.getElementById('btn-oc-abort-round');
     if (abortBtn) {
-        abortBtn.addEventListener('click', endRoundCleanup);
+        abortBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to end this round session? All unsaved data will be cleared.")) {
+                endRoundCleanup();
+            }
+        });
     }
 }
 
@@ -245,13 +257,35 @@ function bindGlobalRoundActions() {
             }
         });
     }
+
+    // Add floating finish button
+    const fab = document.createElement('button');
+    fab.id = 'oc-fixed-finish-btn';
+    fab.className = 'fixed-action-btn hidden';
+    fab.innerHTML = '🏁 Finish Round';
+    fab.addEventListener('click', openFinishModal);
+    document.body.appendChild(fab);
+
+    // Show/Hide FAB based on round state
+    window.addEventListener('stateChange', (e) => {
+        if (e.detail.property === 'activeRoundId') {
+            if (e.detail.newValue) fab.classList.remove('hidden');
+            else fab.classList.add('hidden');
+        }
+    });
 }
 
-function endRoundCleanup() {
+export function endRoundCleanup() {
     document.body.classList.remove('round-active');
     document.getElementById('oncourse-setup').classList.remove('hidden');
-    document.getElementById('oncourse-hub').classList.add('hidden');
-    document.getElementById('oc-finish-modal').classList.add('hidden');
+    const hub = document.getElementById('oncourse-hub');
+    if (hub) hub.classList.add('hidden');
+    const finishModal = document.getElementById('oc-finish-modal');
+    if (finishModal) finishModal.classList.add('hidden');
+    const progress = document.getElementById('oc-progress-bar');
+    if (progress) progress.classList.add('hidden');
+    const exitBar = document.getElementById('oc-exit-bar');
+    if (exitBar) exitBar.classList.add('hidden');
 
     AppState.liveRoundGroups = [];
     AppState.currentHole = 1;
@@ -259,6 +293,7 @@ function endRoundCleanup() {
     AppState.currentLiveCompRules = [];
     AppState.currentHoleShots = [];
     AppState.activeRoundId = null;
+    AppState.currentRoundDate = null;
 
     if (UI.ocAddedPlayersList) UI.ocAddedPlayersList.innerHTML = '';
 }
@@ -277,13 +312,16 @@ async function getPlayerHandicap(uid) {
     return 0;
 }
 
-function loadHole() {
+export function loadHole() {
     const fh = document.getElementById('oc-hole-display');
     const ph = document.getElementById('oc-par-display');
     const dotsContainer = document.getElementById('oc-hole-dots');
 
+    const parForHole = AppState.currentCoursePars[AppState.currentHole - 1] || 4;
+    const parSelect = document.getElementById('oc-par-select');
+    if (parSelect) parSelect.value = parForHole;
+
     if (fh) fh.textContent = `Hole ${AppState.currentHole}`;
-    const parForHole = AppState.currentCoursePars[AppState.currentHole - 1] || 0;
     if (ph) ph.textContent = parForHole > 0 ? `Par ${parForHole}` : `Par ?`;
 
     if (dotsContainer) {
@@ -394,8 +432,274 @@ function loadHole() {
             }
         });
         pDiv.appendChild(scoreCtrl);
+
+        // Action 2: Linked Competition Rule Inputs
+        if (AppState.currentLiveCompId && AppState.currentLiveCompRules && AppState.currentLiveCompRules.length > 0) {
+            const compRulesDiv = document.createElement('div');
+            compRulesDiv.style.cssText = 'margin-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px solid #e2e8f0; padding-top:10px;';
+
+            AppState.currentLiveCompRules.forEach(rule => {
+                const ruleWrapper = document.createElement('div');
+                ruleWrapper.style.cssText = 'display:flex; flex-direction:column; align-items:center; background:#fff; padding:10px; border-radius:10px; border:1px solid #e2e8f0;';
+
+                const ruleVal = (p.compStats[AppState.currentHole] && p.compStats[AppState.currentHole][rule.name]) || 0;
+
+                ruleWrapper.innerHTML = `
+                    <div style="font-size:0.75rem; font-weight:bold; margin-bottom:6px; color:#64748b; text-align:center; overflow:hidden; text-overflow:ellipsis; width:100%">${rule.name}</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="rule-minus" style="width:28px; height:28px; border-radius:50%; border:1px solid #cbd5e1; background:white; font-size:1.2rem; line-height:1;">-</button>
+                        <span style="font-weight:bold; font-size:1.2rem; min-width:20px; text-align:center;">${ruleVal}</span>
+                        <button class="rule-plus" style="width:28px; height:28px; border-radius:50%; border:1px solid #cbd5e1; background:white; font-size:1.2rem; line-height:1;">+</button>
+                    </div>
+                `;
+
+                ruleWrapper.querySelector('.rule-plus').addEventListener('click', () => {
+                    if (!p.compStats[AppState.currentHole]) p.compStats[AppState.currentHole] = {};
+                    p.compStats[AppState.currentHole][rule.name] = (p.compStats[AppState.currentHole][rule.name] || 0) + 1;
+                    loadHole();
+                });
+                ruleWrapper.querySelector('.rule-minus').addEventListener('click', () => {
+                    if (p.compStats[AppState.currentHole] && p.compStats[AppState.currentHole][rule.name] > 0) {
+                        p.compStats[AppState.currentHole][rule.name]--;
+                        loadHole();
+                    }
+                });
+                compRulesDiv.appendChild(ruleWrapper);
+            });
+            pDiv.appendChild(compRulesDiv);
+        }
+
         scoresContainer.appendChild(pDiv);
     });
+}
+
+function openFinishModal() {
+    const modal = document.getElementById('oc-finish-modal');
+    if (!modal) return;
+
+    // Aggregate stats for current user
+    const stats = recalculateReviewStats();
+
+    // Update summary card
+    if (UI.sumTotalShots) UI.sumTotalShots.textContent = stats.shots;
+    if (UI.sumTotalPoints) UI.sumTotalPoints.textContent = stats.points;
+    if (UI.sumTotalPutts) UI.sumTotalPutts.textContent = stats.putts;
+    if (UI.sumTotalFir) UI.sumTotalFir.textContent = stats.fir;
+    if (UI.sumTotalGir) UI.sumTotalGir.textContent = stats.gir;
+    if (UI.sumTotalPen) UI.sumTotalPen.textContent = stats.penalties;
+
+    modal.classList.remove('hidden');
+    document.getElementById('oc-finish-holes').value = AppState.currentRoundHoles || (AppState.currentHole > 9 ? 18 : 9);
+
+    // Smooth scroll to the buttons
+    const btnSave = document.getElementById('btn-oc-save-whs');
+    if (btnSave) btnSave.scrollIntoView({ behavior: 'smooth' });
+}
+
+function recalculateReviewStats() {
+    const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
+    if (!p) return { shots: 0, points: 0, putts: 0, fir: 0, gir: 0, penalties: 0 };
+
+    let totalShots = 0;
+    let totalPoints = 0;
+    let totalPutts = 0;
+    let totalFIR = 0;
+    let totalGIR = 0;
+    let totalPen = 0;
+
+    const courseName = AppState.currentRoundCourseName;
+    const teeName = UI.ocTeeSelect.value;
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+
+    const maxHole = AppState.currentRoundHoles || 9;
+    for (let h = 1; h <= maxHole; h++) {
+        const score = p.scores[h] || 0;
+        if (score === 0) continue;
+
+        totalShots += score;
+
+        // Points
+        const holeIdx = h - 1;
+        const hPar = AppState.currentCoursePars[holeIdx] || 4;
+        const hSI = teeData.strokeIndex?.[holeIdx] || (holeIdx + 1);
+        totalPoints += calculateHoleStableford(score, hPar, hSI, p.dailyHandicap);
+
+        // Stats
+        if (p.simpleStats[h]) {
+            if (p.simpleStats[h].putts) totalPutts += p.simpleStats[h].putts;
+            if (p.simpleStats[h].fir || p.simpleStats[h].fwy) totalFIR++;
+            if (p.simpleStats[h].gir) totalGIR++;
+        }
+
+        // Penalties (Search in shots if available)
+        const holeShots = AppState.currentHoleShots.filter(s => s.hole === h);
+        holeShots.forEach(s => {
+            if (s.penalty) totalPen++; // Basic count, though some penalties are +2
+        });
+    }
+
+    return {
+        shots: totalShots,
+        points: totalPoints,
+        putts: totalPutts,
+        fir: totalFIR,
+        gir: totalGIR,
+        penalties: totalPen
+    };
+}
+
+function bindReviewActions() {
+    if (UI.btnOcEditReview) {
+        UI.btnOcEditReview.addEventListener('click', () => {
+            openDetailedReview();
+        });
+    }
+
+    const btnCloseDetailed = document.getElementById('btn-close-detailed');
+    if (btnCloseDetailed) {
+        btnCloseDetailed.addEventListener('click', () => {
+            UI.ocDetailedReviewModal.classList.add('hidden');
+        });
+    }
+
+    const btnDetailedDone = document.getElementById('btn-detailed-done');
+    if (btnDetailedDone) {
+        btnDetailedDone.addEventListener('click', () => {
+            UI.ocDetailedReviewModal.classList.add('hidden');
+            openFinishModal(); // Refresh summary
+        });
+    }
+
+    if (UI.btnEditorSave) {
+        UI.btnEditorSave.addEventListener('click', saveHoleEdits);
+    }
+
+    if (UI.btnEditorCancel) {
+        UI.btnEditorCancel.addEventListener('click', () => {
+            UI.ocHoleEditorModal.classList.add('hidden');
+        });
+    }
+
+    const btnFIR = document.getElementById('editor-btn-fir');
+    if (btnFIR) {
+        btnFIR.addEventListener('click', () => {
+            editorState.fir = !editorState.fir;
+            btnFIR.classList.toggle('btn-primary', editorState.fir);
+            btnFIR.classList.toggle('btn-secondary', !editorState.fir);
+        });
+    }
+
+    const btnGIR = document.getElementById('editor-btn-gir');
+    if (btnGIR) {
+        btnGIR.addEventListener('click', () => {
+            editorState.gir = !editorState.gir;
+            btnGIR.classList.toggle('btn-primary', editorState.gir);
+            btnGIR.classList.toggle('btn-secondary', !editorState.gir);
+        });
+    }
+}
+
+function openDetailedReview() {
+    if (!UI.ocDetailedReviewModal) return;
+    renderDetailedReview();
+    UI.ocDetailedReviewModal.classList.remove('hidden');
+    UI.ocFinishModal = document.getElementById('oc-finish-modal');
+    if (UI.ocFinishModal) UI.ocFinishModal.classList.add('hidden');
+}
+
+function renderDetailedReview() {
+    if (!UI.ocDetailedTbody) return;
+    UI.ocDetailedTbody.innerHTML = '';
+
+    const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
+    if (!p) return;
+
+    const courseName = AppState.currentRoundCourseName;
+    const teeName = UI.ocTeeSelect.value;
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+
+    const maxHole = AppState.currentRoundHoles || 9;
+    for (let h = 1; h <= maxHole; h++) {
+        const score = p.scores[h] || 0;
+        const holeIdx = h - 1;
+        const hPar = AppState.currentCoursePars[holeIdx] || 4;
+        const hSI = teeData.strokeIndex?.[holeIdx] || (holeIdx + 1);
+        const points = calculateHoleStableford(score, hPar, hSI, p.dailyHandicap);
+        const putts = p.simpleStats[h]?.putts || 0;
+        const statsStr = [
+            (p.simpleStats[h]?.fir || p.simpleStats[h]?.fwy) ? 'FIR' : '',
+            p.simpleStats[h]?.gir ? 'GIR' : ''
+        ].filter(Boolean).join(', ') || '-';
+
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.innerHTML = `
+            <td><strong>${h}</strong> <span style="font-size:0.7rem; opacity:0.6;">(P${hPar})</span></td>
+            <td style="font-weight:bold;">${score || '-'}</td>
+            <td>${points}</td>
+            <td>${putts}</td>
+            <td style="font-size:0.75rem;">${statsStr}</td>
+        `;
+        tr.addEventListener('click', () => openHoleEditor(h));
+        UI.ocDetailedTbody.appendChild(tr);
+    }
+}
+
+let currentEditingHole = null;
+let editorState = { score: 0, putts: 0, penalties: 0, fir: false, gir: false };
+
+window.adjustEditorField = function (field, delta) {
+    if (editorState[field] !== undefined) {
+        editorState[field] = Math.max(0, editorState[field] + delta);
+        if (field === 'score') document.getElementById('editor-score-val').textContent = editorState.score;
+        if (field === 'putts') document.getElementById('editor-putts-val').textContent = editorState.putts;
+        if (field === 'penalties') document.getElementById('editor-pen-val').textContent = editorState.penalties;
+    }
+}
+
+function openHoleEditor(holeNum) {
+    currentEditingHole = holeNum;
+    const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
+    const score = p.scores[holeNum] || 0;
+    const putts = p.simpleStats[holeNum]?.putts || 0;
+    const fir = !!(p.simpleStats[holeNum]?.fir || p.simpleStats[holeNum]?.fwy);
+    const gir = !!p.simpleStats[holeNum]?.gir;
+
+    editorState = { score, putts, penalties: 0, fir, gir };
+
+    document.getElementById('hole-editor-title').textContent = `Hole ${holeNum} Editor`;
+    document.getElementById('editor-score-val').textContent = score;
+    document.getElementById('editor-putts-val').textContent = putts;
+    document.getElementById('editor-pen-val').textContent = 0;
+
+    const btnFIR = document.getElementById('editor-btn-fir');
+    const btnGIR = document.getElementById('editor-btn-gir');
+    if (btnFIR) {
+        btnFIR.classList.toggle('btn-primary', fir);
+        btnFIR.classList.toggle('btn-secondary', !fir);
+    }
+    if (btnGIR) {
+        btnGIR.classList.toggle('btn-primary', gir);
+        btnGIR.classList.toggle('btn-secondary', !gir);
+    }
+
+    UI.ocHoleEditorModal.classList.remove('hidden');
+}
+
+function saveHoleEdits() {
+    const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
+    if (!p || !currentEditingHole) return;
+
+    // Apply edits
+    p.scores[currentEditingHole] = editorState.score + editorState.penalties;
+    if (!p.simpleStats[currentEditingHole]) p.simpleStats[currentEditingHole] = {};
+    p.simpleStats[currentEditingHole].putts = editorState.putts;
+    p.simpleStats[currentEditingHole].fir = editorState.fir;
+    p.simpleStats[currentEditingHole].gir = editorState.gir;
+
+    UI.ocHoleEditorModal.classList.add('hidden');
+    renderDetailedReview(); // Refresh table
+    loadHole(); // Sync hub if needed
 }
 
 function bindHoleNav() {
@@ -419,28 +723,39 @@ function bindHoleNav() {
                 AppState.currentHole++;
                 loadHole();
             } else {
-                document.getElementById('oc-finish-modal').classList.remove('hidden');
-                document.getElementById('oc-finish-holes').value = AppState.currentRoundHoles;
+                openFinishModal();
             }
         });
     }
 
     const btnFinish = document.getElementById('btn-oc-finish');
     if (btnFinish) {
-        btnFinish.addEventListener('click', () => {
-            document.getElementById('oc-finish-modal').classList.remove('hidden');
-            document.getElementById('oc-finish-holes').value = AppState.currentHole;
-        });
+        btnFinish.addEventListener('click', () => openFinishModal());
     }
-
     const btnCancelFinish = document.getElementById('btn-oc-cancel-finish');
     if (btnCancelFinish) {
-        btnCancelFinish.addEventListener('click', () => document.getElementById('oc-finish-modal').classList.add('hidden'));
+        btnCancelFinish.addEventListener('click', () => {
+            const modal = document.getElementById('oc-finish-modal');
+            if (modal) modal.classList.add('hidden');
+        });
     }
 
     const btnSaveWhs = document.getElementById('btn-oc-save-whs');
     if (btnSaveWhs) {
         btnSaveWhs.addEventListener('click', saveRoundToDatabase);
+    }
+
+    const parSelect = document.getElementById('oc-par-select');
+    if (parSelect) {
+        parSelect.addEventListener('change', (e) => {
+            const val = parseInt(e.target.value) || 4;
+            const holeIdx = AppState.currentHole - 1;
+            if (AppState.currentCoursePars) {
+                AppState.currentCoursePars[holeIdx] = val;
+                const ph = document.getElementById('oc-par-display');
+                if (ph) ph.textContent = `Par ${val}`;
+            }
+        });
     }
 }
 
@@ -467,14 +782,13 @@ async function saveRoundToDatabase() {
                 const gross = p.scores[h];
                 totalGross += gross;
 
-                // Calculate Stableford if we have hole data
-                if (teeData.pars && teeData.strokeIndex) {
-                    const holeIdx = parseInt(h) - 1;
-                    const hPar = teeData.pars[holeIdx];
-                    const hSI = teeData.strokeIndex[holeIdx];
-                    if (hPar && hSI) {
-                        totalStableford += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
-                    }
+                // Action 4: Enforce Par Precedence using AppState.currentCoursePars
+                const holeIdx = parseInt(h) - 1;
+                const hPar = AppState.currentCoursePars[holeIdx] || 4;
+                const hSI = teeData.strokeIndex?.[holeIdx] || (holeIdx + 1); // Fallback to index if missing
+
+                if (hPar && hSI) {
+                    totalStableford += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
                 }
             }
 
@@ -488,153 +802,461 @@ async function saveRoundToDatabase() {
                 if (p.simpleStats[h].fwy) sumFwy += 1;
             }
 
-            await addDoc(collection(db, "whs_rounds"), {
+            const payload = {
                 uid: p.uid,
                 course: AppState.currentRoundCourseName + ` (${holesPlayedStr}H)`,
+                courseName: AppState.currentRoundCourseName,
                 rating: cr,
                 slope: sr,
                 adjustedGross: adjustedGross, // Saved as WHS Adjusted Gross
                 totalGross: totalGross,
+                totalScore: totalGross,
                 totalStableford: totalStableford,
                 dailyHandicap: p.dailyHandicap,
-                date: serverTimestamp(),
+                date: AppState.currentRoundDate ? new Date(AppState.currentRoundDate) : serverTimestamp(),
                 isLiveTracked: true,
                 liveRoundsMode: AppState.currentTrackingMode,
-                stats: { putts: sumPutts, gir: sumGIR, fwy: sumFwy }
-            });
+                stats: { putts: sumPutts, gir: sumGIR, fwy: sumFwy },
+                totalPutts: sumPutts
+            };
+
+            await addDoc(collection(db, "whs_rounds"), payload);
+
+            // If a competition is linked, save a comp_rounds document too
+            if (AppState.currentLiveCompId) {
+                let totalPoints = 0;
+                const ruleCounts = {};
+                // Initialize rule counts
+                AppState.currentLiveCompRules.forEach(r => ruleCounts[r.name] = 0);
+
+                // Aggregate from compStats (per hole)
+                for (const h in p.compStats) {
+                    for (const ruleName in p.compStats[h]) {
+                        const count = p.compStats[h][ruleName];
+                        ruleCounts[ruleName] += count;
+                        const ruleDef = AppState.currentLiveCompRules.find(r => r.name === ruleName);
+                        if (ruleDef) totalPoints += (count * ruleDef.pts);
+                    }
+                }
+
+                // Add starting points if enabled in competition configuration
+                const selectedCompOpt = UI.ocLinkComp ? UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex] : null;
+                // Note: We don't have the full comp startingPoints object here easily without a fetch, 
+                // but we can assume normal fixed points if we wanted to be perfect. 
+                // For now, we manually save the live tracked rule points.
+
+                await addDoc(collection(db, "comp_rounds"), {
+                    compId: AppState.currentLiveCompId,
+                    uid: p.uid,
+                    playerName: p.name,
+                    totalPoints: totalPoints,
+                    score: totalGross,
+                    date: serverTimestamp(),
+                    ruleCounts: ruleCounts,
+                    createdAt: serverTimestamp()
+                });
+            }
         }
         alert("Scores Saved successfully.");
         endRoundCleanup();
+
+        // Remove fixed finish button if exists
+        const fab = document.getElementById('oc-fixed-finish-btn');
+        if (fab) fab.remove();
     } catch (err) {
         console.error(err);
         alert("Failed to save.");
     }
 }
 
+function setWizardActive(isActive) {
+    if (isActive) {
+        document.body.classList.add('active-wizard-mode');
+    } else {
+        document.body.classList.remove('active-wizard-mode');
+    }
+}
+
 function bindShotWizard() {
     const btnTrackShot = document.getElementById('btn-oc-track-shot');
     const wizardDiv = document.getElementById('oncourse-wizard');
-    const btnCancelWiz = document.getElementById('btn-wizard-cancel');
 
     if (btnTrackShot) {
         btnTrackShot.addEventListener('click', () => {
-            wizardDiv.classList.remove('hidden');
-            const shotNum = (AppState.currentHoleShots?.length || 0) + 1;
-            AppState.currentShotData = {
-                hole: AppState.currentHole,
-                shotNumber: shotNum,
-                roundId: AppState.activeRoundId,
-                timestamp: new Date().toISOString()
-            };
-            showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${shotNum}`);
+            startNewShotInput();
+        });
+    }
 
-            // Smooth scroll to inputs for better UX
-            const scrollAnchor = document.getElementById('detailed-shot-inputs');
-            if (scrollAnchor) {
-                scrollAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                wizardDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Wizard Cancel 
+    if (UI.btnBackToHole) {
+        UI.btnBackToHole.addEventListener('click', () => {
+            setWizardActive(false);
+            wizardDiv.classList.add('hidden');
+        });
+    }
+
+    const btnExitShot = document.getElementById('btn-wizard-cancel');
+    if (btnExitShot) {
+        btnExitShot.addEventListener('click', () => {
+            setWizardActive(false);
+            wizardDiv.classList.add('hidden');
+        });
+    }
+
+    // Shot Navigation
+    if (UI.btnShotPrev) {
+        UI.btnShotPrev.addEventListener('click', () => {
+            if (AppState.currentShotData.shotNumber > 1) {
+                const prevShotNum = AppState.currentShotData.shotNumber - 1;
+                loadExistingShotData(prevShotNum);
             }
         });
     }
 
+    if (UI.btnShotNext) {
+        UI.btnShotNext.addEventListener('click', () => {
+            const nextShotNum = AppState.currentShotData.shotNumber + 1;
+            loadExistingShotData(nextShotNum, true);
+        });
+    }
+
+    // Final Save
+    if (UI.btnSaveShotFinal) {
+        UI.btnSaveShotFinal.addEventListener('click', saveShotData);
+    }
+
+    // Routine Toggles
+    document.querySelectorAll('.wiz-routine-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const b = e.target.closest('.wiz-routine-btn');
+            const routineField = b.getAttribute('data-routine');
+            const val = b.getAttribute('data-val');
+
+            // Clear siblings
+            b.parentElement.querySelectorAll('.wiz-routine-btn').forEach(sib => sib.classList.remove('active'));
+            b.classList.add('active');
+
+            if (!AppState.currentShotData.routines) AppState.currentShotData.routines = {};
+            AppState.currentShotData.routines[routineField] = val;
+        });
+    });
+
+    // Header step-by-step navigation
     if (UI.btnWizardPrev) {
         UI.btnWizardPrev.addEventListener('click', () => {
-            if (AppState.currentShotData.shotNumber > 1) {
-                const prevShotNum = AppState.currentShotData.shotNumber - 1;
-                const prevShot = AppState.currentHoleShots.find(s => s.shotNumber === prevShotNum);
-                if (prevShot) {
-                    AppState.currentShotData = { ...prevShot };
-                    showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${prevShotNum}`);
-                }
+            const currentStep = document.querySelector('.wizard-step:not(.hidden)');
+            const steps = ['wizard-step-club', 'wizard-step-trajectory', 'wizard-step-outcome', 'wizard-step-putt', 'wizard-step-strike', 'wizard-step-routine'];
+            const idx = steps.indexOf(currentStep.id);
+            if (idx > 0) {
+                // Special handling for putt vs trajectory
+                let nextIdx = idx - 1;
+                if (steps[nextIdx] === 'wizard-step-putt' && AppState.currentShotData.club !== 'Putter') nextIdx--;
+                if (steps[nextIdx] === 'wizard-step-trajectory' && AppState.currentShotData.club === 'Putter') nextIdx--;
+                showWizardStep(steps[nextIdx]);
             }
         });
     }
 
     if (UI.btnWizardNext) {
         UI.btnWizardNext.addEventListener('click', () => {
-            const nextShotNum = AppState.currentShotData.shotNumber + 1;
-            const nextShot = AppState.currentHoleShots.find(s => s.shotNumber === nextShotNum);
-            if (nextShot) {
-                AppState.currentShotData = { ...nextShot };
-                showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${nextShotNum}`);
-            } else {
-                AppState.currentShotData = {
-                    hole: AppState.currentHole,
-                    shotNumber: nextShotNum,
-                    roundId: AppState.activeRoundId,
-                    timestamp: new Date().toISOString()
-                };
-                showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${nextShotNum}`);
+            const currentStep = document.querySelector('.wizard-step:not(.hidden)');
+            const steps = ['wizard-step-club', 'wizard-step-trajectory', 'wizard-step-outcome', 'wizard-step-putt', 'wizard-step-strike', 'wizard-step-routine'];
+            const idx = steps.indexOf(currentStep.id);
+            if (idx < steps.length - 1) {
+                let nextIdx = idx + 1;
+                if (steps[nextIdx] === 'wizard-step-trajectory' && AppState.currentShotData.club === 'Putter') nextIdx++;
+                if (steps[nextIdx] === 'wizard-step-putt' && AppState.currentShotData.club !== 'Putter') nextIdx++;
+                showWizardStep(steps[nextIdx]);
             }
         });
     }
 
-    if (btnCancelWiz) {
-        btnCancelWiz.addEventListener('click', () => wizardDiv.classList.add('hidden'));
-    }
+    // Universal Grid Button Listener for overhaul
+    wizardDiv.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-grid');
+        if (!btn) return;
 
-    function showWizardStep(stepId, title) {
-        document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
-        const step = document.getElementById(stepId);
-        if (step) step.classList.remove('hidden');
-        const titleEl = document.getElementById('wizard-title');
-        if (titleEl) titleEl.textContent = title;
+        const val = btn.getAttribute('data-val');
+        const parentStep = btn.closest('.wizard-step');
+        if (!parentStep) return;
 
-        // Show/Hide Delete button based on whether we're editing an existing shot
-        if (UI.btnWizardDelete) {
-            if (AppState.currentShotData?.id) {
-                UI.btnWizardDelete.classList.remove('hidden');
+        const stepId = parentStep.id;
+
+        // Visual feedback
+        parentStep.querySelectorAll('.btn-grid').forEach(b => b.classList.remove('active-choice'));
+        btn.classList.add('active-choice');
+
+        if (stepId === 'wizard-step-club') {
+            AppState.currentShotData.club = val;
+            if (val === 'Putter') {
+                showWizardStep('wizard-step-putt', 'Putting Control');
             } else {
-                UI.btnWizardDelete.classList.add('hidden');
+                showWizardStep('wizard-step-trajectory', 'Trajectory');
             }
+        } else if (stepId === 'wizard-step-trajectory') {
+            AppState.currentShotData.trajectory = val;
+            showWizardStep('wizard-step-outcome', 'Outcome');
+        } else if (stepId === 'wizard-step-outcome') {
+            AppState.currentShotData.outcome = val;
+            showWizardStep('wizard-step-strike', 'Strike Quality');
+        } else if (stepId === 'wizard-step-putt') {
+            AppState.currentShotData.puttControl = val;
+            // Default outcome for putter is Green unless Fringe is toggled
+            if (!AppState.currentShotData.outcome) AppState.currentShotData.outcome = 'Green';
+            showWizardStep('wizard-step-strike', 'Strike Quality');
+        } else if (stepId === 'wizard-step-strike') {
+            AppState.currentShotData.strikeQuality = val;
+            showWizardStep('wizard-step-routine', 'Mental Routine');
         }
+    });
+
+    // Putter Location Toggles
+    if (UI.btnPuttOnGreen) {
+        UI.btnPuttOnGreen.addEventListener('click', () => {
+            AppState.currentShotData.outcome = 'Green';
+            AppState.currentShotData.isOffGreen = false;
+            UI.btnPuttOnGreen.classList.add('active');
+            UI.btnPuttFringe.classList.remove('active');
+        });
     }
 
+    if (UI.btnPuttFringe) {
+        UI.btnPuttFringe.addEventListener('click', () => {
+            AppState.currentShotData.outcome = 'Fringe';
+            AppState.currentShotData.isOffGreen = true;
+            UI.btnPuttFringe.classList.add('active');
+            UI.btnPuttOnGreen.classList.remove('active');
+        });
+    }
+
+    // Fix Delete Button
     if (UI.btnWizardDelete) {
         UI.btnWizardDelete.addEventListener('click', deleteShotData);
     }
+}
 
-    // Bind Grid Buttons
-    document.querySelectorAll('.wizard-step .btn-grid').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const b = e.target.closest('.btn-grid');
-            const club = b.getAttribute('data-val');
-            const traj = b.getAttribute('data-traj');
-            const line = b.getAttribute('data-line');
-            const curve = b.getAttribute('data-curve');
-            const dist = b.getAttribute('data-dist');
-            const out = b.getAttribute('data-out');
-            const pline = b.getAttribute('data-pline');
-            const pdist = b.getAttribute('data-pdist');
+function startNewShotInput(forcedShotNum = null) {
+    const shotNum = forcedShotNum || (AppState.currentHoleShots?.length || 0) + 1;
+    AppState.currentShotData = {
+        hole: AppState.currentHole,
+        shotNumber: shotNum,
+        roundId: AppState.activeRoundId,
+        timestamp: new Date().toISOString()
+    };
+    renderBagButtons();
+    setWizardActive(true);
+    document.getElementById('oncourse-wizard').classList.remove('hidden');
+    showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${shotNum}`);
+}
 
-            if (club) {
-                AppState.currentShotData.club = club;
-                if (club === 'Putter') showWizardStep('wizard-step-putt', "Putting");
-                else showWizardStep('wizard-step-line', "Start Line & Curve");
-            } else if (traj) {
-                AppState.currentShotData.trajectory = traj;
-                showWizardStep('wizard-step-line', "Start Line & Curve");
-            } else if (line || curve) {
-                if (line) AppState.currentShotData.line = line;
-                if (curve) AppState.currentShotData.curve = curve;
-                if (AppState.currentShotData.line && AppState.currentShotData.curve) showWizardStep('wizard-step-outcome', "Shot Result");
-            } else if (dist || out) {
-                if (dist) AppState.currentShotData.distanceControl = dist;
-                if (out) AppState.currentShotData.outcome = out;
-                if (AppState.currentShotData.distanceControl && AppState.currentShotData.outcome) saveShotData();
-            } else if (pline || pdist) {
-                if (pline) AppState.currentShotData.puttLine = pline;
-                if (pdist) AppState.currentShotData.puttDistance = pdist;
-                if (AppState.currentShotData.puttLine && AppState.currentShotData.puttDistance) saveShotData();
+function loadExistingShotData(shotNum, allowNew = false) {
+    const existing = AppState.currentHoleShots.find(s => s.shotNumber === shotNum);
+    if (existing) {
+        AppState.currentShotData = { ...existing };
+        renderBagButtons();
+        showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${shotNum}`);
+    } else if (allowNew) {
+        startNewShotInput();
+    }
+}
+
+function renderBagButtons() {
+    if (!UI.bagButtonsGrid) return;
+    UI.bagButtonsGrid.innerHTML = '';
+    const bag = AppState.myBag || { driver: true, putter: true };
+
+    const categories = [
+        { key: 'driver', label: 'Driver', standalone: true },
+        { key: 'woods', label: 'Woods', items: bag.woods },
+        { key: 'irons', label: 'Irons', items: bag.irons },
+        { key: 'wedges', label: 'Wedges', items: bag.wedges },
+        { key: 'putter', label: 'Putter', standalone: true }
+    ];
+
+    categories.forEach(cat => {
+        if (cat.standalone && bag[cat.key]) {
+            addButton(cat.label, cat.label);
+        } else if (cat.items && cat.items.length > 0) {
+            cat.items.forEach(item => {
+                addButton(item, item);
+            });
+        }
+    });
+
+    function addButton(label, val) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-grid';
+        if (AppState.currentShotData.club === val) btn.classList.add('active-choice');
+        btn.setAttribute('data-val', val);
+        btn.textContent = label;
+        UI.bagButtonsGrid.appendChild(btn);
+    }
+}
+
+function showWizardStep(stepId, title) {
+    document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+    const step = document.getElementById(stepId);
+    if (step) {
+        step.classList.remove('hidden');
+        // If it's the club step, ensure bag buttons are sync'd
+        if (stepId === 'wizard-step-club') renderBagButtons();
+
+        // Restore active choices if editing or navigating back
+        step.querySelectorAll('.btn-grid').forEach(b => {
+            const val = b.getAttribute('data-val');
+            if (stepId === 'wizard-step-club' && AppState.currentShotData.club === val) b.classList.add('active-choice');
+            if (stepId === 'wizard-step-trajectory' && AppState.currentShotData.trajectory === val) b.classList.add('active-choice');
+            if (stepId === 'wizard-step-outcome' && AppState.currentShotData.outcome === val) b.classList.add('active-choice');
+            if (stepId === 'wizard-step-putt' && AppState.currentShotData.puttControl === val) b.classList.add('active-choice');
+            if (stepId === 'wizard-step-strike' && AppState.currentShotData.strikeQuality === val) b.classList.add('active-choice');
+        });
+
+        // Sync routine buttons
+        if (stepId === 'wizard-step-routine' && AppState.currentShotData.routines) {
+            document.querySelectorAll('.wiz-routine-btn').forEach(b => {
+                const field = b.getAttribute('data-routine');
+                const val = b.getAttribute('data-val');
+                if (AppState.currentShotData.routines[field] === val) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        }
+    }
+
+    if (title) {
+        const titleEl = document.getElementById('wizard-title');
+        if (titleEl) titleEl.textContent = title;
+    } else {
+        // Auto title based on stepId
+        const titles = {
+            'wizard-step-club': `Shot ${AppState.currentShotData.shotNumber}`,
+            'wizard-step-trajectory': 'Trajectory',
+            'wizard-step-outcome': 'Outcome',
+            'wizard-step-putt': 'Putts',
+            'wizard-step-strike': 'Strike',
+            'wizard-step-routine': 'Mental'
+        };
+        const titleEl = document.getElementById('wizard-title');
+        if (titleEl) titleEl.textContent = titles[stepId] || `Shot ${AppState.currentShotData.shotNumber}`;
+    }
+
+    if (UI.btnWizardDelete) {
+        if (AppState.currentShotData?.id) UI.btnWizardDelete.classList.remove('hidden');
+        else UI.btnWizardDelete.classList.add('hidden');
+    }
+
+    // Reset Putter Toggles
+    if (stepId === 'wizard-step-putt') {
+        if (AppState.currentShotData.isOffGreen) {
+            if (UI.btnPuttFringe) UI.btnPuttFringe.classList.add('active');
+            if (UI.btnPuttOnGreen) UI.btnPuttOnGreen.classList.remove('active');
+        } else {
+            if (UI.btnPuttOnGreen) UI.btnPuttOnGreen.classList.add('active');
+            if (UI.btnPuttFringe) UI.btnPuttFringe.classList.remove('active');
+        }
+    }
+}
+
+function bindPenaltyModal() {
+    if (UI.btnWizardPenalty) {
+        UI.btnWizardPenalty.addEventListener('click', () => {
+            if (UI.penaltyModal) UI.penaltyModal.classList.remove('hidden');
+        });
+    }
+
+    document.querySelectorAll('.penalty-opt').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const opt = e.target.closest('.penalty-opt');
+            const type = opt.getAttribute('data-type');
+
+            const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
+            if (!p) return;
+
+            // Apply Penalty Strokes
+            let penaltyCount = 0;
+            if (type === 'ob_lost') {
+                penaltyCount = 1;
+                AppState.currentShotData.penalty = 'OB/Lost Ball';
+                AppState.currentShotData.outcome = 'OB';
+            } else if (type === 'hazard') {
+                penaltyCount = 1;
+                AppState.currentShotData.penalty = 'Hazard Drop';
+                AppState.currentShotData.outcome = 'Hazard';
+            } else if (type === 'local_rule') {
+                penaltyCount = 2;
+                AppState.currentShotData.penalty = 'Local Rule (Fairway Drop)';
+                AppState.currentShotData.outcome = 'Fairway';
             }
+
+            p.scores[AppState.currentHole] = (p.scores[AppState.currentHole] || 0) + penaltyCount;
+
+            // Auto-advance or stay put depends on type
+            // But we'll save the "Shot with penalty" first
+            await saveShotData();
+
+            // If OB, next shot number should skip the penalty.
+            // e.g. Hit 1 OOB. Penalty is 2. Next is 3. 
+            // My saveShotData increments by 1. So 1 is logged. Score is 1+1=2.
+            // Next startNewShotInput will see shotNumber as 2. We need it to be 3.
+            if (type === 'ob_lost' || type === 'local_rule' || type === 'hazard') {
+                const nextShotNum = AppState.currentShotData.shotNumber + penaltyCount + 1;
+                startNewShotInput(nextShotNum);
+            }
+
+            if (UI.penaltyModal) UI.penaltyModal.classList.add('hidden');
         });
     });
+
+    const btnCancel = document.getElementById('btn-cancel-penalty');
+    if (btnCancel) btnCancel.addEventListener('click', () => UI.penaltyModal.classList.add('hidden'));
+}
+
+export function bindBagSettings() {
+    if (UI.btnSaveBag) {
+        UI.btnSaveBag.addEventListener('click', () => {
+            const newBag = {
+                driver: false,
+                woods: [],
+                irons: [],
+                wedges: [],
+                putter: false
+            };
+
+            document.querySelectorAll('.bag-check').forEach(chk => {
+                if (chk.checked) {
+                    const cat = chk.getAttribute('data-cat');
+                    const val = chk.getAttribute('data-val');
+                    if (cat === 'driver' || cat === 'putter') newBag[cat] = true;
+                    else newBag[cat].push(val);
+                }
+            });
+
+            AppState.myBag = newBag;
+            const msg = document.getElementById('bag-msg');
+            if (msg) {
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    // Sync UI with state
+    if (AppState.myBag) {
+        document.querySelectorAll('.bag-check').forEach(chk => {
+            const cat = chk.getAttribute('data-cat');
+            const val = chk.getAttribute('data-val');
+            if (cat === 'driver' || cat === 'putter') {
+                chk.checked = !!AppState.myBag[cat];
+            } else {
+                chk.checked = AppState.myBag[cat]?.includes(val);
+            }
+        });
+    }
 }
 
 async function saveShotData() {
     if (!AppState.currentUser) return;
     document.getElementById('oncourse-wizard').classList.add('hidden');
+    setWizardActive(false); // Deactivate wizard mode
     const payload = { uid: AppState.currentUser.uid, ...AppState.currentShotData };
     try {
         if (AppState.currentShotData.id) {
@@ -647,6 +1269,21 @@ async function saveShotData() {
             const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
             if (p) {
                 p.scores[AppState.currentHole] = (p.scores[AppState.currentHole] || 0) + 1;
+
+                // TASK 1: Automated GIR Logic
+                const holeIdx = AppState.currentHole - 1;
+                const par = AppState.currentCoursePars[holeIdx] || 4;
+                if (payload.outcome === 'Green' && payload.shotNumber <= (par - 2)) {
+                    if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+                    p.simpleStats[AppState.currentHole].gir = true;
+                }
+
+                // TASK 2: Putter Stats (Exclude Fringe)
+                if (payload.club === 'Putter' && !payload.isOffGreen) {
+                    if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+                    p.simpleStats[AppState.currentHole].putts = (p.simpleStats[AppState.currentHole].putts || 0) + 1;
+                }
+
                 loadHole();
             }
         }

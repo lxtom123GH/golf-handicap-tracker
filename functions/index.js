@@ -27,7 +27,7 @@ exports.askAiCoach = onCall({ secrets: ["GEMINI_API_KEY"] }, async (request) => 
         }
 
         const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1beta" });
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // 3. Make the API Call
         const result = await model.generateContent(prompt);

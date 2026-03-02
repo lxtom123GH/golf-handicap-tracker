@@ -12,6 +12,11 @@ import { AppState } from './state.js';
 let _lastAiUid = null;
 let _lastAiRole = null;
 
+/**
+ * Initializes and binds event listeners for the AI Coach interface.
+ * Injects the AI modal into the DOM if not already present and sets up 
+ * role-based visibility for the "Ask AI" buttons.
+ */
 export function bindAiGenerator() {
     // Inject the modal if it doesn't exist
     if (!document.getElementById('ai-modal-overlay')) {
@@ -96,8 +101,19 @@ export function bindAiGenerator() {
     if (btnClose2) {
         btnClose2.addEventListener('click', () => UI.aiModalOverlay.classList.add('hidden'));
     }
+
+    if (btnClose2) {
+        btnClose2.addEventListener('click', () => UI.aiModalOverlay.classList.add('hidden'));
+    }
 }
 
+/**
+ * Basic markdown parser converting Gemini's text responses into HTML.
+ * Handles headers, bold/italic text, and lists.
+ * 
+ * @param {string} md - The raw markdown text from the AI.
+ * @returns {string} Sanitized HTML string for rendering.
+ */
 function markdownToHtml(md) {
     return md
         .replace(/^### (.+)/gm, '<h3 style="margin:16px 0 6px;color:#6d28d9;">$1</h3>')
@@ -112,6 +128,16 @@ function markdownToHtml(md) {
         .trim();
 }
 
+/**
+ * Orchestrates the AI analysis pipeline:
+ * 1. Fetches recent rounds, drills, and shot data for the target user.
+ * 2. Processes stats into a human-readable prompt with trend analysis.
+ * 3. Calls the 'askAiCoach' Firebase Cloud Function.
+ * 4. Renders the resulting Gemini response into the UI modal.
+ * 
+ * @param {string} uid - The Firestore UID of the player to analyze.
+ * @param {string} role - Either 'player' (self-analysis) or 'coach' (student-analysis).
+ */
 export async function generateAIResponse(uid, role) {
     if (!UI.aiModalOverlay) return;
 
@@ -222,3 +248,4 @@ export async function generateAIResponse(uid, role) {
         document.getElementById('btn-regenerate-ai').disabled = false;
     }
 }
+

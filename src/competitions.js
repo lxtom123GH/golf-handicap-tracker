@@ -75,17 +75,34 @@ export function setActiveCompetition(compId) {
     activeCompId = compId;
     AppState.activeCompId = compId;
 
-    // CRITICAL FIX: Added bounds checking for the dropdown index
-    if (!compId || !UI.compSelect || UI.compSelect.selectedIndex <= 0) {
-        if (UI.logCompRoundContainer) UI.logCompRoundContainer.classList.add('hidden');
+    const compContainer = document.getElementById('log-comp-round-container') || document.querySelector('.log-comp-round-container');
+    const activeCompView = document.getElementById('active-comp-view');
+    const noCompEmpty = document.getElementById('no-comp-empty');
+
+    if (!compId || !UI.compSelect || UI.compSelect.selectedIndex === -1) {
+        if (compContainer) compContainer.classList.add('hidden');
+        if (activeCompView) activeCompView.classList.add('hidden');
+        if (noCompEmpty) noCompEmpty.classList.remove('hidden');
         return;
     }
 
     const selectedOpt = UI.compSelect.options[UI.compSelect.selectedIndex];
+    // Prevent crash if placeholder is selected
+    if (selectedOpt.disabled) {
+        if (compContainer) compContainer.classList.add('hidden');
+        if (activeCompView) activeCompView.classList.add('hidden');
+        if (noCompEmpty) noCompEmpty.classList.remove('hidden');
+        return;
+    }
+
     const rulesArray = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
     AppState.currentCompData = { name: selectedOpt.getAttribute('data-name'), rules: rulesArray };
-    if (UI.logCompRoundContainer) {
-        UI.logCompRoundContainer.classList.remove('hidden');
+
+    if (activeCompView) activeCompView.classList.remove('hidden');
+    if (noCompEmpty) noCompEmpty.classList.add('hidden');
+
+    if (compContainer) {
+        compContainer.classList.remove('hidden');
         if (UI.logCompRoundForm) {
             UI.logCompRoundForm.reset();
             // Clear dynamic inputs specifically if needed

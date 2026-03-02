@@ -156,45 +156,37 @@ export function bindCoachDashboard() {
         if (!rosterEl) return;
         const myUid = AppState.currentUser.uid;
 
-        let allUsers = AppState.allUsersCache;
-        if (!allUsers) {
-            const snap = await getDocs(collection(db, 'users'));
-            allUsers = [];
-            snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
-            AppState.allUsersCache = allUsers;
-        }
-
+        // Strictly fetch athletes linked by coachUid
+        const q = query(collection(db, 'users'), where('coachUid', '==', myUid));
+        const snap = await getDocs(q);
         const athletes = [];
-        allUsers.forEach(data => {
-            if (!data.isApproved || data.uid === myUid) return;
-            const coaches = data.coaches || [];
-            if (window.currentUserIsAdmin || coaches.includes(myUid)) {
-                athletes.push(data);
-            }
+        snap.forEach(d => {
+            athletes.push({ uid: d.id, ...d.data() });
         });
 
         if (rosterCount) rosterCount.textContent = `${athletes.length} athlete${athletes.length !== 1 ? 's' : ''}`;
 
         if (!athletes.length) {
-            rosterEl.innerHTML = '<p style="color:#94a3b8;">No athletes have granted you access yet.</p>';
+            rosterEl.innerHTML = '<p style="color:#94a3b8;">No athletes are currently linked to your profile.</p>';
             return;
         }
 
         rosterEl.innerHTML = '';
         for (const athlete of athletes) {
-            const hiSnap = await getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid)));
+            // Trend analysis
+            const roundsQuery = query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10));
+            const hiSnap = await getDocs(roundsQuery);
             let rounds = [];
             hiSnap.forEach(d => {
                 const r = d.data();
                 rounds.push({ diff: (113 / r.slope) * (r.adjustedGross - r.rating), date: r.date?.toDate?.() || new Date() });
             });
-            rounds.sort((a, b) => b.date - a.date);
 
             let trendBadge = '';
             if (rounds.length >= 4) {
-                const half = Math.floor(Math.min(rounds.length, 10) / 2);
+                const half = Math.floor(rounds.length / 2);
                 const recent = rounds.slice(0, half).reduce((a, b) => a + b.diff, 0) / half;
-                const older = rounds.slice(half, half * 2).reduce((a, b) => a + b.diff, 0) / half;
+                const older = rounds.slice(half, half * 2).reduce((a, b) => a + b.diff, 0) / (rounds.length - half);
                 const delta = recent - older;
                 if (delta < -0.5) trendBadge = '<span class="status-badge success">📉 Improving</span>';
                 else if (delta > 0.5) trendBadge = '<span class="status-badge error">📈 Declining</span>';
@@ -205,7 +197,7 @@ export function bindCoachDashboard() {
             card.className = 'coach-roster-card';
             card.innerHTML = `
                 <div class="athlete-info">
-                    <div class="avatar">${(athlete.displayName || '?')[0].toUpperCase()}</div>
+                    <div class="avatar">${(athlete.displayName || athlete.email || '?')[0].toUpperCase()}</div>
                     <div>
                         <div class="name">${athlete.displayName || athlete.email}</div>
                         <div class="meta">${trendBadge}</div>
@@ -215,7 +207,27 @@ export function bindCoachDashboard() {
                     <div class="value">${athlete.handicapIndex ?? '--'}</div>
                     <div class="label">HI</div>
                 </div>
+                <div style="display: flex; gap: 8px; margin-left: 15px;">
+                    <button class="btn btn-primary btn-sm athlete-view-btn">View</button>
+                    <button class="btn btn-danger btn-sm athlete-release-btn">Release</button>
+                </div>
             `;
+
+            const viewBtn = card.querySelector('.athlete-view-btn');
+            if (viewBtn) viewBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                loadCoachPlayerView(athlete);
+            });
+
+            const releaseBtn = card.querySelector('.athlete-release-btn');
+            if (releaseBtn) releaseBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (confirm(`Are you sure you want to release ${athlete.displayName || athlete.email}? They will be removed from your roster.`)) {
+                    await updateDoc(doc(db, 'users', athlete.uid), { coachUid: null });
+                    loadCoachRoster(); // Refresh the UI
+                }
+            });
+
             card.addEventListener('click', () => loadCoachPlayerView(athlete));
             rosterEl.appendChild(card);
         }

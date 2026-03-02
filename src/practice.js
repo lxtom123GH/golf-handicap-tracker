@@ -3,7 +3,7 @@
 // Practice Drills & Dashboard Logic
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
 import { bindAiGenerator } from './ai.js';
@@ -62,12 +62,43 @@ const DRILL_TEMPLATES = {
             { id: 'putts_9ft', label: 'Makes from 9ft (1 pt)', type: 'number', multiplier: 1, default: 0 }
         ],
         scoringMath: "higher_is_better"
+    },
+    "ladder_putt": {
+        name: "Ladder Distance Control (20 mins)",
+        desc: "4 balls at 10, 20, 30, and 40 feet. 5 rounds. Focus on lagging into the 2-foot scoring zone.",
+        inputs: [
+            { id: 'inside_half_club', label: 'Inside Half Club (5 pts)', type: 'number', multiplier: 5 },
+            { id: 'inside_1_club', label: 'Inside 1 Club (3 pts)', type: 'number', multiplier: 3 },
+            { id: 'inside_2_clubs', label: 'Inside 2 Clubs (1 pt)', type: 'number', multiplier: 1 },
+            { id: 'outside_2_clubs', label: 'Outside 2 Clubs (0 pts)', type: 'number', multiplier: 0 }
+        ],
+        scoringMath: "higher_is_better"
+    },
+    "make_break_5ft": {
+        name: "5-Foot Make or Break (15 mins)",
+        desc: "5 balls in a semi-circle at 5 feet. 5 sets. Goal is to make every single one.",
+        inputs: [
+            { id: 'putts_made', label: 'Putts Made (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'putts_missed', label: 'Putts Missed (0 pts)', type: 'number', multiplier: 0, default: 0 }
+        ],
+        scoringMath: "higher_is_better"
+    },
+    "gauntlet_putt": {
+        name: "The Gauntlet Challenge (10 mins)",
+        desc: "Make a 3ft, 6ft, and 9ft putt in sequence. If you miss, sequence ends. 3 total sequences.",
+        inputs: [
+            { id: 'made_3ft', label: 'Made 3-footer (1 pt)', type: 'number', multiplier: 1 },
+            { id: 'made_6ft', label: 'Made 6-footer (2 pts)', type: 'number', multiplier: 2 },
+            { id: 'made_9ft', label: 'Made 9-footer (3 pts)', type: 'number', multiplier: 3 }
+        ],
+        scoringMath: "higher_is_better"
     }
 };
 
 export function initPractice() {
     populatePracticeSelect();
     listenToPractice();
+    initCoachSelection();
 
     const btnAskAi = document.getElementById('btn-ask-ai');
     if (btnAskAi) btnAskAi.addEventListener('click', bindAiGenerator);
@@ -108,7 +139,9 @@ export function initPractice() {
             const drillId = UI.practiceSelect.value;
 
             let dataPayload = {};
-            let scoreVal = parseInt(UI.drillLiveTotalEl.textContent) || 0;
+            const liveTotalEl = document.getElementById('drill-live-total') || document.querySelector('.drill-live-total');
+            let scoreVal = liveTotalEl ? (parseInt(liveTotalEl.textContent) || 0) : 0;
+            const safePlayerName = AppState.currentUser.displayName || AppState.currentUser.email || "Player";
 
             currentDrillDefinition.inputs.forEach(inputDef => {
                 const el = document.getElementById('drill-input-' + inputDef.id);
@@ -122,15 +155,25 @@ export function initPractice() {
             btn.textContent = 'Saving...';
 
             try {
+                const dateInput = document.getElementById('drill-date');
+                let finalDate = new Date();
+                if (dateInput && dateInput.value) {
+                    const parsed = new Date(dateInput.value);
+                    if (!isNaN(parsed)) finalDate = parsed;
+                }
+
                 await addDoc(collection(db, "practice_rounds"), {
                     uid: AppState.currentUser.uid,
-                    playerName: AppState.currentUser.displayName || AppState.currentUser.email,
+                    playerName: safePlayerName,
                     drillId: drillId,
                     drillName: currentDrillDefinition.name,
                     score: scoreVal,
                     data: dataPayload,
-                    date: dateInput && dateInput.value ? new Date(dateInput.value) : new Date()
+                    date: finalDate
                 });
+
+                alert("Practice session successfully saved to your profile!");
+                if (typeof listenToPractice === 'function') listenToPractice();
 
                 // Reset form
                 UI.logPracticeForm.reset();
@@ -235,7 +278,9 @@ function generatePracticeForm() {
         input.type = inputDef.type;
         input.id = 'drill-input-' + inputDef.id;
         input.className = 'drill-outcome-field';
-        input.value = inputDef.default || 0;
+        input.value = ''; // Start blank
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('pattern', '[0-9]*');
         input.min = 0;
         input.required = true;
         input.style.width = '100%';
@@ -258,7 +303,7 @@ function calculateLiveTotal() {
         const el = document.getElementById('drill-input-' + inputDef.id);
         if (el) {
             const val = parseInt(el.value) || 0;
-            total += (val * (inputDef.multiplier || 1));
+            total += (val * (inputDef.multiplier !== undefined ? inputDef.multiplier : 1));
         }
     });
     UI.drillLiveTotalEl.textContent = total;
@@ -376,5 +421,55 @@ function renderRecentPractice() {
         `;
         UI.practiceRecentTbody.appendChild(tr);
     });
+}
+
+async function initCoachSelection() {
+    const coachSelect = document.getElementById('player-coach-select');
+    const saveBtn = document.getElementById('btn-save-coach');
+    if (!coachSelect || !AppState.currentUser) return;
+
+    // Populate all coaches
+    try {
+        const coachQuery = query(collection(db, 'users'), where('isCoach', '==', true));
+        const snap = await getDocs(coachQuery);
+
+        // Keep existing placeholder
+        coachSelect.innerHTML = '<option value="">-- No Coach Selected --</option>';
+
+        snap.forEach(d => {
+            const data = d.data();
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = data.displayName || data.email;
+            coachSelect.appendChild(opt);
+        });
+
+        // Set current selection
+        const userRef = doc(db, 'users', AppState.currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.coachUid) {
+                coachSelect.value = userData.coachUid;
+            }
+        }
+    } catch (e) {
+        console.error("Coach init error:", e);
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const selectedCoachId = coachSelect.value;
+            try {
+                await updateDoc(doc(db, 'users', AppState.currentUser.uid), {
+                    coachUid: selectedCoachId || null
+                });
+                alert("Coach updated successfully!");
+            } catch (err) {
+                console.error("Save coach error:", err);
+                alert("Failed to update coach.");
+            }
+        });
+    }
 }
 

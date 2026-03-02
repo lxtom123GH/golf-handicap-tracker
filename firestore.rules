@@ -6,21 +6,22 @@ service cloud.firestore {
     // 🔒 HELPER FUNCTIONS
     // =========================================================================
     
-    // Checks if the user is logged in
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Checks the 'users' collection to see if the user has the isAdmin flag
     function isAdmin() {
       return isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
-    // Checks if the logged-in user's UID is in the target student's 'coaches' array
+    // UPDATED: Checks if the logged-in user is the assigned coach (coachUid) for the student
     function isCoachOf(studentUid) {
-      return isAuthenticated() && 
-        request.auth.uid in get(/databases/$(database)/documents/users/$(studentUid)).data.coaches;
+      let studentData = get(/databases/$(database)/documents/users/$(studentUid)).data;
+      return isAuthenticated() && (
+        studentData.coachUid == request.auth.uid || 
+        (studentData.coaches != null && request.auth.uid in studentData.coaches) // Backward compatibility
+      );
     }
 
     // =========================================================================
@@ -28,53 +29,58 @@ service cloud.firestore {
     // =========================================================================
     
     match /users/{userId} {
-      // Anyone logged in can read basic profiles (needed for leaderboards/feed)
       allow read: if isAuthenticated();
-      // Users can only update their own profile, Admins can update anyone
       allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
 
-      // 📝 Nested Coach Notes
       match /coachNotes/{noteId} {
-        // Only the student, their assigned coach, or an admin can read notes
         allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
-        // Only the coach or an admin can write notes
         allow write: if isAuthenticated() && (isCoachOf(userId) || isAdmin());
       }
 
-      // ⚙️ Nested User Preferences
       match /prefs/{prefId} {
         allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       }
     }
 
-    // Profile aliases (legacy mapping catch)
     match /profiles/{userId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
     // =========================================================================
-    // ⛳ ROUNDS, SHOTS & PRACTICE
+    // ⛳ ROUNDS, SHOTS & PRACTICE (MAINTENANCE UPDATES)
     // =========================================================================
     
     match /whs_rounds/{roundId} {
-      // Read: Open to auth'd users for the social feed and leaderboards
-      allow read: if isAuthenticated();
-      // Create: Must be setting their own UID
+      // UPDATED: Restricting read access to Owner, Assigned Coach, or Admin
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || 
+        isCoachOf(resource.data.uid) || 
+        isAdmin() ||
+        (resource.data.visibility == "public") // Fallback for social if implemented
+      );
       allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
-      // Update/Delete: Only the owner or an Admin
       allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
     }
 
     match /shots/{shotId} {
-      allow read: if isAuthenticated();
+      // UPDATED: Restricting read access to Owner, Assigned Coach, or Admin
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || 
+        isCoachOf(resource.data.uid) || 
+        isAdmin()
+      );
       allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
     }
 
     match /practice_rounds/{roundId} {
-      // Practice rounds are private! Only the user, their coach, or an Admin can see them.
-      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isCoachOf(resource.data.uid) || isAdmin());
+      // Private practice data: Only the user, their coach, or an Admin
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || 
+        isCoachOf(resource.data.uid) || 
+        isAdmin()
+      );
       allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
     }
@@ -84,14 +90,12 @@ service cloud.firestore {
     // =========================================================================
     
     match /competitions/{compId} {
-      // Users can read if it's public, if they own it, if they are invited, or if admin
       allow read: if isAuthenticated() && (
         resource.data.visibility == "public" || 
         resource.data.ownerId == request.auth.uid || 
         request.auth.uid in resource.data.invitedUIDs || 
         isAdmin()
       );
-      // Only the owner can create/edit/delete
       allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
       allow update, delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
@@ -107,9 +111,7 @@ service cloud.firestore {
     // =========================================================================
     
     match /preapproved_emails/{email} {
-      // App needs to read this during registration
       allow read: if isAuthenticated() || request.auth == null; 
-      // Only admins can add or remove pre-approved emails
       allow write: if isAdmin();
     }
   }

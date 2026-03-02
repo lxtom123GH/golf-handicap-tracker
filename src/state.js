@@ -29,7 +29,15 @@ const initialState = {
     currentLiveCompId: null,
     currentLiveCompRules: [],
     currentHoleShots: [],
-    activeRoundId: null
+    activeRoundId: null,
+    currentRoundDate: null,
+    myBag: {
+        driver: true,
+        woods: ['3 Wood'],
+        irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
+        wedges: ['56°'],
+        putter: true
+    }
 };
 
 /**

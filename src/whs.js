@@ -11,6 +11,13 @@ import { UI } from './ui.js';
 let unsubscribeWHS = null;
 
 // Core WHS Math
+/**
+ * Determines the number of best scores to use and the adjustment factor based on the total number of rounds.
+ * Follows the standard WHS lookup table (e.g., best 8 of 20).
+ * 
+ * @param {number} count - The total number of non-excluded rounds in the player's history.
+ * @returns {Object|null} An object with 'use' (number of scores) and 'adj' (handicap adjustment), or null if count < 3.
+ */
 export function getAdjustmentFactor(count) {
     if (count < 3) return null;
     if (count === 3) return { use: 1, adj: -2.0 };
@@ -29,12 +36,30 @@ export function getAdjustmentFactor(count) {
 // NEW WHS STABLEFORD & AGS CALCULATIONS
 // -------------------------------------------------------------------------------- //
 
+/**
+ * Calculates the Australian Daily Handicap for a player on a specific course.
+ * Formula: Handicap Index x (Slope Rating / 113)
+ * 
+ * @param {number} handicapIndex - The player's exact WHS Handicap Index.
+ * @param {number} slopeRating - The Slope Rating of the course/tees being played.
+ * @returns {number} The rounded Daily Handicap integer.
+ */
 export function calculateDailyHandicap(handicapIndex, slopeRating) {
     if (handicapIndex === undefined || handicapIndex === null || isNaN(handicapIndex) || !slopeRating) return 0;
     // Australian Daily Handicap = Handicap Index x (Slope Rating / 113)
     return Math.round(handicapIndex * (slopeRating / 113));
 }
 
+/**
+ * Calculates Stableford points for a single hole based on the player's Daily Handicap.
+ * Handles stroke indexing and provides "net par + 2" math.
+ * 
+ * @param {number} grossScore - The number of strokes taken on the hole.
+ * @param {number} holePar - The par of the hole.
+ * @param {number} holeStrokeIndex - The difficulty rank (1-18) of the hole.
+ * @param {number} dailyHandicap - The player's calculated Daily Handicap for the day.
+ * @returns {number} The Stableford points earned (minimum 0).
+ */
 export function calculateHoleStableford(grossScore, holePar, holeStrokeIndex, dailyHandicap) {
     if (!grossScore || isNaN(grossScore) || grossScore === 0) return 0;
     if (!holePar || !holeStrokeIndex) return 0;
@@ -52,6 +77,16 @@ export function calculateHoleStableford(grossScore, holePar, holeStrokeIndex, da
     return Math.max(0, points);
 }
 
+/**
+ * Converts a total Stableford score back into a WHS-compliant Adjusted Gross Score (AGS).
+ * This is used for handicap indexing when hole-by-hole gross scores aren't tracked.
+ * Formula: Par + Daily Handicap - (Stableford Points - 36)
+ * 
+ * @param {number} totalStableford - The total Stableford points for the round.
+ * @param {number} dailyHandicap - The Daily Handicap used during the round.
+ * @param {number} coursePar - The total par for the course (typically 70-73).
+ * @returns {number} The theoretical Adjusted Gross Score.
+ */
 export function convertStablefordToAGS(totalStableford, dailyHandicap, coursePar) {
     // AGS = Par + Daily Handicap - (Stableford Points - 36)
     return coursePar + dailyHandicap - (totalStableford - 36);
@@ -59,7 +94,13 @@ export function convertStablefordToAGS(totalStableford, dailyHandicap, coursePar
 
 // -------------------------------------------------------------------------------- //
 
-
+/**
+ * Core handicap indexing engine. Filters rounds, determines the best subset of differentials,
+ * and calculates the rolling average for the WHS Handicap Index.
+ * 
+ * @param {Array<Object>} rounds - Array of round documents from Firestore.
+ * @returns {Object} { index: string, usedIds: string[] } - The capped 1-decimal index and the IDs used in the calc.
+ */
 export function calculateIndex(rounds) {
     // Return early if no rounds at all
     if (!rounds || rounds.length === 0) return { "index": 0, "usedIds": [] };
@@ -94,7 +135,10 @@ export function calculateIndex(rounds) {
     return { "index": Math.max(0, avg).toFixed(1), "usedIds": bestDiffs.map(d => d.id) };
 }
 
-// Database Subscriptions
+/**
+ * Sets up a real-time Firestore listener for the currently viewed player's rounds.
+ * Automatically recalculates the handicap index on every data change.
+ */
 export function listenToWHSRounds() {
     if (unsubscribeWHS) unsubscribeWHS();
 
@@ -140,6 +184,13 @@ export function listenToWHSRounds() {
 // Handicap Trend Chart (Chart.js)
 // ==========================================
 let _trendChart = null;
+
+/**
+ * Initializes and renders a Line Chart showing the player's handicap differential trend over time.
+ * Uses Chart.js for data visualization.
+ * 
+ * @param {Array<Object>} rounds - The array of rounds to visualize.
+ */
 export function renderTrendChart(rounds) {
     const canvas = document.getElementById('handicap-chart');
     const noData = document.getElementById('chart-no-data');
@@ -210,6 +261,12 @@ export function renderTrendChart(rounds) {
     });
 }
 
+/**
+ * Persists the newly calculated Handicap Index to the player's historical profile document.
+ * Maintains an 'indexHistory' array useful for long-term progress logs.
+ * 
+ * @param {string} index - The current 1-decimal handicap index string.
+ */
 async function updateUserHandicapIndexArray(index) {
     if (!AppState.currentUser) return;
     try {
@@ -242,7 +299,12 @@ async function updateUserHandicapIndexArray(index) {
     }
 }
 
-// Rendering
+/**
+ * Manages the DOM rendering for the WHS round history table.
+ * Highlights counting rounds and used differentials.
+ * 
+ * @param {Array<string>} usedIds - IDs of the best 8 differentials currently in use.
+ */
 export function renderRoundsHistory(usedIds = []) {
     UI.historyTbody.innerHTML = '';
     const uidMatches = AppState.currentUser && AppState.viewingPlayerId === AppState.currentUser.uid;
@@ -295,6 +357,16 @@ export function renderRoundsHistory(usedIds = []) {
     }
 }
 
+/**
+ * Saves a new manual round entry to Firestore.
+ * 
+ * @param {string} course - Name of the golf course.
+ * @param {number} rating - Scratch rating.
+ * @param {number} slope - Slope rating.
+ * @param {number} adjustedGross - Final WHS Adjusted Gross Score.
+ * @param {Object} [stats] - Optional performance statistics (putts, gir, etc).
+ * @returns {Promise<boolean>} Success status.
+ */
 export async function addRound(course, rating, slope, adjustedGross, stats = null) {
     try {
         const roundData = {
@@ -317,13 +389,18 @@ export async function addRound(course, rating, slope, adjustedGross, stats = nul
     }
 }
 
-// Bind Global Window Functions for Event Delegation in app.js
+/**
+ * Utility for global deletion of a round record.
+ */
 window.deleteWhsRound = async function (id) {
     if (confirm("Are you sure you want to delete this round?")) {
         await deleteDoc(doc(db, "whs_rounds", id));
     }
 };
 
+/**
+ * Utility for toggling whether a specific round should count towards the handicap index.
+ */
 window.toggleCountingRules = async function (id) {
     const roundDoc = AppState.currentRounds.find(r => r.id === id);
     if (!roundDoc) return;
@@ -338,3 +415,4 @@ window.toggleCountingRules = async function (id) {
         alert("Permission denied");
     }
 };
+

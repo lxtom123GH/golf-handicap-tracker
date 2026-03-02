@@ -12,8 +12,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-suT4-h5r.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-EjkX2GvS.css">
+  <script type="module" crossorigin src="/assets/index-DbzVjVmP.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Cnl3i_5-.css">
 </head>
 
 <body>
@@ -150,8 +150,8 @@
             <header class="header">
                 <div class="header-content">
                     <div class="branding">
-                        <h1>Handicap Tracker <span
-                                style="font-size:0.5em; color:#94a3b8; font-weight:normal; vertical-align:middle; margin-left:8px;">v4.5.0</span>
+                        <h1>Handicap Tracker <span id="app-version"
+                                style="font-size: 0.7rem; color: #64748b; margin-left: 10px;">v5.1.0</span>
                         </h1>
                         <p>World Handicap System (WHS)</p>
                     </div>
@@ -688,7 +688,7 @@
                         <div class="form-group flex-2">
                             <label>Select Drill Template</label>
                             <select id="drill-select">
-                                <option value="bunker_game">The Bunker Game</option>
+
                                 <option value="inside_30">Inside 30</option>
                                 <option value="putting_9_holes">Putting (9 Holes)</option>
                                 <option value="up_down">Up/Down</option>
@@ -706,10 +706,9 @@
                         style="margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px;">
                         <h3 id="pf-title"
                             style="margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; color: var(--primary-color);">
-                            The Bunker Game</h3>
-                        <p id="pf-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Hit
-                            balls from a greenside bunker. Score your outcome based on how close you finish to the hole.
-                            Goal is to get the lowest score possible.</p>
+                            Select a Drill Above</h3>
+                        <p id="pf-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Choose
+                            a practice routine to begin tracking your performance.</p>
 
                         <form id="form-log-practice">
                             <div id="practice-dynamic-inputs">
@@ -730,6 +729,17 @@
 
                 <!-- Personal Analytics Dashboard -->
                 <div class="card bg-white" style="grid-column: 1; border-top: 4px solid var(--primary-color);">
+                    <div id="coach-selection-container"
+                        style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                        <label for="player-coach-select" style="font-weight: bold;">My Coach:</label>
+                        <select id="player-coach-select" class="form-control"
+                            style="display: inline-block; width: auto; margin-left: 10px;">
+                            <option value="">-- No Coach Selected --</option>
+                        </select>
+                        <button id="btn-save-coach" class="btn btn-primary btn-sm"
+                            style="margin-left: 10px; width: auto; display: inline-block; margin-top: 0;">Save
+                            Coach</button>
+                    </div>
                     <h2 class="section-title">My Performance Metrics</h2>
 
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
@@ -834,6 +844,12 @@
                     <button type="button" id="btn-round-18" class="oc-roundtype-btn"
                         style="flex:1; padding:12px; border:2px solid #cbd5e1; border-radius:8px; background:white; font-weight:700; cursor:pointer; color:#64748b;">18
                         Holes</button>
+                </div>
+
+                <!-- Round Date picker -->
+                <div class="form-group">
+                    <label>Round Date:</label>
+                    <input type="date" id="oc-round-date" class="form-control" style="margin-bottom: 15px;">
                 </div>
 
                 <!-- Course Selector -->
@@ -1160,8 +1176,7 @@
                     <button type="button" id="btn-oc-save-whs" class="btn btn-primary"
                         style="padding:15px; font-size:1.1rem;">Save to WHS Database</button>
                     <button type="button" id="btn-oc-discard" class="btn btn-secondary"
-                        style="padding:15px; color:#ef4444; border-color:#ef4444;">Discard Scores (Keep
-                        Shots)</button>
+                        style="padding:15px; color:#ef4444; border-color:#ef4444;">Discard Scores and Shots</button>
                     <button type="button" id="btn-oc-cancel-finish" class="btn-text"
                         style="font-weight:bold; margin-top:10px;">Back to Round</button>
                 </div>
@@ -1581,7 +1596,7 @@
     <!-- Global Version Footer -->
     <div
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-        Golf Handicap Tracker v4.5.0
+        Golf Handicap Tracker v5.1.0
     </div>
     <script>
         if ('serviceWorker' in navigator) {

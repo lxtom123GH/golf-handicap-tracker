@@ -3,6 +3,14 @@
 // Main Entry Point & Global Event Bindings
 // ==========================================
 
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            registration.unregister();
+        }
+    });
+}
+
 import { UI, setupTabs } from './ui.js';
 import { setupAuthUI } from './auth-v2.js';
 import { listenToWHSRounds, addRound } from './whs.js';
@@ -20,6 +28,8 @@ import { bindAdminTools, bindAdminInvite } from './admin.js';
 import { bindAiGenerator } from './ai.js';
 import { bindCoachTools, bindCoachDashboard } from './coach.js';
 import { initTempo } from './tempo.js';
+import { initializeAppRouting } from './persistence.js';
+import { initWakeLock } from './wakelock.js';
 
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -41,10 +51,14 @@ function bootstrapApplication() {
     populatePlayerSelect();
     initNotifications();
     initTempo();
+    initWakeLock();
 
     // Feed tab — init when first opened
     const feedBtn = document.getElementById('tab-btn-feed');
     if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
+
+    // Restore state and handle routing overrides
+    initializeAppRouting();
 }
 
 // Kickoff Authentication Flow
