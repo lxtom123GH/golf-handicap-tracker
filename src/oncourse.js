@@ -22,6 +22,7 @@ export function initOnCourse() {
     bindBagSettings();
     bindPenaltyModal();
     bindReviewActions();
+    bindAdvancedTools();
 
     // Default init
     if (typeof updateModeVisibility === 'function') updateModeVisibility();
@@ -700,6 +701,147 @@ function saveHoleEdits() {
     UI.ocHoleEditorModal.classList.add('hidden');
     renderDetailedReview(); // Refresh table
     loadHole(); // Sync hub if needed
+}
+
+function bindAdvancedTools() {
+    if (UI.btnToggleGps) {
+        UI.btnToggleGps.addEventListener('click', toggleGPS);
+    }
+    if (UI.btnVoiceRules) {
+        UI.btnVoiceRules.addEventListener('click', () => {
+            if (!recognition) initVoiceRules();
+            if (recognition) recognition.start();
+        });
+    }
+    if (UI.btnCancelVoice) {
+        UI.btnCancelVoice.addEventListener('click', () => {
+            if (recognition) recognition.stop();
+            UI.voiceOverlay.classList.add('hidden');
+        });
+    }
+    if (UI.btnCloseRulesCard) {
+        UI.btnCloseRulesCard.addEventListener('click', () => {
+            UI.rulesResponseCard.classList.add('hidden');
+        });
+    }
+}
+
+let gpsWatchId = null;
+function toggleGPS() {
+    if (gpsWatchId) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+        if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: OFF";
+        if (UI.ocGpsWidget) UI.ocGpsWidget.classList.add('hidden');
+    } else {
+        if (!navigator.geolocation) {
+            showToast("GPS not supported on this device.");
+            return;
+        }
+
+        if (UI.btnToggleGps) UI.btnToggleGps.textContent = "⌛ Locating...";
+        gpsWatchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                updateGPSDistances(latitude, longitude);
+                if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: ON";
+                if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden');
+            },
+            (err) => {
+                console.error("GPS Error:", err);
+                let msg = "GPS Error";
+                if (err.code === 1) msg = "GPS Permission Denied";
+                else if (err.code === 2) msg = "GPS Position Unavailable";
+                showToast(msg);
+                toggleGPS(); // Turn off
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+}
+
+function updateGPSDistances(lat, lon) {
+    const holeIdx = AppState.currentHole - 1;
+    const courseName = AppState.currentRoundCourseName;
+    const teeName = UI.ocTeeSelect.value;
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+
+    // Example: Looking for coords in course data (Mock if missing)
+    const green = teeData.greens?.[holeIdx] || {
+        lat: lat + 0.002, // Mock 200m away north
+        lon: lon + 0.002,
+        frontOffset: -20,
+        backOffset: 20
+    };
+
+    const distMiddle = Math.round(getHaversineDistance(lat, lon, green.lat, green.lon));
+
+    if (UI.gpsMiddle) UI.gpsMiddle.textContent = distMiddle;
+    if (UI.gpsFront) UI.gpsFront.textContent = distMiddle + (green.frontOffset || -15);
+    if (UI.gpsBack) UI.gpsBack.textContent = distMiddle + (green.backOffset || 15);
+}
+
+function getHaversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+let recognition = null;
+function initVoiceRules() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+        UI.voiceOverlay.classList.remove('hidden');
+        UI.voiceStatus.textContent = "Listening...";
+        UI.voiceTranscript.textContent = "";
+    };
+
+    recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+        }
+        UI.voiceTranscript.textContent = transcript;
+    };
+
+    recognition.onerror = (event) => {
+        UI.voiceStatus.textContent = "Error: " + event.error;
+        setTimeout(() => UI.voiceOverlay.classList.add('hidden'), 2000);
+    };
+
+    recognition.onend = () => {
+        const finalTranscript = UI.voiceTranscript.textContent.trim();
+        if (finalTranscript) {
+            processVoiceQuery(finalTranscript);
+        }
+        UI.voiceOverlay.classList.add('hidden');
+    };
+}
+
+async function processVoiceQuery(text) {
+    if (!UI.rulesResponseCard) return;
+    UI.rulesResponseCard.classList.remove('hidden');
+    UI.rulesResponseContent.textContent = "Consulting Rules AI for: \"" + text + "\"...";
+
+    const mockAns = await queryRulesAI(text);
+    UI.rulesResponseContent.innerHTML = `<strong>Rule Clarification:</strong> ${mockAns}`;
+}
+
+async function queryRulesAI(text) {
+    return new Promise(r => setTimeout(() => {
+        r("Based on the Rules of Golf (Rule 16.1), you are entitled to free relief if your ball, stance, or area of intended swing is interfered with by an Immovable Obstruction. Find the nearest point of complete relief, not nearer the hole, and drop within one club-length.");
+    }, 2000));
 }
 
 function bindHoleNav() {

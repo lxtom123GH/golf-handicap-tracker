@@ -162,7 +162,22 @@ export const UI = {
     editorPuttsVal: document.getElementById('editor-putts-val'),
     editorPenVal: document.getElementById('editor-pen-val'),
     btnEditorSave: document.getElementById('btn-editor-save'),
-    btnEditorCancel: document.getElementById('btn-editor-cancel')
+    btnEditorCancel: document.getElementById('btn-editor-cancel'),
+
+    // Phase 5: GPS & Voice
+    btnToggleGps: document.getElementById('btn-toggle-gps'),
+    ocGpsWidget: document.getElementById('oc-gps-widget'),
+    gpsFront: document.getElementById('gps-front'),
+    gpsMiddle: document.getElementById('gps-middle'),
+    gpsBack: document.getElementById('gps-back'),
+    btnVoiceRules: document.getElementById('btn-voice-rules'),
+    voiceOverlay: document.getElementById('voice-overlay'),
+    voiceStatus: document.getElementById('voice-status'),
+    voiceTranscript: document.getElementById('voice-transcript'),
+    btnCancelVoice: document.getElementById('btn-cancel-voice'),
+    rulesResponseCard: document.getElementById('rules-response-card'),
+    rulesResponseContent: document.getElementById('rules-response-content'),
+    btnCloseRulesCard: document.getElementById('btn-close-rules-card')
 };
 
 // ==========================================
