@@ -6,17 +6,13 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Golf Handicap Tracker - Cloud Edition</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/src/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <!-- PWA Requirements -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <!-- Chart.js for Handicap Trend -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- SheetJS for Excel Bulk Import -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -102,6 +98,7 @@
             <button class="tab-btn" data-target="tab-comp">Custom Competitions</button>
             <button class="tab-btn" data-target="tab-practice">Practice Drills</button>
             <button class="tab-btn" data-target="tab-oncourse">On Course</button>
+            <button class="tab-btn" data-target="tab-tempo" id="tab-btn-tempo">Tempo</button>
             <button class="tab-btn hidden" id="tab-btn-feed" data-target="tab-feed">👥 Feed</button>
             <button class="tab-btn hidden" id="tab-btn-coach" data-target="tab-coach"
                 style="background-color: #d1d8e0; color: #3867d6;">Coach Portal</button>
@@ -717,8 +714,15 @@
                             <div id="practice-dynamic-inputs">
                                 <!-- Dynamically generated fields per drill -->
                             </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Save
-                                Drill Score</button>
+                            <div
+                                style="margin-top: 15px; padding: 10px; background: #e2e8f0; border-radius: 6px; text-align: center;">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Calculated Total:
+                                </span>
+                                <span id="drill-live-total"
+                                    style="font-size: 1.25rem; font-weight: 800; color: var(--primary-color);">0</span>
+                            </div>
+                            <button type="submit" id="btn-save-practice" class="btn btn-primary"
+                                style="width: 100%; margin-top: 15px;">Save Practice Session</button>
                         </form>
                     </div>
                 </div>
@@ -746,13 +750,15 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                        <button id="btn-export-practice" class="btn btn-secondary btn-sm" style="width: 100%;">Email
-                            Coach / Export Drills</button>
-                        <button id="btn-ask-ai" class="btn btn-primary btn-sm"
-                            style="width: 100%; margin-top: 0; background-color: #8b5cf6; border-color: #8b5cf6;">✨ Ask
-                            AI Coach</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button id="btn-email-coach" class="btn btn-secondary btn-sm" style="flex: 1;">Email
+                            Coach</button>
+                        <button id="btn-export-practice" class="btn btn-secondary btn-sm" style="flex: 1;">Export
+                            Drills</button>
                     </div>
+                    <button id="btn-ask-ai" class="btn btn-primary btn-sm"
+                        style="width: 100%; margin-top: 0; background-color: #8b5cf6; border-color: #8b5cf6;">✨ Ask
+                        AI Coach</button>
 
                     <h3
                         style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">
@@ -930,8 +936,8 @@
             <div id="oncourse-hub" class="card hidden" style="text-align:center; position:relative;">
                 <h1 id="oc-hole-display" style="font-size: 3rem; margin: 0 0 4px; color: var(--primary-color);">Hole 1
                 </h1>
-                <div id="oc-hole-par-display"
-                    style="font-size:1.1rem; color:#64748b; margin-bottom:16px; font-weight:600;">Par 4</div>
+                <div id="oc-par-display" style="font-size:1.1rem; color:#64748b; margin-bottom:16px; font-weight:600;">
+                    Par 4</div>
 
                 <div
                     style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
@@ -1264,7 +1270,18 @@
                         </div>
                     </section>
 
+                    <!-- Shot Dispersion Panel -->
+                    <section class="card two-span">
+                        <h3>Detailed Shot Dispersion</h3>
+                        <p class="section-desc">Analysis of tendencies across all tracked shots.</p>
+                        <div id="coach-shot-dispersion"
+                            style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-top:15px;">
+                            <p style="color:#94a3b8;">Loading analytics...</p>
+                        </div>
+                    </section>
+
                     <!-- Coach Notes -->
+
                     <section class="card">
                         <h3>Coach Notes</h3>
                         <div id="coach-notes-list"
@@ -1428,13 +1445,93 @@
 
 
         <!-- ========================================== -->
+        <!-- TEMPO VIBES TAB                            -->
+        <!-- ========================================== -->
+        <section id="tab-tempo" class="tab-content hidden">
+            <div class="card" style="position: relative; overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <div>
+                        <h2 style="margin: 0; color: var(--primary-color);">Tempo Vibes</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Session Swings: <span
+                                id="tempo-swing-counter"
+                                style="font-weight: bold; color: var(--primary-color);">0</span></p>
+                    </div>
+                    <button id="tempo-reset-counter" class="btn btn-secondary btn-sm"
+                        style="font-size: 10px; padding: 4px 8px;">RESET</button>
+                </div>
+
+                <div
+                    style="height: 160px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; margin: 20px 0; background: #e2e8f0; border-radius: 12px; overflow: hidden;">
+                    <div id="tempo-core-circle"
+                        style="width: 96px; height: 96px; background: #3b82f6; border-radius: 50%; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: transform 0.1s, background-color 0.1s;">
+                        <span id="tempo-swing-state"
+                            style="font-weight: 800; font-size: 1.25rem; color: white; letter-spacing: 1px;">READY</span>
+                    </div>
+                    <div id="tempo-ring"
+                        style="position: absolute; width: 100px; height: 100px; border-radius: 50%; background: rgba(59, 130, 246, 0.5); display: none; transform: scale(1); opacity: 0.8;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">Ratio</label>
+                        <select id="tempo-select"
+                            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="3">3:1 (Full)</option>
+                            <option value="2">2:1 (Short)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px;">Vibe</label>
+                        <select id="tempo-vibe-select"
+                            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="classic">Classic</option>
+                            <option value="glock">Glockenspiel</option>
+                            <option value="snare">Snap</option>
+                            <option value="marimba">Marimba</option>
+                            <option value="bass">Bass</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600;">
+                        <label>Speed</label>
+                        <span id="tempo-speed-display" style="color: var(--primary-color);">1.2s</span>
+                    </div>
+                    <input type="range" id="tempo-speed-slider" min="0.8" max="2.0" step="0.1" value="1.2"
+                        style="width: 100%;">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <label style="font-size: 0.85rem; font-weight: 600;">Auto-Loop</label>
+                    <input type="checkbox" id="tempo-loop-toggle" checked style="width: 20px; height: 20px;">
+                </div>
+
+                <div id="tempo-delay-container" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600;">
+                        <label>Setup Delay</label>
+                        <span id="tempo-delay-display" style="color: var(--primary-color);">8s</span>
+                    </div>
+                    <input type="range" id="tempo-delay-slider" min="3" max="20" step="1" value="8"
+                        style="width: 100%;">
+                </div>
+
+                <button id="tempo-play-btn" class="btn btn-primary"
+                    style="width: 100%; padding: 15px; font-size: 1.1rem; letter-spacing: 2px;">START</button>
+            </div>
+        </section>
+        <audio id="native-audio-player" class="hidden" playsinline></audio>
+
+        <!-- ========================================== -->
         <!-- ADMIN DASHBOARD TAB (Dynamic)              -->
         <!-- ========================================== -->
         <div id="tab-admin" class="tab-content hidden"></div>
         <!-- ADMIN DASHBOARD TAB END -->
 
     </div>
-
     <!-- Delete Competition Confirmation Modal -->
     <div id="delete-comp-modal"
         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
@@ -1485,7 +1582,7 @@
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
         Golf Handicap Tracker v4.5.0
     </div>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="/src/app-v4.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

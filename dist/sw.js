@@ -1,18 +1,7 @@
-const CACHE_NAME = 'golf-tracker-v1';
+const CACHE_NAME = 'golf-tracker-v3'; // Incremented version
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
-    '/style.css',
-    '/app.js',
-    '/auth.js',
-    '/competitions.js',
-    '/course-data.js',
-    '/firebase-config.js',
-    '/state.js',
-    '/ui.js',
-    '/whs.js',
-    '/oncourse.js',
-    '/practice.js',
     '/manifest.json'
 ];
 

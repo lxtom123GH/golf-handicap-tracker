@@ -6,7 +6,7 @@ import { AppState } from './state.js';
 import {
     collection, doc, setDoc, deleteDoc, getDocs,
     query, where, orderBy, limit, getDoc
-} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+} from "firebase/firestore";
 
 export function initSocialFeed() {
     const btnSearch = document.getElementById('btn-feed-search');

@@ -741,3 +741,8 @@ body.round-active #tab-oncourse.hidden {
     /* below exit bar */
     z-index: 99;
 }
+
+@keyframes tempoExpand {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(3); opacity: 0; }
+}

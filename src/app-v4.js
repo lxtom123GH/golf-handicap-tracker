@@ -4,7 +4,7 @@
 // ==========================================
 
 import { UI, setupTabs } from './ui.js';
-import { setupAuthUI } from './auth.js';
+import { setupAuthUI } from './auth-v2.js';
 import { listenToWHSRounds, addRound } from './whs.js';
 import { initCompetitions } from './competitions.js';
 import { initPractice } from './practice.js';
@@ -19,9 +19,10 @@ import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS
 import { bindAdminTools, bindAdminInvite } from './admin.js';
 import { bindAiGenerator } from './ai.js';
 import { bindCoachTools, bindCoachDashboard } from './coach.js';
+import { initTempo } from './tempo.js';
 
 import { db } from './firebase-config.js';
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 function bootstrapApplication() {
     console.log("App Ready: Bootstrapping modules...");
@@ -39,6 +40,7 @@ function bootstrapApplication() {
     bindAiGenerator();
     populatePlayerSelect();
     initNotifications();
+    initTempo();
 
     // Feed tab — init when first opened
     const feedBtn = document.getElementById('tab-btn-feed');

@@ -3,8 +3,8 @@
 // ==========================================
 import { db, auth } from './firebase-config.js';
 import { AppState } from './state.js';
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const PREFS_DEFAULTS = {
     hiChange: true,

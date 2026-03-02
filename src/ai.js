@@ -4,8 +4,8 @@
 // ==========================================
 
 import { db } from './firebase-config.js';
-import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { UI } from './ui.js';
 import { AppState } from './state.js';
 
@@ -57,10 +57,12 @@ export function bindAiGenerator() {
     const btnAiCoach = document.getElementById('btn-ai-coach');
     const btnRegenerate = document.getElementById('btn-regenerate-ai');
 
-    // Coach users must never see or access the AI Coach feature
+    // Coach users must never see or access the AI Coach feature meant for players
     if (window.currentUserIsCoach && !window.currentUserIsAdmin) {
         if (btnAiPlayer) btnAiPlayer.closest('section, div')?.style && (btnAiPlayer.style.display = 'none');
         if (btnAiCoach) btnAiCoach.style.display = 'none';
+        const btnAskAi = document.getElementById('btn-ask-ai');
+        if (btnAskAi) btnAskAi.style.display = 'none';
         const btnCoachAiPlan = document.getElementById('btn-coach-ai-plan');
         if (btnCoachAiPlan) btnCoachAiPlan.style.display = 'none';
         return;

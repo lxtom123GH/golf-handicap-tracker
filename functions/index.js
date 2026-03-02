@@ -26,7 +26,7 @@ exports.askAiCoach = onCall({ secrets: ["GEMINI_API_KEY"] }, async (request) => 
             throw new HttpsError('failed-precondition', 'Server is missing the AI configuration key.');
         }
 
-        const genAI = new GoogleGenerativeAI(apiKey);
+        const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1beta" });
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // 3. Make the API Call

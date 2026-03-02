@@ -3,7 +3,7 @@
 // Custom Competitions & Leaderboards
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, or } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, or } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
 
@@ -16,6 +16,12 @@ export function initCompetitions() {
     bindLeaderboardSortHandlers();
     bindCompetitionCreation();
     bindCompetitionLogging();
+
+    if (UI.compSelect) {
+        UI.compSelect.addEventListener('change', (e) => {
+            setActiveCompetition(e.target.value);
+        });
+    }
 }
 
 function listenToCompetitions() {
@@ -67,37 +73,30 @@ function listenToCompetitions() {
 
 export function setActiveCompetition(compId) {
     activeCompId = compId;
-
-    // Save locally
     AppState.activeCompId = compId;
 
-    if (!compId) {
-        UI.logCompRoundContainer.classList.add('hidden');
-        AppState.currentCompData = null;
-        renderCompLeaderboard();
+    // CRITICAL FIX: Added bounds checking for the dropdown index
+    if (!compId || !UI.compSelect || UI.compSelect.selectedIndex <= 0) {
+        if (UI.logCompRoundContainer) UI.logCompRoundContainer.classList.add('hidden');
         return;
     }
 
     const selectedOpt = UI.compSelect.options[UI.compSelect.selectedIndex];
-    let rulesArray = [];
-    try {
-        rulesArray = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
-    } catch (e) { console.error("Rules parse err:", e); }
+    const rulesArray = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
+    AppState.currentCompData = { name: selectedOpt.getAttribute('data-name'), rules: rulesArray };
+    if (UI.logCompRoundContainer) {
+        UI.logCompRoundContainer.classList.remove('hidden');
+        if (UI.logCompRoundForm) {
+            UI.logCompRoundForm.reset();
+            // Clear dynamic inputs specifically if needed
+            const dynamicBody = document.getElementById('log-comp-dynamic');
+            if (dynamicBody) dynamicBody.innerHTML = '';
+            generateDynamicLogInputs(rulesArray);
+        }
+    }
 
-    AppState.currentCompData = {
-        name: selectedOpt.getAttribute('data-name'),
-        rules: rulesArray
-    };
-
-    // Build the rules desc UI
-    UI.compRulesDesc.innerHTML = '<strong>Scoring Rules:</strong> ' + rulesArray.map(r => `${r.name}: ${r.pts}pt`).join(', ');
-
-    // Reveal logging container and inject dynamic inputs
-    UI.logCompRoundContainer.classList.remove('hidden');
-    generateDynamicLogInputs(rulesArray);
-
-    // Listen for rounds specific to this comp
-    listenToCompRounds(compId);
+    // Ensure this function exists in the file
+    if (typeof listenToCompRounds === 'function') listenToCompRounds(compId);
 }
 
 function generateDynamicLogInputs(rulesArray) {

@@ -3,7 +3,11 @@
   "version": "1.1.0",
   "description": "Golf Handicap Tracker with Sequential Shot Tracking",
   "main": "app.js",
+  "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test:unit": "vitest run tests/unit",
     "test:rules": "npx firebase emulators:exec --only firestore \"vitest run tests/rules\"",
     "test:e2e": "playwright test",
@@ -12,12 +16,17 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
     "@playwright/test": "^1.58.2",
     "firebase-tools": "^15.8.0",
     "jsdom": "^28.1.0",
+    "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "firebase": "^12.10.0",
+    "xlsx": "^0.18.5"
   }
 }

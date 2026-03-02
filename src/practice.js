@@ -3,9 +3,10 @@
 // Practice Drills & Dashboard Logic
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
+import { bindAiGenerator } from './ai.js';
 
 let unsubscribePractice = null;
 let currentDrillDefinition = null;
@@ -13,48 +14,66 @@ let currentDrillDefinition = null;
 const DRILL_TEMPLATES = {
     "bunker_game": {
         name: "Bunker Game (Par 18)",
-        desc: "Play 9 bunker shots to different pins. Up & down = Par. Hole out = Birdie. 3 shots = Bogey.",
-        inputs: [{ id: "score", label: "Total Score (Par 18)", type: "number", default: 18, isMainScore: true }],
+        desc: "Hit 9 bunker shots. Focus on getting up-and-down. 1 pt for holed, 2 pts for up & down, 3 pts for bogey+.",
+        inputs: [
+            { id: 'holed', label: 'Holed (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'up_down', label: 'Up & Down (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'missed', label: 'Bogey+ (3 pts)', type: 'number', multiplier: 3, default: 0 }
+        ],
         scoringMath: "lower_is_better"
     },
     "inside_30": {
         name: "Inside 30 Yards (Proximity)",
-        desc: "Hit 9 shots from inside 30 yards. Within 1 club length = Birdie (-1). Within 2 = Par (0). Outside 2 = Double (+2).",
+        desc: "9 shots from 30 yards. Reward proximity with structured points. Stay inside the circle!",
         inputs: [
-            { id: "prox_in_1", label: "Within 1 Club Length (-1 pt)", type: "number", default: 0 },
-            { id: "prox_in_2", label: "Within 2 Club Lengths (0 pts)", type: "number", default: 0 },
-            { id: "prox_out_2", label: "Outside 2 Club Lengths (+2 pts)", type: "number", default: 0 },
-            { id: "score", label: "Total Points", type: "number", default: 0, isMainScore: true }
+            { id: 'holed', label: 'Holed (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'in_1_club', label: 'Inside 1 Club (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'in_2_clubs', label: 'Inside 2 Clubs (3 pts)', type: 'number', multiplier: 3, default: 0 },
+            { id: 'missed', label: 'Outside 2 Clubs (5 pts)', type: 'number', multiplier: 5, default: 0 }
         ],
         scoringMath: "lower_is_better"
     },
     "putting_9": {
-        name: "Putting 9-Hole Course",
-        desc: "Play 9 holes on the putting green. 1-putt = Birdie (-1). 2-putt = Par (0). 3-putt = Double (+2).",
+        name: "Putting (9 Holes)",
+        desc: "A 9-hole putting course challenge. 1 pt for a 1-putt, 2 pts for a 2-putt, 4 pts for a 3-putt catastrophe.",
         inputs: [
-            { id: "putts_1", label: "1-Putts (-1 pt)", type: "number", default: 0 },
-            { id: "putts_2", label: "2-Putts (0 pts)", type: "number", default: 0 },
-            { id: "putts_3", label: "3+ Putts (+2 pts)", type: "number", default: 0 },
-            { id: "score", label: "Total Points", type: "number", default: 0, isMainScore: true }
+            { id: 'putts_1', label: '1-Putts (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'putts_2', label: '2-Putts (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'putts_3', label: '3+ Putts (4 pts)', type: 'number', multiplier: 4, default: 0 }
         ],
         scoringMath: "lower_is_better"
     },
     "up_down": {
         name: "Up & Down Challenge",
-        desc: "Play 9 shots around the green. Chip in = Birdie (-1). Chip + 1 putt = Par (0). More than 1 putt = Double (+2).",
+        desc: "Play 9 shots around the green. Chip-ins are king. Focus on making those par saves.",
         inputs: [
-            { id: "ud_chip_in", label: "Chip Ins (-1 pt)", type: "number", default: 0 },
-            { id: "ud_up_down", label: "Up & Downs (0 pts)", type: "number", default: 0 },
-            { id: "ud_more", label: "Failed Up & Downs (+2 pts)", type: "number", default: 0 },
-            { id: "score", label: "Total Points", type: "number", default: 0, isMainScore: true }
+            { id: 'birdies', label: 'Holed (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'pars', label: 'Up & Down (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'bogeys', label: 'Bogey+ (3 pts)', type: 'number', multiplier: 3, default: 0 }
         ],
         scoringMath: "lower_is_better"
+    },
+    "putting_369": {
+        name: "3-6-9 Putting Ladder",
+        desc: "Hit 3 balls from 3ft, 6ft, and 9ft. 1 pt for a make, 0 for a miss. Max score 9.",
+        inputs: [
+            { id: 'putts_3ft', label: 'Makes from 3ft (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'putts_6ft', label: 'Makes from 6ft (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'putts_9ft', label: 'Makes from 9ft (1 pt)', type: 'number', multiplier: 1, default: 0 }
+        ],
+        scoringMath: "higher_is_better"
     }
 };
 
 export function initPractice() {
     populatePracticeSelect();
     listenToPractice();
+
+    const btnAskAi = document.getElementById('btn-ask-ai');
+    if (btnAskAi) btnAskAi.addEventListener('click', bindAiGenerator);
+
+    const dateInput = document.getElementById('drill-date');
+    if (dateInput) dateInput.valueAsDate = new Date();
 
     if (UI.practiceSelect) {
         UI.practiceSelect.addEventListener('change', (e) => {
@@ -89,19 +108,16 @@ export function initPractice() {
             const drillId = UI.practiceSelect.value;
 
             let dataPayload = {};
-            let mainScoreObj = currentDrillDefinition.inputs.find(i => i.isMainScore);
-            let scoreVal = 0;
+            let scoreVal = parseInt(UI.drillLiveTotalEl.textContent) || 0;
 
             currentDrillDefinition.inputs.forEach(inputDef => {
                 const el = document.getElementById('drill-input-' + inputDef.id);
                 if (el) {
-                    const rawVal = parseInt(el.value) || 0;
-                    dataPayload[inputDef.id] = rawVal;
-                    if (inputDef.isMainScore) scoreVal = rawVal;
+                    dataPayload[inputDef.id] = parseInt(el.value) || 0;
                 }
             });
 
-            const btn = e.target.querySelector('button[type="submit"]');
+            const btn = UI.btnSavePractice || e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.textContent = 'Saving...';
 
@@ -112,8 +128,8 @@ export function initPractice() {
                     drillId: drillId,
                     drillName: currentDrillDefinition.name,
                     score: scoreVal,
-                    data: dataPayload, // Store the raw inputs layout
-                    date: serverTimestamp()
+                    data: dataPayload,
+                    date: dateInput && dateInput.value ? new Date(dateInput.value) : new Date()
                 });
 
                 // Reset form
@@ -130,7 +146,49 @@ export function initPractice() {
                 alert("Failed to save practice record.");
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Log Practice Session';
+                btn.textContent = 'Save Practice Session';
+            }
+        });
+    }
+
+    if (UI.btnEmailCoach) {
+        UI.btnEmailCoach.addEventListener('click', () => {
+            const dataStr = AppState.currentPracticeRounds.map(r =>
+                `${new Date(r.date?.toDate?.() || r.date).toLocaleDateString()} - ${r.drillName}: ${r.score}`
+            ).join('\n');
+            window.location.href = `mailto:?subject=Golf Practice Logs&body=Here are my recent practice sessions:\n\n${encodeURIComponent(dataStr)}`;
+        });
+    }
+
+    if (UI.btnExportPractice) {
+        UI.btnExportPractice.addEventListener('click', () => {
+            const csv = "Date,Drill,Score\n" + AppState.currentPracticeRounds.map(r =>
+                `${new Date(r.date?.toDate?.() || r.date).toLocaleDateString()},${r.drillName},${r.score}`
+            ).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'golf_practice.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    }
+
+    // CRITICAL FIX: Event Delegation for deleting practice rounds
+    if (UI.practiceRecentTbody) {
+        UI.practiceRecentTbody.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('del-prac-round')) {
+                const id = e.target.getAttribute('data-id');
+                if (confirm("Are you sure you want to delete this practice session?")) {
+                    try {
+                        await deleteDoc(doc(db, "practice_rounds", id));
+                    } catch (err) {
+                        console.error("Failed to delete round", err);
+                    }
+                }
             }
         });
     }
@@ -155,30 +213,55 @@ function generatePracticeForm() {
     dynamicBody.innerHTML = '';
 
     const descP = document.createElement('p');
-    descP.style.fontSize = '0.9rem';
-    descP.style.color = '#64748b';
-    descP.style.marginBottom = '15px';
+    descP.style.fontSize = '0.95rem';
+    descP.style.color = '#475569';
+    descP.style.marginBottom = '18px';
+    descP.style.lineHeight = '1.5';
     descP.textContent = currentDrillDefinition.desc;
     dynamicBody.appendChild(descP);
 
     currentDrillDefinition.inputs.forEach(inputDef => {
         const div = document.createElement('div');
         div.className = 'form-group';
+        div.style.marginBottom = '12px';
 
         const label = document.createElement('label');
         label.textContent = inputDef.label;
         label.htmlFor = 'drill-input-' + inputDef.id;
+        label.style.display = 'block';
+        label.style.marginBottom = '4px';
 
         const input = document.createElement('input');
         input.type = inputDef.type;
         input.id = 'drill-input-' + inputDef.id;
+        input.className = 'drill-outcome-field';
         input.value = inputDef.default || 0;
+        input.min = 0;
         input.required = true;
+        input.style.width = '100%';
+
+        // Real-time calculation listener
+        input.addEventListener('input', calculateLiveTotal);
 
         div.appendChild(label);
         div.appendChild(input);
         dynamicBody.appendChild(div);
     });
+
+    calculateLiveTotal();
+}
+
+function calculateLiveTotal() {
+    if (!currentDrillDefinition || !UI.drillLiveTotalEl) return;
+    let total = 0;
+    currentDrillDefinition.inputs.forEach(inputDef => {
+        const el = document.getElementById('drill-input-' + inputDef.id);
+        if (el) {
+            const val = parseInt(el.value) || 0;
+            total += (val * (inputDef.multiplier || 1));
+        }
+    });
+    UI.drillLiveTotalEl.textContent = total;
 }
 
 function listenToPractice() {
@@ -295,8 +378,3 @@ function renderRecentPractice() {
     });
 }
 
-window.deletePracRound = async function (id) {
-    if (confirm("Are you sure you want to delete this practice session?")) {
-        await deleteDoc(doc(db, "practice_rounds", id));
-    }
-}

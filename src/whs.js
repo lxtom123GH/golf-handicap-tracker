@@ -3,7 +3,8 @@
 // Core World Handicap System Math & DB Logic
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import Chart from 'chart.js/auto';
 import { AppState } from './state.js';
 import { UI } from './ui.js';
 
@@ -99,7 +100,6 @@ export function listenToWHSRounds() {
 
     if (AppState.viewingPlayerId === null) {
         AppState.currentRounds = [];
-        renderRoundsHistory();
         return;
     }
 
@@ -109,32 +109,30 @@ export function listenToWHSRounds() {
         orderBy("date", "desc")
     );
 
-    UI.loadingState.classList.remove('hidden');
-    UI.emptyState.classList.add('hidden');
-    UI.historyTbody.innerHTML = '';
+    if (UI.loadingState) UI.loadingState.classList.remove('hidden');
+    if (UI.emptyState) UI.emptyState.classList.add('hidden');
 
     unsubscribeWHS = onSnapshot(q, async (snapshot) => {
-        UI.loadingState.classList.add('hidden');
-        AppState.currentRounds = [];
+        if (UI.loadingState) UI.loadingState.classList.add('hidden');
+
+        const newRounds = [];
         snapshot.forEach((doc) => {
-            AppState.currentRounds.push({ id: doc.id, ...doc.data() });
+            newRounds.push({ id: doc.id, ...doc.data() });
         });
 
-        const { index, usedIds } = calculateIndex(AppState.currentRounds);
-        window.currentHandicapIndex = index; // Cache globally if needed by other legacy functions
+        const { index, usedIds } = calculateIndex(newRounds);
 
-        UI.handicapIndexEl.textContent = index > 0 ? index : 'N/A';
-        UI.indexSubtextEl.textContent = AppState.currentRounds.filter(r => r.notCounting !== true).length < 3 ? "Need 3 scores to establish index" : "Current WHS Index";
+        // Batch updates to state
+        AppState.usedIds = usedIds;
+        AppState.handicapIndex = index;
+        AppState.currentRounds = newRounds;
 
         if (AppState.currentUser && AppState.viewingPlayerId === AppState.currentUser.uid) {
             updateUserHandicapIndexArray(index);
         }
-
-        renderRoundsHistory(usedIds);
-        renderTrendChart(AppState.currentRounds);
     }, (err) => {
         console.error("WHS Listen Error:", err);
-        UI.loadingState.classList.add('hidden');
+        if (UI.loadingState) UI.loadingState.classList.add('hidden');
     });
 }
 

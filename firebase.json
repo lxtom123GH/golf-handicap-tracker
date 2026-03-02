@@ -16,17 +16,17 @@
     "singleProjectMode": true
   },
   "hosting": {
-    "public": ".",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "tests/**",
-      "package.json",
-      "package-lock.json",
-      "playwright.config.js",
-      "vitest.config.js",
-      "*.log"
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   }
 }

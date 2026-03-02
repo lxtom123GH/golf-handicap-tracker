@@ -9,6 +9,8 @@ const initialState = {
     allUsersCache: null, // Used to cache the full list of users to prevent repeated DB reads
     viewingPlayerId: null,
     currentRounds: [], // Array of round objects for the currently viewed WHS player
+    handicapIndex: 'N/A',
+    usedIds: [], // The IDs of the best 8 of 20 scores
 
     activeCompId: null,
     currentCompData: null, // rules, name, etc.

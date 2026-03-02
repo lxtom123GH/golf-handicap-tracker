@@ -1,146 +1,116 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    function isApproved() {
-      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return exists(userPath) && (
-        get(userPath).data.get('isApproved', true) == true || 
-        get(userPath).data.get('isAdmin', false) == true
-      );
-    }
+
+    // =========================================================================
+    // 🔒 HELPER FUNCTIONS
+    // =========================================================================
     
+    // Checks if the user is logged in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Checks the 'users' collection to see if the user has the isAdmin flag
     function isAdmin() {
-      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return exists(userPath) && get(userPath).data.get('isAdmin', false) == true;
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
+
+    // Checks if the logged-in user's UID is in the target student's 'coaches' array
+    function isCoachOf(studentUid) {
+      return isAuthenticated() && 
+        request.auth.uid in get(/databases/$(database)/documents/users/$(studentUid)).data.coaches;
+    }
+
+    // =========================================================================
+    // 👤 USERS & PROFILES
+    // =========================================================================
     
-    function isCoachOf(studentId) {
-      let userPath = /databases/$(database)/documents/users/$(studentId);
-      return exists(userPath) && request.auth.uid in get(userPath).data.get('coaches', []);
-    }
-
-    // Schema Validation Helpers
-    function isValidString(val, minLen, maxLen) {
-      return val is string && val.size() >= minLen && val.size() <= maxLen;
-    }
-    function isValidNumber(val, minVal, maxVal) {
-      return (val is int || val is float) && val >= minVal && val <= maxVal;
-    }
-    function hasFields(data, fields) {
-      return data.keys().hasAll(fields);
-    }
-
-    // Users Collection
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId && 
-                    hasFields(request.resource.data, ['email', 'isAdmin']) &&
-                    request.resource.data.isAdmin == false &&
-                    (
-                      request.resource.data.get('isApproved', false) == false ||
-                      exists(/databases/$(database)/documents/preapproved_emails/$(request.resource.data.email))
-                    );
-      allow update: if request.auth != null && (
-        isAdmin() || 
-        (request.auth.uid == userId && 
-         request.resource.data.get('isApproved', false) == resource.data.get('isApproved', false) &&
-         request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false))
-      );
-      
-      // Settings / Prefs Subcollection
-      match /prefs/{prefId} {
-        allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      }
-      
-      // Social Following Subcollection
-      match /following/{targetUid} {
-        allow read: if request.auth != null && isApproved();
-        allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      }
-      
-      // Coach Notes Subcollection
+      // Anyone logged in can read basic profiles (needed for leaderboards/feed)
+      allow read: if isAuthenticated();
+      // Users can only update their own profile, Admins can update anyone
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+
+      // 📝 Nested Coach Notes
       match /coachNotes/{noteId} {
-        allow read: if request.auth != null && isApproved() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
-        allow write: if request.auth != null && isApproved() && (isCoachOf(userId) || isAdmin()) &&
-                     hasFields(request.resource.data, ['coachUid', 'text', 'createdAt']);
+        // Only the student, their assigned coach, or an admin can read notes
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
+        // Only the coach or an admin can write notes
+        allow write: if isAuthenticated() && (isCoachOf(userId) || isAdmin());
       }
-      
-      // Coach Assigned Drills Subcollection
-      match /assignedDrills/{drillId} {
-        allow read: if request.auth != null && isApproved() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
-        allow write: if request.auth != null && isApproved() && (isCoachOf(userId) || isAdmin()) &&
-                     hasFields(request.resource.data, ['drillName', 'assignedBy', 'assignedAt']);
+
+      // ⚙️ Nested User Preferences
+      match /prefs/{prefId} {
+        allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       }
-    }
-    
-    // Profiles Collection (Handicap array)
-    match /profiles/{userId} {
-      allow read: if request.auth != null && isApproved();
-      allow write: if request.auth != null && isApproved() && request.auth.uid == userId &&
-                   hasFields(request.resource.data, ['handicapHistory']);
-    }
-    
-    // WHS Rounds Collection
-    match /whs_rounds/{roundId} {
-      allow read, list: if request.auth != null && isApproved();
-      allow create: if request.auth != null && isApproved() && 
-                    request.resource.data.uid == request.auth.uid &&
-                    hasFields(request.resource.data, ['course', 'adjustedGross', 'rating', 'slope', 'date']) &&
-                    isValidString(request.resource.data.course, 1, 100) &&
-                    isValidNumber(request.resource.data.adjustedGross, 20, 200) &&
-                    isValidNumber(request.resource.data.rating, 30, 90) &&
-                    isValidNumber(request.resource.data.slope, 50, 155);
-      allow update, delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
     }
 
-    // Competitions Collection
+    // Profile aliases (legacy mapping catch)
+    match /profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // =========================================================================
+    // ⛳ ROUNDS, SHOTS & PRACTICE
+    // =========================================================================
+    
+    match /whs_rounds/{roundId} {
+      // Read: Open to auth'd users for the social feed and leaderboards
+      allow read: if isAuthenticated();
+      // Create: Must be setting their own UID
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      // Update/Delete: Only the owner or an Admin
+      allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /shots/{shotId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /practice_rounds/{roundId} {
+      // Practice rounds are private! Only the user, their coach, or an Admin can see them.
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isCoachOf(resource.data.uid) || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // =========================================================================
+    // 🏆 COMPETITIONS
+    // =========================================================================
+    
     match /competitions/{compId} {
-      allow read, list: if request.auth != null && isApproved() && (
-        resource.data.get('visibility', 'public') == 'public' ||
-        resource.data.ownerId == request.auth.uid ||
-        request.auth.uid in resource.data.get('invitedUIDs', []) ||
+      // Users can read if it's public, if they own it, if they are invited, or if admin
+      allow read: if isAuthenticated() && (
+        resource.data.visibility == "public" || 
+        resource.data.ownerId == request.auth.uid || 
+        request.auth.uid in resource.data.invitedUIDs || 
         isAdmin()
       );
-      allow create: if request.auth != null && isApproved() && 
-                    hasFields(request.resource.data, ['name', 'ownerId', 'rules']) &&
-                    request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if request.auth != null && isApproved() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      // Only the owner can create/edit/delete
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
-    
-    // Competition Rounds Collection
+
     match /comp_rounds/{compRoundId} {
-      allow read, list: if request.auth != null && isApproved();
-      allow create: if request.auth != null && isApproved() && 
-                    hasFields(request.resource.data, ['compId', 'uid', 'score']) &&
-                    request.resource.data.uid == request.auth.uid;
-      allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
     }
 
-    // Practice Rounds Collection
-    match /practice_rounds/{practiceId} {
-      allow read, list: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
-      allow create: if request.auth != null && isApproved() && 
-                    request.resource.data.uid == request.auth.uid &&
-                    hasFields(request.resource.data, ['drillName', 'score', 'date']) &&
-                    isValidString(request.resource.data.drillName, 1, 100);
-      allow delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
-    }
-
-    // Pre-Approved Emails Collection
-    match /preapproved_emails/{emailId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isAdmin();
-    }
-
-    // Shot Tracker Collection
-    match /shots/{shotId} {
-      allow read, list: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
-      allow create: if request.auth != null && isApproved() && 
-                    request.resource.data.uid == request.auth.uid &&
-                    hasFields(request.resource.data, ['hole', 'club']) &&
-                    isValidNumber(request.resource.data.hole, 1, 18);
-      allow update, delete: if request.auth != null && isApproved() && resource.data.uid == request.auth.uid;
+    // =========================================================================
+    // 🔑 ADMIN & SYSTEM
+    // =========================================================================
+    
+    match /preapproved_emails/{email} {
+      // App needs to read this during registration
+      allow read: if isAuthenticated() || request.auth == null; 
+      // Only admins can add or remove pre-approved emails
+      allow write: if isAdmin();
     }
   }
 }

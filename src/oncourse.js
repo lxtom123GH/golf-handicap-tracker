@@ -3,7 +3,7 @@
 // Live Round Tracking & Shot UI Engine
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc, getDocs, writeBatch, deleteDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
 import { COURSE_DATA } from './course-data.js';
@@ -16,10 +16,12 @@ export function initOnCourse() {
     bindCourseSelect();
     bindAddPlayer();
     bindShotWizard();
+    bindStartRound();
     bindGlobalRoundActions();
     bindReviewModal();
 
     // Default init
+    if (typeof updateModeVisibility === 'function') updateModeVisibility();
     if (UI.ocCourseSelect && UI.ocCourseSelect.value) {
         UI.ocCourseSelect.dispatchEvent(new Event('change'));
     }
@@ -36,6 +38,7 @@ function bindSetupToggles() {
             UI.btnModeDetailed.style.background = 'transparent';
             UI.btnModeDetailed.style.color = '#64748b';
             if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Simple: fairway, GIR, putts per hole";
+            updateModeVisibility();
         });
         UI.btnModeDetailed.addEventListener('click', () => {
             AppState.currentTrackingMode = 'detailed';
@@ -46,7 +49,20 @@ function bindSetupToggles() {
             UI.btnModeSimple.style.background = 'transparent';
             UI.btnModeSimple.style.color = '#64748b';
             if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Detailed: Tracking ball flight, start line, curve, & outcomes";
+            updateModeVisibility();
         });
+    }
+
+
+    function updateModeVisibility() {
+        const btnTrack = document.getElementById('btn-oc-track-shot');
+        const wizard = document.getElementById('oncourse-wizard');
+        if (AppState.currentTrackingMode === 'simple') {
+            if (btnTrack) btnTrack.classList.add('hidden');
+            if (wizard) wizard.classList.add('hidden');
+        } else {
+            if (btnTrack) btnTrack.classList.remove('hidden');
+        }
     }
 
     if (UI.btnRound9 && UI.btnRound18) {
@@ -111,12 +127,15 @@ function bindCourseSelect() {
                 if (AppState.currentUser) {
                     const hi = await getPlayerHandicap(AppState.currentUser.uid);
                     if (hi !== undefined && data.par > 0) {
-                        const dh = Math.round(hi * ((data.slope || 113) / 113) + ((data.rating || 72) - data.par));
+                        const dh = Math.round(hi * ((data.slope || 113) / 113) + ((data.rating || 72) - (data.par || 72)));
                         if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <strong><input type="number" id="oc-manual-dh" value="${dh}" style="width:60px; display:inline; font-weight:bold; color:var(--primary-color);"></strong>`;
                     } else {
                         if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <input type="number" id="oc-manual-dh" value="0" style="width:60px; display:inline; font-weight:bold;">`;
                     }
                 }
+
+                // Force UI isolation check on tee/mode change
+                updateModeVisibility();
             }
         });
     }
@@ -133,44 +152,17 @@ function bindAddPlayer() {
                 return;
             }
 
-            AppState.liveRoundGroups.push({
+            // Update state triggers Proxy 'set' and thus reactive render
+            AppState.liveRoundGroups = [...AppState.liveRoundGroups, {
                 uid: sel.value,
                 name: sel.text,
                 scores: {},
                 compStats: {},
                 simpleStats: {}
-            });
-
-            renderOcPlayersList();
+            }];
         });
     }
 }
-
-export function renderOcPlayersList() {
-    if (!UI.ocAddedPlayersList) return;
-    UI.ocAddedPlayersList.innerHTML = '';
-    AppState.liveRoundGroups.forEach((p, index) => {
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px; background:#f1f5f9; margin-bottom:5px; border-radius:5px;';
-
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = p.name;
-
-        const btnRemove = document.createElement('button');
-        btnRemove.textContent = 'Remove';
-        btnRemove.className = 'btn-text';
-        btnRemove.style.cssText = 'color:#ef4444; padding:0;';
-        btnRemove.addEventListener('click', () => {
-            AppState.liveRoundGroups.splice(index, 1);
-            renderOcPlayersList();
-        });
-
-        div.appendChild(nameSpan);
-        div.appendChild(btnRemove);
-        UI.ocAddedPlayersList.appendChild(div);
-    });
-}
-
 function bindStartRound() {
     if (UI.btnOcStart) {
         UI.btnOcStart.addEventListener('click', async () => {
@@ -230,23 +222,29 @@ function bindStartRound() {
 function bindGlobalRoundActions() {
     const btnDiscard = document.getElementById('btn-oc-discard');
     if (btnDiscard) {
-        btnDiscard.addEventListener('click', () => {
-            if (confirm("Are you sure you want to discard this round's scores? Individual shots tracked will remain saved in your history.")) {
-                endRoundCleanup();
+        btnDiscard.addEventListener('click', async () => {
+            if (confirm("Are you sure you want to discard this round and ALL recorded shots?")) {
+                try {
+                    const batch = writeBatch(db);
+                    const shotsQuery = query(collection(db, "shots"), where("roundId", "==", AppState.activeRoundId));
+                    const shotSnaps = await getDocs(shotsQuery);
+                    shotSnaps.forEach(sdoc => batch.delete(sdoc.ref));
+
+                    // CRITICAL FIX: Delete the round document itself
+                    const roundRef = doc(db, "whs_rounds", AppState.activeRoundId);
+                    batch.delete(roundRef);
+
+                    await batch.commit();
+
+                    // Note: Assuming showToast exists in the file, otherwise replace with console.log
+                    if (typeof showToast !== 'undefined') showToast("Round & Shots discarded 🗑️");
+                    endRoundCleanup();
+                } catch (e) {
+                    alert("Failed to discard round data cleanly.");
+                }
             }
         });
     }
-
-    const btnExit = document.getElementById('btn-oc-exit');
-    if (btnExit) {
-        btnExit.addEventListener('click', () => {
-            if (confirm("Exit round and return to setup? This will NOT save your final scores to the database.")) {
-                endRoundCleanup();
-            }
-        });
-    }
-
-    bindStartRound(); // Ensure it is bound
 }
 
 function endRoundCleanup() {
@@ -529,6 +527,14 @@ function bindShotWizard() {
                 timestamp: new Date().toISOString()
             };
             showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${shotNum}`);
+
+            // Smooth scroll to inputs for better UX
+            const scrollAnchor = document.getElementById('detailed-shot-inputs');
+            if (scrollAnchor) {
+                scrollAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                wizardDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         });
     }
 

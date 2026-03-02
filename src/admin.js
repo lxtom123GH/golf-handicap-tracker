@@ -4,8 +4,9 @@
 // ==========================================
 
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, query, where } from "firebase/firestore";
+import { sendPasswordResetEmail } from "firebase/auth";
+import * as XLSX from 'xlsx';
 import { UI } from './ui.js';
 
 export function bindAdminTools() {
@@ -334,7 +335,7 @@ export function bindAdminInvite() {
             try {
                 const file = fileInput.files[0];
                 const data = await file.arrayBuffer();
-                const workbook = window.XLSX.read(data, { type: 'array', cellDates: true });
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
                 let totalImported = 0;
                 let logMsg = "Import log:\n";
@@ -356,7 +357,7 @@ export function bindAdminInvite() {
                     logMsg += `✅ Found user for tab '${sheetName}' (UID: ${targetUid}).\n`;
 
                     const worksheet = workbook.Sheets[sheetName];
-                    const rows = window.XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
                     let tabImported = 0;
                     let tabErrors = 0;
