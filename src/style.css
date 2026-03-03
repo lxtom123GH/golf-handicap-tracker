@@ -36,6 +36,8 @@ input,
 .oc-toggle-btn,
 .oc-sub-btn,
 .mini-stat,
+.putt-plus,
+.putt-minus,
 .tab-btn {
     touch-action: manipulation;
     user-select: none;
