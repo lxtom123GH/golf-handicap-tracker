@@ -56,6 +56,8 @@ function listenToCompetitions() {
             opt.setAttribute('data-name', data.name);
             // Task 1: Store regulars
             opt.setAttribute('data-regulars', JSON.stringify(data.defaultPlayers || []));
+            // Store starting points for scoring sync
+            opt.setAttribute('data-sp', JSON.stringify(data.startingPoints || {}));
 
             UI.compSelect.appendChild(opt);
 
@@ -99,7 +101,13 @@ export function setActiveCompetition(compId) {
     }
 
     const rulesArray = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
-    AppState.currentCompData = { name: selectedOpt.getAttribute('data-name'), rules: rulesArray };
+    const startingPoints = JSON.parse(selectedOpt.getAttribute('data-sp') || "{}");
+
+    AppState.currentCompData = {
+        name: selectedOpt.getAttribute('data-name'),
+        rules: rulesArray,
+        startingPoints: startingPoints
+    };
 
     if (activeCompView) activeCompView.classList.remove('hidden');
     if (noCompEmpty) noCompEmpty.classList.add('hidden');
