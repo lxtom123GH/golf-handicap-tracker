@@ -195,6 +195,10 @@ export function switchTab(targetId) {
     try {
         if (!targetId) throw new Error('switchTab called without targetId');
 
+        // Task 1: Mobile Error Trapping (Visible Console)
+        // temporary alert to confirm the function is firing on hardware
+        alert('Attempting to open: ' + targetId);
+
         // 1. Authorization & Role Check
         const isAdmin = window.currentUserIsAdmin || false;
         const isCoach = AppState.currentUser?.isCoach || false;
@@ -239,6 +243,9 @@ export function switchTab(targetId) {
 
     } catch (err) {
         console.error(`[Navigation Error] ${err.message}`);
+        // Task 1: Mobile Error Trapping
+        alert('Navigation Error: ' + err.message);
+        console.error(err);
     }
 }
 
