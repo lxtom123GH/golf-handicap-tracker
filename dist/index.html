@@ -12,7 +12,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-DLgye_ym.js"></script>
+  <script type="module" crossorigin src="/assets/index-CBRMKSEj.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-B-qXDccU.css">
 </head>
 
@@ -672,6 +672,7 @@
                                 <button type="submit" class="btn btn-primary" style="background-color: #1e3c72;">Log
                                     Round &
                                     Calculate Points</button>
+                            </div>
                         </form>
                     </section>
 
@@ -2090,22 +2091,24 @@
                 </div>
             </div>
         </div>
-        <!-- Global Version Footer -->
-        <div id="footer-version"
-            style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-            Golf Handicap Tracker v6.0.0
-        </div>
-        <script>
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js').then((registration) => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    }, (error) => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
+    </div>
+    <!-- Global Version Footer -->
+    <div id="footer-version"
+        style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
+        Golf Handicap Tracker v6.0.0
+    </div>
+    </div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (error) => {
+                    console.log('ServiceWorker registration failed: ', error);
                 });
-            }
-        </script>
+            });
+        }
+    </script>
 </body>
 
 </html>
