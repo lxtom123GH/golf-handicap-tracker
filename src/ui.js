@@ -64,6 +64,8 @@ export const UI = {
     compLeaderboardHead: document.getElementById('comp-leaderboard-head'),
     compLeaderboardTbody: document.getElementById('comp-leaderboard-tbody'),
     compRulesDesc: document.getElementById('active-comp-rules-summary'),
+    compRegularsList: document.getElementById('comp-regulars-list'),
+    btnOcQuickAdd: document.getElementById('btn-oc-quick-add'),
 
     // Practice Module
     tabBtnPractice: document.querySelector('[data-target="tab-practice"]'),

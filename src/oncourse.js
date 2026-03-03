@@ -25,6 +25,7 @@ export function initOnCourse() {
     bindReviewActions();
     bindAdvancedTools();
     bindOcSubNav();
+    bindCompQuickAdd();
 
     // Default init
     if (typeof updateModeVisibility === 'function') updateModeVisibility();
@@ -162,6 +163,51 @@ function bindAddPlayer() {
         });
     }
 }
+
+function bindCompQuickAdd() {
+    if (UI.ocLinkComp && UI.btnOcQuickAdd) {
+        UI.ocLinkComp.addEventListener('change', () => {
+            const sel = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
+            if (!sel || !sel.value) {
+                UI.btnOcQuickAdd.classList.add('hidden');
+                return;
+            }
+            const regulars = JSON.parse(sel.getAttribute('data-regulars') || "[]");
+            if (regulars.length > 0) {
+                UI.btnOcQuickAdd.classList.remove('hidden');
+            } else {
+                UI.btnOcQuickAdd.classList.add('hidden');
+            }
+        });
+
+        UI.btnOcQuickAdd.addEventListener('click', () => {
+            const sel = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
+            const regulars = JSON.parse(sel.getAttribute('data-regulars') || "[]");
+            if (regulars.length === 0) return;
+
+            let addedCount = 0;
+            const currentGroups = [...AppState.liveRoundGroups];
+            regulars.forEach(p => {
+                if (!currentGroups.find(existing => existing.uid === p.uid)) {
+                    currentGroups.push({
+                        uid: p.uid,
+                        name: p.name,
+                        scores: {},
+                        compStats: {},
+                        simpleStats: {}
+                    });
+                    addedCount++;
+                }
+            });
+            AppState.liveRoundGroups = currentGroups;
+            if (addedCount > 0) {
+                // Done
+            } else {
+                alert("All regulars are already in the group.");
+            }
+        });
+    }
+}
 function bindStartRound() {
     if (UI.btnOcStart) {
         UI.btnOcStart.addEventListener('click', async () => {
@@ -208,7 +254,7 @@ function bindStartRound() {
             document.body.classList.add('round-active');
             document.getElementById('oncourse-setup').classList.add('hidden');
             document.getElementById('oncourse-hub').classList.remove('hidden');
-            
+
             // Show new sub-nav and progress bar
             const subNav = document.getElementById('oc-sub-nav');
             if (subNav) subNav.classList.remove('hidden');

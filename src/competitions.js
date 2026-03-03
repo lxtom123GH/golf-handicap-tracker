@@ -16,6 +16,7 @@ export function initCompetitions() {
     bindLeaderboardSortHandlers();
     bindCompetitionCreation();
     bindCompetitionLogging();
+    populateRegularsPool();
 
     if (UI.compSelect) {
         UI.compSelect.addEventListener('change', (e) => {
@@ -53,6 +54,8 @@ function listenToCompetitions() {
             // Store raw rules array as JSON on option
             opt.setAttribute('data-rules', JSON.stringify(data.rules || []));
             opt.setAttribute('data-name', data.name);
+            // Task 1: Store regulars
+            opt.setAttribute('data-regulars', JSON.stringify(data.defaultPlayers || []));
 
             UI.compSelect.appendChild(opt);
 
@@ -319,6 +322,7 @@ function bindCompetitionCreation() {
         btnShowCreateComp.addEventListener('click', () => {
             UI.createCompContainer.classList.remove('hidden');
             btnShowCreateComp.classList.add('hidden');
+            populateRegularsPool(); // Ensure fresh list
         });
     }
 
@@ -384,6 +388,10 @@ function bindCompetitionCreation() {
                 createdAt: serverTimestamp(),
                 visibility: document.querySelector('input[name="comp-visibility"]:checked')?.value || 'public',
                 rules: rules,
+                defaultPlayers: Array.from(UI.compRegularsList.querySelectorAll('input:checked')).map(i => ({
+                    uid: i.value,
+                    name: i.getAttribute('data-name')
+                })),
                 startingPoints: {
                     round: {
                         enabled: spRoundEnable,
@@ -505,3 +513,26 @@ function bindCompetitionLogging() {
         });
     });
 }
+
+function populateRegularsPool() {
+    if (!UI.compRegularsList) return;
+    getDocs(collection(db, 'users')).then(snap => {
+        UI.compRegularsList.innerHTML = '';
+        snap.forEach(d => {
+            const data = d.data();
+            if (data.isApproved) {
+                const label = document.createElement('label');
+                label.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;';
+                label.innerHTML = `
+                    <input type="checkbox" value="${d.id}" data-name="${data.displayName || data.email}">
+                    <span>${data.displayName || data.email}</span>
+                `;
+                UI.compRegularsList.appendChild(label);
+            }
+        });
+        if (UI.compRegularsList.innerHTML === '') {
+            UI.compRegularsList.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem;">No approved players found.</p>';
+        }
+    });
+}
+

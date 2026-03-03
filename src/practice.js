@@ -13,70 +13,90 @@ let currentDrillDefinition = null;
 
 const DRILL_TEMPLATES = {
     "bunker_game": {
-        name: "Bunker Game (Par 18)",
-        desc: "Hit 9 bunker shots. Focus on getting up-and-down. 1 pt for holed, 2 pts for up & down, 3 pts for bogey+.",
+        name: "Bunker Game (9 Shots)",
+        desc: "Hit 9 bunker shots. Reward quality recoveries. Holed: 5pts, Up & Down: 2pts, On Green: 1pt. Aim for the flag!",
         inputs: [
-            { id: 'holed', label: 'Holed (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'holed', label: 'Holed (5 pts)', type: 'number', multiplier: 5, default: 0 },
             { id: 'up_down', label: 'Up & Down (2 pts)', type: 'number', multiplier: 2, default: 0 },
-            { id: 'missed', label: 'Bogey+ (3 pts)', type: 'number', multiplier: 3, default: 0 }
+            { id: 'on_green', label: 'On Green (1 pt)', type: 'number', multiplier: 1, default: 0 }
         ],
-        scoringMath: "lower_is_better"
+        scoringMath: "higher_is_better"
     },
     "inside_30": {
         name: "Inside 30 Yards (Proximity)",
-        desc: "9 shots from 30 yards. Reward proximity with structured points. Stay inside the circle!",
+        desc: "9 shots from 30 yards. Precision is rewarded. Holed: 10pts, Inside 3ft: 3pts, Inside 6ft: 1pt. Stay aggressive!",
         inputs: [
-            { id: 'holed', label: 'Holed (1 pt)', type: 'number', multiplier: 1, default: 0 },
-            { id: 'in_1_club', label: 'Inside 1 Club (2 pts)', type: 'number', multiplier: 2, default: 0 },
-            { id: 'in_2_clubs', label: 'Inside 2 Clubs (3 pts)', type: 'number', multiplier: 3, default: 0 },
-            { id: 'missed', label: 'Outside 2 Clubs (5 pts)', type: 'number', multiplier: 5, default: 0 }
+            { id: 'holed', label: 'Holed (10 pts)', type: 'number', multiplier: 10, default: 0 },
+            { id: 'in_3ft', label: 'Inside 3ft (3 pts)', type: 'number', multiplier: 3, default: 0 },
+            { id: 'in_6ft', label: 'Inside 6ft (1 pt)', type: 'number', multiplier: 1, default: 0 }
         ],
-        scoringMath: "lower_is_better"
+        scoringMath: "higher_is_better"
     },
     "putting_9": {
         name: "Putting (9 Holes)",
-        desc: "A 9-hole putting course challenge. 1 pt for a 1-putt, 2 pts for a 2-putt, 4 pts for a 3-putt catastrophe.",
+        desc: "A 9-hole putting challenge. Avoid the 3-putt! Holed (1-putt): 3pts, 2-putt: 1pt, 3+ putt: 0pts.",
         inputs: [
-            { id: 'putts_1', label: '1-Putts (1 pt)', type: 'number', multiplier: 1, default: 0 },
-            { id: 'putts_2', label: '2-Putts (2 pts)', type: 'number', multiplier: 2, default: 0 },
-            { id: 'putts_3', label: '3+ Putts (4 pts)', type: 'number', multiplier: 4, default: 0 }
+            { id: 'putts_1', label: '1-Putts (3 pts)', type: 'number', multiplier: 3, default: 0 },
+            { id: 'putts_2', label: '2-Putts (1 pt)', type: 'number', multiplier: 1, default: 0 },
+            { id: 'putts_3', label: '3+ Putts (0 pts)', type: 'number', multiplier: 0, default: 0 }
         ],
-        scoringMath: "lower_is_better"
+        scoringMath: "higher_is_better"
     },
     "up_down": {
         name: "Up & Down Challenge",
-        desc: "Play 9 shots around the green. Chip-ins are king. Focus on making those par saves.",
+        desc: "9 shots around the green. Chip-ins are king. Holed: 5pts, Pars (Up & Down): 2pts, Bogeys: 0pts.",
         inputs: [
-            { id: 'birdies', label: 'Holed (1 pt)', type: 'number', multiplier: 1, default: 0 },
-            { id: 'pars', label: 'Up & Down (2 pts)', type: 'number', multiplier: 2, default: 0 },
-            { id: 'bogeys', label: 'Bogey+ (3 pts)', type: 'number', multiplier: 3, default: 0 }
+            { id: 'holed', label: 'Holed (5 pts)', type: 'number', multiplier: 5, default: 0 },
+            { id: 'up_down', label: 'Up & Down (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'missed', label: 'Missed (0 pts)', type: 'number', multiplier: 0, default: 0 }
         ],
-        scoringMath: "lower_is_better"
+        scoringMath: "higher_is_better"
+    },
+    "driving_accuracy": {
+        name: "Driving Accuracy",
+        desc: "10 Drivers. Focus on the skinny line. Center Stripe: 5pts, Fairway: 2pts, Miss: 0pts.",
+        inputs: [
+            { id: 'center', label: 'Center Stripe (5 pts)', type: 'number', multiplier: 5, default: 0 },
+            { id: 'fairway', label: 'Fairway (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'miss', label: 'Miss (0 pts)', type: 'number', multiplier: 0, default: 0 }
+        ],
+        scoringMath: "higher_is_better"
+    },
+    "iron_proximity": {
+        name: "Iron Proximity (50-150y)",
+        desc: "10 shots to alternating targets. Holed: 20pts, Inside 5ft: 5pts, Inside 15ft: 2pts, Green Hit: 1pt.",
+        inputs: [
+            { id: 'holed', label: 'Holed (20 pts)', type: 'number', multiplier: 20, default: 0 },
+            { id: 'in_5ft', label: 'Inside 5ft (5 pts)', type: 'number', multiplier: 5, default: 0 },
+            { id: 'in_15ft', label: 'Inside 15ft (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'green', label: 'Green Hit (1 pt)', type: 'number', multiplier: 1, default: 0 }
+        ],
+        scoringMath: "higher_is_better"
     },
     "putting_369": {
         name: "3-6-9 Putting Ladder",
-        desc: "Hit 3 balls from 3ft, 6ft, and 9ft. 1 pt for 3ft, 2 pts for 6ft, 3 pts for 9ft makes. Max score 18.",
+        desc: "Hit 3 balls from 3ft, 6ft, and 9ft. 1 pt for 3ft, 3 pts for 6ft, 5 pts for 9ft makes. Reward the deep ones!",
         inputs: [
             { id: 'putts_3ft', label: 'Makes from 3ft (1 pt)', type: 'number', multiplier: 1, default: 0 },
-            { id: 'putts_6ft', label: 'Makes from 6ft (2 pts)', type: 'number', multiplier: 2, default: 0 },
-            { id: 'putts_9ft', label: 'Makes from 9ft (3 pts)', type: 'number', multiplier: 3, default: 0 }
+            { id: 'putts_6ft', label: 'Makes from 6ft (3 pts)', type: 'number', multiplier: 3, default: 0 },
+            { id: 'putts_9ft', label: 'Makes from 9ft (5 pts)', type: 'number', multiplier: 5, default: 0 }
         ],
         scoringMath: "higher_is_better"
     },
     "ladder_putt": {
-        name: "Ladder Distance Control (20 mins)",
-        desc: "4 balls at 10, 20, 30, and 40 feet. 5 rounds. Focus on lagging into the 2-foot scoring zone.",
+        name: "Ladder Distance Control",
+        desc: "4 balls at 10, 20, 30, and 40 feet. 5 rounds. Lag it close! Inside Half Club: 5pts, 1 Club: 2pts, 2 Clubs: 1pt.",
         inputs: [
             { id: 'inside_half_club', label: 'Inside Half Club (5 pts)', type: 'number', multiplier: 5 },
-            { id: 'inside_1_club', label: 'Inside 1 Club (3 pts)', type: 'number', multiplier: 3 },
+            { id: 'inside_1_club', label: 'Inside 1 Club (2 pts)', type: 'number', multiplier: 2 },
             { id: 'inside_2_clubs', label: 'Inside 2 Clubs (1 pt)', type: 'number', multiplier: 1 },
             { id: 'outside_2_clubs', label: 'Outside 2 Clubs (0 pts)', type: 'number', multiplier: 0 }
         ],
         scoringMath: "higher_is_better"
     },
     "make_break_5ft": {
-        name: "5-Foot Make or Break (15 mins)",
-        desc: "5 balls in a semi-circle at 5 feet. 5 sets. Goal is to make every single one.",
+        name: "5-Foot Make or Break",
+        desc: "5 balls in a semi-circle at 5 feet. 5 sets. Goal is perfection. Each make is 1pt.",
         inputs: [
             { id: 'putts_made', label: 'Putts Made (1 pt)', type: 'number', multiplier: 1, default: 0 },
             { id: 'putts_missed', label: 'Putts Missed (0 pts)', type: 'number', multiplier: 0, default: 0 }
@@ -84,12 +104,12 @@ const DRILL_TEMPLATES = {
         scoringMath: "higher_is_better"
     },
     "gauntlet_putt": {
-        name: "The Gauntlet Challenge (10 mins)",
-        desc: "Make a 3ft, 6ft, and 9ft putt in sequence. If you miss, sequence ends. 3 total sequences.",
+        name: "The Gauntlet Challenge",
+        desc: "Make a 3ft, 6ft, and 9ft putt in sequence. Extreme focus required. Made 3ft: 1pt, 6ft: 3pts, 9ft: 5pts.",
         inputs: [
             { id: 'made_3ft', label: 'Made 3-footer (1 pt)', type: 'number', multiplier: 1 },
-            { id: 'made_6ft', label: 'Made 6-footer (2 pts)', type: 'number', multiplier: 2 },
-            { id: 'made_9ft', label: 'Made 9-footer (3 pts)', type: 'number', multiplier: 3 }
+            { id: 'made_6ft', label: 'Made 6-footer (3 pts)', type: 'number', multiplier: 3 },
+            { id: 'made_9ft', label: 'Made 9-footer (5 pts)', type: 'number', multiplier: 5 }
         ],
         scoringMath: "higher_is_better"
     }

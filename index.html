@@ -460,6 +460,20 @@
                         </div>
                     </div>
 
+                    <!-- Regulars Selection -->
+                    <div id="comp-regulars-container" class="form-row"
+                        style="background: #f8f9fa; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; flex-direction: column; margin-bottom: 20px;">
+                        <label style="margin-bottom: 5px; color: var(--primary-color); font-weight:700;">Competition
+                            Regulars (Quick Add):</label>
+                        <p class="section-desc" style="margin-bottom:10px;">Select players who regularly play in this
+                            competition for quick-entry on the course.</p>
+                        <div id="comp-regulars-list"
+                            style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background:white; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <!-- Checkboxes injected here via JS -->
+                            <p style="color:#94a3b8; font-size:0.85rem;">Loading potential regulars...</p>
+                        </div>
+                    </div>
+
                     <div id="comp-invite-container" class="form-row hidden"
                         style="background: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; flex-direction: column;">
                         <label style="margin-bottom: 5px; color: var(--primary-color);">Select Invited Players:</label>
@@ -981,11 +995,16 @@
                 <ul id="oc-players-list" style="list-style:none; padding:0; margin-bottom:15px;"></ul>
 
                 <div class="form-group"
-                    style="margin-top:10px; border-top: 1px solid var(--border-color); padding-top:15px;">
+                    style="margin-top:10px; border-top: 1px solid var(--border-color); padding-top:15px; margin-bottom:5px;">
                     <label>Link Custom Competition (Optional)</label>
-                    <select id="oc-link-comp">
-                        <option value="">-- No Competition Linked --</option>
-                    </select>
+                    <div style="display:flex; gap:10px;">
+                        <select id="oc-link-comp" style="flex:1;">
+                            <option value="">-- No Competition Linked --</option>
+                        </select>
+                        <button type="button" id="btn-oc-quick-add" class="btn btn-secondary hidden"
+                            style="margin:0; padding:10px 14px; font-size:0.8rem; border-color:var(--secondary-color); color:var(--secondary-color); font-weight:700;">+
+                            Regulars</button>
+                    </div>
                 </div>
 
                 <button type="button" id="btn-oc-start" class="btn btn-primary"
