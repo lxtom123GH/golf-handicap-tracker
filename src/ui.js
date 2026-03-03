@@ -207,6 +207,9 @@ export function ensureScreensExist() {
             div.style.textAlign = 'center';
             div.innerHTML = `<h1>DYNAMIC ${id.replace('tab-', '').toUpperCase()} SCREEN</h1><p>This screen was generated dynamically because it was missing from the static HTML.</p>`;
             appContainer.appendChild(div);
+        } else {
+            // Ensure even existing screens have the correct base class
+            document.getElementById(id).classList.add('tab-content');
         }
     });
 }
@@ -312,7 +315,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'V6.1.0-DEV';
+        const versionStr = 'V6.1.2';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;

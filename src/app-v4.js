@@ -60,7 +60,7 @@ function bootstrapApplication() {
     initWakeLock();
 
     // Feed tab — init when first opened
-    const feedBtn = document.getElementById('tab-btn-feed');
+    const feedBtn = document.getElementById('tab-btn-feed') || document.querySelector('[data-target="tab-feed"]');
     if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
 }
 
