@@ -192,66 +192,91 @@ export const UI = {
 const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
 
 export function switchTab(targetId) {
-    if (!targetId) return;
+    try {
+        if (!targetId) throw new Error('switchTab called without targetId');
 
-    // Check if we are trying to access protected tabs
-    const isAdmin = window.currentUserIsAdmin || false;
-    const isCoach = AppState.currentUser?.isCoach || false;
+        // 1. Authorization & Role Check
+        const isAdmin = window.currentUserIsAdmin || false;
+        const isCoach = AppState.currentUser?.isCoach || false;
 
-    if (targetId === 'tab-admin' && !isAdmin) return;
-    if (targetId === 'tab-coach' && !isCoach) return;
+        if (targetId === 'tab-admin' && !isAdmin) {
+            console.warn('[Navigation] Admin access denied');
+            return;
+        }
+        if (targetId === 'tab-coach' && !isCoach) {
+            console.warn('[Navigation] Coach access denied');
+            return;
+        }
 
-    console.log(`[Navigation] Switching to: ${targetId}`);
+        console.log(`[Navigation] switching to: ${targetId}`);
 
-    const allBtns = document.querySelectorAll('.tab-btn');
-    const allContents = document.querySelectorAll('.tab-content');
+        // 2. Failsafe: Verify target exists
+        const targetScreen = document.getElementById(targetId);
+        if (!targetScreen) {
+            throw new Error(`Target screen missing: ${targetId}`);
+        }
 
-    allBtns.forEach(b => {
-        if (b.getAttribute('data-target') === targetId) b.classList.add('active');
-        else b.classList.remove('active');
-    });
+        // 3. UI State Reset
+        const allBtns = document.querySelectorAll('.tab-btn');
+        const allContents = document.querySelectorAll('.tab-content');
 
-    allContents.forEach(c => {
-        if (c.id === targetId) {
-            c.classList.remove('hidden');
-            c.classList.add('active');
-        } else {
+        allBtns.forEach(b => b.classList.remove('active'));
+        allContents.forEach(c => {
             c.classList.add('hidden');
             c.classList.remove('active');
-        }
-    });
+        });
 
-    localStorage.setItem(DEFAULT_TAB_KEY, targetId);
+        // 4. Activate Target
+        targetScreen.classList.remove('hidden');
+        targetScreen.classList.add('active');
+
+        // Update button state (Find by data-target)
+        const activeBtn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // 5. Persistence
+        localStorage.setItem(DEFAULT_TAB_KEY, targetId);
+
+    } catch (err) {
+        console.error(`[Navigation Error] ${err.message}`);
+    }
 }
 
-export function setupTabs() {
-    // 1. Determine Initial Tab
-    // PRIORITY: Always prioritize On-Course if a round is active
-    let initialTab = 'tab-oncourse'; // Base fallback (User request)
+export function initNavigation() {
+    console.log("[Navigation] Initializing Clean Slate Architecture...");
 
+    const tabButtons = document.querySelectorAll('.tab-btn');
+
+    tabButtons.forEach(btn => {
+        // Task 1: The Clone Purge
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+
+        // Task 3: Strict Direct Binding
+        newBtn.addEventListener('click', (e) => {
+            const target = newBtn.getAttribute('data-target');
+            if (target) {
+                switchTab(target);
+            }
+        });
+    });
+
+    // Determine and set initial tab
+    let initialTab = 'tab-oncourse';
     if (AppState.activeRoundId) {
         initialTab = 'tab-oncourse';
     } else {
         const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
-        initialTab = savedTabId || 'tab-oncourse'; // Default to On-Course Hub
+        initialTab = savedTabId || 'tab-oncourse';
     }
 
-    // Force clear any potential "Ghost" states for hidden tabs
-    console.log(`[Startup] Routing to primary tab: ${initialTab}`);
     switchTab(initialTab);
+}
 
-    // 2. Nuclear Navigation Diagnostic & Override
-    // This listener uses the capture phase (true) to intercept touches before they are swallowed
-    document.addEventListener('touchstart', (e) => {
-        const tabBtn = e.target.closest('.tab-btn');
-        if (tabBtn) {
-            const targetId = tabBtn.getAttribute('data-target');
-            console.log(`[Nuclear-Nav] Touch detected on ${tabBtn.id || 'btn'} -> Forcing route to ${targetId}`);
-            if (targetId) {
-                switchTab(targetId);
-            }
-        }
-    }, true);
+export function setupTabs() {
+    // Deprecated in favor of initNavigation for Phase 8.6
+    // But we keep it as a wrapper to avoid breaking bootstrapApplication
+    initNavigation();
 
     // Dynamic Version Injection
     try {
