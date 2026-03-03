@@ -1070,7 +1070,6 @@ function bindShotWizard() {
         });
     }
 
-    // Wizard Cancel 
     if (UI.btnBackToHole) {
         UI.btnBackToHole.addEventListener('click', () => {
             setWizardActive(false);
@@ -1086,22 +1085,47 @@ function bindShotWizard() {
         });
     }
 
-    // Shot Navigation
-    if (UI.btnShotPrev) {
-        UI.btnShotPrev.addEventListener('click', () => {
-            if (AppState.currentShotData.shotNumber > 1) {
-                const prevShotNum = AppState.currentShotData.shotNumber - 1;
-                loadExistingShotData(prevShotNum);
+    // Weapon Section (Manual Binding as it's dynamic)
+    if (UI.bagButtonsGrid) {
+        UI.bagButtonsGrid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-grid-compact');
+            if (!btn) return;
+            const val = btn.getAttribute('data-val');
+            AppState.currentShotData.club = val;
+
+            // Toggle Putting Section
+            const puttingSection = document.getElementById('section-putting-outcome');
+            if (val === 'Putter') {
+                puttingSection.classList.remove('hidden');
+            } else {
+                puttingSection.classList.add('hidden');
             }
+
+            // UI Feedback
+            UI.bagButtonsGrid.querySelectorAll('.btn-grid-compact').forEach(b => b.classList.remove('active-choice'));
+            btn.classList.add('active-choice');
         });
     }
 
-    if (UI.btnShotNext) {
-        UI.btnShotNext.addEventListener('click', () => {
-            const nextShotNum = AppState.currentShotData.shotNumber + 1;
-            loadExistingShotData(nextShotNum, true);
-        });
-    }
+    // Intent Grid & Putting Delegation
+    wizardDiv.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-grid-compact');
+        if (!btn || btn.closest('#bag-buttons-grid')) return;
+
+        const group = btn.getAttribute('data-group');
+        const val = btn.getAttribute('data-val');
+        if (!group) return;
+
+        // Toggle Logic
+        if (btn.classList.contains('active-choice')) {
+            delete AppState.currentShotData[group];
+            btn.classList.remove('active-choice');
+        } else {
+            AppState.currentShotData[group] = val;
+            btn.closest('div').querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active-choice'));
+            btn.classList.add('active-choice');
+        }
+    });
 
     // Final Save
     if (UI.btnSaveShotFinal) {
@@ -1112,143 +1136,24 @@ function bindShotWizard() {
     document.querySelectorAll('.wiz-routine-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const b = e.target.closest('.wiz-routine-btn');
-            const routineField = b.getAttribute('data-routine');
+            const field = b.getAttribute('data-routine');
             const val = b.getAttribute('data-val');
 
-            // Clear siblings
-            b.parentElement.querySelectorAll('.wiz-routine-btn').forEach(sib => sib.classList.remove('active'));
-            b.classList.add('active');
-
             if (!AppState.currentShotData.routines) AppState.currentShotData.routines = {};
-            AppState.currentShotData.routines[routineField] = val;
-        });
-    });
 
-    // Header step-by-step navigation
-    if (UI.btnWizardPrev) {
-        UI.btnWizardPrev.addEventListener('click', () => {
-            const currentStep = document.querySelector('.wizard-step:not(.hidden)');
-            const steps = [
-                'wizard-step-club',
-                'wizard-step-trajectory',
-                'wizard-step-startline',
-                'wizard-step-shape',
-                'wizard-step-outcome',
-                'wizard-step-putt',
-                'wizard-step-strike',
-                'wizard-step-routine'
-            ];
-            const idx = steps.indexOf(currentStep.id);
-            if (idx > 0) {
-                let nextIdx = idx - 1;
-                // Skip logic reversed
-                if (AppState.currentShotData.club === 'Putter') {
-                    if (steps[nextIdx] !== 'wizard-step-club' && steps[nextIdx] !== 'wizard-step-routine') {
-                        nextIdx = 0; // Back to club
-                    }
-                } else {
-                    if (steps[nextIdx] === 'wizard-step-putt') nextIdx--;
-                }
-                showWizardStep(steps[nextIdx]);
-            }
-        });
-    }
-
-    if (UI.btnWizardNext) {
-        UI.btnWizardNext.addEventListener('click', () => {
-            const currentStep = document.querySelector('.wizard-step:not(.hidden)');
-            const steps = [
-                'wizard-step-club',
-                'wizard-step-trajectory',
-                'wizard-step-startline',
-                'wizard-step-shape',
-                'wizard-step-outcome',
-                'wizard-step-putt',
-                'wizard-step-strike',
-                'wizard-step-routine'
-            ];
-            const idx = steps.indexOf(currentStep.id);
-            if (idx < steps.length - 1) {
-                let nextIdx = idx + 1;
-                // Skip logic
-                if (AppState.currentShotData.club === 'Putter') {
-                    // Jump from club or any mid-shot step straight to putt if putter selected
-                    if (steps[nextIdx] !== 'wizard-step-putt' && steps[nextIdx] !== 'wizard-step-strike' && steps[nextIdx] !== 'wizard-step-routine') {
-                        nextIdx = steps.indexOf('wizard-step-putt');
-                    }
-                } else {
-                    // Skip putt if not putter
-                    if (steps[nextIdx] === 'wizard-step-putt') nextIdx++;
-                }
-                showWizardStep(steps[nextIdx]);
-            }
-        });
-    }
-
-    // Universal Grid Button Listener for overhaul
-    wizardDiv.addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-grid');
-        if (!btn) return;
-
-        const val = btn.getAttribute('data-val');
-        const parentStep = btn.closest('.wizard-step');
-        if (!parentStep) return;
-
-        const stepId = parentStep.id;
-
-        // Visual feedback
-        parentStep.querySelectorAll('.btn-grid').forEach(b => b.classList.remove('active-choice'));
-        btn.classList.add('active-choice');
-
-        if (stepId === 'wizard-step-club') {
-            AppState.currentShotData.club = val;
-            if (val === 'Putter') {
-                showWizardStep('wizard-step-putt', 'Putting Control');
+            // Toggle
+            if (AppState.currentShotData.routines[field] === val) {
+                delete AppState.currentShotData.routines[field];
+                b.classList.remove('active');
             } else {
-                showWizardStep('wizard-step-trajectory', 'Trajectory');
+                AppState.currentShotData.routines[field] = val;
+                // Deactivate sibling
+                b.parentElement.querySelectorAll('.wiz-routine-btn').forEach(sib => sib.classList.remove('active'));
+                b.classList.add('active');
             }
-        } else if (stepId === 'wizard-step-trajectory') {
-            AppState.currentShotData.trajectory = val;
-            showWizardStep('wizard-step-startline', 'Start Line');
-        } else if (stepId === 'wizard-step-startline') {
-            AppState.currentShotData.startLine = val;
-            showWizardStep('wizard-step-shape', 'Shot Shape');
-        } else if (stepId === 'wizard-step-shape') {
-            AppState.currentShotData.shape = val;
-            showWizardStep('wizard-step-outcome', 'Outcome');
-        } else if (stepId === 'wizard-step-outcome') {
-            AppState.currentShotData.outcome = val;
-            showWizardStep('wizard-step-strike', 'Strike Quality');
-        } else if (stepId === 'wizard-step-putt') {
-            AppState.currentShotData.puttControl = val;
-            if (!AppState.currentShotData.outcome) AppState.currentShotData.outcome = 'Green';
-            showWizardStep('wizard-step-strike', 'Strike Quality');
-        } else if (stepId === 'wizard-step-strike') {
-            AppState.currentShotData.strikeQuality = val;
-            showWizardStep('wizard-step-routine', 'Mental Routine');
-        }
+        });
     });
 
-    // Putter Location Toggles
-    if (UI.btnPuttOnGreen) {
-        UI.btnPuttOnGreen.addEventListener('click', () => {
-            AppState.currentShotData.outcome = 'Green';
-            AppState.currentShotData.isOffGreen = false;
-            UI.btnPuttOnGreen.classList.add('active');
-            UI.btnPuttFringe.classList.remove('active');
-        });
-    }
-
-    if (UI.btnPuttFringe) {
-        UI.btnPuttFringe.addEventListener('click', () => {
-            AppState.currentShotData.outcome = 'Fringe';
-            AppState.currentShotData.isOffGreen = true;
-            UI.btnPuttFringe.classList.add('active');
-            UI.btnPuttOnGreen.classList.remove('active');
-        });
-    }
-
-    // Fix Delete Button
     if (UI.btnWizardDelete) {
         UI.btnWizardDelete.addEventListener('click', deleteShotData);
     }
@@ -1262,21 +1167,66 @@ function startNewShotInput(forcedShotNum = null) {
         roundId: AppState.activeRoundId,
         timestamp: new Date().toISOString()
     };
-    renderBagButtons();
+
     setWizardActive(true);
-    document.getElementById('oncourse-wizard').classList.remove('hidden');
-    showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${shotNum}`);
+    const wizard = document.getElementById('oncourse-wizard');
+    if (wizard) {
+        wizard.classList.remove('hidden');
+        wizard.scrollTop = 0;
+    }
+
+    syncShotWizardUI();
 }
 
-function loadExistingShotData(shotNum, allowNew = false) {
-    const existing = AppState.currentHoleShots.find(s => s.shotNumber === shotNum);
+function loadExistingShotData(shotId) {
+    const existing = AppState.currentHoleShots.find(s => s.id === shotId);
     if (existing) {
         AppState.currentShotData = { ...existing };
-        renderBagButtons();
-        showWizardStep('wizard-step-club', `Hole ${AppState.currentHole} - Shot ${shotNum}`);
-    } else if (allowNew) {
-        startNewShotInput();
+        setWizardActive(true);
+        const wizard = document.getElementById('oncourse-wizard');
+        if (wizard) {
+            wizard.classList.remove('hidden');
+            wizard.scrollTop = 0;
+        }
+        syncShotWizardUI();
     }
+}
+
+function syncShotWizardUI() {
+    renderBagButtons();
+
+    const wizard = document.getElementById('oncourse-wizard');
+    if (!wizard) return;
+
+    // Reset all intent/grid buttons
+    wizard.querySelectorAll('.btn-grid-compact').forEach(btn => btn.classList.remove('active-choice'));
+
+    // Populate choices
+    const data = AppState.currentShotData;
+    ['startLine', 'trajectory', 'strikeQuality', 'shape', 'puttControl'].forEach(group => {
+        if (data[group]) {
+            const btn = wizard.querySelector(`[data-group="${group}"][data-val="${data[group]}"]`);
+            if (btn) btn.classList.add('active-choice');
+        }
+    });
+
+    // Populate routines
+    document.querySelectorAll('.wiz-routine-btn').forEach(btn => {
+        const field = btn.getAttribute('data-routine');
+        const val = btn.getAttribute('data-val');
+        if (data.routines && data.routines[field] === val) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+
+    // Show/Hide delete
+    if (UI.btnWizardDelete) {
+        UI.btnWizardDelete.classList.toggle('hidden', !data.id);
+    }
+
+    // Toggle Putter Section
+    const puttingSection = document.getElementById('section-putting-outcome');
+    if (data.club === 'Putter') puttingSection.classList.remove('hidden');
+    else puttingSection.classList.add('hidden');
 }
 
 function renderBagButtons() {
@@ -1287,13 +1237,13 @@ function renderBagButtons() {
         driver: true,
         woods: ['3 Wood'],
         irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
-        wedges: ['56°'],
+        wedges: ['56'],
         putter: true
     };
     const bag = (AppState.myBag && Object.keys(AppState.myBag).length > 0) ? AppState.myBag : defaultBag;
 
     const categories = [
-        { key: 'driver', label: 'Driver', standalone: true },
+        { key: 'driver', label: 'Dr', standalone: true },
         { key: 'woods', label: 'Woods', items: bag.woods },
         { key: 'irons', label: 'Irons', items: bag.irons },
         { key: 'wedges', label: 'Wedges', items: bag.wedges },
@@ -1302,17 +1252,24 @@ function renderBagButtons() {
 
     categories.forEach(cat => {
         if (cat.standalone && bag[cat.key]) {
-            addButton(cat.label, cat.label);
+            addButton(cat.label, cat.key === 'driver' ? 'Driver' : 'Putter');
         } else if (cat.items && cat.items.length > 0) {
             cat.items.forEach(item => {
-                addButton(item, item);
+                // Shorten labels for pills
+                let display = item.replace('Wood', 'W').replace('Iron', 'i').replace('Wedge', 'W');
+                if (display === 'Long i') display = 'Li';
+                if (display === 'Mid i') display = 'Mi';
+                if (display === 'Short i') display = 'Si';
+                addButton(display, item);
             });
         }
     });
 
     function addButton(label, val) {
         const btn = document.createElement('button');
-        btn.className = 'btn-grid';
+        btn.className = 'btn-grid-compact';
+        btn.style.minWidth = '60px';
+        btn.style.whiteSpace = 'nowrap';
         if (AppState.currentShotData.club === val) btn.classList.add('active-choice');
         btn.setAttribute('data-val', val);
         btn.textContent = label;
@@ -1320,72 +1277,6 @@ function renderBagButtons() {
     }
 }
 
-function showWizardStep(stepId, title) {
-    document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
-    const step = document.getElementById(stepId);
-    if (step) {
-        step.classList.remove('hidden');
-        // If it's the club step, ensure bag buttons are sync'd
-        if (stepId === 'wizard-step-club') renderBagButtons();
-
-        // Restore active choices
-        step.querySelectorAll('.btn-grid').forEach(b => {
-            const val = b.getAttribute('data-val');
-            if (stepId === 'wizard-step-club' && AppState.currentShotData.club === val) b.classList.add('active-choice');
-            if (stepId === 'wizard-step-trajectory' && AppState.currentShotData.trajectory === val) b.classList.add('active-choice');
-            if (stepId === 'wizard-step-startline' && AppState.currentShotData.startLine === val) b.classList.add('active-choice');
-            if (stepId === 'wizard-step-shape' && AppState.currentShotData.shape === val) b.classList.add('active-choice');
-            if (stepId === 'wizard-step-outcome' && AppState.currentShotData.outcome === val) b.classList.add('active-choice');
-            if (stepId === 'wizard-step-putt' && AppState.currentShotData.puttControl === val) b.classList.add('active-choice');
-            if (stepId === 'wizard-step-strike' && AppState.currentShotData.strikeQuality === val) b.classList.add('active-choice');
-        });
-
-        // Sync routine buttons
-        if (stepId === 'wizard-step-routine' && AppState.currentShotData.routines) {
-            document.querySelectorAll('.wiz-routine-btn').forEach(b => {
-                const field = b.getAttribute('data-routine');
-                const val = b.getAttribute('data-val');
-                if (AppState.currentShotData.routines[field] === val) b.classList.add('active');
-                else b.classList.remove('active');
-            });
-        }
-    }
-
-    if (title) {
-        const titleEl = document.getElementById('wizard-title');
-        if (titleEl) titleEl.textContent = title;
-    } else {
-        // Auto title based on stepId
-        const titles = {
-            'wizard-step-club': `Shot ${AppState.currentShotData.shotNumber}`,
-            'wizard-step-trajectory': 'Trajectory',
-            'wizard-step-startline': 'Start Line',
-            'wizard-step-shape': 'Shot Shape',
-            'wizard-step-outcome': 'Outcome',
-            'wizard-step-putt': 'Putts',
-            'wizard-step-strike': 'Strike',
-            'wizard-step-routine': 'Mental'
-        };
-        const titleEl = document.getElementById('wizard-title');
-        if (titleEl) titleEl.textContent = titles[stepId] || `Shot ${AppState.currentShotData.shotNumber}`;
-    }
-
-    if (UI.btnWizardDelete) {
-        if (AppState.currentShotData?.id) UI.btnWizardDelete.classList.remove('hidden');
-        else UI.btnWizardDelete.classList.add('hidden');
-    }
-
-    // Reset Putter Toggles
-    if (stepId === 'wizard-step-putt') {
-        if (AppState.currentShotData.isOffGreen) {
-            if (UI.btnPuttFringe) UI.btnPuttFringe.classList.add('active');
-            if (UI.btnPuttOnGreen) UI.btnPuttOnGreen.classList.remove('active');
-        } else {
-            if (UI.btnPuttOnGreen) UI.btnPuttOnGreen.classList.add('active');
-            if (UI.btnPuttFringe) UI.btnPuttFringe.classList.remove('active');
-        }
-    }
-}
 
 function bindPenaltyModal() {
     if (UI.btnWizardPenalty) {

@@ -12,8 +12,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-C-17HF4N.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BZ11YJVd.css">
+  <script type="module" crossorigin src="/assets/index-IrVaa2TV.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-B-qXDccU.css">
 </head>
 
 <body>
@@ -1213,165 +1213,131 @@
                     </div>
                 </div>
 
-                <!-- Shot Wizard Screen -->
-                <div id="oncourse-wizard" class="card hidden" style="padding-bottom: 80px;">
+                <!-- Single-Page Shot Tracker (Command Center) -->
+                <div id="oncourse-wizard" class="card hidden"
+                    style="padding: 15px; padding-bottom: 90px; max-height: 90vh; overflow-y: auto;">
                     <div id="wizard-header"
                         style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <button type="button" id="btn-wizard-prev" class="btn btn-secondary btn-sm"
-                                style="padding:4px 8px;">&larr;</button>
-                            <h3 id="wizard-title" style="margin:0;">Select Club</h3>
-                            <button type="button" id="btn-wizard-next" class="btn btn-secondary btn-sm"
-                                style="padding:4px 8px;">&rarr;</button>
+                        <h3 id="wizard-title" style="margin:0;">🎯 Shot Command Center</h3>
+                        <div style="display:flex; gap:10px; align-items:center;">
                             <button type="button" id="btn-wizard-penalty" class="btn btn-secondary btn-sm"
                                 style="padding:4px 12px; color: #f59e0b; border-color: #f59e0b; background: #fffbeb;">⚠️
                                 Penalty</button>
                             <button type="button" id="btn-wizard-delete" class="btn btn-secondary btn-sm hidden"
                                 style="padding:4px 12px; color: #ef4444; border-color: #ef4444; background: #fee2e2;">🗑️</button>
+                            <button type="button" id="btn-wizard-cancel" class="btn-text"
+                                style="color: #64748b; padding:0; font-weight:bold; font-size: 1.2rem;">✕</button>
                         </div>
-                        <button type="button" id="btn-wizard-cancel" class="btn-text"
-                            style="color: #64748b; padding:0; font-weight:bold;">Exit Shot</button>
                     </div>
 
-                    <div id="wizard-steps-container">
-                        <!-- Step 1: Club Selection -->
-                        <div id="wizard-step-club" class="wizard-step">
-                            <div class="mobile-grid" id="bag-buttons-grid">
-                                <!-- Dynamically injected from My Bag -->
+                    <div id="shot-command-center-body" style="display:flex; flex-direction:column; gap:20px;">
+
+                        <!-- Section: Weapon (Horizontal Scroll) -->
+                        <div id="section-weapon">
+                            <p
+                                style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">
+                                Weapon</p>
+                            <div id="bag-buttons-grid"
+                                style="display:flex; overflow-x:auto; gap:8px; padding-bottom:10px; scrollbar-width: none; -ms-overflow-style: none;">
+                                <!-- Dynamically injected: Dr, 3W, 4i, etc. -->
                             </div>
                         </div>
 
-                        <!-- Step 2: Trajectory -->
-                        <div id="wizard-step-trajectory" class="wizard-step hidden">
-                            <p class="wizard-instruction">Flight Trajectory</p>
-                            <div class="mobile-grid three-cols">
-                                <button class="btn-grid" data-val="Low">🔽 Low</button>
-                                <button class="btn-grid" data-val="Medium">➡️ Medium</button>
-                                <button class="btn-grid" data-val="High">🔼 High</button>
+                        <!-- Section: The Intent Grid (3x3 Layout) -->
+                        <div id="section-intent" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
+
+                            <!-- Column 1: Start Line -->
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <p
+                                    style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; text-align:center;">
+                                    Start</p>
+                                <button class="btn-grid-compact" data-group="startLine" data-val="Left">Left</button>
+                                <button class="btn-grid-compact" data-group="startLine"
+                                    data-val="Straight">Target</button>
+                                <button class="btn-grid-compact" data-group="startLine" data-val="Right">Right</button>
+                            </div>
+
+                            <!-- Column 2: Trajectory -->
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <p
+                                    style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; text-align:center;">
+                                    Flight</p>
+                                <button class="btn-grid-compact" data-group="trajectory" data-val="High">High</button>
+                                <button class="btn-grid-compact" data-group="trajectory" data-val="Medium">Mid</button>
+                                <button class="btn-grid-compact" data-group="trajectory" data-val="Low">Low</button>
+                            </div>
+
+                            <!-- Column 3: Strike Quality -->
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <p
+                                    style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; text-align:center;">
+                                    Strike</p>
+                                <button class="btn-grid-compact" data-group="strikeQuality"
+                                    data-val="Pure">Pure</button>
+                                <button class="btn-grid-compact" data-group="strikeQuality"
+                                    data-val="Thin">Thin</button>
+                                <button class="btn-grid-compact" data-group="strikeQuality" data-val="Fat">Fat</button>
                             </div>
                         </div>
 
-                        <!-- Step 2.1: Start Line -->
-                        <div id="wizard-step-startline" class="wizard-step hidden">
-                            <p class="wizard-instruction">Start Line</p>
-                            <div class="mobile-grid three-cols">
-                                <button class="btn-grid" data-val="Left">⬅️ Left</button>
-                                <button class="btn-grid" data-val="Straight">⬆️ Straight</button>
-                                <button class="btn-grid" data-val="Right">➡️ Right</button>
+                        <!-- Section: Shape (Special Row) -->
+                        <div id="section-shape">
+                            <p
+                                style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">
+                                Shape</p>
+                            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px;">
+                                <button class="btn-grid-compact" data-group="shape" data-val="Hook">Hook</button>
+                                <button class="btn-grid-compact" data-group="shape" data-val="Draw">Draw</button>
+                                <button class="btn-grid-compact" data-group="shape" data-val="Straight">Strt</button>
+                                <button class="btn-grid-compact" data-group="shape" data-val="Fade">Fade</button>
+                                <button class="btn-grid-compact" data-group="shape" data-val="Slice">Slice</button>
                             </div>
                         </div>
 
-                        <!-- Step 2.2: Shape -->
-                        <div id="wizard-step-shape" class="wizard-step hidden">
-                            <p class="wizard-instruction">Shot Shape</p>
-                            <div class="mobile-grid three-cols">
-                                <button class="btn-grid" data-val="Hook">Hook</button>
-                                <button class="btn-grid" data-val="Draw">Draw</button>
-                                <button class="btn-grid" data-val="Straight">Straight</button>
-                                <button class="btn-grid" data-val="Fade">Fade</button>
-                                <button class="btn-grid" data-val="Slice">Slice</button>
-                            </div>
-                        </div>
-
-                        <!-- Step 3: Result / Lie -->
-                        <div id="wizard-step-outcome" class="wizard-step hidden">
-                            <p class="wizard-instruction">Result / Lie</p>
-                            <div class="mobile-grid two-cols">
-                                <button class="btn-grid btn-good two-span" data-val="Fairway">Fairway</button>
-                                <button class="btn-grid btn-great two-span" data-val="Green">Green</button>
-                                <button class="btn-grid btn-warn" data-val="Rough-Playable">Rough (Good)</button>
-                                <button class="btn-grid btn-bad" data-val="Rough-Blocked">Rough (Bad)</button>
-                                <button class="btn-grid btn-terrible two-span" data-val="Hazard/OB">Hazard/OB</button>
-                            </div>
-                        </div>
-
-                        <!-- Step 4: Putting -->
-                        <div id="wizard-step-putt" class="wizard-step hidden">
-                            <p class="wizard-instruction">Putt Distance Control</p>
-                            <div class="mobile-grid three-cols" style="margin-bottom:15px;">
-                                <button class="btn-grid" data-val="Short">Short</button>
-                                <button class="btn-grid btn-great" data-val="Holed">Holed!</button>
-                                <button class="btn-grid" data-val="Past">Past</button>
-                            </div>
-                            <div
-                                style="display:flex; justify-content:center; align-items:center; gap:10px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
-                                <span style="font-size:0.9rem; font-weight:600;">Location:</span>
-                                <button type="button" id="btn-putt-on-green" class="oc-toggle-btn active"
-                                    style="font-size:0.85rem; padding:6px 12px;">On Green</button>
-                                <button type="button" id="btn-putt-fringe" class="oc-toggle-btn"
-                                    style="font-size:0.85rem; padding:6px 12px;">Fringe</button>
-                            </div>
-                        </div>
-
-                        <!-- Step 5: Strike Quality (OPTIONAL) -->
-                        <div id="wizard-step-strike" class="wizard-step hidden">
-                            <p class="wizard-instruction">Strike Quality (Optional)</p>
-                            <div class="mobile-grid three-cols">
-                                <button class="btn-grid" data-val="Fat">🕳️ Fat</button>
-                                <button class="btn-grid" data-val="Pure">💎 Pure</button>
-                                <button class="btn-grid" data-val="Thin">📏 Thin</button>
-                            </div>
-                            <p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-top:10px;">You can skip
-                                this by clicking Next</p>
-                        </div>
-
-                        <!-- Step 6: Mental Routines -->
-                        <div id="wizard-step-routine" class="wizard-step hidden">
-                            <p class="wizard-instruction">Mental Routines</p>
-                            <div style="display:flex; flex-direction:column; gap:12px;">
+                        <!-- Section: Mental Routine (Large Toggles) -->
+                        <div id="section-routine">
+                            <p
+                                style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:10px;">
+                                Mental Routine</p>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
                                 <div
-                                    style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="font-weight:600;">Pre-Shot Routine</span>
-                                    <div style="display:flex; gap:10px;">
+                                    style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #e2e8f0;">
+                                    <span style="font-weight:600; font-size:0.9rem;">Process & Commitment</span>
+                                    <div style="display:flex; gap:8px;">
                                         <button class="oc-toggle-btn wiz-routine-btn" data-routine="pre" data-val="Pass"
-                                            style="width:50px; height:44px; font-size:1.2rem;">✅</button>
+                                            style="width:55px; height:45px; font-size:1.3rem;">✅</button>
                                         <button class="oc-toggle-btn wiz-routine-btn" data-routine="pre" data-val="Fail"
-                                            style="width:50px; height:44px; font-size:1.2rem;">❌</button>
-                                    </div>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="font-weight:600;">Shot Execution</span>
-                                    <div style="display:flex; gap:10px;">
-                                        <button class="oc-toggle-btn wiz-routine-btn" data-routine="shot"
-                                            data-val="Pass"
-                                            style="width:50px; height:44px; font-size:1.2rem;">✅</button>
-                                        <button class="oc-toggle-btn wiz-routine-btn" data-routine="shot"
-                                            data-val="Fail"
-                                            style="width:50px; height:44px; font-size:1.2rem;">❌</button>
-                                    </div>
-                                </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="font-weight:600;">Post-Shot Routine</span>
-                                    <div style="display:flex; gap:10px;">
-                                        <button class="oc-toggle-btn wiz-routine-btn" data-routine="post"
-                                            data-val="Pass"
-                                            style="width:50px; height:44px; font-size:1.2rem;">✅</button>
-                                        <button class="oc-toggle-btn wiz-routine-btn" data-routine="post"
-                                            data-val="Fail"
-                                            style="width:50px; height:44px; font-size:1.2rem;">❌</button>
+                                            style="width:55px; height:45px; font-size:1.3rem;">❌</button>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <button type="button" id="btn-save-shot-final" class="btn btn-primary"
-                                style="width:100%; height:60px; font-size:1.2rem; margin-top:20px; background-color:#10b981;">Save
-                                Shot Data</button>
+                        <!-- Putting Specifics (Hidden by default, shown if Putter selected) -->
+                        <div id="section-putting-outcome" class="hidden">
+                            <p
+                                style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">
+                                Putt Control</p>
+                            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
+                                <button class="btn-grid-compact" data-group="puttControl"
+                                    data-val="Short">Short</button>
+                                <button class="btn-grid-compact" data-group="puttControl" data-val="Holed"
+                                    style="background:#10b981; color:white; border-color:#10b981;">Holed</button>
+                                <button class="btn-grid-compact" data-group="puttControl" data-val="Past">Past</button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Wizard Navigation Footer -->
-                    <div id="wizard-footer-nav"
-                        style="margin-top:25px; display:flex; gap:10px; border-top:1px solid #e2e8f0; padding-top:15px;">
-                        <button type="button" id="btn-shot-prev" class="btn btn-secondary"
-                            style="flex:1; font-size:0.9rem;">⏮ Previous Shot</button>
-                        <button type="button" id="btn-shot-next" class="btn btn-secondary"
-                            style="flex:1; font-size:0.9rem;">Next Shot ⏭</button>
+                    <!-- Action: Sticky Log Button -->
+                    <div
+                        style="position: sticky; bottom: -15px; left: -15px; right: -15px; background: white; padding: 15px; border-top: 1px solid #e2e8f0; margin: 0 -15px -15px;">
+                        <button type="button" id="btn-save-shot-final" class="btn btn-primary"
+                            style="width:100%; height:55px; font-size:1.2rem; background-color:#10b981; border-radius:12px; font-weight:800; box-shadow:0 4px 12px rgba(16,185,129,0.3);">
+                            LOG SHOT
+                        </button>
                     </div>
-                    <button type="button" id="btn-back-to-hole" class="btn-text"
-                        style="width:100%; margin-top:10px; color:#64748b;">Back to Hole Overview</button>
                 </div>
+
 
                 <!-- Finish Round Summary Modal -->
                 <div id="oc-finish-modal" class="card hidden" style="border: 2px solid var(--primary-color);">

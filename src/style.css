@@ -619,6 +619,39 @@ body {
     background-color: #e2e8f0;
 }
 
+/* High Density Command Center Buttons */
+.btn-grid-compact {
+    background-color: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 4px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+}
+
+.btn-grid-compact:active {
+    transform: scale(0.95);
+}
+
+.btn-grid-compact.active-choice {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 2px 8px rgba(11, 46, 19, 0.25);
+}
+
+#bag-buttons-grid::-webkit-scrollbar {
+    display: none;
+}
+
 .two-span {
     grid-column: span 2;
 }

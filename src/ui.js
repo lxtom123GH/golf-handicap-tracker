@@ -244,6 +244,16 @@ export function switchTab(targetId) {
         const activeBtn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
         if (activeBtn) activeBtn.classList.add('active');
 
+        // Task 2: Auto-Scroll (On-Course)
+        if (targetId === 'tab-oncourse') {
+            setTimeout(() => {
+                const btnStart = document.getElementById('btn-oc-start');
+                if (btnStart) {
+                    btnStart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+
         // 5. Persistence
         localStorage.setItem(DEFAULT_TAB_KEY, targetId);
 
