@@ -547,14 +547,18 @@ body {
 }
 
 .tab-content {
-    display: none;
+    display: none !important;
     /* Block all flashes */
     animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     will-change: opacity, transform;
+    opacity: 0;
 }
 
 .tab-content.active {
     display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 100;
 }
 
 #app-loading-cloak.cloak-hidden {

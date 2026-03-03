@@ -195,10 +195,6 @@ export function switchTab(targetId) {
     try {
         if (!targetId) throw new Error('switchTab called without targetId');
 
-        // Task 1: Mobile Error Trapping (Visible Console)
-        // temporary alert to confirm the function is firing on hardware
-        alert('Attempting to open: ' + targetId);
-
         // 1. Authorization & Role Check
         const isAdmin = window.currentUserIsAdmin || false;
         const isCoach = AppState.currentUser?.isCoach || false;
@@ -228,11 +224,16 @@ export function switchTab(targetId) {
         allContents.forEach(c => {
             c.classList.add('hidden');
             c.classList.remove('active');
+            // Task 2: Strip Inline Styles (JavaScript Hard Override)
+            c.style.display = 'none';
         });
 
         // 4. Activate Target
         targetScreen.classList.remove('hidden');
         targetScreen.classList.add('active');
+        // Task 2: Strip Inline Styles (JavaScript Hard Override)
+        targetScreen.style.display = 'block';
+        targetScreen.style.opacity = '1';
 
         // Update button state (Find by data-target)
         const activeBtn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
@@ -243,8 +244,6 @@ export function switchTab(targetId) {
 
     } catch (err) {
         console.error(`[Navigation Error] ${err.message}`);
-        // Task 1: Mobile Error Trapping
-        alert('Navigation Error: ' + err.message);
         console.error(err);
     }
 }
