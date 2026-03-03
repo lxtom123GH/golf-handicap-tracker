@@ -40,9 +40,7 @@ function bootstrapApplication() {
     // 1. Restore state first (Critical for routing)
     initializeAppRouting();
 
-    // 2. Setup UI
-    setupTabs();
-
+    // 2. Initialize all modules
     listenToWHSRounds();
     initCompetitions();
     initPractice();
@@ -62,6 +60,9 @@ function bootstrapApplication() {
     // Feed tab — init when first opened
     const feedBtn = document.getElementById('tab-btn-feed') || document.querySelector('[data-target="tab-feed"]');
     if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
+
+    // Final UI Setup - Bind Listeners after all logic is ready
+    setupTabs();
 }
 
 // Kickoff Authentication Flow

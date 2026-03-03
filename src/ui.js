@@ -194,24 +194,8 @@ export const UI = {
 const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
 
 export function ensureScreensExist() {
-    console.log("[Navigation] Running Dynamic Screen Failsafe...");
-    const appContainer = document.getElementById('main-app') || document.body;
-
-    ALL_SCREENS.forEach(id => {
-        if (!document.getElementById(id)) {
-            console.warn(`[Navigation] Missing screen: ${id}. Injecting dynamic placeholder.`);
-            const div = document.createElement('div');
-            div.id = id;
-            div.className = 'tab-content hidden';
-            div.style.padding = '80px 20px';
-            div.style.textAlign = 'center';
-            div.innerHTML = `<h1>DYNAMIC ${id.replace('tab-', '').toUpperCase()} SCREEN</h1><p>This screen was generated dynamically because it was missing from the static HTML.</p>`;
-            appContainer.appendChild(div);
-        } else {
-            // Ensure even existing screens have the correct base class
-            document.getElementById(id).classList.add('tab-content');
-        }
-    });
+    // Disabled as per user request to prevent overwriting static HTML
+    console.log("[Navigation] Screen failsafe disabled.");
 }
 
 export function switchTab(targetId) {
@@ -315,7 +299,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'V6.1.2';
+        const versionStr = 'v6.1.2';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;
