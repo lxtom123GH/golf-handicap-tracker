@@ -4,6 +4,8 @@
 import { AppState } from './state.js';
 import Chart from 'chart.js/auto';
 
+const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
+
 export const UI = {
     // Core App
     authOverlay: document.getElementById('auth-overlay'),
@@ -216,24 +218,27 @@ export function switchTab(targetId) {
             throw new Error(`Target screen missing: ${targetId}`);
         }
 
-        // 3. UI State Reset
+        // 3. UI State Reset & Master Array Routing
         const allBtns = document.querySelectorAll('.tab-btn');
-        const allContents = document.querySelectorAll('.tab-content');
-
         allBtns.forEach(b => b.classList.remove('active'));
-        allContents.forEach(c => {
-            c.classList.add('hidden');
-            c.classList.remove('active');
-            // Task 2: Strip Inline Styles (JavaScript Hard Override)
-            c.style.display = 'none';
-        });
 
-        // 4. Activate Target
-        targetScreen.classList.remove('hidden');
-        targetScreen.classList.add('active');
-        // Task 2: Strip Inline Styles (JavaScript Hard Override)
-        targetScreen.style.display = 'block';
-        targetScreen.style.opacity = '1';
+        // Task 1: Master Array Routing (Bypass Classes)
+        ALL_SCREENS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === targetId) {
+                    el.style.display = 'block';
+                    el.style.opacity = '1';
+                    el.classList.add('active');
+                    el.classList.remove('hidden');
+                } else {
+                    el.style.display = 'none';
+                    el.style.opacity = '0';
+                    el.classList.remove('active');
+                    el.classList.add('hidden');
+                }
+            }
+        });
 
         // Update button state (Find by data-target)
         const activeBtn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
