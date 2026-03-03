@@ -1042,10 +1042,10 @@ body.active-wizard-mode #oncourse-wizard {
 }
 
 .tab-content {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    z-index: 10 !important;
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 10;
 }
 
 .tab-content.active {
@@ -1054,3 +1054,5 @@ body.active-wizard-mode #oncourse-wizard {
     visibility: visible !important;
     z-index: 50 !important;
 }
+
+.hidden { display: none !important; visibility: hidden !important; }

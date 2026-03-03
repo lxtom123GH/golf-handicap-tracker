@@ -235,8 +235,8 @@ export function switchTab(targetId) {
 
         // 2. Force-show ONLY the target tab
         if (targetScreen) {
-            targetScreen.classList.add('active');
             targetScreen.classList.remove('hidden');
+            targetScreen.classList.add('active');
         } else {
             console.error('[Navigation Error] Target screen not found in DOM:', targetId);
         }
@@ -299,7 +299,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'v6.1.3 - 2026-03-04 07:45';
+        const versionStr = 'v6.1.4 - 2026-03-04 08:06';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;

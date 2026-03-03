@@ -222,7 +222,9 @@ function bindStartRound() {
             const totalPar = manualParInput ? parseInt(manualParInput.value) : (COURSE_DATA[courseName]?.[UI.ocTeeSelect.value]?.par || 0);
 
             if (!totalPar) {
-                alert("Please specify a valid total Par for this course.");
+                if (document.getElementById('tab-oncourse').classList.contains('active')) {
+                    alert("Please specify a valid total Par for this course.");
+                }
                 return;
             }
 
