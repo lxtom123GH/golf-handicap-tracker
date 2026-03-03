@@ -240,23 +240,23 @@ export function switchTab(targetId) {
         const allBtns = document.querySelectorAll('.tab-btn');
         allBtns.forEach(b => b.classList.remove('active'));
 
-        // Task 1: Master Array Routing (Bypass Classes)
-        ALL_SCREENS.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                if (id === targetId) {
-                    el.style.display = 'block';
-                    el.style.opacity = '1';
-                    el.classList.add('active');
-                    el.classList.remove('hidden');
-                } else {
-                    el.style.display = 'none';
-                    el.style.opacity = '0';
-                    el.classList.remove('active');
-                    el.classList.add('hidden');
-                }
-            }
+        // Task 1: Hide All Routing Override (Brute Force)
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.style.display = 'none';
+            el.style.opacity = '0';
+            el.classList.remove('active');
+            el.classList.add('hidden');
         });
+
+        // 2. Force-show ONLY the target tab
+        if (targetScreen) {
+            targetScreen.style.display = 'block';
+            targetScreen.style.opacity = '1';
+            targetScreen.classList.add('active');
+            targetScreen.classList.remove('hidden');
+        } else {
+            console.error('[Navigation Error] Target screen not found in DOM:', targetId);
+        }
 
         // Update button state (Find by data-target)
         const activeBtn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
