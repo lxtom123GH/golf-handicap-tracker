@@ -63,21 +63,6 @@ function bindSetupToggles() {
     }
 
 
-    function updateModeVisibility() {
-        const btnTrack = document.getElementById('btn-oc-track-shot');
-        const wizard = document.getElementById('oncourse-wizard');
-        if (AppState.currentTrackingMode === 'simple') {
-            if (btnTrack) btnTrack.classList.add('hidden');
-            if (wizard) wizard.classList.add('hidden');
-        } else {
-            if (btnTrack) btnTrack.classList.remove('hidden');
-            // Ensure hub is visible if in detailed
-            const hub = document.getElementById('oncourse-hub');
-            if (hub && !hub.classList.contains('hidden')) {
-                btnTrack.classList.remove('hidden');
-            }
-        }
-    }
 
     if (UI.btnRound9 && UI.btnRound18) {
         UI.btnRound9.addEventListener('click', () => {
@@ -1579,4 +1564,30 @@ function bindReviewModal() {
     }
     if (UI.btnCloseReview) UI.btnCloseReview.addEventListener('click', () => UI.reviewRoundModal.classList.add('hidden'));
     if (UI.btnReviewFinished) UI.btnReviewFinished.addEventListener('click', () => UI.reviewRoundModal.classList.add('hidden'));
+}
+
+/**
+ * Bulletproof Visibility UI
+ * Handles switching between Simple (Stats) and Detailed (Wizard) tracking
+ */
+export function updateModeVisibility() {
+    const btnTrack = document.getElementById('btn-oc-track-shot');
+    const wizard = document.getElementById('oncourse-wizard');
+    const simpleStats = document.getElementById('oc-simple-stats');
+
+    if (AppState.currentTrackingMode === 'simple') {
+        if (btnTrack) btnTrack.classList.add('hidden');
+        if (wizard) wizard.classList.add('hidden');
+        if (simpleStats) simpleStats.classList.remove('hidden');
+    } else {
+        // Detailed mode
+        if (btnTrack) btnTrack.classList.remove('hidden');
+        if (simpleStats) simpleStats.classList.add('hidden');
+
+        // If hub is visible, make sure track button is too
+        const hub = document.getElementById('oncourse-hub');
+        if (hub && !hub.classList.contains('hidden')) {
+            if (btnTrack) btnTrack.classList.remove('hidden');
+        }
+    }
 }

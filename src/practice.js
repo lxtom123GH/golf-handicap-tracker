@@ -55,11 +55,11 @@ const DRILL_TEMPLATES = {
     },
     "putting_369": {
         name: "3-6-9 Putting Ladder",
-        desc: "Hit 3 balls from 3ft, 6ft, and 9ft. 1 pt for a make, 0 for a miss. Max score 9.",
+        desc: "Hit 3 balls from 3ft, 6ft, and 9ft. 1 pt for 3ft, 2 pts for 6ft, 3 pts for 9ft makes. Max score 18.",
         inputs: [
             { id: 'putts_3ft', label: 'Makes from 3ft (1 pt)', type: 'number', multiplier: 1, default: 0 },
-            { id: 'putts_6ft', label: 'Makes from 6ft (1 pt)', type: 'number', multiplier: 1, default: 0 },
-            { id: 'putts_9ft', label: 'Makes from 9ft (1 pt)', type: 'number', multiplier: 1, default: 0 }
+            { id: 'putts_6ft', label: 'Makes from 6ft (2 pts)', type: 'number', multiplier: 2, default: 0 },
+            { id: 'putts_9ft', label: 'Makes from 9ft (3 pts)', type: 'number', multiplier: 3, default: 0 }
         ],
         scoringMath: "higher_is_better"
     },
