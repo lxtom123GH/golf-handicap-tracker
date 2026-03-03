@@ -9,6 +9,45 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import * as XLSX from 'xlsx';
 import { UI } from './ui.js';
 
+window.refreshAdminDashboard = async () => {
+    if (!window.currentUserIsAdmin) return;
+
+    const usersList = document.getElementById('admin-users-list');
+    if (usersList) usersList.innerHTML = '<tr><td colspan="5">Loading users from Firestore...</td></tr>';
+
+    try {
+        const snap = await getDocs(collection(db, "users"));
+        if (usersList) usersList.innerHTML = '';
+        snap.forEach(d => {
+            const data = d.data();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${data.displayName || 'N/A'}</td>
+                <td>${data.email}</td>
+                <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
+                <td>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${d.id}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </td>
+                <td>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${d.id}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </td>
+            `;
+            if (usersList) usersList.appendChild(tr);
+        });
+    } catch (e) {
+        console.error("Admin dashboard fetch error:", e);
+        if (usersList) usersList.innerHTML = '<tr><td colspan="5" style="color:#ef4444;">Error: Failed to fetch users.</td></tr>';
+    }
+
+    loadPreapprovedEmails();
+};
+
 export function bindAdminTools() {
     const tabAdmin = document.getElementById('tab-admin');
     if (tabAdmin && (tabAdmin.innerHTML === '' || tabAdmin.innerHTML.includes('DYNAMIC'))) {
@@ -85,42 +124,9 @@ export function bindAdminTools() {
     }
 
     const tabBtnAdmin = document.getElementById('tab-btn-admin');
-    if (!tabBtnAdmin) return;
-
-    tabBtnAdmin.addEventListener('click', async () => {
-        if (!window.currentUserIsAdmin) return;
-
-        const usersList = document.getElementById('admin-users-list');
-        if (usersList) usersList.innerHTML = 'Loading...';
-        try {
-            const snap = await getDocs(collection(db, "users"));
-            if (usersList) usersList.innerHTML = '';
-            snap.forEach(d => {
-                const data = d.data();
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${data.displayName || 'N/A'}</td>
-                    <td>${data.email}</td>
-                    <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
-                    <td>
-                        <label class="toggle-switch">
-                            <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${d.id}', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </td>
-                    <td>
-                        <label class="toggle-switch">
-                            <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${d.id}', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </td>
-                `;
-                if (usersList) usersList.appendChild(tr);
-            });
-        } catch (e) { console.error("Admin error:", e); }
-
-        loadPreapprovedEmails();
-    });
+    if (tabBtnAdmin) {
+        tabBtnAdmin.addEventListener('click', window.refreshAdminDashboard);
+    }
 
     const preapproveForm = document.getElementById('admin-preapprove-form');
     if (preapproveForm) {

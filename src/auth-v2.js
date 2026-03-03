@@ -11,6 +11,7 @@ import {
 import { doc, getDoc, getDocFromServer, setDoc, serverTimestamp } from "firebase/firestore";
 import { UI } from './ui.js';
 import { AppState } from './state.js';
+import { bindAdminTools, bindAdminInvite } from './admin.js';
 
 let isRegistering = false;
 let initializeAppCallback = null; // Callback supplied by app.js to boot modules
@@ -155,6 +156,10 @@ export function setupAuthUI(onAppReady) {
 
                         if (userData.isAdmin) {
                             if (UI.tabBtnAdmin) UI.tabBtnAdmin.classList.remove('hidden');
+                            try {
+                                bindAdminTools();
+                                bindAdminInvite();
+                            } catch (e) { console.error("[Auth] Admin binding failed:", e); }
                         }
                         if (userData.isCoach) {
                             const coachBtn = document.getElementById('tab-btn-coach');

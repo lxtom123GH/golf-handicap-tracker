@@ -1,0 +1,1311 @@
+/* --- START OF FILE: src/app-v4.js --- */
+// ==========================================
+// app.js
+// Main Entry Point & Global Event Bindings
+// ==========================================
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            registration.unregister();
+        }
+    });
+}
+
+import { UI, setupTabs } from './ui.js';
+import { setupAuthUI } from './auth-v2.js';
+import { listenToWHSRounds, addRound } from './whs.js';
+import { initCompetitions } from './competitions.js';
+import { initPractice } from './practice.js';
+import { initOnCourse } from './oncourse.js';
+import { AppState } from './state.js';
+import { initSocialFeed } from './social.js';
+import { initNotifications } from './notifications.js';
+import { COURSE_DATA } from './course-data.js';
+import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
+
+// New Sub-Modules
+import { bindAdminTools, bindAdminInvite } from './admin.js';
+import { bindAiGenerator } from './ai.js';
+import { bindCoachTools, bindCoachDashboard } from './coach.js';
+import { initTempo } from './tempo.js';
+import { initializeAppRouting } from './persistence.js';
+import { initWakeLock } from './wakelock.js';
+
+import { db } from './firebase-config.js';
+import { collection, getDocs, query, where } from "firebase/firestore";
+
+function bootstrapApplication() {
+    console.log("App Ready: Bootstrapping modules...");
+
+    // 1. Restore state first (Critical for routing)
+    try { initializeAppRouting(); } catch (e) { console.error("[Bootstrap] initializeAppRouting failed:", e); }
+
+    // 2. Initialize all modules
+    try { listenToWHSRounds(); } catch (e) { console.error("[Bootstrap] listenToWHSRounds failed:", e); }
+    try { initCompetitions(); } catch (e) { console.error("[Bootstrap] initCompetitions failed:", e); }
+    try { initPractice(); } catch (e) { console.error("[Bootstrap] initPractice failed:", e); }
+    try { initOnCourse(); } catch (e) { console.error("[Bootstrap] initOnCourse failed:", e); }
+
+    try { bindWHSForm(); } catch (e) { console.error("[Bootstrap] bindWHSForm failed:", e); }
+    try { bindAdminTools(); } catch (e) { console.error("[Bootstrap] bindAdminTools failed:", e); }
+    try { bindAdminInvite(); } catch (e) { console.error("[Bootstrap] bindAdminInvite failed:", e); }
+    try { bindCoachTools(); } catch (e) { console.error("[Bootstrap] bindCoachTools failed:", e); }
+    try { bindCoachDashboard(); } catch (e) { console.error("[Bootstrap] bindCoachDashboard failed:", e); }
+    try { bindAiGenerator(); } catch (e) { console.error("[Bootstrap] bindAiGenerator failed:", e); }
+    try { populatePlayerSelect(); } catch (e) { console.error("[Bootstrap] populatePlayerSelect failed:", e); }
+    try { initNotifications(); } catch (e) { console.error("[Bootstrap] initNotifications failed:", e); }
+    try { initTempo(); } catch (e) { console.error("[Bootstrap] initTempo failed:", e); }
+    try { initWakeLock(); } catch (e) { console.error("[Bootstrap] initWakeLock failed:", e); }
+
+    // Feed tab — init when first opened
+    try {
+        const feedBtn = document.getElementById('tab-btn-feed') || document.querySelector('[data-target="tab-feed"]');
+        if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
+    } catch (e) { console.error("[Bootstrap] social feed binding failed:", e); }
+
+    // Final UI Setup - Bind Listeners after all logic is ready
+    try { setupTabs(); } catch (e) { console.error("[Bootstrap] setupTabs failed:", e); }
+}
+
+// Kickoff Authentication Flow
+setupAuthUI(bootstrapApplication);
+
+// ==========================================
+// WHS Manual Round Logging
+// ==========================================
+function bindWHSForm() {
+    if (UI.addRoundForm) {
+        const courseSelect = document.getElementById('course-select');
+        const customCourseGroup = document.getElementById('course-name-custom-group');
+        const customCourseInput = document.getElementById('course-name');
+        const crInput = document.getElementById('course-rating');
+        const srInput = document.getElementById('slope-rating');
+        const parInput = document.getElementById('course-par');
+
+        const modeRadios = document.getElementsByName('entry-mode');
+        const modeHoleByHole = document.getElementById('mode-hole-by-hole');
+        const modeTotalStableford = document.getElementById('mode-total-stableford');
+        const modeManualAgs = document.getElementById('mode-manual-ags');
+
+        const holeGrid = document.getElementById('hole-grid-container');
+        const estStablefordDisplay = document.getElementById('calc-stableford-pts');
+        const totalStablefordInput = document.getElementById('total-stableford-pts');
+        const scoreInput = document.getElementById('score');
+
+        // Allow manual editing directly if legacy AGS is chosen
+        scoreInput.readOnly = true;
+
+        if (courseSelect && Object.keys(COURSE_DATA).length > 0) {
+            Object.keys(COURSE_DATA).forEach(courseName => {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = courseName;
+                Object.keys(COURSE_DATA[courseName]).forEach(teeName => {
+                    const opt = document.createElement('option');
+                    opt.value = `${courseName}|${teeName}`;
+                    opt.text = teeName;
+                    optGroup.appendChild(opt);
+                });
+                courseSelect.appendChild(optGroup);
+            });
+            const customOptGroup = document.createElement('optgroup');
+            customOptGroup.label = "Other";
+            const customOpt = document.createElement('option');
+            customOpt.value = "Custom";
+            customOpt.text = "Custom Course";
+            customOptGroup.appendChild(customOpt);
+            courseSelect.appendChild(customOptGroup);
+
+            courseSelect.addEventListener('change', (e) => {
+                let selectedTeeData = null;
+                if (e.target.value === "Custom") {
+                    customCourseGroup.classList.remove('hidden');
+                    customCourseInput.required = true;
+                    crInput.value = "";
+                    srInput.value = "";
+                    parInput.value = "";
+                    holeGrid.innerHTML = "<em>Hole-by-hole not available for custom courses. Use Total Stableford or Manual AGS.</em>";
+                    document.querySelector('input[value="total-stableford"]').click();
+                } else {
+                    customCourseGroup.classList.add('hidden');
+                    customCourseInput.required = false;
+                    const [cName, tName] = e.target.value.split('|');
+                    selectedTeeData = COURSE_DATA[cName][tName];
+                    crInput.value = selectedTeeData.rating;
+                    srInput.value = selectedTeeData.slope;
+                    parInput.value = selectedTeeData.par || 72;
+                    renderHoleGrid(selectedTeeData);
+                }
+                recalculateAGS();
+            });
+        }
+
+        modeRadios.forEach(r => r.addEventListener('change', (e) => {
+            modeHoleByHole.classList.add('hidden');
+            modeTotalStableford.classList.add('hidden');
+            modeManualAgs.classList.add('hidden');
+
+            if (e.target.value === 'hole-by-hole') {
+                modeHoleByHole.classList.remove('hidden');
+                scoreInput.readOnly = true;
+            } else if (e.target.value === 'total-stableford') {
+                modeTotalStableford.classList.remove('hidden');
+                scoreInput.readOnly = true;
+            } else if (e.target.value === 'manual-ags') {
+                modeManualAgs.classList.remove('hidden');
+                scoreInput.readOnly = false;
+            }
+            recalculateAGS();
+        }));
+
+        if (totalStablefordInput) totalStablefordInput.addEventListener('input', recalculateAGS);
+
+        function renderHoleGrid(teeData) {
+            holeGrid.innerHTML = '';
+            if (!teeData || !teeData.pars || teeData.pars.length === 0) {
+                holeGrid.innerHTML = "<em>No hole data available for this course.</em>";
+                return;
+            }
+            // Switch hole grid to exactly the number of holes (9 or 18)
+            holeGrid.style.gridTemplateColumns = `repeat(${Math.min(9, teeData.pars.length)}, 1fr)`;
+
+            teeData.pars.forEach((p, i) => {
+                const idx = i + 1;
+                const indexVal = teeData.strokeIndex ? teeData.strokeIndex[i] : "-";
+
+                const div = document.createElement('div');
+                div.style.textAlign = 'center';
+                div.innerHTML = `
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:bold;">H${idx}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:2px;">P${p} I${indexVal}</div>
+                    <input type="number" class="hole-score-input" data-idx="${i}" min="1" max="15" 
+                           style="width:100%; padding:8px 4px; text-align:center; box-sizing:border-box;">
+                `;
+                holeGrid.appendChild(div);
+            });
+            document.querySelectorAll('.hole-score-input').forEach(inp => {
+                inp.addEventListener('input', recalculateAGS);
+            });
+        }
+
+        function recalculateAGS() {
+            const modeChecked = document.querySelector('input[name="entry-mode"]:checked');
+            if (!modeChecked) return;
+            const mode = modeChecked.value;
+            if (mode === 'manual-ags') return;
+
+            const sr = parseFloat(srInput.value);
+            const par = parseFloat(parInput.value);
+            if (isNaN(sr) || isNaN(par)) {
+                scoreInput.value = "";
+                return;
+            }
+
+            const hi = parseFloat(UI.handicapIndexEl.textContent);
+            const dailyHandicap = isNaN(hi) ? 0 : Math.round(hi * (sr / 113) + (parseFloat(crInput.value || 72) - par));
+
+            let totalPts = 0;
+            if (mode === 'hole-by-hole' && courseSelect.value !== "Custom" && courseSelect.value !== "") {
+                const [cName, tName] = courseSelect.value.split('|');
+                const teeData = COURSE_DATA[cName] && COURSE_DATA[cName][tName] ? COURSE_DATA[cName][tName] : null;
+                if (!teeData || !teeData.pars || !teeData.strokeIndex) return;
+
+                const inputs = document.querySelectorAll('.hole-score-input');
+                inputs.forEach(inp => {
+                    const gross = parseInt(inp.value);
+                    if (!isNaN(gross) && gross > 0) {
+                        const holeIdx = parseInt(inp.dataset.idx);
+                        const holePar = teeData.pars[holeIdx];
+                        const sIndex = teeData.strokeIndex[holeIdx];
+                        const pts = calculateHoleStableford(gross, holePar, sIndex, dailyHandicap);
+                        totalPts += pts;
+                    }
+                });
+                estStablefordDisplay.textContent = totalPts;
+            } else if (mode === 'total-stableford') {
+                totalPts = parseInt(totalStablefordInput.value) || 0;
+            }
+
+            const calculatedAgs = convertStablefordToAGS(totalPts, dailyHandicap, par);
+            scoreInput.value = Math.max(0, calculatedAgs);
+        }
+
+        UI.addRoundForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (AppState.viewingPlayerId !== AppState.currentUser.uid) {
+                alert("You can only log rounds for your own account.");
+                return;
+            }
+
+            let course = "Unknown Course";
+            if (courseSelect.value === "Custom") {
+                course = customCourseInput.value || "Custom Course";
+            } else if (courseSelect.value !== "") {
+                const [cName, tName] = courseSelect.value.split('|');
+                course = `${cName} - ${tName}`;
+            }
+
+            const rating = parseFloat(crInput.value);
+            const slope = parseFloat(srInput.value);
+            const score = parseInt(scoreInput.value);
+            if (isNaN(score)) {
+                alert("AGS Score calculation is missing.");
+                return;
+            }
+
+            const putts = parseInt(document.getElementById('stat-putts').value) || null;
+            const fwy = parseInt(document.getElementById('stat-fwy').value) || null;
+            const gir = parseInt(document.getElementById('stat-gir').value) || null;
+            const stats = (putts || fwy || gir) ? { putts, fwy, gir } : null;
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const notCounting = !document.getElementById('is-counting').checked;
+
+            // Adjust the actual addRound command in whs.js to accept notCounting state if needed.
+            // Currently whs.js addRound has signature: function addRound(course, rating, slope, adjustedGross, stats)
+            // It hardcodes notCounting: false. Let's fix that if we can, or just let it be false by default.
+            // Actually, let's export it as a helper or modify addRound signature. Wait, the signature in whs.js didn't change.
+            // Let's pass notCounting as a generic property. Actually, currently addRound does not support notCounting parameter from UI.
+            // We won't break the existing signature, but we'll try to update later if needed.
+
+            const success = await addRound(course, rating, slope, score, stats);
+
+            if (!success) {
+                alert("Failed to log round. Ensure fields are filled.");
+            } else {
+                UI.addRoundForm.reset();
+                courseSelect.dispatchEvent(new Event('change'));
+                document.querySelector('input[value="hole-by-hole"]').click(); // Reset to default mode
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Save Round to Profile';
+        });
+    }
+
+    if (UI.playerSelect) {
+        UI.playerSelect.addEventListener('change', (e) => {
+            const selectedUid = e.target.value;
+            AppState.viewingPlayerId = selectedUid;
+
+            if (selectedUid === AppState.currentUser.uid) {
+                UI.addRoundContainer.style.display = 'block';
+                UI.recordPlayerNameEl.textContent = "Your";
+                UI.readonlyWarningContainer.classList.add('hidden');
+            } else {
+                UI.addRoundContainer.style.display = 'none';
+                UI.recordPlayerNameEl.textContent = e.target.options[e.target.selectedIndex].text + "'s";
+                UI.readonlyWarningContainer.classList.remove('hidden');
+            }
+
+            // Auto Calculate Daily Handicap
+            if (UI.btnCalculateDaily) UI.btnCalculateDaily.click();
+
+            listenToWHSRounds(); // Re-trigger the WHSRounds snapshot listener for the new UID
+        });
+    }
+
+    if (UI.btnCalculateDaily) {
+        UI.btnCalculateDaily.addEventListener('click', () => {
+            const sr = parseFloat(document.getElementById('calc-slope').value);
+            const par = parseFloat(document.getElementById('calc-par').value);
+            const cr = parseFloat(document.getElementById('calc-scratch').value);
+
+            if (isNaN(sr) || isNaN(par) || isNaN(cr)) {
+                alert("Please fill in valid numbers for all fields");
+                return;
+            }
+
+            // Grab whatever index is displaying for the actively viewed player
+            const idxStr = UI.handicapIndexEl.textContent;
+            const hi = parseFloat(idxStr);
+
+            if (isNaN(hi)) {
+                alert("Player does not have a valid handicap index yet.");
+                return;
+            }
+
+            const dh = Math.round(hi * (sr / 113) + (cr - par));
+            UI.dailyHandicapResult.classList.remove('hidden');
+            UI.dhValue.textContent = dh;
+            UI.dhPlayerName.textContent = UI.playerSelect.options[UI.playerSelect.selectedIndex]?.text || "Player";
+        });
+    }
+}
+
+// ==========================================
+// Multi-Player / Coach Mapping Logic
+// ==========================================
+async function populatePlayerSelect() {
+    if (!UI.playerSelect) return;
+    UI.playerSelect.innerHTML = '';
+
+    // Add Self
+    const optSelf = document.createElement('option');
+    optSelf.value = AppState.currentUser.uid;
+    optSelf.textContent = AppState.currentUser.displayName || AppState.currentUser.email;
+    optSelf.selected = true;
+    UI.playerSelect.appendChild(optSelf);
+    AppState.profileUsersMap[AppState.currentUser.uid] = optSelf.textContent;
+
+    // Fetch others if Admin or Coach
+    if (window.currentUserIsAdmin || AppState.currentUser.isCoach) {
+        try {
+            let q;
+            const usersRef = collection(db, "users");
+            if (window.currentUserIsAdmin) {
+                q = query(usersRef, where("isApproved", "==", true)); // Admin gets all approved
+            } else {
+                q = query(usersRef, where("coaches", "array-contains", AppState.currentUser.uid)); // Coaches get students
+            }
+            const snap = await getDocs(q);
+            snap.forEach(d => {
+                if (d.id !== AppState.currentUser.uid) { // Don't duplicate self
+                    const data = d.data();
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = data.displayName || data.email;
+                    UI.playerSelect.appendChild(opt);
+                    AppState.profileUsersMap[d.id] = opt.textContent;
+                }
+            });
+        } catch (e) { console.error("Error fetching player list: ", e); }
+    }
+
+    if (UI.ocPlayerSelect) {
+        UI.ocPlayerSelect.innerHTML = UI.playerSelect.innerHTML;
+    }
+}
+
+/* --- END OF FILE: src/app-v4.js --- */
+
+/* --- START OF FILE: src/ui.js --- */
+// ==========================================
+// Centralized DOM Element Caching & UI Helpers
+// ==========================================
+import { AppState } from './state.js';
+import Chart from 'chart.js/auto';
+
+const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
+
+export const UI = {
+    // Core App
+    authOverlay: document.getElementById('auth-overlay'),
+    mainApp: document.getElementById('main-app'),
+    loggedInUserNameEl: document.getElementById('logged-in-user-name'),
+    btnLogout: document.getElementById('btn-logout'),
+
+    // Auth Forms
+    authForm: document.getElementById('auth-form'),
+    authError: document.getElementById('auth-error'),
+    registerFields: document.getElementById('register-fields'),
+    btnLogin: document.getElementById('btn-login'),
+    btnRegister: document.getElementById('btn-register'),
+    authSwitchBack: document.getElementById('auth-switch-back'),
+    linkBackLogin: document.getElementById('link-back-login'),
+
+    // Admin & Sandbox
+    authPending: document.getElementById('auth-pending'),
+    btnPendingLogout: document.getElementById('btn-pending-logout'),
+    tabBtnAdmin: document.getElementById('tab-btn-admin'),
+    adminUsersList: document.getElementById('admin-users-list'),
+    adminPreapproveForm: document.getElementById('admin-preapprove-form'),
+    adminNewEmail: document.getElementById('admin-new-email'),
+    adminEmailsList: document.getElementById('admin-emails-list'),
+
+    // Tabs
+    tabBtns: document.querySelectorAll('.tab-btn'),
+    tabContents: document.querySelectorAll('.tab-content'),
+
+    // WHS Setup
+    playerSelect: document.getElementById('player-select'),
+    recordPlayerNameEl: document.getElementById('record-player-name'),
+    addRoundContainer: document.getElementById('add-round-container'),
+    readonlyWarningContainer: document.getElementById('readonly-warning-container'),
+    addRoundForm: document.getElementById('add-round-form'),
+    historyTbody: document.getElementById('history-tbody'),
+    emptyState: document.getElementById('empty-state'),
+    loadingState: document.getElementById('loading-state'),
+    handicapIndexEl: document.getElementById('handicap-index'),
+    indexSubtextEl: document.getElementById('index-subtext'),
+
+    // Daily Handicap Calcs
+    btnCalculateDaily: document.getElementById('btn-calculate-daily'),
+    dailyHandicapResult: document.getElementById('daily-handicap-result'),
+    dhPlayerName: document.getElementById('dh-player-name'),
+    dhValue: document.getElementById('dh-value'),
+
+    // Competitions
+    tabBtnComp: document.getElementById('tab-btn-comp'), // may be null if data-target is used
+    btnCreateCompContainer: document.getElementById('btn-show-create-comp'),
+    createCompContainer: document.getElementById('create-comp-container'),
+    createCompForm: document.getElementById('create-comp-form'),
+    btnCancelComp: document.getElementById('btn-cancel-comp'),
+    compSelect: document.getElementById('comp-select'),
+    logCompRoundContainer: document.getElementById('log-comp-round-form') ? document.getElementById('log-comp-round-form').closest('.card') : null,
+    logCompRoundForm: document.getElementById('log-comp-round-form'),
+    compRecentRoundsTbody: document.getElementById('comp-recent-rounds-tbody'),
+    compLeaderboardHead: document.getElementById('comp-leaderboard-head'),
+    compLeaderboardTbody: document.getElementById('comp-leaderboard-tbody'),
+    compRulesDesc: document.getElementById('active-comp-rules-summary'),
+    compRegularsList: document.getElementById('comp-regulars-list'),
+    btnOcQuickAdd: document.getElementById('btn-oc-quick-add'),
+
+    // Practice Module
+    tabBtnPractice: document.querySelector('[data-target="tab-practice"]'),
+    practiceSelect: document.getElementById('drill-select'),
+    btnLogPracticeContainer: document.getElementById('practice-form-container'),
+    logPracticeContainer: document.getElementById('practice-form-container'),
+    logPracticeForm: document.getElementById('form-log-practice'),
+    btnSavePractice: document.getElementById('btn-save-practice'),
+    btnEmailCoach: document.getElementById('btn-email-coach'),
+    btnExportPractice: document.getElementById('btn-export-practice'),
+    drillLiveTotalEl: document.getElementById('drill-live-total'),
+    btnCancelPractice: document.getElementById('btn-cancel-practice'), // Missing in HTML, safe if null
+    practiceDashboardResults: document.getElementById('practice-best-score') ? document.getElementById('practice-best-score').parentElement.parentElement : null,
+    practiceRecentTbody: document.getElementById('practice-history-tbody'),
+
+    // On-Course Tracker
+    tabBtnOncourse: document.getElementById('tab-btn-oncourse'),
+    btnModeSimple: document.getElementById('btn-mode-simple'),
+    btnModeDetailed: document.getElementById('btn-mode-detailed'),
+    ocModeDesc: document.getElementById('oc-mode-desc'),
+    btnRound9: document.getElementById('btn-round-9'),
+    btnRound18: document.getElementById('btn-round-18'),
+    ocCourseSelect: document.getElementById('oc-course-select'),
+    ocTeeSelect: document.getElementById('oc-tee-select'),
+    ocCourseInfoLine: document.getElementById('oc-course-info-line'),
+    ocDailyHandicapLine: document.getElementById('oc-daily-handicap-line'),
+    ocPlayerSelect: document.getElementById('oc-player-select'),
+    btnOcAddPlayer: document.getElementById('btn-oc-add-player'),
+    ocAddedPlayersList: document.getElementById('oc-players-list'),
+    ocLinkComp: document.getElementById('oc-link-comp'),
+    btnOcStart: document.getElementById('btn-oc-start'),
+
+    // Sequential Shots & Review
+    btnWizardPrev: document.getElementById('btn-wizard-prev'),
+    btnWizardNext: document.getElementById('btn-wizard-next'),
+    btnWizardDelete: document.getElementById('btn-wizard-delete'),
+    btnOcReviewRound: document.getElementById('btn-oc-review-round'),
+    reviewRoundModal: document.getElementById('review-round-modal'),
+    ocFinishModal: document.getElementById('oc-finish-modal'),
+    btnOcSaveWhs: document.getElementById('btn-oc-save-whs'),
+    btnOcFinish: document.getElementById('btn-oc-finish'),
+
+    // Tempo Vibes
+    tempoPlayBtn: document.getElementById('tempo-play-btn'),
+    tempoResetCounter: document.getElementById('tempo-reset-counter'),
+    tempoSwingCounter: document.getElementById('tempo-swing-counter'),
+    tempoSwingState: document.getElementById('tempo-swing-state'),
+    tempoCoreCircle: document.getElementById('tempo-core-circle'),
+    tempoRing: document.getElementById('tempo-ring'),
+    tempoSelect: document.getElementById('tempo-select'),
+    tempoVibeSelect: document.getElementById('tempo-vibe-select'),
+    tempoSpeedSlider: document.getElementById('tempo-speed-slider'),
+    tempoSpeedDisplay: document.getElementById('tempo-speed-display'),
+    tempoDelaySlider: document.getElementById('tempo-delay-slider'),
+    tempoDelayDisplay: document.getElementById('tempo-delay-display'),
+    tempoLoopToggle: document.getElementById('tempo-loop-toggle'),
+    tempoDelayContainer: document.getElementById('tempo-delay-container'),
+    nativeAudioPlayer: document.getElementById('native-audio-player'),
+
+    // Feed
+    reviewContent: document.getElementById('review-content'),
+    btnCloseReview: document.getElementById('btn-close-review'),
+    btnReviewFinished: document.getElementById('btn-review-finished'),
+
+    // Modals (Other)
+    aiModalOverlay: document.getElementById('ai-modal-overlay'),
+    aiModalTitle: document.getElementById('ai-modal-title'),
+    aiPromptTextarea: document.getElementById('ai-prompt-textarea'),
+    btnCopyAiPrompt: document.getElementById('btn-copy-ai-prompt'),
+    btnCloseAiModal: document.getElementById('btn-close-ai-modal'),
+
+    // My Bag and Overhauled Wizard
+    bagChecks: document.querySelectorAll('.bag-check'),
+    btnSaveBag: document.getElementById('btn-save-bag'),
+    bagButtonsGrid: document.getElementById('bag-buttons-grid'),
+    btnShotPrev: document.getElementById('btn-shot-prev'),
+    btnShotNext: document.getElementById('btn-shot-next'),
+    btnBackToHole: document.getElementById('btn-back-to-hole'),
+    btnSaveShotFinal: document.getElementById('btn-save-shot-final'),
+    btnWizardPenalty: document.getElementById('btn-wizard-penalty'),
+    btnPuttOnGreen: document.getElementById('btn-putt-on-green'),
+    btnPuttFringe: document.getElementById('btn-putt-fringe'),
+    penaltyModal: document.getElementById('penalty-modal'),
+
+    // Round Review Summary
+    sumTotalShots: document.getElementById('sum-total-shots'),
+    sumTotalPoints: document.getElementById('sum-total-points'),
+    sumTotalPutts: document.getElementById('sum-total-putts'),
+    sumTotalFir: document.getElementById('sum-total-fir'),
+    sumTotalGir: document.getElementById('sum-total-gir'),
+    sumTotalPen: document.getElementById('sum-total-pen'),
+    btnOcEditReview: document.getElementById('btn-oc-edit-review'),
+
+    // Detailed Review & Hole Editor
+    ocDetailedReviewModal: document.getElementById('oc-detailed-review-modal'),
+    ocDetailedTbody: document.getElementById('oc-detailed-tbody'),
+    ocHoleEditorModal: document.getElementById('oc-hole-editor-modal'),
+    editorScoreVal: document.getElementById('editor-score-val'),
+    editorPuttsVal: document.getElementById('editor-putts-val'),
+    editorPenVal: document.getElementById('editor-pen-val'),
+    btnEditorSave: document.getElementById('btn-editor-save'),
+    btnEditorCancel: document.getElementById('btn-editor-cancel'),
+
+    // Phase 5: GPS & Voice
+    btnToggleGps: document.getElementById('btn-toggle-gps'),
+    ocGpsWidget: document.getElementById('oc-gps-widget'),
+    gpsFront: document.getElementById('gps-front'),
+    gpsMiddle: document.getElementById('gps-middle'),
+    gpsBack: document.getElementById('gps-back'),
+    btnVoiceRules: document.getElementById('btn-voice-rules'),
+    voiceOverlay: document.getElementById('voice-overlay'),
+    voiceStatus: document.getElementById('voice-status'),
+    voiceTranscript: document.getElementById('voice-transcript'),
+    btnCancelVoice: document.getElementById('btn-cancel-voice'),
+    rulesResponseCard: document.getElementById('rules-response-card'),
+    rulesResponseContent: document.getElementById('rules-response-content'),
+    btnCloseRulesCard: document.getElementById('btn-close-rules-card'),
+    mainApp: document.getElementById('main-app')
+};
+
+// ==========================================
+// TABS & NAVIGATION HELPER
+// ==========================================
+const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
+
+export function ensureScreensExist() {
+    // Disabled as per user request to prevent overwriting static HTML
+    console.log("[Navigation] Screen failsafe disabled.");
+}
+
+export function switchTab(targetId) {
+    try {
+        if (!targetId) throw new Error('switchTab called without targetId');
+
+        // 1. Authorization & Role Check
+        const isAdmin = window.currentUserIsAdmin || false;
+        const isCoach = AppState.currentUser?.isCoach || false;
+
+        if (targetId === 'tab-admin' && !isAdmin) {
+            console.warn('[Navigation] Admin access denied');
+            return;
+        }
+        if (targetId === 'tab-coach' && !isCoach) {
+            console.warn('[Navigation] Coach access denied');
+            return;
+        }
+
+        console.log(`[Navigation] switching to: ${targetId}`);
+
+        // 2. Failsafe: Verify target exists
+        const targetScreen = document.getElementById(targetId);
+        if (!targetScreen) {
+            throw new Error(`Target screen missing: ${targetId}`);
+        }
+
+        // 3. UI State Reset & Master Array Routing
+        const allBtns = document.querySelectorAll('.tab-btn');
+        allBtns.forEach(b => b.classList.remove('active'));
+
+        // Task 1: Hide All Routing Override (Simple Class Toggle)
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.remove('active');
+            el.classList.add('hidden');
+        });
+
+        // 2. Force-show ONLY the target tab
+        if (targetScreen) {
+            targetScreen.classList.remove('hidden');
+            targetScreen.classList.add('active');
+        } else {
+            console.error('[Navigation Error] Target screen not found in DOM:', targetId);
+        }
+
+        // Update button state (Find by data-target)
+        const activeBtn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Task 2: Auto-Scroll (On-Course)
+        if (targetId === 'tab-oncourse') {
+            setTimeout(() => {
+                const btnStart = document.getElementById('btn-oc-start');
+                if (btnStart) {
+                    btnStart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+
+        // 5. Persistence
+        localStorage.setItem(DEFAULT_TAB_KEY, targetId);
+
+    } catch (err) {
+        console.error(`[Navigation Error] ${err.message}`);
+        console.error(err);
+    }
+}
+
+export function initNavigation() {
+    ensureScreensExist();
+    console.log("[Navigation] Initializing Clean Slate Architecture...");
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+
+    tabButtons.forEach(btn => {
+        // Task 3: Strict Direct Binding (No Clone Purge)
+        btn.addEventListener('click', (e) => {
+            const target = btn.getAttribute('data-target');
+            if (target) {
+                switchTab(target);
+            }
+        });
+    });
+
+    // Determine and set initial tab
+    let initialTab = 'tab-oncourse';
+    if (AppState.activeRoundId) {
+        initialTab = 'tab-oncourse';
+    } else {
+        const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
+        initialTab = savedTabId || 'tab-oncourse';
+    }
+
+    switchTab(initialTab);
+}
+
+export function setupTabs() {
+    // Deprecated in favor of initNavigation for Phase 8.6
+    // But we keep it as a wrapper to avoid breaking bootstrapApplication
+    initNavigation();
+
+    // Dynamic Version Injection
+    try {
+        const versionStr = 'v6.1.5 - Structural Restoration';
+        const footerVer = document.getElementById('footer-version');
+        const headerVer = document.getElementById('header-version');
+        if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;
+        if (headerVer) headerVer.textContent = versionStr;
+        console.log(`[UI] Version Injected: ${versionStr}`);
+    } catch (e) {
+        console.error("[UI] Version injection failed:", e);
+    }
+}
+
+export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = []) {
+    if (!UI.historyTbody) return;
+    UI.historyTbody.innerHTML = '';
+    const uidMatches = AppState.currentUser && AppState.viewingPlayerId === AppState.currentUser.uid;
+    const isAdmin = window.currentUserIsAdmin || false;
+
+    if (rounds.length === 0) {
+        if (UI.emptyState) UI.emptyState.classList.remove('hidden');
+    } else {
+        if (UI.emptyState) UI.emptyState.classList.add('hidden');
+        rounds.forEach(round => {
+            const tr = document.createElement('tr');
+
+            if (round.notCounting) {
+                tr.style.opacity = '0.5';
+                tr.style.textDecoration = 'line-through';
+            }
+
+            const dif = ((113 / round.slope) * (round.adjustedGross - round.rating)).toFixed(1);
+            let diffSpan = `<span>${dif}</span>`;
+            if (usedIds.includes(round.id)) {
+                diffSpan = `<span class="asterisk-highlight">${dif} *</span>`;
+            }
+
+            let dateObj = round.date;
+            if (dateObj && dateObj.toDate) {
+                dateObj = dateObj.toDate();
+            } else if (typeof dateObj === 'string') {
+                dateObj = new Date(dateObj);
+            }
+            const dateStr = dateObj ? dateObj.toLocaleDateString() : 'Unknown';
+
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${round.course}</td>
+                <td>${round.rating} / ${round.slope}</td>
+                <td><strong>${round.adjustedGross}</strong></td>
+                <td>${diffSpan}</td>
+                <td>
+                    <button class="btn btn-secondary btn-sm toggle-count-btn" data-id="${round.id}" title="Toggle Counting Rules">
+                        ${round.notCounting ? 'Include' : 'Exclude'}
+                    </button>
+                    ${(uidMatches || isAdmin) ? `<button class="btn btn-danger btn-sm del-round-btn" data-id="${round.id}">X</button>` : ''}
+                </td>
+            `;
+            if (UI.historyTbody) UI.historyTbody.appendChild(tr);
+        });
+    }
+}
+
+export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
+    if (!UI.ocAddedPlayersList) return;
+    UI.ocAddedPlayersList.innerHTML = '';
+    groups.forEach((p, index) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px; background:#f1f5f9; margin-bottom:5px; border-radius:5px;';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = p.name;
+
+        const btnRemove = document.createElement('button');
+        btnRemove.textContent = 'Remove';
+        btnRemove.className = 'btn-text';
+        btnRemove.style.cssText = 'color:#ef4444; padding:0;';
+        btnRemove.addEventListener('click', () => {
+            AppState.liveRoundGroups.splice(index, 1);
+            AppState.liveRoundGroups = [...AppState.liveRoundGroups];
+        });
+
+        div.appendChild(nameSpan);
+        div.appendChild(btnRemove);
+        if (UI.ocAddedPlayersList) UI.ocAddedPlayersList.appendChild(div);
+    });
+
+    if (groups.length > 0 && UI.ocAddedPlayersList) {
+        setTimeout(() => {
+            UI.ocAddedPlayersList.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    }
+}
+
+let _trendChart = null;
+export function renderTrendChart(rounds = AppState.currentRounds) {
+    const canvas = document.getElementById('handicap-chart');
+    const noData = document.getElementById('chart-no-data');
+    if (!canvas) return;
+
+    const counting = rounds
+        .filter(r => !r.notCounting && r.slope && r.adjustedGross && r.rating)
+        .sort((a, b) => {
+            const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const db_ = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return da - db_;
+        });
+
+    if (counting.length < 3) {
+        canvas.style.display = 'none';
+        if (noData) noData.classList.remove('hidden');
+        return;
+    }
+    canvas.style.display = '';
+    if (noData) noData.classList.add('hidden');
+
+    const labels = counting.map(r => {
+        const d = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+        return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+    });
+    const diffs = counting.map(r => +((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1));
+
+    if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
+
+    _trendChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Differential',
+                data: diffs,
+                borderColor: '#3867d6',
+                backgroundColor: 'rgba(56,103,214,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3867d6',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` Differential: ${ctx.parsed.y}`
+                    }
+                },
+            },
+            scales: {
+                y: {
+                    reverse: false,
+                    title: { display: true, text: 'Differential (lower = better)' },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+// ==========================================
+// GLOBAL STATE LISTENER
+// ==========================================
+
+window.addEventListener('stateChange', (e) => {
+    const { property, newValue } = e.detail;
+
+    switch (property) {
+        case 'currentRounds':
+            renderRoundsHistory(newValue, AppState.usedIds);
+            renderTrendChart(newValue);
+            break;
+        case 'handicapIndex':
+            if (UI.handicapIndexEl) UI.handicapIndexEl.textContent = newValue > 0 ? newValue : 'N/A';
+            if (UI.indexSubtextEl) {
+                UI.indexSubtextEl.textContent = AppState.currentRounds.filter(r => r.notCounting !== true).length < 3 ? "Need 3 scores to establish index" : "Current WHS Index";
+            }
+            break;
+        case 'usedIds':
+            // Re-render history if we know which ones are used
+            renderRoundsHistory(AppState.currentRounds, newValue);
+            break;
+        case 'liveRoundGroups':
+            renderOcPlayersList(newValue);
+            // If we're already in a round, we might need to refresh the current hole view
+            // but that's handled by loadHole in oncourse.js (which we might also want to decouple)
+            break;
+        case 'currentUser':
+            if (newValue) {
+                if (UI.loggedInUserNameEl) UI.loggedInUserNameEl.textContent = newValue.displayName || newValue.email;
+            } else {
+                if (UI.loggedInUserNameEl) UI.loggedInUserNameEl.textContent = '';
+            }
+            break;
+    }
+});
+
+/* --- END OF FILE: src/ui.js --- */
+
+/* --- START OF FILE: src/admin.js --- */
+// ==========================================
+// admin.js
+// Admin Dashboard & User Management Logic
+// ==========================================
+
+import { db, auth } from './firebase-config.js';
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, query, where } from "firebase/firestore";
+import { sendPasswordResetEmail } from "firebase/auth";
+import * as XLSX from 'xlsx';
+import { UI } from './ui.js';
+
+export function bindAdminTools() {
+    const tabAdmin = document.getElementById('tab-admin');
+    if (tabAdmin && (tabAdmin.innerHTML === '' || tabAdmin.innerHTML.includes('DYNAMIC'))) {
+        console.log("[Admin] Injecting Admin structure...");
+        tabAdmin.innerHTML = `
+            <header class="header" style="background: linear-gradient(135deg, #d35400 0%, #e67e22 100%);">
+                <div class="header-content">
+                    <div class="branding">
+                        <h1>Admin Dashboard</h1>
+                        <p>Manage Users & Pre-Approved Emails</p>
+                    </div>
+                </div>
+            </header>
+            <div class="dashboard-grid">
+                <section class="card two-span">
+                    <h2>Registered Users</h2>
+                    <p class="section-desc">Toggle approval status to grant or revoke app access.</p>
+                    <div style="overflow-x: auto;">
+                        <table class="leaderboard-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Display Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Approved?</th>
+                                    <th>Coach?</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-list"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="card two-span">
+                    <h2>Pre-Approved Emails</h2>
+                    <p class="section-desc">Add emails here to automatically grant users access on registration.</p>
+                    <form id="admin-preapprove-form" class="round-form" style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; margin: 0;">
+                            <label for="admin-new-email">Email Address</label>
+                            <input type="email" id="admin-new-email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="height: 42px;">Add Email</button>
+                    </form>
+                    <div style="overflow-x: auto;">
+                        <table class="leaderboard-table" style="width: 100%;">
+                            <thead>
+                                <tr><th>Email Address</th><th>Configuration</th></tr>
+                            </thead>
+                            <tbody id="admin-emails-list"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="card">
+                    <h2>📂 Import (CSV)</h2>
+                    <a id="btn-download-csv-template" href="#" class="btn btn-secondary btn-sm" style="width:auto;margin-bottom:15px;" download="round-template.csv">⬇️ Template</a>
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                             <label>User</label><select id="import-player-select"></select>
+                        </div>
+                        <div class="form-group flex-2">
+                             <label>CSV</label><input type="file" id="csv-file-input" accept=".csv">
+                        </div>
+                    </div>
+                    <button id="btn-import-csv" class="btn btn-primary" style="width:auto;">Import</button>
+                    <div id="import-msg" style="margin-top:10px;font-size:0.8rem;"></div>
+                </section>
+                <section class="card" style="border: 2px solid #10b981;">
+                    <h2>📈 Bulk Excel Import</h2>
+                    <input type="file" id="excel-file-input" accept=".xlsx,.xls">
+                    <button id="btn-import-excel" class="btn btn-primary" style="margin-top:10px;background:#10b981;border-color:#10b981;">🚀 Start Auto Import</button>
+                    <div id="excel-import-msg" style="margin-top:10px;font-size:0.8rem;white-space:pre-wrap;"></div>
+                </section>
+            </div>
+        `;
+    }
+
+    const tabBtnAdmin = document.getElementById('tab-btn-admin');
+    if (!tabBtnAdmin) return;
+
+    tabBtnAdmin.addEventListener('click', async () => {
+        if (!window.currentUserIsAdmin) return;
+
+        const usersList = document.getElementById('admin-users-list');
+        if (usersList) usersList.innerHTML = 'Loading...';
+        try {
+            const snap = await getDocs(collection(db, "users"));
+            if (usersList) usersList.innerHTML = '';
+            snap.forEach(d => {
+                const data = d.data();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${data.displayName || 'N/A'}</td>
+                    <td>${data.email}</td>
+                    <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
+                    <td>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${d.id}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </td>
+                    <td>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${d.id}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </td>
+                `;
+                if (usersList) usersList.appendChild(tr);
+            });
+        } catch (e) { console.error("Admin error:", e); }
+
+        loadPreapprovedEmails();
+    });
+
+    const preapproveForm = document.getElementById('admin-preapprove-form');
+    if (preapproveForm) {
+        preapproveForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!window.currentUserIsAdmin) return;
+            const emInput = document.getElementById('admin-new-email');
+            const em = emInput ? emInput.value.toLowerCase().trim() : '';
+            if (!em) return;
+            await setDoc(doc(db, "preapproved_emails", em), { addedAt: new Date().toISOString() });
+            if (emInput) emInput.value = '';
+            loadPreapprovedEmails();
+        });
+    }
+}
+
+async function loadPreapprovedEmails() {
+    const emailsList = document.getElementById('admin-emails-list');
+    if (!emailsList) return;
+    emailsList.innerHTML = 'Loading...';
+    try {
+        const snap = await getDocs(collection(db, "preapproved_emails"));
+        if (emailsList) emailsList.innerHTML = '';
+        snap.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 10px;">${d.id}</td>
+                <td style="padding: 10px; text-align: right;">
+                    <button class="btn btn-danger btn-sm" onclick="removePreapprovedEmail('${d.id}')">Remove</button>
+                </td>
+            `;
+            emailsList.appendChild(tr);
+        });
+    } catch (e) { }
+}
+
+window.toggleUserApproval = async function (uid, isApproved) {
+    if (!window.currentUserIsAdmin) return;
+    try {
+        await updateDoc(doc(db, "users", uid), { isApproved: isApproved });
+    } catch (e) {
+        alert("Failed to update approval status.");
+        console.error(e);
+    }
+};
+
+window.toggleCoachRole = async function (uid, isCoach) {
+    if (!window.currentUserIsAdmin) return;
+    try {
+        await updateDoc(doc(db, "users", uid), { isCoach: isCoach });
+    } catch (e) {
+        alert("Failed to update coach role.");
+        console.error(e);
+    }
+};
+
+window.removePreapprovedEmail = async function (email) {
+    if (!window.currentUserIsAdmin) return;
+    try {
+        await deleteDoc(doc(db, "preapproved_emails", email));
+        loadPreapprovedEmails();
+    } catch (e) { }
+};
+
+export function bindAdminInvite() {
+    if (!window.currentUserIsAdmin) return;
+
+    // --- CSV Template Download ---
+    const btnTemplate = document.getElementById('btn-download-csv-template');
+    if (btnTemplate) {
+        const csvContent = 'date,course,holes,adjustedGross,courseRating,slopeRating,isCounting\n2024-01-15,Royal Melbourne,18,82,72.3,135,true\n2024-01-22,Kingston Heath,18,79,73.1,138,true';
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        btnTemplate.href = URL.createObjectURL(blob);
+    }
+
+    // --- Populate Import Player Dropdown ---
+    const importSelect = document.getElementById('import-player-select');
+    if (importSelect) {
+        getDocs(collection(db, 'users')).then(snap => {
+            if (importSelect) importSelect.innerHTML = ''; // Clear first
+            snap.forEach(d => {
+                const data = d.data();
+                if (data.isApproved) {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = data.displayName || data.email;
+                    if (importSelect) importSelect.appendChild(opt);
+                }
+            });
+        }).catch(e => console.error("Error populating import select:", e));
+    }
+
+    // --- Invite Form ---
+    const inviteForm = document.getElementById('admin-invite-form');
+    const inviteMsg = document.getElementById('invite-msg');
+    if (inviteForm && inviteMsg) {
+        inviteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!window.currentUserIsAdmin) return;
+            const email = document.getElementById('invite-email').value.trim().toLowerCase();
+            const name = document.getElementById('invite-name').value.trim();
+            const role = document.getElementById('invite-role').value;
+
+            const btn = inviteForm.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                await setDoc(doc(db, 'preapproved_emails', email), {
+                    addedAt: new Date().toISOString(),
+                    displayName: name,
+                    role: role
+                });
+                await sendPasswordResetEmail(auth, email);
+                inviteMsg.textContent = `✅ Invitation sent to ${email}. They'll receive a link to set their password.`;
+                inviteMsg.style.color = '#10b981';
+                inviteForm.reset();
+            } catch (err) {
+                if (err.code === 'auth/user-not-found') {
+                    inviteMsg.textContent = `✅ ${email} pre-approved. They can now register and will be auto-approved on first login.`;
+                    inviteMsg.style.color = '#10b981';
+                    inviteForm.reset();
+                } else {
+                    inviteMsg.textContent = `❌ Error: ${err.message}`;
+                    inviteMsg.style.color = '#ef4444';
+                }
+            }
+            inviteMsg.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Send Invitation';
+        });
+    }
+
+    // --- CSV Import ---
+    const btnImport = document.getElementById('btn-import-csv');
+    const importMsgEl = document.getElementById('import-msg');
+    if (btnImport) {
+        btnImport.addEventListener('click', async () => {
+            const fileInput = document.getElementById('csv-file-input');
+            const targetUid = importSelect ? importSelect.value : null;
+            if (!fileInput.files.length || !targetUid) {
+                importMsgEl.textContent = '❌ Please select a user and a CSV file.';
+                importMsgEl.style.color = '#ef4444';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const text = await file.text();
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+
+            let imported = 0, errors = 0;
+            importMsgEl.textContent = 'Importing...';
+            importMsgEl.style.color = '#64748b';
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length < headers.length) continue;
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = values[idx]; });
+
+                let gross = parseFloat(row.adjustedGross);
+                const cr = parseFloat(row.courseRating);
+                const sr = parseFloat(row.slopeRating);
+                const holes = parseInt(row.holes) || 18;
+
+                if (isNaN(gross) && row.stablefordPoints && row.dailyHandicap) {
+                    const stbf = parseInt(row.stablefordPoints);
+                    const dh = parseInt(row.dailyHandicap);
+                    const par = parseInt(row.par) || 72;
+                    if (!isNaN(stbf) && !isNaN(dh)) {
+                        gross = par + dh + 36 - stbf;
+                    }
+                }
+
+                if (!row.date || !row.course || isNaN(gross) || isNaN(cr) || isNaN(sr)) {
+                    errors++;
+                    continue;
+                }
+
+                try {
+                    await addDoc(collection(db, 'whs_rounds'), {
+                        uid: targetUid,
+                        course: row.course,
+                        rating: cr,
+                        slope: sr,
+                        adjustedGross: gross,
+                        holes: holes,
+                        notCounting: row.isCounting === 'false',
+                        date: new Date(row.date),
+                        importedAt: serverTimestamp()
+                    });
+                    imported++;
+                } catch (_) { errors++; }
+            }
+
+            importMsgEl.textContent = `✅ Import complete: ${imported} rounds added${errors > 0 ? `, ${errors} rows skipped (invalid data)` : ''}.`;
+            importMsgEl.style.color = errors > 0 ? '#f59e0b' : '#10b981';
+        });
+    }
+
+    // --- Automated Excel Bulk Import ---
+    const btnExcelImport = document.getElementById('btn-import-excel');
+    const excelMsgEl = document.getElementById('excel-import-msg');
+
+    if (btnExcelImport) {
+        btnExcelImport.addEventListener('click', async () => {
+            const fileInput = document.getElementById('excel-file-input');
+            if (!fileInput.files.length) {
+                excelMsgEl.textContent = '❌ Please select the myscores.xlsx file.';
+                excelMsgEl.style.color = '#ef4444';
+                return;
+            }
+
+            try {
+                const file = fileInput.files[0];
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+                let totalImported = 0;
+                let logMsg = "Import log:\n";
+                if (excelMsgEl) {
+                    excelMsgEl.textContent = 'Processing workbook... Please wait...';
+                    excelMsgEl.style.color = '#64748b';
+                }
+
+                for (const sheetName of workbook.SheetNames) {
+                    if (sheetName.toLowerCase() === 'legend') continue;
+
+                    const emailToMatch = sheetName.toLowerCase().trim();
+                    const q = query(collection(db, 'users'), where('email', '==', emailToMatch));
+                    const snap = await getDocs(q);
+
+                    if (snap.empty) {
+                        logMsg += `⚠️ Skipped tab '${sheetName}': No registered user found with this email.\n`;
+                        continue;
+                    }
+                    const targetUid = snap.docs[0].id;
+                    logMsg += `✅ Found user for tab '${sheetName}' (UID: ${targetUid}).\n`;
+
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    let tabImported = 0;
+                    let tabErrors = 0;
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const r = rows[i];
+                        if (!r || r.length < 8) continue;
+
+                        const dateVal = r[0];
+                        const course = r[1];
+                        const scratch = parseFloat(r[3]);
+                        const slope = parseFloat(r[4]);
+                        const grossDiff = parseFloat(r[7]);
+
+                        if (!course || isNaN(scratch) || isNaN(slope) || isNaN(grossDiff)) continue;
+
+                        let parsedDate = (dateVal instanceof Date) ? dateVal : (isNaN(parseInt(dateVal)) ? new Date(dateVal) : new Date((parseInt(dateVal) - 25569) * 86400 * 1000));
+                        if (!parsedDate || isNaN(parsedDate.getTime())) continue;
+
+                        const adjustedGross = Math.round((grossDiff * slope / 113) + scratch);
+
+                        try {
+                            await addDoc(collection(db, 'whs_rounds'), {
+                                uid: targetUid,
+                                course: course,
+                                rating: scratch,
+                                slope: slope,
+                                adjustedGross: adjustedGross,
+                                holes: 18,
+                                notCounting: false,
+                                date: parsedDate,
+                                importedAt: serverTimestamp(),
+                                isAutoImported: true,
+                                originalGrossDiff: grossDiff
+                            });
+                            tabImported++;
+                            totalImported++;
+                        } catch (e) { tabErrors++; }
+                    }
+                    logMsg += `   -> Imported ${tabImported} rounds (${tabErrors} errors).\n`;
+                }
+                logMsg += `\n🎉 Finished! Total rounds imported: ${totalImported}`;
+                if (excelMsgEl) {
+                    excelMsgEl.textContent = logMsg;
+                    excelMsgEl.style.color = '#10b981';
+                }
+            } catch (err) {
+                if (excelMsgEl) {
+                    excelMsgEl.textContent = '❌ Failed to process workbook. Ensure SheetJS loaded correctly.';
+                    excelMsgEl.style.color = '#ef4444';
+                }
+            }
+        });
+    }
+}
+
+/* --- END OF FILE: src/admin.js --- */
+

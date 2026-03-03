@@ -255,7 +255,21 @@ export function switchTab(targetId) {
             }, 300);
         }
 
-        // 5. Persistence
+        // 5. Lifecycle Hooks for Dynamic Tabs
+        switch (targetId) {
+            case 'tab-admin':
+                if (typeof window.refreshAdminDashboard === 'function') {
+                    window.refreshAdminDashboard();
+                }
+                break;
+            case 'tab-settings':
+                if (typeof window.refreshSettingsUI === 'function') {
+                    window.refreshSettingsUI();
+                }
+                break;
+        }
+
+        // 6. Persistence
         localStorage.setItem(DEFAULT_TAB_KEY, targetId);
 
     } catch (err) {
@@ -263,6 +277,22 @@ export function switchTab(targetId) {
         console.error(err);
     }
 }
+
+window.refreshSettingsUI = () => {
+    const info = document.getElementById('settings-account-info');
+    if (!info || !AppState.currentUser) return;
+
+    info.innerHTML = `
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p><strong>Name:</strong> ${AppState.currentUser.displayName || 'Guest User'}</p>
+            <p><strong>Email:</strong> ${AppState.currentUser.email}</p>
+            <p><strong>Role:</strong> ${window.currentUserIsAdmin ? 'Master Admin' : (window.currentUserIsCoach ? 'Coach' : 'Standard Player')}</p>
+            <p style="margin-top:10px; font-size: 0.75rem; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 8px;">
+                User ID: ${AppState.currentUser.uid}
+            </p>
+        </div>
+    `;
+};
 
 export function initNavigation() {
     ensureScreensExist();
@@ -299,7 +329,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'v6.1.5 - Structural Restoration';
+        const versionStr = 'v6.1.6 - Lifecycle Stabilized';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;

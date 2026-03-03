@@ -47,8 +47,6 @@ function bootstrapApplication() {
     try { initOnCourse(); } catch (e) { console.error("[Bootstrap] initOnCourse failed:", e); }
 
     try { bindWHSForm(); } catch (e) { console.error("[Bootstrap] bindWHSForm failed:", e); }
-    try { bindAdminTools(); } catch (e) { console.error("[Bootstrap] bindAdminTools failed:", e); }
-    try { bindAdminInvite(); } catch (e) { console.error("[Bootstrap] bindAdminInvite failed:", e); }
     try { bindCoachTools(); } catch (e) { console.error("[Bootstrap] bindCoachTools failed:", e); }
     try { bindCoachDashboard(); } catch (e) { console.error("[Bootstrap] bindCoachDashboard failed:", e); }
     try { bindAiGenerator(); } catch (e) { console.error("[Bootstrap] bindAiGenerator failed:", e); }
