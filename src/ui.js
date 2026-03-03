@@ -279,7 +279,10 @@ export function switchTab(targetId) {
                 break;
         }
 
-        // 6. Persistence
+        // 6. Navigation UX: Reset scroll position
+        window.scrollTo(0, 0);
+
+        // 7. Persistence
         localStorage.setItem(DEFAULT_TAB_KEY, targetId);
 
     } catch (err) {
@@ -339,7 +342,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'v6.1.7 - Full System Integration';
+        const versionStr = 'v6.1.8 - UX Polish & Safe Areas';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;
