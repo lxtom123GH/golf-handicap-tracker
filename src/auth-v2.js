@@ -153,8 +153,15 @@ export function setupAuthUI(onAppReady) {
                         user.isAdmin = userData.isAdmin || false;
                         AppState.currentUser = user;
 
-                        UI.tabBtnAdmin.classList.remove('hidden');
-                        document.getElementById('tab-btn-coach').classList.remove('hidden');
+                        if (userData.isAdmin) {
+                            if (UI.tabBtnAdmin) UI.tabBtnAdmin.classList.remove('hidden');
+                        }
+                        if (userData.isCoach) {
+                            const coachBtn = document.getElementById('tab-btn-coach');
+                            if (coachBtn) coachBtn.classList.remove('hidden');
+                        }
+                        if (UI.tabBtnSettings) UI.tabBtnSettings.classList.remove('hidden');
+
                         // Show Feed tab for all approved users
                         const feedTabBtn = document.getElementById('tab-btn-feed');
                         if (feedTabBtn) feedTabBtn.classList.remove('hidden');

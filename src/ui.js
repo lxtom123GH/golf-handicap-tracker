@@ -240,18 +240,14 @@ export function switchTab(targetId) {
         const allBtns = document.querySelectorAll('.tab-btn');
         allBtns.forEach(b => b.classList.remove('active'));
 
-        // Task 1: Hide All Routing Override (Brute Force)
+        // Task 1: Hide All Routing Override (Simple Class Toggle)
         document.querySelectorAll('.tab-content').forEach(el => {
-            el.style.display = 'none';
-            el.style.opacity = '0';
             el.classList.remove('active');
             el.classList.add('hidden');
         });
 
         // 2. Force-show ONLY the target tab
         if (targetScreen) {
-            targetScreen.style.display = 'block';
-            targetScreen.style.opacity = '1';
             targetScreen.classList.add('active');
             targetScreen.classList.remove('hidden');
         } else {
@@ -288,13 +284,9 @@ export function initNavigation() {
     const tabButtons = document.querySelectorAll('.tab-btn');
 
     tabButtons.forEach(btn => {
-        // Task 1: The Clone Purge
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-
-        // Task 3: Strict Direct Binding
-        newBtn.addEventListener('click', (e) => {
-            const target = newBtn.getAttribute('data-target');
+        // Task 3: Strict Direct Binding (No Clone Purge)
+        btn.addEventListener('click', (e) => {
+            const target = btn.getAttribute('data-target');
             if (target) {
                 switchTab(target);
             }
