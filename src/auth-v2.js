@@ -161,6 +161,7 @@ export function setupAuthUI(onAppReady) {
                         // Roles and bootstrapping handled by individual modules
                         if (initializeAppCallback) initializeAppCallback();
 
+                        console.log("[Auth] Bootstrap complete, removing cloak.");
                         const cloak = document.getElementById('app-loading-cloak');
                         if (cloak) cloak.classList.add('cloak-hidden');
                     } else {

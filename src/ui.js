@@ -240,66 +240,17 @@ export function setupTabs() {
     console.log(`[Startup] Routing to primary tab: ${initialTab}`);
     switchTab(initialTab);
 
-    // 2. Global Event Delegation for all Tab Buttons
-    // Explicitly target both class and known IDs for maximum reliability
-    document.body.addEventListener('click', (e) => {
-        // Find if we clicked a tab button or something inside it
+    // 2. Nuclear Navigation Diagnostic & Override
+    // This listener uses the capture phase (true) to intercept touches before they are swallowed
+    document.addEventListener('touchstart', (e) => {
         const tabBtn = e.target.closest('.tab-btn');
-
         if (tabBtn) {
             const targetId = tabBtn.getAttribute('data-target');
-            console.log(`[UI] Tab click detected: ${targetId} from element ${tabBtn.id || 'anonymous'}`);
-
+            console.log(`[Nuclear-Nav] Touch detected on ${tabBtn.id || 'btn'} -> Forcing route to ${targetId}`);
             if (targetId) {
                 switchTab(targetId);
-
-                // If the click happened on a specific ID, we can add extra handling if needed
-                if (tabBtn.id === 'tab-btn-settings') {
-                    // Force refresh setup bag etc if needed
-                }
             }
         }
-    });
-
-    // Brute-Force Direct Listeners for problematic buttons
-    const bruteForceMap = {
-        'tab-btn-settings': 'tab-settings',
-        'tab-btn-admin': 'tab-admin',
-        'tab-btn-coach': 'tab-coach',
-        'tab-btn-feed': 'tab-feed',
-        'tab-btn-tempo': 'tab-tempo'
-    };
-
-    Object.entries(bruteForceMap).forEach(([btnId, targetId]) => {
-        const btn = document.getElementById(btnId);
-        if (btn) {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log(`[Brute-Force] Clicked ${btnId} -> Routing to ${targetId}`);
-                switchTab(targetId);
-            }, true); // Use capture phase to ensure it fires
-        }
-    });
-
-    // 4. Click Sniffer Diagnostic (Temporary for Phase 8.4)
-    document.addEventListener('touchstart', (e) => {
-        const target = e.target;
-        const msg = `[TOUCH] Tag: ${target.tagName}, ID: ${target.id || 'none'}, Class: ${target.className || 'none'}`;
-        console.log(msg);
-
-        // Show a brief on-screen indicator (Debug Toast)
-        let toast = document.getElementById('debug-toast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'debug-toast';
-            toast.style.cssText = 'position:fixed; top:10px; left:10px; right:10px; background:rgba(0,0,0,0.8); color:lime; font-size:10px; padding:8px; border-radius:4px; z-index:10002; pointer-events:none; font-family:monospace;';
-            document.body.appendChild(toast);
-        }
-        toast.textContent = msg;
-        toast.style.display = 'block';
-        clearTimeout(window.debugToastTimer);
-        window.debugToastTimer = setTimeout(() => toast.style.display = 'none', 3000);
     }, true);
 
     // Dynamic Version Injection
