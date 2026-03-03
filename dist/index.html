@@ -12,7 +12,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-ClA-6TKr.js"></script>
+  <script type="module" crossorigin src="/assets/index-DEChlvGW.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-Dh_mdCUU.css">
 </head>
 
@@ -111,7 +111,8 @@
                         <span style="font-size:0.8rem; opacity:0.8;">+2 Penalties & Fairway Drop</span>
                     </button>
                 </div>
-                <button type="button" id="btn-cancel-penalty" class="btn-text" style="width:100%; margin-top:20px; color:#64748b;">Cancel</button>
+                <button type="button" id="btn-cancel-penalty" class="btn-text"
+                    style="width:100%; margin-top:20px; color:#64748b;">Cancel</button>
             </div>
         </div>
     </div>
@@ -123,7 +124,8 @@
             <p style="margin-bottom: 20px;">Your account has been successfully created, but it is currently waiting for
                 admin approval.</p>
             <p>Please contact the administrator to grant you access.</p>
-            <button id="btn-pending-logout" class="btn btn-secondary" style="margin-top: 30px; width: 100%;">Logout</button>
+            <button id="btn-pending-logout" class="btn btn-secondary"
+                style="margin-top: 30px; width: 100%;">Logout</button>
         </div>
     </div>
 
@@ -156,7 +158,7 @@
                 Settings</button>
         </div>
 
-<!-- ========================================== -->
+        <!-- ========================================== -->
         <!-- ON COURSE TRACKER TAB                      -->
         <!-- ========================================== -->
         <div id="tab-oncourse" class="tab-content hidden">
@@ -792,7 +794,7 @@
             </div>
             <!-- ON COURSE TRACKER TAB END -->
 
-<!-- ========================================== -->
+            <!-- ========================================== -->
             <!-- SETTINGS TAB                               -->
             <!-- ========================================== -->
             <div id="tab-settings" class="tab-content hidden">
@@ -966,715 +968,739 @@
             </div>
             <!-- SETTINGS TAB END -->
 
-        <!-- ========================================== -->
-        <!-- WHS HANDICAP TAB                           -->
-        <!-- ========================================== -->
-        <div id="tab-whs" class="tab-content active">
+            <!-- ========================================== -->
+            <!-- WHS HANDICAP TAB                           -->
+            <!-- ========================================== -->
+            <div id="tab-whs" class="tab-content active">
 
-            <div class="player-management-bar" style="margin-top: 20px;">
-                <div class="player-selector">
-                    <label for="player-select">Viewing Dashboard Of:</label>
-                    <select id="player-select"></select>
-                </div>
-                <button type="button" id="btn-manage-coaches" class="btn btn-secondary btn-sm"
-                    style="margin-top: 10px;">Manage My Coaches</button>
-            </div>
-
-            <!-- Manage Coaches (Hidden by Default) -->
-            <div id="manage-coaches-container" class="card hidden"
-                style="margin-bottom: 20px; border: 2px solid var(--secondary-color);">
-                <h2>Manage Coach Access</h2>
-                <p class="section-desc">Grant coaches access to your dashboard and logs by entering their registered
-                    email address.</p>
-                <form id="add-coach-form" class="round-form"
-                    style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px;">
-                    <div class="form-group" style="flex: 1; margin: 0;">
-                        <label for="coach-email">Coach's Email Address</label>
-                        <input type="email" id="coach-email" required placeholder="coach@example.com">
+                <div class="player-management-bar" style="margin-top: 20px;">
+                    <div class="player-selector">
+                        <label for="player-select">Viewing Dashboard Of:</label>
+                        <select id="player-select"></select>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="height: 42px;">Grant Access</button>
-                </form>
-                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
-                    <ul id="my-coaches-list" style="list-style: none; padding: 0; margin: 0;">
-                        <!-- Dynamically populated -->
-                    </ul>
+                    <button type="button" id="btn-manage-coaches" class="btn btn-secondary btn-sm"
+                        style="margin-top: 10px;">Manage My Coaches</button>
                 </div>
-                <button type="button" id="btn-close-coaches" class="btn btn-secondary btn-sm"
-                    style="margin-top: 10px;">Close Manage</button>
-            </div>
 
-            <!-- Header / Index Display -->
-            <header class="header">
-                <div class="header-content">
-                    <div class="branding">
-                        <h1>Handicap Tracker <span id="app-version"
-                                style="font-size: 0.7rem; color: #64748b; margin-left: 10px;">v6.0.0</span>
-                        </h1>
-                        <p>World Handicap System (WHS)</p>
-                    </div>
-                    <div class="index-display">
-                        <span class="index-label">Handicap Index®</span>
-                        <span class="index-value" id="handicap-index">--</span>
-                        <span class="index-subtext" id="index-subtext">Submit 54 counting holes to establish</span>
-                        <button id="btn-export-whs" class="btn btn-secondary btn-sm"
-                            style="margin-top: 15px; border-color: white; color: white; background: rgba(0,0,0,0.1);">Email
-                            / Export Report</button>
-                    </div>
-                </div>
-            </header>
-
-            <div class="dashboard-grid">
-
-                <!-- Daily Handicap Calculator -->
-                <section class="card calculator-section">
-                    <h2>Daily Playing Handicap</h2>
-                    <p class="section-desc">Calculate the viewing player's daily handicap.</p>
-                    <form id="calculator-form" class="round-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="calc-scratch">Scratch Rating</label>
-                                <input type="number" id="calc-scratch" step="0.1" min="50" max="90" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="calc-slope">Slope Rating</label>
-                                <input type="number" id="calc-slope" min="55" max="155" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="calc-par">Course Par</label>
-                                <input type="number" id="calc-par" min="50" max="80" required>
-                            </div>
+                <!-- Manage Coaches (Hidden by Default) -->
+                <div id="manage-coaches-container" class="card hidden"
+                    style="margin-bottom: 20px; border: 2px solid var(--secondary-color);">
+                    <h2>Manage Coach Access</h2>
+                    <p class="section-desc">Grant coaches access to your dashboard and logs by entering their registered
+                        email address.</p>
+                    <form id="add-coach-form" class="round-form"
+                        style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px;">
+                        <div class="form-group" style="flex: 1; margin: 0;">
+                            <label for="coach-email">Coach's Email Address</label>
+                            <input type="email" id="coach-email" required placeholder="coach@example.com">
                         </div>
-                        <div class="form-row" style="justify-content: flex-end; margin-bottom: 0;">
-                            <button type="button" id="btn-calculate-daily" class="btn btn-secondary btn-sm"
-                                style="width: auto;">Calculate</button>
-                        </div>
-                        <div id="daily-handicap-result" class="result-box hidden">
-                            <span class="result-label">Daily Handicap for <span id="dh-player-name"></span>:</span>
-                            <span class="result-value" id="dh-value">--</span>
-                        </div>
+                        <button type="submit" class="btn btn-primary" style="height: 42px;">Grant Access</button>
                     </form>
-                </section>
-
-                <!-- Add Round Form (Only visible if viewing own dashboard) -->
-                <section class="card add-round-section" id="add-round-container">
-                    <h2>Log a New Round</h2>
-                    <p class="section-desc">You are logging this round to your official WHS profile.</p>
-                    <form id="add-round-form" class="round-form">
-                        <div class="form-row">
-                            <div class="form-group flex-2">
-                                <label for="course-select">Course</label>
-                                <select id="course-select" required>
-                                    <option value="" disabled selected>Select Course...</option>
-                                    <!-- Injected by JS -->
-                                </select>
-                            </div>
-                            <div class="form-group flex-2 hidden" id="course-name-custom-group">
-                                <label for="course-name">Course Name</label>
-                                <input type="text" id="course-name" placeholder="e.g. Royal Melbourne">
-                            </div>
-                            <div class="form-group">
-                                <label for="date">Date Played</label>
-                                <input type="date" id="date" required>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="course-rating">Course Rating (CR)</label>
-                                <input type="number" id="course-rating" step="0.1" min="50" max="90" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="slope-rating">Slope Rating (SR)</label>
-                                <input type="number" id="slope-rating" min="55" max="155" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="course-par">Course Par</label>
-                                <input type="number" id="course-par" min="50" max="80" required>
-                            </div>
-                        </div>
-
-                        <div class="form-row" style="margin-top: 15px; margin-bottom: 15px;">
-                            <div class="form-group" style="width: 100%;">
-                                <label>Score Entry Mode</label>
-                                <div
-                                    style="display: flex; flex-wrap: wrap; gap: 15px; background: #e9ecef; padding: 10px; border-radius: 6px;">
-                                    <label
-                                        style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
-                                        <input type="radio" name="entry-mode" value="hole-by-hole" checked> Hole-by-Hole
-                                        (Auto Stableford)
-                                    </label>
-                                    <label
-                                        style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
-                                        <input type="radio" name="entry-mode" value="total-stableford"> Total Stableford
-                                        (Quick)
-                                    </label>
-                                    <label
-                                        style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
-                                        <input type="radio" name="entry-mode" value="manual-ags"> Manual AGS (Legacy)
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="mode-hole-by-hole" class="mode-container">
-                            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Enter your gross
-                                strokes. Daily Handicap and Stroke Index applies.</p>
-                            <div id="hole-grid-container"
-                                style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 15px;">
-                                <!-- Hole inputs injected by JS -->
-                            </div>
-                            <div
-                                style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-                                <strong style="color: var(--primary-color);">Estimated Stableford: <span
-                                        id="calc-stableford-pts">0</span> pts</strong>
-                            </div>
-                        </div>
-
-                        <div id="mode-total-stableford" class="mode-container hidden">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="total-stableford-pts">Total Stableford Points</label>
-                                    <input type="number" id="total-stableford-pts" min="0" max="60">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="mode-manual-ags" class="mode-container hidden">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="score">Adjusted Gross Score</label>
-                                    <input type="number" id="score" min="50" max="200" required>
-                                    <small>Manual entry or calculated from above</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row" style="margin-top: 10px;">
-                            <div class="form-group checkbox-group"
-                                style="flex-direction: row; align-items: center; gap: 8px;">
-                                <input type="checkbox" id="is-counting" checked style="width: 20px; height: 20px;">
-                                <label for="is-counting" style="margin: 0;">Mark as Counting Round (Affects
-                                    Handicap)</label>
-                            </div>
-                        </div>
-
-                        <!-- Optional Advanced Stats -->
-                        <details style="margin-top:12px;">
-                            <summary
-                                style="cursor:pointer;font-weight:600;color:var(--secondary-color);font-size:0.9rem;">📊
-                                Optional: Add Advanced Stats</summary>
-                            <div class="form-row" style="margin-top:10px;">
-                                <div class="form-group">
-                                    <label for="stat-putts">Total Putts</label>
-                                    <input type="number" id="stat-putts" min="10" max="60" placeholder="e.g. 32">
-                                </div>
-                                <div class="form-group">
-                                    <label for="stat-fwy">Fairways Hit (of 14)</label>
-                                    <input type="number" id="stat-fwy" min="0" max="14" placeholder="e.g. 8">
-                                </div>
-                                <div class="form-group">
-                                    <label for="stat-gir">Greens in Reg. (of 18)</label>
-                                    <input type="number" id="stat-gir" min="0" max="18" placeholder="e.g. 6">
-                                </div>
-                            </div>
-                        </details>
-                        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Save Round to
-                            Profile</button>
-                    </form>
-                </section>
-
-                <!-- Read Only Warning -->
-                <section class="card add-round-section hidden" id="readonly-warning-container"
-                    style="display: flex; align-items: center; justify-content: center; text-align: center;">
-                    <div>
-                        <h2>View Only Mode</h2>
-                        <p style="color: var(--text-light); margin-top: 10px;">You are viewing someone else's WHS
-                            dashboard.<br>You can only add rounds to your own profile.</p>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                        <ul id="my-coaches-list" style="list-style: none; padding: 0; margin: 0;">
+                            <!-- Dynamically populated -->
+                        </ul>
                     </div>
-                </section>
-            </div>
-
-            <section class="card history-section">
-                <div class="history-header">
-                    <h2>WHS Scoring Record (<span id="record-player-name"></span>)</h2>
+                    <button type="button" id="btn-close-coaches" class="btn btn-secondary btn-sm"
+                        style="margin-top: 10px;">Close Manage</button>
                 </div>
-                <div class="table-responsive">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Course</th>
-                                <th>Holes</th>
-                                <th>Score</th>
-                                <th>CR / SR</th>
-                                <th>Diff.</th>
-                                <th>Status</th>
-                                <th class="col-action">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-tbody">
-                            <!-- Rounds injected here via JS -->
-                        </tbody>
-                    </table>
-                </div>
-                <div id="empty-state" class="empty-state">
-                    <p>No rounds logged yet.</p>
-                </div>
-                <div id="loading-state" class="empty-state">
-                    <p>Loading WHS data...</p>
-                </div>
-            </section>
 
-            <!-- Handicap Trend Chart -->
-            <section class="card" id="handicap-chart-section" style="padding:20px;">
-                <h2 style="margin-bottom:8px;">📈 Handicap Index Trend</h2>
-                <p class="section-desc" style="margin-bottom:16px;">Your handicap index over time — lower is better.</p>
-                <div style="position:relative;height:220px;">
-                    <canvas id="handicap-chart"></canvas>
-                </div>
-                <div id="chart-no-data" class="empty-state hidden">
-                    <p>Log at least 3 rounds to see your trend chart.</p>
-                </div>
-            </section>
-        </div> <!-- End WHS Tab -->
-
-        <!-- ========================================== -->
-        <!-- CUSTOM COMPETITIONS TAB                    -->
-        <!-- ========================================== -->
-        <div id="tab-comp" class="tab-content hidden">
-
-            <!-- Competition Selection Bar -->
-            <div class="player-management-bar" style="margin-top: 20px;">
-                <div class="player-selector">
-                    <label for="comp-select">Active Competition:</label>
-                    <select id="comp-select">
-                        <option value="">-- Select a Competition --</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="btn-toggle-archived" class="btn btn-secondary btn-sm"
-                        style="margin: 0; width: auto; font-size: 0.8rem;">📦 Show Archived</button>
-                    <button id="btn-show-create-comp" class="btn btn-primary btn-sm" style="margin: 0; width: auto;">+
-                        New
-                        Competition</button>
-                </div>
-            </div>
-
-            <!-- Create New Competition Form (Hidden by Default) -->
-            <div id="create-comp-container" class="card hidden"
-                style="margin-bottom: 20px; border: 2px solid var(--accent-color);">
-                <h2>Create Custom Competition</h2>
-                <form id="create-comp-form" class="round-form">
-                    <div class="form-row">
-                        <div class="form-group flex-2">
-                            <label>Competition Name</label>
-                            <input type="text" id="comp-name" required placeholder="e.g. Summer League 2026">
-                        </div>
-                    </div>
-
-                    <div class="form-row" style="background: #e9ecef; padding: 10px; border-radius: 6px;">
-                        <div class="form-group flex-2">
-                            <label>Visibility</label>
-                            <div style="display: flex; gap: 20px; align-items: center;">
-                                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
-                                    <input type="radio" name="comp-visibility" value="public" checked> Public (Anyone
-                                    can join)
-                                </label>
-                                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
-                                    <input type="radio" name="comp-visibility" value="private"> Private (Invite Only)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Regulars Selection -->
-                    <div id="comp-regulars-container" class="form-row"
-                        style="background: #f8f9fa; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; flex-direction: column; margin-bottom: 20px;">
-                        <label style="margin-bottom: 5px; color: var(--primary-color); font-weight:700;">Competition
-                            Regulars (Quick Add):</label>
-                        <p class="section-desc" style="margin-bottom:10px;">Select players who regularly play in this
-                            competition for quick-entry on the course.</p>
-                        <div id="comp-regulars-list"
-                            style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background:white; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
-                            <!-- Checkboxes injected here via JS -->
-                            <p style="color:#94a3b8; font-size:0.85rem;">Loading potential regulars...</p>
-                        </div>
-                    </div>
-
-                    <div id="comp-invite-container" class="form-row hidden"
-                        style="background: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; flex-direction: column;">
-                        <label style="margin-bottom: 5px; color: var(--primary-color);">Select Invited Players:</label>
-                        <div id="comp-invite-list"
-                            style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-                            <!-- Checkboxes injected here via JS -->
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 15px 0 10px; font-size: 1.1rem; color: var(--secondary-color);">Configuration
-                        Template</h3>
-                    <div class="form-row"
-                        style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                        <div class="form-group flex-2">
-                            <label>Use Previous Competition's Template (Optional)</label>
-                            <select id="comp-template-select">
-                                <option value="">-- Build From Scratch --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 15px 0 10px; font-size: 1.1rem; color: var(--secondary-color);">Automated
-                        Starting Points</h3>
-                    <p class="section-desc">Configure baseline points awarded at the start of the round or on every
-                        hole.</p>
-
-                    <div
-                        style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                        <!-- Per Round Config -->
-                        <div style="margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
-                            <label
-                                style="font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--primary-color);">
-                                <input type="checkbox" id="sp-round-enable"> Enable Per-Round Baseline
-                            </label>
-
-                            <div id="sp-round-config" class="hidden" style="margin-top: 10px; padding-left: 24px;">
-                                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
-                                    <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
-                                        <input type="radio" name="sp-round-type" value="fixed" checked> Fixed Points
-                                    </label>
-                                    <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
-                                        <input type="radio" name="sp-round-type" value="handicap_calculated"> Math:
-                                        (Base - Handicap)
-                                    </label>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label id="sp-round-val-label">Points per Player</label>
-                                    <input type="number" id="sp-round-value" style="max-width: 200px;">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Per Hole Config -->
-                        <div>
-                            <label
-                                style="font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--primary-color);">
-                                <input type="checkbox" id="sp-hole-enable"> Enable Per-Hole Baseline
-                            </label>
-
-                            <div id="sp-hole-config" class="hidden" style="margin-top: 10px; padding-left: 24px;">
-                                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
-                                    <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
-                                        <input type="radio" name="sp-hole-type" value="fixed" checked> Fixed Points
-                                    </label>
-                                    <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
-                                        <input type="radio" name="sp-hole-type" value="handicap_calculated"> Math: (Base
-                                        - Handicap)
-                                    </label>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label id="sp-hole-val-label">Points per Hole</label>
-                                    <input type="number" id="sp-hole-value" style="max-width: 200px;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h3 style="margin: 15px 0 10px; font-size: 1.1rem; color: var(--secondary-color);">Stat Tracking &
-                        Points Rules</h3>
-                    <p class="section-desc">Add custom rules on the fly for tracking events on the course.</p>
-
-                    <div
-                        style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                        <div class="form-row" style="align-items: flex-end;">
-                            <div class="form-group" style="flex: 2;">
-                                <label>Rule Name (e.g. Fairways, Sand Saves)</label>
-                                <input type="text" id="new-rule-name" placeholder="Rule Name">
-                            </div>
-                            <div class="form-group" style="flex: 1;">
-                                <label>Points per Occurrence</label>
-                                <input type="number" id="new-rule-points" value="1" step="0.5">
-                            </div>
-                            <div class="form-group" style="flex: none; padding-bottom: 5px;">
-                                <button type="button" id="btn-add-rule" class="btn btn-secondary"
-                                    style="padding: 10px;">+ Add Rule</button>
-                            </div>
-                        </div>
-
-                        <div id="comp-rules-list"
-                            style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                            <div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added
-                                yet.</div>
-                        </div>
-                    </div>
-
-                    <div class="auth-buttons" style="flex-direction: row;">
-                        <button type="submit" class="btn btn-primary" style="width: auto;">Create Competition</button>
-                        <button type="button" id="btn-cancel-comp" class="btn btn-secondary"
-                            style="margin-top: 10px;">Cancel</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Active Competition View -->
-            <div id="active-comp-view" class="hidden">
-                <header class="header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <!-- Header / Index Display -->
+                <header class="header">
                     <div class="header-content">
                         <div class="branding">
-                            <h1 id="active-comp-name">Competition Name</h1>
-                            <p id="active-comp-rules-summary">Rules: ...</p>
+                            <h1>Handicap Tracker <span id="app-version"
+                                    style="font-size: 0.7rem; color: #64748b; margin-left: 10px;">v6.0.0</span>
+                            </h1>
+                            <p>World Handicap System (WHS)</p>
                         </div>
-                        <div id="comp-creator-actions" class="hidden"
-                            style="display: flex; gap: 10px; align-items: center;">
-                            <button id="btn-archive-comp" class="btn btn-secondary btn-sm"
-                                style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; margin: 0;">📦
-                                Archive Competition</button>
-                            <button id="btn-delete-comp" class="btn btn-secondary btn-sm hidden"
-                                style="background: rgba(220,53,69,0.4); border: 1px solid rgba(220,53,69,0.7); color: white; margin: 0;">🗑️
-                                Delete Forever</button>
+                        <div class="index-display">
+                            <span class="index-label">Handicap Index®</span>
+                            <span class="index-value" id="handicap-index">--</span>
+                            <span class="index-subtext" id="index-subtext">Submit 54 counting holes to establish</span>
+                            <button id="btn-export-whs" class="btn btn-secondary btn-sm"
+                                style="margin-top: 15px; border-color: white; color: white; background: rgba(0,0,0,0.1);">Email
+                                / Export Report</button>
                         </div>
                     </div>
                 </header>
 
                 <div class="dashboard-grid">
 
-                    <!-- Log Comp Round Component -->
-                    <section class="card add-round-section">
-                        <h2>Log Competition Round</h2>
-                        <form id="log-comp-round-form" class="round-form">
+                    <!-- Daily Handicap Calculator -->
+                    <section class="card calculator-section">
+                        <h2>Daily Playing Handicap</h2>
+                        <p class="section-desc">Calculate the viewing player's daily handicap.</p>
+                        <form id="calculator-form" class="round-form">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Player</label>
-                                    <select id="comp-player-select" required></select>
+                                    <label for="calc-scratch">Scratch Rating</label>
+                                    <input type="number" id="calc-scratch" step="0.1" min="50" max="90" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>Date</label>
-                                    <input type="date" id="comp-date" required>
+                                    <label for="calc-slope">Slope Rating</label>
+                                    <input type="number" id="calc-slope" min="55" max="155" required>
                                 </div>
-                            </div>
-
-                            <hr style="border: 1px solid var(--border-color); margin: 15px 0;">
-
-                            <div id="comp-starting-points-display" class="hidden form-row"
-                                style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                                <div style="flex: 1; text-align: center;">
-                                    <label style="font-size: 0.85rem; margin-bottom: 2px;">Round Baseline</label>
-                                    <div id="comp-sp-round-calc"
-                                        style="font-weight: bold; color: var(--primary-color);">0 pts</div>
-                                </div>
-                                <div style="flex: 1; text-align: center;">
-                                    <label style="font-size: 0.85rem; margin-bottom: 2px;">Hole Baseline (x18)</label>
-                                    <div id="comp-sp-hole-calc" style="font-weight: bold; color: var(--primary-color);">
-                                        0 pts</div>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
                                 <div class="form-group">
-                                    <label>Gross Score</label>
-                                    <input type="number" id="comp-score" required>
+                                    <label for="calc-par">Course Par</label>
+                                    <input type="number" id="calc-par" min="50" max="80" required>
                                 </div>
-                                <div id="comp-dynamic-inputs"
-                                    style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-                                    <!-- Dynamically injected rule inputs go here -->
-                                </div>
-
-                                <button type="submit" class="btn btn-primary" style="background-color: #1e3c72;">Log
-                                    Round &
-                                    Calculate Points</button>
+                            </div>
+                            <div class="form-row" style="justify-content: flex-end; margin-bottom: 0;">
+                                <button type="button" id="btn-calculate-daily" class="btn btn-secondary btn-sm"
+                                    style="width: auto;">Calculate</button>
+                            </div>
+                            <div id="daily-handicap-result" class="result-box hidden">
+                                <span class="result-label">Daily Handicap for <span id="dh-player-name"></span>:</span>
+                                <span class="result-value" id="dh-value">--</span>
                             </div>
                         </form>
                     </section>
 
-                    <!-- Latest Activity Widget -->
-                    <section class="card history-section">
-                        <h2>Recent Rounds</h2>
-                        <div class="table-responsive" style="max-height: 350px;">
-                            <table class="history-table" style="font-size: 0.85rem;">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Score</th>
-                                        <th>Points</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="comp-recent-rounds-tbody"></tbody>
-                            </table>
-                        </div>
-                        <div id="comp-empty-state" class="empty-state" style="padding: 20px;">
-                            <p>No rounds logged yet.</p>
+                    <!-- Add Round Form (Only visible if viewing own dashboard) -->
+                    <section class="card add-round-section" id="add-round-container">
+                        <h2>Log a New Round</h2>
+                        <p class="section-desc">You are logging this round to your official WHS profile.</p>
+                        <form id="add-round-form" class="round-form">
+                            <div class="form-row">
+                                <div class="form-group flex-2">
+                                    <label for="course-select">Course</label>
+                                    <select id="course-select" required>
+                                        <option value="" disabled selected>Select Course...</option>
+                                        <!-- Injected by JS -->
+                                    </select>
+                                </div>
+                                <div class="form-group flex-2 hidden" id="course-name-custom-group">
+                                    <label for="course-name">Course Name</label>
+                                    <input type="text" id="course-name" placeholder="e.g. Royal Melbourne">
+                                </div>
+                                <div class="form-group">
+                                    <label for="date">Date Played</label>
+                                    <input type="date" id="date" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="course-rating">Course Rating (CR)</label>
+                                    <input type="number" id="course-rating" step="0.1" min="50" max="90" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="slope-rating">Slope Rating (SR)</label>
+                                    <input type="number" id="slope-rating" min="55" max="155" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="course-par">Course Par</label>
+                                    <input type="number" id="course-par" min="50" max="80" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="margin-top: 15px; margin-bottom: 15px;">
+                                <div class="form-group" style="width: 100%;">
+                                    <label>Score Entry Mode</label>
+                                    <div
+                                        style="display: flex; flex-wrap: wrap; gap: 15px; background: #e9ecef; padding: 10px; border-radius: 6px;">
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
+                                            <input type="radio" name="entry-mode" value="hole-by-hole" checked>
+                                            Hole-by-Hole
+                                            (Auto Stableford)
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
+                                            <input type="radio" name="entry-mode" value="total-stableford"> Total
+                                            Stableford
+                                            (Quick)
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; margin: 0; cursor:pointer;">
+                                            <input type="radio" name="entry-mode" value="manual-ags"> Manual AGS
+                                            (Legacy)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="mode-hole-by-hole" class="mode-container">
+                                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Enter your gross
+                                    strokes. Daily Handicap and Stroke Index applies.</p>
+                                <div id="hole-grid-container"
+                                    style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 15px;">
+                                    <!-- Hole inputs injected by JS -->
+                                </div>
+                                <div
+                                    style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                                    <strong style="color: var(--primary-color);">Estimated Stableford: <span
+                                            id="calc-stableford-pts">0</span> pts</strong>
+                                </div>
+                            </div>
+
+                            <div id="mode-total-stableford" class="mode-container hidden">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="total-stableford-pts">Total Stableford Points</label>
+                                        <input type="number" id="total-stableford-pts" min="0" max="60">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="mode-manual-ags" class="mode-container hidden">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="score">Adjusted Gross Score</label>
+                                        <input type="number" id="score" min="50" max="200" required>
+                                        <small>Manual entry or calculated from above</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="margin-top: 10px;">
+                                <div class="form-group checkbox-group"
+                                    style="flex-direction: row; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="is-counting" checked style="width: 20px; height: 20px;">
+                                    <label for="is-counting" style="margin: 0;">Mark as Counting Round (Affects
+                                        Handicap)</label>
+                                </div>
+                            </div>
+
+                            <!-- Optional Advanced Stats -->
+                            <details style="margin-top:12px;">
+                                <summary
+                                    style="cursor:pointer;font-weight:600;color:var(--secondary-color);font-size:0.9rem;">
+                                    📊
+                                    Optional: Add Advanced Stats</summary>
+                                <div class="form-row" style="margin-top:10px;">
+                                    <div class="form-group">
+                                        <label for="stat-putts">Total Putts</label>
+                                        <input type="number" id="stat-putts" min="10" max="60" placeholder="e.g. 32">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="stat-fwy">Fairways Hit (of 14)</label>
+                                        <input type="number" id="stat-fwy" min="0" max="14" placeholder="e.g. 8">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="stat-gir">Greens in Reg. (of 18)</label>
+                                        <input type="number" id="stat-gir" min="0" max="18" placeholder="e.g. 6">
+                                    </div>
+                                </div>
+                            </details>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Save Round to
+                                Profile</button>
+                        </form>
+                    </section>
+
+                    <!-- Read Only Warning -->
+                    <section class="card add-round-section hidden" id="readonly-warning-container"
+                        style="display: flex; align-items: center; justify-content: center; text-align: center;">
+                        <div>
+                            <h2>View Only Mode</h2>
+                            <p style="color: var(--text-light); margin-top: 10px;">You are viewing someone else's WHS
+                                dashboard.<br>You can only add rounds to your own profile.</p>
                         </div>
                     </section>
                 </div>
 
-                <!-- Leaderboard Section -->
-                <section class="card history-section" style="margin-top: 30px;">
+                <section class="card history-section">
                     <div class="history-header">
-                        <h2>Competition Leaderboard</h2>
+                        <h2>WHS Scoring Record (<span id="record-player-name"></span>)</h2>
                     </div>
                     <div class="table-responsive">
                         <table class="history-table">
                             <thead>
-                                <tr id="comp-leaderboard-head">
-                                    <!-- Dynamically built based on tracked stats -->
-                                    <th>Rank</th>
-                                    <th>Player</th>
-                                    <th>Rounds</th>
-                                    <th>Avg Score</th>
-                                    <th>Total Points</th>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Course</th>
+                                    <th>Holes</th>
+                                    <th>Score</th>
+                                    <th>CR / SR</th>
+                                    <th>Diff.</th>
+                                    <th>Status</th>
+                                    <th class="col-action">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="comp-leaderboard-tbody">
-                                <!-- Aggregated leaderboard here -->
+                            <tbody id="history-tbody">
+                                <!-- Rounds injected here via JS -->
                             </tbody>
                         </table>
+                    </div>
+                    <div id="empty-state" class="empty-state">
+                        <p>No rounds logged yet.</p>
+                    </div>
+                    <div id="loading-state" class="empty-state">
+                        <p>Loading WHS data...</p>
                     </div>
                 </section>
 
-            </div> <!-- End Active Comp View -->
-
-            <div id="no-comp-empty" class="empty-state" style="margin-top: 40px;">
-                <div class="empty-icon">🏆</div>
-                <p>Select a competition from the dropdown above, or create a new one to start tracking stats and points!
-                </p>
-            </div>
-
-        </div> <!-- End Comp Tab -->
-
-        <!-- ========================================== -->
-        <!-- PRACTICE DRILLS TAB START                  -->
-        <!-- ========================================== -->
-        <div id="tab-practice" class="tab-content hidden">
-
-            <div class="header" style="margin-bottom: 20px;">
-                <h1>Practice Drills</h1>
-                <p>Track your private training sessions and monitor your progress over time.</p>
-            </div>
-
-            <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 20px; align-items: start;">
-
-                <!-- Drill Selection & Form -->
-                <div class="card bg-white" style="grid-column: 1;">
-                    <h2 class="section-title">Log a Practice Session</h2>
-
-                    <div class="form-row">
-                        <div class="form-group flex-2">
-                            <label>Select Drill Template</label>
-                            <select id="drill-select">
-
-                                <option value="inside_30">Inside 30</option>
-                                <option value="putting_9_holes">Putting (9 Holes)</option>
-                                <option value="up_down">Up/Down</option>
-                                <option value="strokes_gained_putting">Strokes Gained Putting</option>
-                            </select>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label>Date</label>
-                            <input type="date" id="drill-date" required>
-                        </div>
+                <!-- Handicap Trend Chart -->
+                <section class="card" id="handicap-chart-section" style="padding:20px;">
+                    <h2 style="margin-bottom:8px;">📈 Handicap Index Trend</h2>
+                    <p class="section-desc" style="margin-bottom:16px;">Your handicap index over time — lower is better.
+                    </p>
+                    <div style="position:relative;height:220px;">
+                        <canvas id="handicap-chart"></canvas>
                     </div>
-
-                    <!-- DYNAMIC DRILL CONTAINER -->
-                    <div id="practice-form-container" class="drill-template-container"
-                        style="margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px;">
-                        <h3 id="pf-title"
-                            style="margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; color: var(--primary-color);">
-                            Select a Drill Above</h3>
-                        <button type="button" class="wakelock-toggle btn btn-secondary btn-sm"
-                            style="width: 100%; margin-bottom: 15px; background: #64748b; color: #fff;">🌙 Screen:
-                            Normal</button>
-                        <p id="pf-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Choose
-                            a practice routine to begin tracking your performance.</p>
-
-                        <form id="form-log-practice">
-                            <div id="practice-dynamic-inputs">
-                                <!-- Dynamically generated fields per drill -->
-                            </div>
-                            <div
-                                style="margin-top: 15px; padding: 10px; background: #e2e8f0; border-radius: 6px; text-align: center;">
-                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Calculated Total:
-                                </span>
-                                <span id="drill-live-total"
-                                    style="font-size: 1.25rem; font-weight: 800; color: var(--primary-color);">0</span>
-                            </div>
-                            <button type="submit" id="btn-save-practice" class="btn btn-primary"
-                                style="width: 100%; margin-top: 15px;">Save Practice Session</button>
-                        </form>
+                    <div id="chart-no-data" class="empty-state hidden">
+                        <p>Log at least 3 rounds to see your trend chart.</p>
                     </div>
-                </div>
+                </section>
+            </div> <!-- End WHS Tab -->
 
-                <!-- Personal Analytics Dashboard -->
-                <div class="card bg-white" style="grid-column: 1; border-top: 4px solid var(--primary-color);">
-                    <div id="coach-selection-container"
-                        style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
-                        <label for="player-coach-select" style="font-weight: bold;">My Coach:</label>
-                        <select id="player-coach-select" class="form-control"
-                            style="display: inline-block; width: auto; margin-left: 10px;">
-                            <option value="">-- No Coach Selected --</option>
+            <!-- ========================================== -->
+            <!-- CUSTOM COMPETITIONS TAB                    -->
+            <!-- ========================================== -->
+            <div id="tab-comp" class="tab-content hidden">
+
+                <!-- Competition Selection Bar -->
+                <div class="player-management-bar" style="margin-top: 20px;">
+                    <div class="player-selector">
+                        <label for="comp-select">Active Competition:</label>
+                        <select id="comp-select">
+                            <option value="">-- Select a Competition --</option>
                         </select>
-                        <button id="btn-save-coach" class="btn btn-primary btn-sm"
-                            style="margin-left: 10px; width: auto; display: inline-block; margin-top: 0;">Save
-                            Coach</button>
                     </div>
-                    <h2 class="section-title">My Performance Metrics</h2>
-
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div
-                            style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
-                            <div
-                                style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
-                                Best Score</div>
-                            <div id="practice-best-score"
-                                style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">-</div>
-                        </div>
-                        <div
-                            style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
-                            <div
-                                style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
-                                Avg Score</div>
-                            <div id="practice-avg-score" style="font-size: 2rem; font-weight: 800; color: #475569;">-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        <button id="btn-email-coach" class="btn btn-secondary btn-sm" style="flex: 1;">Email
-                            Coach</button>
-                        <button id="btn-export-practice" class="btn btn-secondary btn-sm" style="flex: 1;">Export
-                            Drills</button>
-                    </div>
-                    <button id="btn-ask-ai" class="btn btn-primary btn-sm"
-                        style="width: 100%; margin-top: 0; background-color: #8b5cf6; border-color: #8b5cf6;">✨ Ask
-                        AI Coach</button>
-
-                    <h3
-                        style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">
-                        Past Sessions</h3>
-
-                    <div id="practice-empty-state" class="empty-state" style="padding: 15px;">
-                        No practice sessions recorded yet. Start grinding!
-                    </div>
-
-                    <div class="table-responsive" style="margin-top: 0; display: none;" id="practice-table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Total Points</th>
-                                    <th style="width: 60px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="practice-history-tbody">
-                                <!-- JS injected -->
-                            </tbody>
-                        </table>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button id="btn-toggle-archived" class="btn btn-secondary btn-sm"
+                            style="margin: 0; width: auto; font-size: 0.8rem;">📦 Show Archived</button>
+                        <button id="btn-show-create-comp" class="btn btn-primary btn-sm"
+                            style="margin: 0; width: auto;">+
+                            New
+                            Competition</button>
                     </div>
                 </div>
+
+                <!-- Create New Competition Form (Hidden by Default) -->
+                <div id="create-comp-container" class="card hidden"
+                    style="margin-bottom: 20px; border: 2px solid var(--accent-color);">
+                    <h2>Create Custom Competition</h2>
+                    <form id="create-comp-form" class="round-form">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label>Competition Name</label>
+                                <input type="text" id="comp-name" required placeholder="e.g. Summer League 2026">
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="background: #e9ecef; padding: 10px; border-radius: 6px;">
+                            <div class="form-group flex-2">
+                                <label>Visibility</label>
+                                <div style="display: flex; gap: 20px; align-items: center;">
+                                    <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                                        <input type="radio" name="comp-visibility" value="public" checked> Public
+                                        (Anyone
+                                        can join)
+                                    </label>
+                                    <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                                        <input type="radio" name="comp-visibility" value="private"> Private (Invite
+                                        Only)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Regulars Selection -->
+                        <div id="comp-regulars-container" class="form-row"
+                            style="background: #f8f9fa; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; flex-direction: column; margin-bottom: 20px;">
+                            <label style="margin-bottom: 5px; color: var(--primary-color); font-weight:700;">Competition
+                                Regulars (Quick Add):</label>
+                            <p class="section-desc" style="margin-bottom:10px;">Select players who regularly play in
+                                this
+                                competition for quick-entry on the course.</p>
+                            <div id="comp-regulars-list"
+                                style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background:white; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                                <!-- Checkboxes injected here via JS -->
+                                <p style="color:#94a3b8; font-size:0.85rem;">Loading potential regulars...</p>
+                            </div>
+                        </div>
+
+                        <div id="comp-invite-container" class="form-row hidden"
+                            style="background: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; flex-direction: column;">
+                            <label style="margin-bottom: 5px; color: var(--primary-color);">Select Invited
+                                Players:</label>
+                            <div id="comp-invite-list"
+                                style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Checkboxes injected here via JS -->
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 15px 0 10px; font-size: 1.1rem; color: var(--secondary-color);">Configuration
+                            Template</h3>
+                        <div class="form-row"
+                            style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                            <div class="form-group flex-2">
+                                <label>Use Previous Competition's Template (Optional)</label>
+                                <select id="comp-template-select">
+                                    <option value="">-- Build From Scratch --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 15px 0 10px; font-size: 1.1rem; color: var(--secondary-color);">Automated
+                            Starting Points</h3>
+                        <p class="section-desc">Configure baseline points awarded at the start of the round or on every
+                            hole.</p>
+
+                        <div
+                            style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                            <!-- Per Round Config -->
+                            <div style="margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+                                <label
+                                    style="font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--primary-color);">
+                                    <input type="checkbox" id="sp-round-enable"> Enable Per-Round Baseline
+                                </label>
+
+                                <div id="sp-round-config" class="hidden" style="margin-top: 10px; padding-left: 24px;">
+                                    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
+                                        <label
+                                            style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="sp-round-type" value="fixed" checked> Fixed Points
+                                        </label>
+                                        <label
+                                            style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="sp-round-type" value="handicap_calculated"> Math:
+                                            (Base - Handicap)
+                                        </label>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label id="sp-round-val-label">Points per Player</label>
+                                        <input type="number" id="sp-round-value" style="max-width: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Per Hole Config -->
+                            <div>
+                                <label
+                                    style="font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--primary-color);">
+                                    <input type="checkbox" id="sp-hole-enable"> Enable Per-Hole Baseline
+                                </label>
+
+                                <div id="sp-hole-config" class="hidden" style="margin-top: 10px; padding-left: 24px;">
+                                    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 10px;">
+                                        <label
+                                            style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="sp-hole-type" value="fixed" checked> Fixed Points
+                                        </label>
+                                        <label
+                                            style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                                            <input type="radio" name="sp-hole-type" value="handicap_calculated"> Math:
+                                            (Base
+                                            - Handicap)
+                                        </label>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label id="sp-hole-val-label">Points per Hole</label>
+                                        <input type="number" id="sp-hole-value" style="max-width: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 15px 0 10px; font-size: 1.1rem; color: var(--secondary-color);">Stat Tracking
+                            &
+                            Points Rules</h3>
+                        <p class="section-desc">Add custom rules on the fly for tracking events on the course.</p>
+
+                        <div
+                            style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                            <div class="form-row" style="align-items: flex-end;">
+                                <div class="form-group" style="flex: 2;">
+                                    <label>Rule Name (e.g. Fairways, Sand Saves)</label>
+                                    <input type="text" id="new-rule-name" placeholder="Rule Name">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Points per Occurrence</label>
+                                    <input type="number" id="new-rule-points" value="1" step="0.5">
+                                </div>
+                                <div class="form-group" style="flex: none; padding-bottom: 5px;">
+                                    <button type="button" id="btn-add-rule" class="btn btn-secondary"
+                                        style="padding: 10px;">+ Add Rule</button>
+                                </div>
+                            </div>
+
+                            <div id="comp-rules-list"
+                                style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                                <div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added
+                                    yet.</div>
+                            </div>
+                        </div>
+
+                        <div class="auth-buttons" style="flex-direction: row;">
+                            <button type="submit" class="btn btn-primary" style="width: auto;">Create
+                                Competition</button>
+                            <button type="button" id="btn-cancel-comp" class="btn btn-secondary"
+                                style="margin-top: 10px;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Active Competition View -->
+                <div id="active-comp-view" class="hidden">
+                    <header class="header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                        <div class="header-content">
+                            <div class="branding">
+                                <h1 id="active-comp-name">Competition Name</h1>
+                                <p id="active-comp-rules-summary">Rules: ...</p>
+                            </div>
+                            <div id="comp-creator-actions" class="hidden"
+                                style="display: flex; gap: 10px; align-items: center;">
+                                <button id="btn-archive-comp" class="btn btn-secondary btn-sm"
+                                    style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; margin: 0;">📦
+                                    Archive Competition</button>
+                                <button id="btn-delete-comp" class="btn btn-secondary btn-sm hidden"
+                                    style="background: rgba(220,53,69,0.4); border: 1px solid rgba(220,53,69,0.7); color: white; margin: 0;">🗑️
+                                    Delete Forever</button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="dashboard-grid">
+
+                        <!-- Log Comp Round Component -->
+                        <section class="card add-round-section">
+                            <h2>Log Competition Round</h2>
+                            <form id="log-comp-round-form" class="round-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Player</label>
+                                        <select id="comp-player-select" required></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Date</label>
+                                        <input type="date" id="comp-date" required>
+                                    </div>
+                                </div>
+
+                                <hr style="border: 1px solid var(--border-color); margin: 15px 0;">
+
+                                <div id="comp-starting-points-display" class="hidden form-row"
+                                    style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                                    <div style="flex: 1; text-align: center;">
+                                        <label style="font-size: 0.85rem; margin-bottom: 2px;">Round Baseline</label>
+                                        <div id="comp-sp-round-calc"
+                                            style="font-weight: bold; color: var(--primary-color);">0 pts</div>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <label style="font-size: 0.85rem; margin-bottom: 2px;">Hole Baseline
+                                            (x18)</label>
+                                        <div id="comp-sp-hole-calc"
+                                            style="font-weight: bold; color: var(--primary-color);">
+                                            0 pts</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Gross Score</label>
+                                        <input type="number" id="comp-score" required>
+                                    </div>
+                                    <div id="comp-dynamic-inputs"
+                                        style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                                        <!-- Dynamically injected rule inputs go here -->
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary" style="background-color: #1e3c72;">Log
+                                        Round &
+                                        Calculate Points</button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- Latest Activity Widget -->
+                        <section class="card history-section">
+                            <h2>Recent Rounds</h2>
+                            <div class="table-responsive" style="max-height: 350px;">
+                                <table class="history-table" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr>
+                                            <th>Player</th>
+                                            <th>Score</th>
+                                            <th>Points</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="comp-recent-rounds-tbody"></tbody>
+                                </table>
+                            </div>
+                            <div id="comp-empty-state" class="empty-state" style="padding: 20px;">
+                                <p>No rounds logged yet.</p>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Leaderboard Section -->
+                    <section class="card history-section" style="margin-top: 30px;">
+                        <div class="history-header">
+                            <h2>Competition Leaderboard</h2>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="history-table">
+                                <thead>
+                                    <tr id="comp-leaderboard-head">
+                                        <!-- Dynamically built based on tracked stats -->
+                                        <th>Rank</th>
+                                        <th>Player</th>
+                                        <th>Rounds</th>
+                                        <th>Avg Score</th>
+                                        <th>Total Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comp-leaderboard-tbody">
+                                    <!-- Aggregated leaderboard here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                </div> <!-- End Active Comp View -->
+
+                <div id="no-comp-empty" class="empty-state" style="margin-top: 40px;">
+                    <div class="empty-icon">🏆</div>
+                    <p>Select a competition from the dropdown above, or create a new one to start tracking stats and
+                        points!
+                    </p>
+                </div>
+
+            </div> <!-- End Comp Tab -->
+
+            <!-- ========================================== -->
+            <!-- PRACTICE DRILLS TAB START                  -->
+            <!-- ========================================== -->
+            <div id="tab-practice" class="tab-content hidden">
+
+                <div class="header" style="margin-bottom: 20px;">
+                    <h1>Practice Drills</h1>
+                    <p>Track your private training sessions and monitor your progress over time.</p>
+                </div>
+
+                <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 20px; align-items: start;">
+
+                    <!-- Drill Selection & Form -->
+                    <div class="card bg-white" style="grid-column: 1;">
+                        <h2 class="section-title">Log a Practice Session</h2>
+
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label>Select Drill Template</label>
+                                <select id="drill-select">
+
+                                    <option value="inside_30">Inside 30</option>
+                                    <option value="putting_9_holes">Putting (9 Holes)</option>
+                                    <option value="up_down">Up/Down</option>
+                                    <option value="strokes_gained_putting">Strokes Gained Putting</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Date</label>
+                                <input type="date" id="drill-date" required>
+                            </div>
+                        </div>
+
+                        <!-- DYNAMIC DRILL CONTAINER -->
+                        <div id="practice-form-container" class="drill-template-container"
+                            style="margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px;">
+                            <h3 id="pf-title"
+                                style="margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; color: var(--primary-color);">
+                                Select a Drill Above</h3>
+                            <button type="button" class="wakelock-toggle btn btn-secondary btn-sm"
+                                style="width: 100%; margin-bottom: 15px; background: #64748b; color: #fff;">🌙 Screen:
+                                Normal</button>
+                            <p id="pf-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
+                                Choose
+                                a practice routine to begin tracking your performance.</p>
+
+                            <form id="form-log-practice">
+                                <div id="practice-dynamic-inputs">
+                                    <!-- Dynamically generated fields per drill -->
+                                </div>
+                                <div
+                                    style="margin-top: 15px; padding: 10px; background: #e2e8f0; border-radius: 6px; text-align: center;">
+                                    <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Calculated
+                                        Total:
+                                    </span>
+                                    <span id="drill-live-total"
+                                        style="font-size: 1.25rem; font-weight: 800; color: var(--primary-color);">0</span>
+                                </div>
+                                <button type="submit" id="btn-save-practice" class="btn btn-primary"
+                                    style="width: 100%; margin-top: 15px;">Save Practice Session</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Personal Analytics Dashboard -->
+                    <div class="card bg-white" style="grid-column: 1; border-top: 4px solid var(--primary-color);">
+                        <div id="coach-selection-container"
+                            style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                            <label for="player-coach-select" style="font-weight: bold;">My Coach:</label>
+                            <select id="player-coach-select" class="form-control"
+                                style="display: inline-block; width: auto; margin-left: 10px;">
+                                <option value="">-- No Coach Selected --</option>
+                            </select>
+                            <button id="btn-save-coach" class="btn btn-primary btn-sm"
+                                style="margin-left: 10px; width: auto; display: inline-block; margin-top: 0;">Save
+                                Coach</button>
+                        </div>
+                        <h2 class="section-title">My Performance Metrics</h2>
+
+                        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                            <div
+                                style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
+                                <div
+                                    style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
+                                    Best Score</div>
+                                <div id="practice-best-score"
+                                    style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">-</div>
+                            </div>
+                            <div
+                                style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
+                                <div
+                                    style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
+                                    Avg Score</div>
+                                <div id="practice-avg-score" style="font-size: 2rem; font-weight: 800; color: #475569;">
+                                    -
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <button id="btn-email-coach" class="btn btn-secondary btn-sm" style="flex: 1;">Email
+                                Coach</button>
+                            <button id="btn-export-practice" class="btn btn-secondary btn-sm" style="flex: 1;">Export
+                                Drills</button>
+                        </div>
+                        <button id="btn-ask-ai" class="btn btn-primary btn-sm"
+                            style="width: 100%; margin-top: 0; background-color: #8b5cf6; border-color: #8b5cf6;">✨ Ask
+                            AI Coach</button>
+
+                        <h3
+                            style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">
+                            Past Sessions</h3>
+
+                        <div id="practice-empty-state" class="empty-state" style="padding: 15px;">
+                            No practice sessions recorded yet. Start grinding!
+                        </div>
+
+                        <div class="table-responsive" style="margin-top: 0; display: none;"
+                            id="practice-table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Total Points</th>
+                                        <th style="width: 60px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="practice-history-tbody">
+                                    <!-- JS injected -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+            <!-- PRACTICE DRILLS TAB END -->
 
-        </div>
-        <!-- PRACTICE DRILLS TAB END -->
 
-        
 
             <!-- ========================================== -->
             <!-- COACH DASHBOARD TAB (Redesigned)           -->
@@ -1953,7 +1979,7 @@
             </div>
             <!-- FEED TAB END -->
 
-            
+
 
             <!-- ========================================== -->
             <!-- TEMPO VIBES TAB                            -->
@@ -2097,7 +2123,7 @@
     <!-- Global Version Footer -->
     <div id="footer-version"
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-        Golf Handicap Tracker v6.0.0
+        Golf Handicap Tracker v6.1.3 - 2026-03-04 07:45
     </div>
     <script>
         if ('serviceWorker' in navigator) {

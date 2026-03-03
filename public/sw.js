@@ -1,23 +1,24 @@
-// SERVICE WORKER KILL SWITCH
-// Purpose: Force immediate takeover, nuke all caches, and default to network-only fetching.
+const CACHE_NAME = 'golf-cache-v6.1.3';
 
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker] Kill Switch: Installing and skipping wait...');
+    console.log('[Service Worker] Installing golf-cache-v6.1.3 and skipping wait...');
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('[Service Worker] Kill Switch: Activating and nuking all caches...');
+    console.log('[Service Worker] Activating and cleaning old caches...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    console.log('[Service Worker] Deleting cache:', cacheName);
-                    return caches.delete(cacheName);
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('[Service Worker] Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
                 })
             );
         }).then(() => {
-            console.log('[Service Worker] Kill Switch: All caches cleared. Claiming clients...');
+            console.log('[Service Worker] Claiming clients...');
             return self.clients.claim();
         })
     );
@@ -25,6 +26,5 @@ self.addEventListener('activate', (event) => {
 
 // DEFAULT TO NETWORK-ONLY TO BYPASS ANY LINGERING CACHE ISSUES
 self.addEventListener('fetch', (event) => {
-    // We do NOT cache anything. Simply pass through to the network.
     event.respondWith(fetch(event.request));
 });

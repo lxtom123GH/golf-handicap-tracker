@@ -299,7 +299,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'v6.1.2';
+        const versionStr = 'v6.1.3 - 2026-03-04 07:45';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;

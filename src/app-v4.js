@@ -38,31 +38,33 @@ function bootstrapApplication() {
     console.log("App Ready: Bootstrapping modules...");
 
     // 1. Restore state first (Critical for routing)
-    initializeAppRouting();
+    try { initializeAppRouting(); } catch (e) { console.error("[Bootstrap] initializeAppRouting failed:", e); }
 
     // 2. Initialize all modules
-    listenToWHSRounds();
-    initCompetitions();
-    initPractice();
-    initOnCourse();
+    try { listenToWHSRounds(); } catch (e) { console.error("[Bootstrap] listenToWHSRounds failed:", e); }
+    try { initCompetitions(); } catch (e) { console.error("[Bootstrap] initCompetitions failed:", e); }
+    try { initPractice(); } catch (e) { console.error("[Bootstrap] initPractice failed:", e); }
+    try { initOnCourse(); } catch (e) { console.error("[Bootstrap] initOnCourse failed:", e); }
 
-    bindWHSForm();
-    bindAdminTools();
-    bindAdminInvite();
-    bindCoachTools();
-    bindCoachDashboard();
-    bindAiGenerator();
-    populatePlayerSelect();
-    initNotifications();
-    initTempo();
-    initWakeLock();
+    try { bindWHSForm(); } catch (e) { console.error("[Bootstrap] bindWHSForm failed:", e); }
+    try { bindAdminTools(); } catch (e) { console.error("[Bootstrap] bindAdminTools failed:", e); }
+    try { bindAdminInvite(); } catch (e) { console.error("[Bootstrap] bindAdminInvite failed:", e); }
+    try { bindCoachTools(); } catch (e) { console.error("[Bootstrap] bindCoachTools failed:", e); }
+    try { bindCoachDashboard(); } catch (e) { console.error("[Bootstrap] bindCoachDashboard failed:", e); }
+    try { bindAiGenerator(); } catch (e) { console.error("[Bootstrap] bindAiGenerator failed:", e); }
+    try { populatePlayerSelect(); } catch (e) { console.error("[Bootstrap] populatePlayerSelect failed:", e); }
+    try { initNotifications(); } catch (e) { console.error("[Bootstrap] initNotifications failed:", e); }
+    try { initTempo(); } catch (e) { console.error("[Bootstrap] initTempo failed:", e); }
+    try { initWakeLock(); } catch (e) { console.error("[Bootstrap] initWakeLock failed:", e); }
 
     // Feed tab — init when first opened
-    const feedBtn = document.getElementById('tab-btn-feed') || document.querySelector('[data-target="tab-feed"]');
-    if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
+    try {
+        const feedBtn = document.getElementById('tab-btn-feed') || document.querySelector('[data-target="tab-feed"]');
+        if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
+    } catch (e) { console.error("[Bootstrap] social feed binding failed:", e); }
 
     // Final UI Setup - Bind Listeners after all logic is ready
-    setupTabs();
+    try { setupTabs(); } catch (e) { console.error("[Bootstrap] setupTabs failed:", e); }
 }
 
 // Kickoff Authentication Flow
