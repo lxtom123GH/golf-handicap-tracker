@@ -238,13 +238,58 @@ export function setupTabs() {
     switchTab(initialTab);
 
     // 2. Global Event Delegation for all Tab Buttons
+    // Explicitly target both class and known IDs for maximum reliability
     document.body.addEventListener('click', (e) => {
+        // Find if we clicked a tab button or something inside it
         const tabBtn = e.target.closest('.tab-btn');
+
         if (tabBtn) {
             const targetId = tabBtn.getAttribute('data-target');
-            switchTab(targetId);
+            console.log(`[UI] Tab click detected: ${targetId} from element ${tabBtn.id || 'anonymous'}`);
+
+            if (targetId) {
+                switchTab(targetId);
+
+                // If the click happened on a specific ID, we can add extra handling if needed
+                if (tabBtn.id === 'tab-btn-settings') {
+                    // Force refresh setup bag etc if needed
+                }
+            }
         }
     });
+
+    // Brute-Force Direct Listeners for problematic buttons
+    const bruteForceMap = {
+        'tab-btn-settings': 'tab-settings',
+        'tab-btn-admin': 'tab-admin',
+        'tab-btn-coach': 'tab-coach',
+        'tab-btn-feed': 'tab-feed',
+        'tab-btn-tempo': 'tab-tempo'
+    };
+
+    Object.entries(bruteForceMap).forEach(([btnId, targetId]) => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log(`[Brute-Force] Clicked ${btnId} -> Routing to ${targetId}`);
+                switchTab(targetId);
+            }, true); // Use capture phase to ensure it fires
+        }
+    });
+
+    // Dynamic Version Injection
+    try {
+        const versionStr = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'V6.1.0-DEV';
+        const footerVer = document.getElementById('footer-version');
+        const headerVer = document.getElementById('header-version');
+        if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;
+        if (headerVer) headerVer.textContent = versionStr;
+        console.log(`[UI] Version Injected: ${versionStr}`);
+    } catch (e) {
+        console.error("[UI] Version injection failed:", e);
+    }
 }
 
 export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = []) {
@@ -386,7 +431,7 @@ export function renderTrendChart(rounds = AppState.currentRounds) {
                     callbacks: {
                         label: ctx => ` Differential: ${ctx.parsed.y}`
                     }
-                }
+                },
             },
             scales: {
                 y: {

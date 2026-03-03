@@ -38,6 +38,8 @@ input,
 .mini-stat,
 .putt-plus,
 .putt-minus,
+.btn-grid-plus,
+.btn-grid-minus,
 .tab-btn {
     touch-action: manipulation;
     user-select: none;

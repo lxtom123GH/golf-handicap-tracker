@@ -1129,13 +1129,13 @@ function bindShotWizard() {
         UI.btnWizardPrev.addEventListener('click', () => {
             const currentStep = document.querySelector('.wizard-step:not(.hidden)');
             const steps = [
-                'wizard-step-club', 
-                'wizard-step-trajectory', 
+                'wizard-step-club',
+                'wizard-step-trajectory',
                 'wizard-step-startline',
                 'wizard-step-shape',
-                'wizard-step-outcome', 
-                'wizard-step-putt', 
-                'wizard-step-strike', 
+                'wizard-step-outcome',
+                'wizard-step-putt',
+                'wizard-step-strike',
                 'wizard-step-routine'
             ];
             const idx = steps.indexOf(currentStep.id);
@@ -1662,7 +1662,12 @@ export function updateModeVisibility() {
     if (AppState.currentTrackingMode === 'simple') {
         if (btnTrack) btnTrack.classList.add('hidden');
         if (wizard) wizard.classList.add('hidden');
-        if (simpleStats) simpleStats.classList.remove('hidden');
+
+        // Aggressive Hide for Groups: stats block only for single player
+        const isSinglePlayer = AppState.liveRoundGroups.length <= 1;
+        if (simpleStats) {
+            simpleStats.classList.toggle('hidden', !isSinglePlayer);
+        }
     } else {
         // Detailed mode
         if (btnTrack) btnTrack.classList.remove('hidden');
@@ -1734,7 +1739,14 @@ function bindOcSubNav() {
             btn.style.color = 'var(--primary-color)';
             btn.style.borderBottom = '3px solid var(--primary-color)';
 
-            document.getElementById('oc-simple-stats').classList.toggle('hidden', target !== 'hub');
+            const isHub = target === 'hub';
+            const isSinglePlayer = AppState.liveRoundGroups.length <= 1;
+            const simpleStats = document.getElementById('oc-simple-stats');
+
+            if (simpleStats) {
+                simpleStats.classList.toggle('hidden', !isHub || !isSinglePlayer);
+            }
+
             document.getElementById('oc-leaderboard').classList.toggle('hidden', target !== 'leaderboard');
 
             if (target === 'leaderboard') updateLiveLeaderboard();
