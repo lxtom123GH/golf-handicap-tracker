@@ -66,6 +66,11 @@ export function initSocialFeed() {
     loadFeed();
 }
 
+window.refreshSocialFeed = async () => {
+    await loadFollowing();
+    await loadFeed();
+};
+
 async function followPlayer(targetUid) {
     const myUid = AppState.currentUser.uid;
     await setDoc(doc(db, 'users', myUid, 'following', targetUid), {

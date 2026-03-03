@@ -55,10 +55,20 @@ function bootstrapApplication() {
     try { initTempo(); } catch (e) { console.error("[Bootstrap] initTempo failed:", e); }
     try { initWakeLock(); } catch (e) { console.error("[Bootstrap] initWakeLock failed:", e); }
 
-    // Feed tab — init when first opened
+    // Feed tab — init and refresh logic
     try {
         const feedBtn = document.getElementById('tab-btn-feed') || document.querySelector('[data-target="tab-feed"]');
-        if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
+        if (feedBtn) {
+            let feedInited = false;
+            feedBtn.addEventListener('click', () => {
+                if (!feedInited) {
+                    initSocialFeed();
+                    feedInited = true;
+                } else if (typeof window.refreshSocialFeed === 'function') {
+                    window.refreshSocialFeed();
+                }
+            });
+        }
     } catch (e) { console.error("[Bootstrap] social feed binding failed:", e); }
 
     // Final UI Setup - Bind Listeners after all logic is ready

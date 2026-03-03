@@ -152,6 +152,12 @@ export function bindCoachDashboard() {
 
     loadCoachRoster();
 
+    window.refreshCoachDashboard = async () => {
+        const rosterEl = document.getElementById('coach-roster-list');
+        if (rosterEl) rosterEl.innerHTML = '<p style="color:#64748b;">🔄 Syncing athlete roster...</p>';
+        await loadCoachRoster();
+    };
+
     async function loadCoachRoster() {
         if (!rosterEl) return;
         const myUid = AppState.currentUser.uid;

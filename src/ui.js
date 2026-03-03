@@ -262,6 +262,16 @@ export function switchTab(targetId) {
                     window.refreshAdminDashboard();
                 }
                 break;
+            case 'tab-coach':
+                if (typeof window.refreshCoachDashboard === 'function') {
+                    window.refreshCoachDashboard();
+                }
+                break;
+            case 'tab-feed':
+                if (typeof window.refreshSocialFeed === 'function') {
+                    window.refreshSocialFeed();
+                }
+                break;
             case 'tab-settings':
                 if (typeof window.refreshSettingsUI === 'function') {
                     window.refreshSettingsUI();
@@ -329,7 +339,7 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'v6.1.6 - Lifecycle Stabilized';
+        const versionStr = 'v6.1.7 - Full System Integration';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
         if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;

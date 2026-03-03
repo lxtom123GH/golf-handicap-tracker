@@ -9,7 +9,7 @@ import {
     signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail
 } from "firebase/auth";
 import { doc, getDoc, getDocFromServer, setDoc, serverTimestamp } from "firebase/firestore";
-import { UI } from './ui.js';
+import { UI, switchTab } from './ui.js';
 import { AppState } from './state.js';
 import { bindAdminTools, bindAdminInvite } from './admin.js';
 
@@ -173,6 +173,12 @@ export function setupAuthUI(onAppReady) {
                         if (feedTabBtn) feedTabBtn.classList.remove('hidden');
                         // Roles and bootstrapping handled by individual modules
                         if (initializeAppCallback) initializeAppCallback();
+
+                        // Security Heartbeat: Explicitly sync UI state
+                        try {
+                            const defaultTab = localStorage.getItem('golfAppDefaultTab') || 'tab-whs';
+                            switchTab(defaultTab);
+                        } catch (e) { console.error("[Auth] UI Sync failed:", e); }
 
                         console.log("[Auth] Bootstrap complete, removing cloak.");
                         const cloak = document.getElementById('app-loading-cloak');
