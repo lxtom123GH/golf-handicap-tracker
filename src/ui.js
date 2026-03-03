@@ -193,6 +193,24 @@ export const UI = {
 // ==========================================
 const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
 
+export function ensureScreensExist() {
+    console.log("[Navigation] Running Dynamic Screen Failsafe...");
+    const appContainer = document.getElementById('main-app') || document.body;
+
+    ALL_SCREENS.forEach(id => {
+        if (!document.getElementById(id)) {
+            console.warn(`[Navigation] Missing screen: ${id}. Injecting dynamic placeholder.`);
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'tab-content hidden';
+            div.style.padding = '80px 20px';
+            div.style.textAlign = 'center';
+            div.innerHTML = `<h1>DYNAMIC ${id.replace('tab-', '').toUpperCase()} SCREEN</h1><p>This screen was generated dynamically because it was missing from the static HTML.</p>`;
+            appContainer.appendChild(div);
+        }
+    });
+}
+
 export function switchTab(targetId) {
     try {
         if (!targetId) throw new Error('switchTab called without targetId');
@@ -264,6 +282,7 @@ export function switchTab(targetId) {
 }
 
 export function initNavigation() {
+    ensureScreensExist();
     console.log("[Navigation] Initializing Clean Slate Architecture...");
 
     const tabButtons = document.querySelectorAll('.tab-btn');

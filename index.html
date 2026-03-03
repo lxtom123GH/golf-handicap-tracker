@@ -1242,41 +1242,23 @@
                             </div>
                         </div>
 
-                        <!-- Section: The Intent Grid (3x3 Layout) -->
-                        <div id="section-intent" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
+                        <!-- Refactored Intent Grid (3 Rows x 3 Columns) -->
+                        <div id="section-intent"
+                            style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; text-align: center;">
+                            <!-- Row 1: Start Line -->
+                            <button class="btn-grid-compact" data-group="startLine" data-val="Left">Left</button>
+                            <button class="btn-grid-compact" data-group="startLine" data-val="Straight">Centre</button>
+                            <button class="btn-grid-compact" data-group="startLine" data-val="Right">Right</button>
 
-                            <!-- Column 1: Start Line -->
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                <p
-                                    style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; text-align:center;">
-                                    Start</p>
-                                <button class="btn-grid-compact" data-group="startLine" data-val="Left">Left</button>
-                                <button class="btn-grid-compact" data-group="startLine"
-                                    data-val="Straight">Target</button>
-                                <button class="btn-grid-compact" data-group="startLine" data-val="Right">Right</button>
-                            </div>
+                            <!-- Row 2: Trajectory -->
+                            <button class="btn-grid-compact" data-group="trajectory" data-val="Low">Low</button>
+                            <button class="btn-grid-compact" data-group="trajectory" data-val="Medium">Medium</button>
+                            <button class="btn-grid-compact" data-group="trajectory" data-val="High">High</button>
 
-                            <!-- Column 2: Trajectory -->
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                <p
-                                    style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; text-align:center;">
-                                    Flight</p>
-                                <button class="btn-grid-compact" data-group="trajectory" data-val="High">High</button>
-                                <button class="btn-grid-compact" data-group="trajectory" data-val="Medium">Mid</button>
-                                <button class="btn-grid-compact" data-group="trajectory" data-val="Low">Low</button>
-                            </div>
-
-                            <!-- Column 3: Strike Quality -->
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                <p
-                                    style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; text-align:center;">
-                                    Strike</p>
-                                <button class="btn-grid-compact" data-group="strikeQuality"
-                                    data-val="Pure">Pure</button>
-                                <button class="btn-grid-compact" data-group="strikeQuality"
-                                    data-val="Thin">Thin</button>
-                                <button class="btn-grid-compact" data-group="strikeQuality" data-val="Fat">Fat</button>
-                            </div>
+                            <!-- Row 3: Strike -->
+                            <button class="btn-grid-compact" data-group="strikeQuality" data-val="Fat">Fat</button>
+                            <button class="btn-grid-compact" data-group="strikeQuality" data-val="Pure">Pure</button>
+                            <button class="btn-grid-compact" data-group="strikeQuality" data-val="Thin">Thin</button>
                         </div>
 
                         <!-- Section: Shape (Special Row) -->
