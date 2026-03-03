@@ -46,6 +46,7 @@ exports.processRulesQuery = onCall({ secrets: ["GEMINI_API_KEY"] }, async (reque
         return { answer: text };
     } catch (error) {
         console.error("Rules Engine Error:", error);
-        throw new HttpsError('internal', 'Rules Assistant encountered an error.');
+        // Task 4: Return actual error message instead of failing silently with 500
+        return { answer: "AI Error: " + error.message };
     }
 });

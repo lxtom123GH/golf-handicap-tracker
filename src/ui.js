@@ -104,6 +104,9 @@ export const UI = {
     btnWizardDelete: document.getElementById('btn-wizard-delete'),
     btnOcReviewRound: document.getElementById('btn-oc-review-round'),
     reviewRoundModal: document.getElementById('review-round-modal'),
+    ocFinishModal: document.getElementById('oc-finish-modal'),
+    btnOcSaveWhs: document.getElementById('btn-oc-save-whs'),
+    btnOcFinish: document.getElementById('btn-oc-finish'),
 
     // Tempo Vibes
     tempoPlayBtn: document.getElementById('tempo-play-btn'),
@@ -179,7 +182,8 @@ export const UI = {
     btnCancelVoice: document.getElementById('btn-cancel-voice'),
     rulesResponseCard: document.getElementById('rules-response-card'),
     rulesResponseContent: document.getElementById('rules-response-content'),
-    btnCloseRulesCard: document.getElementById('btn-close-rules-card')
+    btnCloseRulesCard: document.getElementById('btn-close-rules-card'),
+    mainApp: document.getElementById('main-app')
 };
 
 // ==========================================
@@ -187,70 +191,61 @@ export const UI = {
 // ==========================================
 const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
 
+export function switchTab(targetId) {
+    if (!targetId) return;
+
+    // Check if we are trying to access protected tabs
+    const isAdmin = window.currentUserIsAdmin || false;
+    const isCoach = AppState.currentUser?.isCoach || false;
+
+    if (targetId === 'tab-admin' && !isAdmin) return;
+    if (targetId === 'tab-coach' && !isCoach) return;
+
+    console.log(`[Navigation] Switching to: ${targetId}`);
+
+    const allBtns = document.querySelectorAll('.tab-btn');
+    const allContents = document.querySelectorAll('.tab-content');
+
+    allBtns.forEach(b => {
+        if (b.getAttribute('data-target') === targetId) b.classList.add('active');
+        else b.classList.remove('active');
+    });
+
+    allContents.forEach(c => {
+        if (c.id === targetId) {
+            c.classList.remove('hidden');
+            c.classList.add('active');
+        } else {
+            c.classList.add('hidden');
+            c.classList.remove('active');
+        }
+    });
+
+    localStorage.setItem(DEFAULT_TAB_KEY, targetId);
+}
+
 export function setupTabs() {
     const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
 
-    // Initial Load Restore
-    if (savedTabId) {
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const savedBtn = Array.from(tabBtns).find(b => b.getAttribute('data-target') === savedTabId);
+    // 1. Determine Initial Tab
+    let initialTab = savedTabId || 'tab-whs';
 
-        if (savedBtn) {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.add('hidden'));
-
-            savedBtn.classList.add('active');
-            const targetContent = document.getElementById(savedTabId);
-            if (targetContent) {
-                targetContent.classList.remove('hidden');
-                targetContent.classList.add('active');
-            }
-        }
+    // Proactive Force: If a round is active, always go to On-Course
+    if (AppState.activeRoundId) {
+        initialTab = 'tab-oncourse';
     }
 
-    // GLOBAL DELEGATION: Tabs and Essential Buttons
+    switchTab(initialTab);
+
+    // 2. Global Event Delegation for all Tab Buttons
     document.body.addEventListener('click', (e) => {
-        // 1. Tab Navigation Delegation
         const tabBtn = e.target.closest('.tab-btn');
         if (tabBtn) {
             const targetId = tabBtn.getAttribute('data-target');
-            if (!targetId) return;
-
-            console.log(`[Navigation] Tab Switch: ${targetId}`);
-
-            const allBtns = document.querySelectorAll('.tab-btn');
-            const allContents = document.querySelectorAll('.tab-content');
-
-            allBtns.forEach(b => b.classList.remove('active'));
-            allContents.forEach(c => {
-                c.classList.add('hidden');
-                c.classList.remove('active');
-            });
-
-            tabBtn.classList.add('active');
-            const targetContent = document.getElementById(targetId);
-            if (targetContent) {
-                targetContent.classList.remove('hidden');
-                targetContent.classList.add('active');
-                localStorage.setItem(DEFAULT_TAB_KEY, targetId);
-            }
-            return;
-        }
-
-        // 2. Specialized Button Delegation (Unresponsive fixes)
-        const saveBtn = e.target.closest('#btn-oc-save-whs, #btn-oc-save-final');
-        if (saveBtn) {
-            console.log("[Navigation] Confirm & Save clicked via delegation");
-            // If the specific listener in oncourse.js is lost, we can re-trigger it here if needed
-            // But usually delegation handles it even if re-rendered.
+            switchTab(targetId);
         }
     });
 }
-
-// ==========================================
-// REACTIVE UI RENDERING FUNCTIONS
-// ==========================================
 
 export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = []) {
     if (!UI.historyTbody) return;

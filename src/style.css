@@ -601,6 +601,20 @@ body {
     grid-column: span 2;
 }
 
+.active-choice {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 4px 12px rgba(11, 46, 19, 0.3);
+}
+
+.wiz-routine-btn.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    transform: scale(1.1);
+}
+
 /* Outcome Colors for extreme contrast in sunlight */
 .btn-good {
     background-color: #d1fae5;

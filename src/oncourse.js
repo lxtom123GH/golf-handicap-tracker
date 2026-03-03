@@ -26,6 +26,7 @@ export function initOnCourse() {
     bindAdvancedTools();
     bindOcSubNav();
     bindCompQuickAdd();
+    bindHoleNav();
 
     // Default init
     if (typeof updateModeVisibility === 'function') updateModeVisibility();
@@ -440,9 +441,9 @@ export function loadHole() {
 
         pDiv.appendChild(controlRow);
 
-        // Optional Simple Stats Row (Small icons for GIR/Fwy)
+        // Optional Simple Stats Row (Small icons for GIR/Fwy + Plus/Minus for Putts)
         const statsRow = document.createElement('div');
-        statsRow.style.cssText = 'display:flex; gap:10px; margin-top:5px;';
+        statsRow.style.cssText = 'display:flex; gap:10px; margin-top:5px; align-items:center;';
 
         const fwySet = p.simpleStats[AppState.currentHole]?.fwy;
         const girSet = p.simpleStats[AppState.currentHole]?.gir;
@@ -451,28 +452,48 @@ export function loadHole() {
         statsRow.innerHTML = `
             <button class="mini-stat ${fwySet === true ? 'active-fwy' : (fwySet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🌿 FW</button>
             <button class="mini-stat ${girSet === true ? 'active-gir' : (girSet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🟢 GIR</button>
-            <button class="mini-stat" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">⛳ ${putts} P</button>
+            <div style="flex:1.5; display:flex; align-items:center; justify-content:space-between; padding:4px 8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc;">
+                <button class="putt-minus" style="border:none; background:none; font-weight:bold; padding:4px 8px; font-size:1rem;">−</button>
+                <span style="font-size:0.85rem; font-weight:800; color:var(--primary-color);">⛳ ${putts} P</span>
+                <button class="putt-plus" style="border:none; background:none; font-weight:bold; padding:4px 8px; font-size:1rem;">+</button>
+            </div>
         `;
 
-        statsRow.children[0].onclick = () => {
+        statsRow.querySelector('.mini-stat:nth-child(1)').onclick = () => {
             if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
             p.simpleStats[AppState.currentHole].fwy = !p.simpleStats[AppState.currentHole].fwy;
             loadHole();
         };
-        statsRow.children[1].onclick = () => {
+        statsRow.querySelector('.mini-stat:nth-child(2)').onclick = () => {
             if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
             p.simpleStats[AppState.currentHole].gir = !p.simpleStats[AppState.currentHole].gir;
             loadHole();
         };
-        statsRow.children[2].onclick = () => {
+        statsRow.querySelector('.putt-plus').onclick = () => {
             if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            p.simpleStats[AppState.currentHole].putts = ((p.simpleStats[AppState.currentHole].putts || 0) + 1) % 5;
+            p.simpleStats[AppState.currentHole].putts = (p.simpleStats[AppState.currentHole].putts || 0) + 1;
+            loadHole();
+        };
+        statsRow.querySelector('.putt-minus').onclick = () => {
+            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+            const cur = p.simpleStats[AppState.currentHole].putts || 0;
+            if (cur > 0) p.simpleStats[AppState.currentHole].putts = cur - 1;
             loadHole();
         };
 
         pDiv.appendChild(statsRow);
         scoresContainer.appendChild(pDiv);
     });
+
+    // Hide single-player stats block if group round
+    const simpleStatsBlock = document.getElementById('oc-simple-stats-container');
+    if (simpleStatsBlock) {
+        if (AppState.liveRoundGroups.length > 1) {
+            simpleStatsBlock.classList.add('hidden');
+        } else {
+            simpleStatsBlock.classList.remove('hidden');
+        }
+    }
 
     updateLiveLeaderboard();
 }
@@ -910,7 +931,8 @@ function bindHoleNav() {
 }
 
 async function saveRoundToDatabase() {
-    const holesPlayedStr = document.getElementById('oc-finish-holes').value;
+    const holesPlayedEl = document.getElementById('oc-finish-holes');
+    const holesPlayedStr = holesPlayedEl ? holesPlayedEl.value : "9";
     const manualCR = document.getElementById('oc-manual-cr');
     const manualSR = document.getElementById('oc-manual-sr');
     const manualPar = document.getElementById('oc-manual-par');
@@ -920,7 +942,7 @@ async function saveRoundToDatabase() {
     const par = manualPar ? parseFloat(manualPar.value) : 72;
 
     const courseName = AppState.currentRoundCourseName;
-    const teeName = UI.ocTeeSelect.value;
+    const teeName = UI.ocTeeSelect ? UI.ocTeeSelect.value : null;
     const teeData = COURSE_DATA[courseName]?.[teeName] || {};
 
     try {
@@ -932,24 +954,25 @@ async function saveRoundToDatabase() {
                 const gross = p.scores[h];
                 totalGross += gross;
 
-                // Action 4: Enforce Par Precedence using AppState.currentCoursePars
                 const holeIdx = parseInt(h) - 1;
                 const hPar = AppState.currentCoursePars[holeIdx] || 4;
-                const hSI = teeData.strokeIndex?.[holeIdx] || (holeIdx + 1); // Fallback to index if missing
+                const hSI = teeData.strokeIndex?.[holeIdx] || (holeIdx + 1);
 
                 if (hPar && hSI) {
                     totalStableford += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
                 }
             }
 
-            // Convert to AGS (Adjusted Gross Score)
+            // Convert to AGS
             const adjustedGross = convertStablefordToAGS(totalStableford, p.dailyHandicap, par);
 
             let sumPutts = 0, sumGIR = 0, sumFwy = 0;
-            for (const h in p.simpleStats) {
-                if (p.simpleStats[h].putts) sumPutts += p.simpleStats[h].putts;
-                if (p.simpleStats[h].gir) sumGIR += 1;
-                if (p.simpleStats[h].fwy) sumFwy += 1;
+            if (p.simpleStats) {
+                for (const h in p.simpleStats) {
+                    if (p.simpleStats[h].putts) sumPutts += p.simpleStats[h].putts;
+                    if (p.simpleStats[h].gir) sumGIR += 1;
+                    if (p.simpleStats[h].fwy) sumFwy += 1;
+                }
             }
 
             const payload = {
@@ -958,7 +981,7 @@ async function saveRoundToDatabase() {
                 courseName: AppState.currentRoundCourseName,
                 rating: cr,
                 slope: sr,
-                adjustedGross: adjustedGross, // Saved as WHS Adjusted Gross
+                adjustedGross: adjustedGross,
                 totalGross: totalGross,
                 totalScore: totalGross,
                 totalStableford: totalStableford,
@@ -976,24 +999,27 @@ async function saveRoundToDatabase() {
             if (AppState.currentLiveCompId) {
                 let totalRulePoints = 0;
                 const ruleCounts = {};
-                AppState.currentLiveCompRules.forEach(r => ruleCounts[r.name] = 0);
+                const rules = AppState.currentLiveCompRules || [];
+                rules.forEach(r => { if (r.name) ruleCounts[r.name] = 0; });
 
-                for (const h in p.compStats) {
-                    for (const ruleName in p.compStats[h]) {
-                        const count = p.compStats[h][ruleName];
-                        ruleCounts[ruleName] += count;
-                        const ruleDef = AppState.currentLiveCompRules.find(r => r.name === ruleName);
-                        if (ruleDef) totalRulePoints += (count * ruleDef.pts);
+                if (p.compStats) {
+                    for (const h in p.compStats) {
+                        if (!p.compStats[h]) continue;
+                        for (const ruleName in p.compStats[h]) {
+                            const count = p.compStats[h][ruleName] || 0;
+                            ruleCounts[ruleName] = (ruleCounts[ruleName] || 0) + count;
+                            const ruleDef = rules.find(r => r.name === ruleName);
+                            if (ruleDef) totalRulePoints += (count * (ruleDef.pts || ruleDef.value || 0));
+                        }
                     }
                 }
 
-                // Competition Results Sync logic (Task 2)
                 await addDoc(collection(db, "competition_results"), {
                     compId: AppState.currentLiveCompId,
                     uid: p.uid,
                     playerName: p.name,
                     stablefordPoints: totalStableford,
-                    netScore: totalGross, // Or Adjusted Gross depending on comp rules
+                    netScore: totalGross,
                     rulePoints: totalRulePoints,
                     totalCompScore: totalStableford + totalRulePoints,
                     date: serverTimestamp(),
@@ -1102,13 +1128,27 @@ function bindShotWizard() {
     if (UI.btnWizardPrev) {
         UI.btnWizardPrev.addEventListener('click', () => {
             const currentStep = document.querySelector('.wizard-step:not(.hidden)');
-            const steps = ['wizard-step-club', 'wizard-step-trajectory', 'wizard-step-outcome', 'wizard-step-putt', 'wizard-step-strike', 'wizard-step-routine'];
+            const steps = [
+                'wizard-step-club', 
+                'wizard-step-trajectory', 
+                'wizard-step-startline',
+                'wizard-step-shape',
+                'wizard-step-outcome', 
+                'wizard-step-putt', 
+                'wizard-step-strike', 
+                'wizard-step-routine'
+            ];
             const idx = steps.indexOf(currentStep.id);
             if (idx > 0) {
-                // Special handling for putt vs trajectory
                 let nextIdx = idx - 1;
-                if (steps[nextIdx] === 'wizard-step-putt' && AppState.currentShotData.club !== 'Putter') nextIdx--;
-                if (steps[nextIdx] === 'wizard-step-trajectory' && AppState.currentShotData.club === 'Putter') nextIdx--;
+                // Skip logic reversed
+                if (AppState.currentShotData.club === 'Putter') {
+                    if (steps[nextIdx] !== 'wizard-step-club' && steps[nextIdx] !== 'wizard-step-routine') {
+                        nextIdx = 0; // Back to club
+                    }
+                } else {
+                    if (steps[nextIdx] === 'wizard-step-putt') nextIdx--;
+                }
                 showWizardStep(steps[nextIdx]);
             }
         });
@@ -1117,12 +1157,29 @@ function bindShotWizard() {
     if (UI.btnWizardNext) {
         UI.btnWizardNext.addEventListener('click', () => {
             const currentStep = document.querySelector('.wizard-step:not(.hidden)');
-            const steps = ['wizard-step-club', 'wizard-step-trajectory', 'wizard-step-outcome', 'wizard-step-putt', 'wizard-step-strike', 'wizard-step-routine'];
+            const steps = [
+                'wizard-step-club',
+                'wizard-step-trajectory',
+                'wizard-step-startline',
+                'wizard-step-shape',
+                'wizard-step-outcome',
+                'wizard-step-putt',
+                'wizard-step-strike',
+                'wizard-step-routine'
+            ];
             const idx = steps.indexOf(currentStep.id);
             if (idx < steps.length - 1) {
                 let nextIdx = idx + 1;
-                if (steps[nextIdx] === 'wizard-step-trajectory' && AppState.currentShotData.club === 'Putter') nextIdx++;
-                if (steps[nextIdx] === 'wizard-step-putt' && AppState.currentShotData.club !== 'Putter') nextIdx++;
+                // Skip logic
+                if (AppState.currentShotData.club === 'Putter') {
+                    // Jump from club or any mid-shot step straight to putt if putter selected
+                    if (steps[nextIdx] !== 'wizard-step-putt' && steps[nextIdx] !== 'wizard-step-strike' && steps[nextIdx] !== 'wizard-step-routine') {
+                        nextIdx = steps.indexOf('wizard-step-putt');
+                    }
+                } else {
+                    // Skip putt if not putter
+                    if (steps[nextIdx] === 'wizard-step-putt') nextIdx++;
+                }
                 showWizardStep(steps[nextIdx]);
             }
         });
@@ -1152,13 +1209,18 @@ function bindShotWizard() {
             }
         } else if (stepId === 'wizard-step-trajectory') {
             AppState.currentShotData.trajectory = val;
+            showWizardStep('wizard-step-startline', 'Start Line');
+        } else if (stepId === 'wizard-step-startline') {
+            AppState.currentShotData.startLine = val;
+            showWizardStep('wizard-step-shape', 'Shot Shape');
+        } else if (stepId === 'wizard-step-shape') {
+            AppState.currentShotData.shape = val;
             showWizardStep('wizard-step-outcome', 'Outcome');
         } else if (stepId === 'wizard-step-outcome') {
             AppState.currentShotData.outcome = val;
             showWizardStep('wizard-step-strike', 'Strike Quality');
         } else if (stepId === 'wizard-step-putt') {
             AppState.currentShotData.puttControl = val;
-            // Default outcome for putter is Green unless Fringe is toggled
             if (!AppState.currentShotData.outcome) AppState.currentShotData.outcome = 'Green';
             showWizardStep('wizard-step-strike', 'Strike Quality');
         } else if (stepId === 'wizard-step-strike') {
@@ -1266,11 +1328,13 @@ function showWizardStep(stepId, title) {
         // If it's the club step, ensure bag buttons are sync'd
         if (stepId === 'wizard-step-club') renderBagButtons();
 
-        // Restore active choices if editing or navigating back
+        // Restore active choices
         step.querySelectorAll('.btn-grid').forEach(b => {
             const val = b.getAttribute('data-val');
             if (stepId === 'wizard-step-club' && AppState.currentShotData.club === val) b.classList.add('active-choice');
             if (stepId === 'wizard-step-trajectory' && AppState.currentShotData.trajectory === val) b.classList.add('active-choice');
+            if (stepId === 'wizard-step-startline' && AppState.currentShotData.startLine === val) b.classList.add('active-choice');
+            if (stepId === 'wizard-step-shape' && AppState.currentShotData.shape === val) b.classList.add('active-choice');
             if (stepId === 'wizard-step-outcome' && AppState.currentShotData.outcome === val) b.classList.add('active-choice');
             if (stepId === 'wizard-step-putt' && AppState.currentShotData.puttControl === val) b.classList.add('active-choice');
             if (stepId === 'wizard-step-strike' && AppState.currentShotData.strikeQuality === val) b.classList.add('active-choice');
@@ -1295,6 +1359,8 @@ function showWizardStep(stepId, title) {
         const titles = {
             'wizard-step-club': `Shot ${AppState.currentShotData.shotNumber}`,
             'wizard-step-trajectory': 'Trajectory',
+            'wizard-step-startline': 'Start Line',
+            'wizard-step-shape': 'Shot Shape',
             'wizard-step-outcome': 'Outcome',
             'wizard-step-putt': 'Putts',
             'wizard-step-strike': 'Strike',
