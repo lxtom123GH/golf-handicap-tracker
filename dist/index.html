@@ -12,8 +12,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-DDooxHXe.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DZUgfuSx.css">
+  <script type="module" crossorigin src="/assets/index-DYrHm2ra.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BNqDkWbZ.css">
 </head>
 
 <body>
@@ -853,6 +853,16 @@
                 <!-- dots injected by JS -->
             </div>
 
+            <!-- On-Course Sub-tabs (Hub vs Leaderboard) -->
+            <div id="oc-sub-nav" class="hidden"
+                style="display:flex; justify-content:center; border-bottom:1px solid #e2e8f0; margin-bottom:15px; background:white;">
+                <button type="button" class="oc-sub-btn active" data-sub="hub"
+                    style="flex:1; padding:12px; border:none; background:none; font-weight:700; color:var(--primary-color); border-bottom:3px solid var(--primary-color); cursor:pointer;">Live
+                    Round</button>
+                <button type="button" class="oc-sub-btn" data-sub="leaderboard"
+                    style="flex:1; padding:12px; border:none; background:none; font-weight:700; color:#64748b; cursor:pointer;">Leaderboard</button>
+            </div>
+
             <!-- Setup Screen -->
             <div id="oncourse-setup" class="card">
                 <h2 style="margin-bottom:20px;">⛳ Start New Round</h2>
@@ -1139,6 +1149,26 @@
                             <button type="button" id="btn-oc-finish" class="btn-text"
                                 style="color: #ef4444; font-weight:bold;">End Round / Save Options</button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- On-Course Leaderboard View -->
+                <div id="oc-leaderboard" class="hidden" style="padding:0 15px;">
+                    <div class="card" style="padding:0; overflow:hidden;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                            <thead
+                                style="background:#f1f5f9; color:#475569; font-weight:700; text-transform:uppercase; font-size:0.75rem;">
+                                <tr>
+                                    <th style="padding:12px 8px; text-align:left;">Pos</th>
+                                    <th style="padding:12px 8px; text-align:left;">Player</th>
+                                    <th style="padding:12px 8px; text-align:center;">Thru</th>
+                                    <th style="padding:12px 8px; text-align:right;">Pts</th>
+                                </tr>
+                            </thead>
+                            <tbody id="oc-leaderboard-tbody">
+                                <!-- JS Injected -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

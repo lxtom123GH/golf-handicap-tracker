@@ -34,6 +34,8 @@ input,
 .rule-minus,
 .wakelock-toggle,
 .oc-toggle-btn,
+.oc-sub-btn,
+.mini-stat,
 .tab-btn {
     touch-action: manipulation;
     user-select: none;
@@ -926,4 +928,28 @@ body.active-wizard-mode #oncourse-wizard {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
+}
+
+/* Mini Stats Styles */
+.mini-stat.active-fwy {
+    background-color: #dcfce7 !important;
+    border-color: #22c55e !important;
+    color: #166534 !important;
+}
+
+.mini-stat.active-gir {
+    background-color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+    color: #1e40af !important;
+}
+
+.mini-stat.active-miss {
+    background-color: #fee2e2 !important;
+    border-color: #ef4444 !important;
+    color: #991b1b !important;
+}
+
+.oc-sub-btn.active {
+    color: var(--primary-color) !important;
+    border-bottom: 3px solid var(--primary-color) !important;
 }

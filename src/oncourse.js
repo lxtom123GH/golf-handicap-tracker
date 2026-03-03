@@ -21,10 +21,10 @@ export function initOnCourse() {
     bindStartRound();
     bindGlobalRoundActions();
     bindReviewModal();
-    bindBagSettings();
     bindPenaltyModal();
     bindReviewActions();
     bindAdvancedTools();
+    bindOcSubNav();
 
     // Default init
     if (typeof updateModeVisibility === 'function') updateModeVisibility();
@@ -208,6 +208,14 @@ function bindStartRound() {
             document.body.classList.add('round-active');
             document.getElementById('oncourse-setup').classList.add('hidden');
             document.getElementById('oncourse-hub').classList.remove('hidden');
+            
+            // Show new sub-nav and progress bar
+            const subNav = document.getElementById('oc-sub-nav');
+            if (subNav) subNav.classList.remove('hidden');
+            const progress = document.getElementById('oc-progress-bar');
+            if (progress) progress.classList.remove('hidden');
+            const exitBar = document.getElementById('oc-exit-bar');
+            if (exitBar) exitBar.classList.remove('hidden');
 
             loadHole();
             bindHoleNav(); // Re-bind on start
@@ -279,6 +287,8 @@ export function endRoundCleanup() {
     if (progress) progress.classList.add('hidden');
     const exitBar = document.getElementById('oc-exit-bar');
     if (exitBar) exitBar.classList.add('hidden');
+    const subNav = document.getElementById('oc-sub-nav');
+    if (subNav) subNav.classList.add('hidden');
 
     AppState.liveRoundGroups = [];
     AppState.currentHole = 1;
@@ -337,133 +347,88 @@ export function loadHole() {
     if (!scoresContainer) return;
     scoresContainer.innerHTML = '';
 
+    // MAP MULTIPLE PLAYERS INTO SCORING GRID
     AppState.liveRoundGroups.forEach((p, index) => {
         const pDiv = document.createElement('div');
-        pDiv.style.cssText = 'margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:12px;';
+        pDiv.style.cssText = 'margin-bottom:12px; background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:10px;';
 
-        const header = document.createElement('h3');
-        header.style.cssText = 'margin-top:0; margin-bottom:10px; font-size:1.3rem;';
-        header.textContent = p.name;
-        pDiv.appendChild(header);
+        const nameRow = document.createElement('div');
+        nameRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
 
-        const simpleStatsDiv = document.createElement('div');
-        simpleStatsDiv.className = 'mobile-grid three-cols';
-        simpleStatsDiv.style.marginBottom = '15px';
-
-        if (parForHole !== 3) {
-            const btnFwy = document.createElement('button');
-            btnFwy.className = "btn-grid";
-            btnFwy.innerHTML = 'Fwy<br><span style="font-size:1.5rem">' + (p.simpleStats[AppState.currentHole]?.fwy === true ? '✅' : (p.simpleStats[AppState.currentHole]?.fwy === false ? '❌' : '🤷')) + '</span>';
-            if (p.simpleStats[AppState.currentHole]?.fwy === true) btnFwy.classList.add('btn-good');
-            else if (p.simpleStats[AppState.currentHole]?.fwy === false) btnFwy.classList.add('btn-bad');
-
-            btnFwy.addEventListener('click', () => {
-                if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-                p.simpleStats[AppState.currentHole].fwy = !p.simpleStats[AppState.currentHole].fwy;
-                loadHole();
-            });
-            simpleStatsDiv.appendChild(btnFwy);
-        } else {
-            simpleStatsDiv.appendChild(document.createElement('div'));
+        // Calculate cumulative score (gross)
+        let totalSoFar = 0;
+        for (let h = 1; h < AppState.currentHole; h++) {
+            totalSoFar += (p.scores[h] || 0);
         }
+        const holeScore = p.scores[AppState.currentHole] || 0;
 
-        const btnGIR = document.createElement('button');
-        btnGIR.className = "btn-grid";
-        btnGIR.innerHTML = 'GIR<br><span style="font-size:1.5rem">' + (p.simpleStats[AppState.currentHole]?.gir === true ? '✅' : (p.simpleStats[AppState.currentHole]?.gir === false ? '❌' : '🤷')) + '</span>';
-        if (p.simpleStats[AppState.currentHole]?.gir === true) btnGIR.classList.add('btn-good');
-        else if (p.simpleStats[AppState.currentHole]?.gir === false) btnGIR.classList.add('btn-bad');
-
-        btnGIR.addEventListener('click', () => {
-            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            p.simpleStats[AppState.currentHole].gir = !p.simpleStats[AppState.currentHole].gir;
-            loadHole();
-        });
-        simpleStatsDiv.appendChild(btnGIR);
-
-        const puttsVal = p.simpleStats[AppState.currentHole]?.putts || 0;
-        const puttsWrapper = document.createElement('div');
-        puttsWrapper.style.cssText = 'display:flex; flex-direction:column; align-items:center;';
-        puttsWrapper.innerHTML = `
-             <div style="font-size:0.9rem; font-weight:bold; margin-bottom:5px; color:#64748b;">Putts</div>
-             <div style="display:flex; align-items:center;">
-                 <button class="btn-minus-putt" style="width:34px; height:34px; border-radius:50%; border:1px solid #cbd5e1; background:white;">-</button>
-                 <span style="width:30px; text-align:center; font-weight:bold; font-size:1.2rem;">${puttsVal}</span>
-                 <button class="btn-plus-putt" style="width:34px; height:34px; border-radius:50%; border:1px solid #cbd5e1; background:white;">+</button>
-             </div>
+        nameRow.innerHTML = `
+            <span style="font-weight:700; font-size:1.1rem; color:#1e293b;">${p.name}</span>
+            <span style="font-size:0.85rem; color:#64748b; font-weight:600;">Total: <span style="color:var(--primary-color); font-size:1rem;">${totalSoFar + holeScore}</span></span>
         `;
-        puttsWrapper.querySelector('.btn-plus-putt').addEventListener('click', () => {
-            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            p.simpleStats[AppState.currentHole].putts = (p.simpleStats[AppState.currentHole].putts || 0) + 1;
-            loadHole();
-        });
-        puttsWrapper.querySelector('.btn-minus-putt').addEventListener('click', () => {
-            if (p.simpleStats[AppState.currentHole]?.putts > 0) {
-                p.simpleStats[AppState.currentHole].putts--;
-                loadHole();
-            }
-        });
-        simpleStatsDiv.appendChild(puttsWrapper);
-        pDiv.appendChild(simpleStatsDiv);
+        pDiv.appendChild(nameRow);
 
-        const currentScore = p.scores[AppState.currentHole] || 0;
-        const scoreCtrl = document.createElement('div');
-        scoreCtrl.style.cssText = 'display:flex; align-items:center; background:white; border-radius:12px; border:2px solid #e2e8f0; padding:10px;';
-        scoreCtrl.innerHTML = `
-             <div style="font-weight:bold; font-size:1.1rem; flex:1;">Total Strokes</div>
-             <button class="btn-score-minus" style="width:40px; height:40px; border-radius:50%; border:1px solid #cbd5e1; background:white;">-</button>
-             <span style="width:40px; text-align:center; font-size:1.5rem; font-weight:bold; margin:0 10px; color:var(--primary-color);">${currentScore}</span>
-             <button class="btn-score-plus" style="width:40px; height:40px; border-radius:50%; background:var(--primary-color); color:white; border:none;">+</button>
+        const controlRow = document.createElement('div');
+        controlRow.style.cssText = 'display:flex; align-items:center; gap:15px;';
+        controlRow.innerHTML = `
+            <div style="flex:1; font-size:0.9rem; font-weight:600; color:#475569;">Hole ${AppState.currentHole} Strokes</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="btn-grid-minus" style="width:44px; height:44px; border-radius:12px; border:2px solid #cbd5e1; background:white; font-size:1.4rem; font-weight:bold;">−</button>
+                <span style="min-width:30px; text-align:center; font-size:1.8rem; font-weight:800; color:#1e293b;">${holeScore}</span>
+                <button class="btn-grid-plus" style="width:44px; height:44px; border-radius:12px; background:var(--primary-color); color:white; border:none; font-size:1.4rem; font-weight:bold;">+</button>
+            </div>
         `;
-        scoreCtrl.querySelector('.btn-score-plus').addEventListener('click', () => {
+
+        controlRow.querySelector('.btn-grid-plus').onclick = () => {
             p.scores[AppState.currentHole] = (p.scores[AppState.currentHole] || 0) + 1;
             loadHole();
-        });
-        scoreCtrl.querySelector('.btn-score-minus').addEventListener('click', () => {
+            updateLiveLeaderboard();
+        };
+        controlRow.querySelector('.btn-grid-minus').onclick = () => {
             if (p.scores[AppState.currentHole] > 0) {
                 p.scores[AppState.currentHole]--;
                 loadHole();
+                updateLiveLeaderboard();
             }
-        });
-        pDiv.appendChild(scoreCtrl);
+        };
 
-        // Action 2: Linked Competition Rule Inputs
-        if (AppState.currentLiveCompId && AppState.currentLiveCompRules && AppState.currentLiveCompRules.length > 0) {
-            const compRulesDiv = document.createElement('div');
-            compRulesDiv.style.cssText = 'margin-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px solid #e2e8f0; padding-top:10px;';
+        pDiv.appendChild(controlRow);
 
-            AppState.currentLiveCompRules.forEach(rule => {
-                const ruleWrapper = document.createElement('div');
-                ruleWrapper.style.cssText = 'display:flex; flex-direction:column; align-items:center; background:#fff; padding:10px; border-radius:10px; border:1px solid #e2e8f0;';
+        // Optional Simple Stats Row (Small icons for GIR/Fwy)
+        const statsRow = document.createElement('div');
+        statsRow.style.cssText = 'display:flex; gap:10px; margin-top:5px;';
 
-                const ruleVal = (p.compStats[AppState.currentHole] && p.compStats[AppState.currentHole][rule.name]) || 0;
+        const fwySet = p.simpleStats[AppState.currentHole]?.fwy;
+        const girSet = p.simpleStats[AppState.currentHole]?.gir;
+        const putts = p.simpleStats[AppState.currentHole]?.putts || 0;
 
-                ruleWrapper.innerHTML = `
-                    <div style="font-size:0.75rem; font-weight:bold; margin-bottom:6px; color:#64748b; text-align:center; overflow:hidden; text-overflow:ellipsis; width:100%">${rule.name}</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <button class="rule-minus" style="width:28px; height:28px; border-radius:50%; border:1px solid #cbd5e1; background:white; font-size:1.2rem; line-height:1;">-</button>
-                        <span style="font-weight:bold; font-size:1.2rem; min-width:20px; text-align:center;">${ruleVal}</span>
-                        <button class="rule-plus" style="width:28px; height:28px; border-radius:50%; border:1px solid #cbd5e1; background:white; font-size:1.2rem; line-height:1;">+</button>
-                    </div>
-                `;
+        statsRow.innerHTML = `
+            <button class="mini-stat ${fwySet === true ? 'active-fwy' : (fwySet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🌿 FW</button>
+            <button class="mini-stat ${girSet === true ? 'active-gir' : (girSet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🟢 GIR</button>
+            <button class="mini-stat" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">⛳ ${putts} P</button>
+        `;
 
-                ruleWrapper.querySelector('.rule-plus').addEventListener('click', () => {
-                    if (!p.compStats[AppState.currentHole]) p.compStats[AppState.currentHole] = {};
-                    p.compStats[AppState.currentHole][rule.name] = (p.compStats[AppState.currentHole][rule.name] || 0) + 1;
-                    loadHole();
-                });
-                ruleWrapper.querySelector('.rule-minus').addEventListener('click', () => {
-                    if (p.compStats[AppState.currentHole] && p.compStats[AppState.currentHole][rule.name] > 0) {
-                        p.compStats[AppState.currentHole][rule.name]--;
-                        loadHole();
-                    }
-                });
-                compRulesDiv.appendChild(ruleWrapper);
-            });
-            pDiv.appendChild(compRulesDiv);
-        }
+        statsRow.children[0].onclick = () => {
+            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+            p.simpleStats[AppState.currentHole].fwy = !p.simpleStats[AppState.currentHole].fwy;
+            loadHole();
+        };
+        statsRow.children[1].onclick = () => {
+            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+            p.simpleStats[AppState.currentHole].gir = !p.simpleStats[AppState.currentHole].gir;
+            loadHole();
+        };
+        statsRow.children[2].onclick = () => {
+            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+            p.simpleStats[AppState.currentHole].putts = ((p.simpleStats[AppState.currentHole].putts || 0) + 1) % 5;
+            loadHole();
+        };
 
+        pDiv.appendChild(statsRow);
         scoresContainer.appendChild(pDiv);
     });
+
+    updateLiveLeaderboard();
 }
 
 function openFinishModal() {
@@ -961,38 +926,45 @@ async function saveRoundToDatabase() {
 
             await addDoc(collection(db, "whs_rounds"), payload);
 
-            // If a competition is linked, save a comp_rounds document too
+            // If a competition is linked, save to results collection
             if (AppState.currentLiveCompId) {
-                let totalPoints = 0;
+                let totalRulePoints = 0;
                 const ruleCounts = {};
-                // Initialize rule counts
                 AppState.currentLiveCompRules.forEach(r => ruleCounts[r.name] = 0);
 
-                // Aggregate from compStats (per hole)
                 for (const h in p.compStats) {
                     for (const ruleName in p.compStats[h]) {
                         const count = p.compStats[h][ruleName];
                         ruleCounts[ruleName] += count;
                         const ruleDef = AppState.currentLiveCompRules.find(r => r.name === ruleName);
-                        if (ruleDef) totalPoints += (count * ruleDef.pts);
+                        if (ruleDef) totalRulePoints += (count * ruleDef.pts);
                     }
                 }
 
-                // Add starting points if enabled in competition configuration
-                const selectedCompOpt = UI.ocLinkComp ? UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex] : null;
-                // Note: We don't have the full comp startingPoints object here easily without a fetch, 
-                // but we can assume normal fixed points if we wanted to be perfect. 
-                // For now, we manually save the live tracked rule points.
+                // Competition Results Sync logic (Task 2)
+                await addDoc(collection(db, "competition_results"), {
+                    compId: AppState.currentLiveCompId,
+                    uid: p.uid,
+                    playerName: p.name,
+                    stablefordPoints: totalStableford,
+                    netScore: totalGross, // Or Adjusted Gross depending on comp rules
+                    rulePoints: totalRulePoints,
+                    totalCompScore: totalStableford + totalRulePoints,
+                    date: serverTimestamp(),
+                    ruleCounts: ruleCounts,
+                    isLiveSynced: true
+                });
 
+                // Maintain legacy comp_rounds for backward compat if needed, 
+                // but main logic now targets competition_results as requested.
                 await addDoc(collection(db, "comp_rounds"), {
                     compId: AppState.currentLiveCompId,
                     uid: p.uid,
                     playerName: p.name,
-                    totalPoints: totalPoints,
+                    totalPoints: totalStableford + totalRulePoints,
                     score: totalGross,
                     date: serverTimestamp(),
-                    ruleCounts: ruleCounts,
-                    createdAt: serverTimestamp()
+                    ruleCounts: ruleCounts
                 });
             }
         }
@@ -1590,4 +1562,70 @@ export function updateModeVisibility() {
             if (btnTrack) btnTrack.classList.remove('hidden');
         }
     }
+}
+/**
+ * Task 3: Live Leaderboard Logic
+ * Calculates Stableford points across all players in current session
+ */
+function updateLiveLeaderboard() {
+    const tbody = document.getElementById('oc-leaderboard-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const courseName = AppState.currentRoundCourseName;
+    const teeName = UI.ocTeeSelect ? UI.ocTeeSelect.value : null;
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+
+    const standings = AppState.liveRoundGroups.map(p => {
+        let pts = 0;
+        let thru = 0;
+        for (let h = 1; h <= AppState.currentRoundHoles; h++) {
+            const gross = p.scores[h];
+            if (gross > 0) {
+                thru = h;
+                const hIdx = h - 1;
+                const hPar = AppState.currentCoursePars[hIdx] || 4;
+                const hSI = teeData.strokeIndex?.[hIdx] || h;
+                pts += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
+            }
+        }
+        return { name: p.name, points: pts, thru: thru };
+    });
+
+    // Sort by Stableford points desc
+    standings.sort((a, b) => b.points - a.points);
+
+    standings.forEach((s, i) => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #f1f5f9';
+        tr.innerHTML = `
+            <td style="padding:12px 8px; font-weight:700; color:#64748b;">${i + 1}</td>
+            <td style="padding:12px 8px; font-weight:600;">${s.name}</td>
+            <td style="padding:12px 8px; text-align:center; color:#64748b;">${s.thru}</td>
+            <td style="padding:12px 8px; text-align:right; font-weight:800; color:var(--primary-color);">${s.points}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function bindOcSubNav() {
+    const btns = document.querySelectorAll('.oc-sub-btn');
+    btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-sub');
+            btns.forEach(b => {
+                b.classList.remove('active');
+                b.style.color = '#64748b';
+                b.style.borderBottom = 'none';
+            });
+            btn.classList.add('active');
+            btn.style.color = 'var(--primary-color)';
+            btn.style.borderBottom = '3px solid var(--primary-color)';
+
+            document.getElementById('oc-simple-stats').classList.toggle('hidden', target !== 'hub');
+            document.getElementById('oc-leaderboard').classList.toggle('hidden', target !== 'leaderboard');
+
+            if (target === 'leaderboard') updateLiveLeaderboard();
+        });
+    });
 }
