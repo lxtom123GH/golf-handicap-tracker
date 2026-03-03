@@ -81,82 +81,92 @@ export async function unfollowPlayer(targetUid) {
 }
 
 async function loadFollowing() {
-    const listEl = document.getElementById('feed-following-list');
-    if (!listEl) return;
-    const myUid = AppState.currentUser.uid;
-    const snap = await getDocs(collection(db, 'users', myUid, 'following'));
-    listEl.innerHTML = '';
+    try {
+        const listEl = document.getElementById('feed-following-list');
+        if (!listEl) return;
+        const myUid = AppState.currentUser?.uid;
+        if (!myUid) return;
+        const snap = await getDocs(collection(db, 'users', myUid, 'following'));
+        if (listEl) listEl.innerHTML = '';
 
-    if (snap.empty) {
-        listEl.innerHTML = '<li style="color:#94a3b8;">Not following anyone yet.</li>';
-        return;
-    }
+        if (snap.empty) {
+            if (listEl) listEl.innerHTML = '<li style="color:#94a3b8;">Not following anyone yet.</li>';
+            return;
+        }
 
-    for (const d of snap.docs) {
-        const uid = d.id;
-        const userSnap = await getDoc(doc(db, 'users', uid));
-        const name = userSnap.exists() ? (userSnap.data().displayName || uid) : uid;
-        const li = document.createElement('li');
-        li.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;';
-        li.innerHTML = `<span>${name}</span><button data-uid="${uid}" class="btn btn-secondary btn-sm unfollow-btn" style="width:auto;margin:0;font-size:0.78rem;">Unfollow</button>`;
-        li.querySelector('.unfollow-btn').addEventListener('click', (e) => unfollowPlayer(e.target.dataset.uid));
-        listEl.appendChild(li);
+        for (const d of snap.docs) {
+            const uid = d.id;
+            const userSnap = await getDoc(doc(db, 'users', uid));
+            const name = userSnap.exists() ? (userSnap.data().displayName || uid) : uid;
+            const li = document.createElement('li');
+            li.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;';
+            li.innerHTML = `<span>${name}</span><button data-uid="${uid}" class="btn btn-secondary btn-sm unfollow-btn" style="width:auto;margin:0;font-size:0.78rem;">Unfollow</button>`;
+            li.querySelector('.unfollow-btn').addEventListener('click', (e) => unfollowPlayer(e.target.dataset.uid));
+            if (listEl) listEl.appendChild(li);
+        }
+    } catch (err) {
+        console.error("[Social] Failed to load following:", err);
     }
 }
 
 async function loadFeed() {
-    const feedEl = document.getElementById('feed-activity-list');
-    if (!feedEl) return;
-    const myUid = AppState.currentUser.uid;
-    feedEl.innerHTML = '<p style="color:#94a3b8;">Loading...</p>';
+    try {
+        const feedEl = document.getElementById('feed-activity-list');
+        if (!feedEl) return;
+        const myUid = AppState.currentUser?.uid;
+        if (!myUid) return;
+        if (feedEl) feedEl.innerHTML = '<p style="color:#94a3b8;">Loading...</p>';
 
-    const followingSnap = await getDocs(collection(db, 'users', myUid, 'following'));
-    if (followingSnap.empty) {
-        feedEl.innerHTML = '<p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>';
-        return;
-    }
+        const followingSnap = await getDocs(collection(db, 'users', myUid, 'following'));
+        if (followingSnap.empty) {
+            if (feedEl) feedEl.innerHTML = '<p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>';
+            return;
+        }
 
-    const followedUids = followingSnap.docs.map(d => d.id);
-    // Firestore 'in' queries support max 30 UIDs
-    const uidsChunk = followedUids.slice(0, 10);
+        const followedUids = followingSnap.docs.map(d => d.id);
+        const uidsChunk = followedUids.slice(0, 10);
 
-    const roundsSnap = await getDocs(
-        query(collection(db, 'whs_rounds'), where('uid', 'in', uidsChunk), orderBy('date', 'desc'), limit(20))
-    );
+        const roundsSnap = await getDocs(
+            query(collection(db, 'whs_rounds'), where('uid', 'in', uidsChunk), orderBy('date', 'desc'), limit(20))
+        );
 
-    if (roundsSnap.empty) {
-        feedEl.innerHTML = '<p style="color:#94a3b8;">No recent rounds from people you follow.</p>';
-        return;
-    }
+        if (roundsSnap.empty) {
+            if (feedEl) feedEl.innerHTML = '<p style="color:#94a3b8;">No recent rounds from people you follow.</p>';
+            return;
+        }
 
-    // Get display names
-    const nameCache = {};
-    for (const uid of uidsChunk) {
-        const u = await getDoc(doc(db, 'users', uid));
-        nameCache[uid] = u.exists() ? (u.data().displayName || uid) : uid;
-    }
+        const nameCache = {};
+        for (const uid of uidsChunk) {
+            const u = await getDoc(doc(db, 'users', uid));
+            nameCache[uid] = u.exists() ? (u.data().displayName || uid) : uid;
+        }
 
-    feedEl.innerHTML = '';
-    roundsSnap.forEach(d => {
-        const r = d.data();
-        const diff = ((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1);
-        const date = r.date?.toDate ? r.date.toDate().toLocaleDateString('en-AU') : new Date(r.date).toLocaleDateString('en-AU');
-        const card = document.createElement('div');
-        card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;';
-        card.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3867d6,#4b7bec);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
-                    ${(nameCache[r.uid] || '?')[0].toUpperCase()}
+        if (feedEl) feedEl.innerHTML = '';
+        roundsSnap.forEach(d => {
+            const r = d.data();
+            const diff = ((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1);
+            const date = r.date?.toDate ? r.date.toDate().toLocaleDateString('en-AU') : new Date(r.date).toLocaleDateString('en-AU');
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;';
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3867d6,#4b7bec);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
+                        ${(nameCache[r.uid] || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <strong>${nameCache[r.uid] || 'Unknown'}</strong>
+                        <span style="color:#94a3b8;font-size:0.8rem;margin-left:8px;">${date}</span>
+                    </div>
                 </div>
-                <div>
-                    <strong>${nameCache[r.uid] || 'Unknown'}</strong>
-                    <span style="color:#94a3b8;font-size:0.8rem;margin-left:8px;">${date}</span>
+                <div style="font-size:0.88rem;color:#475569;">
+                    ⛳ <strong>${r.course}</strong> &nbsp;·&nbsp; Score: <strong>${r.adjustedGross}</strong> &nbsp;·&nbsp; Diff: <strong>${diff}</strong>
                 </div>
-            </div>
-            <div style="font-size:0.88rem;color:#475569;">
-                ⛳ <strong>${r.course}</strong> &nbsp;·&nbsp; Score: <strong>${r.adjustedGross}</strong> &nbsp;·&nbsp; Diff: <strong>${diff}</strong>
-            </div>
-        `;
-        feedEl.appendChild(card);
-    });
+            `;
+            if (feedEl) feedEl.appendChild(card);
+        });
+    } catch (err) {
+        console.error("[Social] Failed to load feed:", err);
+        const feedEl = document.getElementById('feed-activity-list');
+        if (feedEl) feedEl.innerHTML = '<p style="color:#ef4444;">Error loading activity feed. Please try again later.</p>';
+    }
 }

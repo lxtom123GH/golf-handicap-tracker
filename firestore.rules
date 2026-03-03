@@ -114,5 +114,17 @@ service cloud.firestore {
       allow read: if isAuthenticated() || request.auth == null; 
       allow write: if isAdmin();
     }
+
+    match /tempo/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /feed/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /users/{userId}/following/{followedId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
   }
 }

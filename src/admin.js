@@ -11,7 +11,7 @@ import { UI } from './ui.js';
 
 export function bindAdminTools() {
     const tabAdmin = document.getElementById('tab-admin');
-    if (tabAdmin) {
+    if (tabAdmin && tabAdmin.innerHTML === '') {
         tabAdmin.innerHTML = `
             <header class="header" style="background: linear-gradient(135deg, #d35400 0%, #e67e22 100%);">
                 <div class="header-content">
@@ -89,10 +89,10 @@ export function bindAdminTools() {
     tabBtnAdmin.addEventListener('click', async () => {
         if (!window.currentUserIsAdmin) return;
 
-        UI.adminUsersList.innerHTML = 'Loading...';
+        if (UI.adminUsersList) UI.adminUsersList.innerHTML = 'Loading...';
         try {
             const snap = await getDocs(collection(db, "users"));
-            UI.adminUsersList.innerHTML = '';
+            if (UI.adminUsersList) UI.adminUsersList.innerHTML = '';
             snap.forEach(d => {
                 const data = d.data();
                 const tr = document.createElement('tr');
@@ -113,7 +113,7 @@ export function bindAdminTools() {
                         </label>
                     </td>
                 `;
-                UI.adminUsersList.appendChild(tr);
+                if (UI.adminUsersList) UI.adminUsersList.appendChild(tr);
             });
         } catch (e) { console.error("Admin error:", e); }
 
@@ -138,7 +138,7 @@ async function loadPreapprovedEmails() {
     UI.adminEmailsList.innerHTML = 'Loading...';
     try {
         const snap = await getDocs(collection(db, "preapproved_emails"));
-        UI.adminEmailsList.innerHTML = '';
+        if (UI.adminEmailsList) UI.adminEmailsList.innerHTML = '';
         snap.forEach(d => {
             const li = document.createElement('li');
             li.style.display = 'flex';
@@ -149,7 +149,7 @@ async function loadPreapprovedEmails() {
                 <span>${d.id}</span>
                 <button class="btn btn-danger btn-sm" onclick="removePreapprovedEmail('${d.id}')">Remove</button>
             `;
-            UI.adminEmailsList.appendChild(li);
+            if (UI.adminEmailsList) UI.adminEmailsList.appendChild(li);
         });
     } catch (e) { }
 }
@@ -197,17 +197,17 @@ export function bindAdminInvite() {
     const importSelect = document.getElementById('import-player-select');
     if (importSelect) {
         getDocs(collection(db, 'users')).then(snap => {
-            importSelect.innerHTML = ''; // Clear first
+            if (importSelect) importSelect.innerHTML = ''; // Clear first
             snap.forEach(d => {
                 const data = d.data();
                 if (data.isApproved) {
                     const opt = document.createElement('option');
                     opt.value = d.id;
                     opt.textContent = data.displayName || data.email;
-                    importSelect.appendChild(opt);
+                    if (importSelect) importSelect.appendChild(opt);
                 }
             });
-        });
+        }).catch(e => console.error("Error populating import select:", e));
     }
 
     // --- Invite Form ---
@@ -339,8 +339,10 @@ export function bindAdminInvite() {
 
                 let totalImported = 0;
                 let logMsg = "Import log:\n";
-                excelMsgEl.textContent = 'Processing workbook... Please wait...';
-                excelMsgEl.style.color = '#64748b';
+                if (excelMsgEl) {
+                    excelMsgEl.textContent = 'Processing workbook... Please wait...';
+                    excelMsgEl.style.color = '#64748b';
+                }
 
                 for (const sheetName of workbook.SheetNames) {
                     if (sheetName.toLowerCase() === 'legend') continue;
@@ -400,11 +402,15 @@ export function bindAdminInvite() {
                     logMsg += `   -> Imported ${tabImported} rounds (${tabErrors} errors).\n`;
                 }
                 logMsg += `\n🎉 Finished! Total rounds imported: ${totalImported}`;
-                excelMsgEl.textContent = logMsg;
-                excelMsgEl.style.color = '#10b981';
+                if (excelMsgEl) {
+                    excelMsgEl.textContent = logMsg;
+                    excelMsgEl.style.color = '#10b981';
+                }
             } catch (err) {
-                excelMsgEl.textContent = '❌ Failed to process workbook. Ensure SheetJS loaded correctly.';
-                excelMsgEl.style.color = '#ef4444';
+                if (excelMsgEl) {
+                    excelMsgEl.textContent = '❌ Failed to process workbook. Ensure SheetJS loaded correctly.';
+                    excelMsgEl.style.color = '#ef4444';
+                }
             }
         });
     }

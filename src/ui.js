@@ -347,7 +347,7 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
                     ${(uidMatches || isAdmin) ? `<button class="btn btn-danger btn-sm del-round-btn" data-id="${round.id}">X</button>` : ''}
                 </td>
             `;
-            UI.historyTbody.appendChild(tr);
+            if (UI.historyTbody) UI.historyTbody.appendChild(tr);
         });
     }
 }
@@ -367,19 +367,16 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
         btnRemove.className = 'btn-text';
         btnRemove.style.cssText = 'color:#ef4444; padding:0;';
         btnRemove.addEventListener('click', () => {
-            // This is a bit tricky since we're decoupling, but for now we'll allow spliced state updates
             AppState.liveRoundGroups.splice(index, 1);
-            // Trigger state change manually since splice doesn't trigger Proxy 'set'
             AppState.liveRoundGroups = [...AppState.liveRoundGroups];
         });
 
         div.appendChild(nameSpan);
         div.appendChild(btnRemove);
-        UI.ocAddedPlayersList.appendChild(div);
+        if (UI.ocAddedPlayersList) UI.ocAddedPlayersList.appendChild(div);
     });
 
-    // Auto-scroll to the bottom of the list when players are added to avoid them being hidden on mobile
-    if (groups.length > 0) {
+    if (groups.length > 0 && UI.ocAddedPlayersList) {
         setTimeout(() => {
             UI.ocAddedPlayersList.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 50);
