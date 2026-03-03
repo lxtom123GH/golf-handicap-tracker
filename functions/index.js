@@ -16,7 +16,7 @@ exports.askAiCoach = onCall({ secrets: ["GEMINI_API_KEY"] }, async (request) => 
     try {
         const apiKey = process.env.GEMINI_API_KEY;
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const result = await model.generateContent(prompt);
         return { answer: result.response.text() };
     } catch (e) {
@@ -37,7 +37,7 @@ exports.processRulesQuery = onCall({ secrets: ["GEMINI_API_KEY"] }, async (reque
         const apiKey = process.env.GEMINI_API_KEY;
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             systemInstruction: "You are an expert, certified USGA and R&A Rules of Golf official. Answer the user's golf rules question concisely. Cite the specific rule number. If the question is not about the rules of golf, reply strictly with: 'I can only assist with official USGA/R&A Rules of Golf inquiries.'"
         });
 
