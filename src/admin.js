@@ -11,7 +11,8 @@ import { UI } from './ui.js';
 
 export function bindAdminTools() {
     const tabAdmin = document.getElementById('tab-admin');
-    if (tabAdmin && tabAdmin.innerHTML === '') {
+    if (tabAdmin && (tabAdmin.innerHTML === '' || tabAdmin.innerHTML.includes('DYNAMIC'))) {
+        console.log("[Admin] Injecting Admin structure...");
         tabAdmin.innerHTML = `
             <header class="header" style="background: linear-gradient(135deg, #d35400 0%, #e67e22 100%);">
                 <div class="header-content">
@@ -89,10 +90,11 @@ export function bindAdminTools() {
     tabBtnAdmin.addEventListener('click', async () => {
         if (!window.currentUserIsAdmin) return;
 
-        if (UI.adminUsersList) UI.adminUsersList.innerHTML = 'Loading...';
+        const usersList = document.getElementById('admin-users-list');
+        if (usersList) usersList.innerHTML = 'Loading...';
         try {
             const snap = await getDocs(collection(db, "users"));
-            if (UI.adminUsersList) UI.adminUsersList.innerHTML = '';
+            if (usersList) usersList.innerHTML = '';
             snap.forEach(d => {
                 const data = d.data();
                 const tr = document.createElement('tr');
@@ -113,43 +115,44 @@ export function bindAdminTools() {
                         </label>
                     </td>
                 `;
-                if (UI.adminUsersList) UI.adminUsersList.appendChild(tr);
+                if (usersList) usersList.appendChild(tr);
             });
         } catch (e) { console.error("Admin error:", e); }
 
         loadPreapprovedEmails();
     });
 
-    if (UI.adminPreapproveForm) {
-        UI.adminPreapproveForm.addEventListener('submit', async (e) => {
+    const preapproveForm = document.getElementById('admin-preapprove-form');
+    if (preapproveForm) {
+        preapproveForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!window.currentUserIsAdmin) return;
-            const em = UI.adminNewEmail.value.toLowerCase().trim();
+            const emInput = document.getElementById('admin-new-email');
+            const em = emInput ? emInput.value.toLowerCase().trim() : '';
             if (!em) return;
             await setDoc(doc(db, "preapproved_emails", em), { addedAt: new Date().toISOString() });
-            UI.adminNewEmail.value = '';
+            if (emInput) emInput.value = '';
             loadPreapprovedEmails();
         });
     }
 }
 
 async function loadPreapprovedEmails() {
-    if (!UI.adminEmailsList) return;
-    UI.adminEmailsList.innerHTML = 'Loading...';
+    const emailsList = document.getElementById('admin-emails-list');
+    if (!emailsList) return;
+    emailsList.innerHTML = 'Loading...';
     try {
         const snap = await getDocs(collection(db, "preapproved_emails"));
-        if (UI.adminEmailsList) UI.adminEmailsList.innerHTML = '';
+        if (emailsList) emailsList.innerHTML = '';
         snap.forEach(d => {
-            const li = document.createElement('li');
-            li.style.display = 'flex';
-            li.style.justifyContent = 'space-between';
-            li.style.padding = '8px';
-            li.style.borderBottom = '1px solid #e2e8f0';
-            li.innerHTML = `
-                <span>${d.id}</span>
-                <button class="btn btn-danger btn-sm" onclick="removePreapprovedEmail('${d.id}')">Remove</button>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 10px;">${d.id}</td>
+                <td style="padding: 10px; text-align: right;">
+                    <button class="btn btn-danger btn-sm" onclick="removePreapprovedEmail('${d.id}')">Remove</button>
+                </td>
             `;
-            if (UI.adminEmailsList) UI.adminEmailsList.appendChild(li);
+            emailsList.appendChild(tr);
         });
     } catch (e) { }
 }

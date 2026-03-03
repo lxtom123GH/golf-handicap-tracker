@@ -160,7 +160,8 @@ export function setupAuthUI(onAppReady) {
                             const coachBtn = document.getElementById('tab-btn-coach');
                             if (coachBtn) coachBtn.classList.remove('hidden');
                         }
-                        if (UI.tabBtnSettings) UI.tabBtnSettings.classList.remove('hidden');
+                        const settingsBtn = document.getElementById('tab-btn-settings');
+                        if (settingsBtn) settingsBtn.classList.remove('hidden');
 
                         // Show Feed tab for all approved users
                         const feedTabBtn = document.getElementById('tab-btn-feed');

@@ -548,10 +548,9 @@ body {
 
 .tab-content {
     display: none;
-    /* Block all flashes */
+    padding-bottom: 80px;
     animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     will-change: opacity, transform;
-    opacity: 0;
 }
 
 .tab-content.active {
