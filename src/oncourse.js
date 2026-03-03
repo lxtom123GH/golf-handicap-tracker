@@ -6,7 +6,7 @@ import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc, getDocs, writeBatch, deleteDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
-import { COURSE_DATA } from './course-data.js';
+import { COURSE_DATA, KEPERRA_GPS } from './course-data.js';
 
 import { initNotifications } from './notifications.js';
 import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
@@ -790,29 +790,50 @@ function updateGPSDistances(lat, lon) {
     const teeName = UI.ocTeeSelect.value;
     const teeData = COURSE_DATA[courseName]?.[teeName] || {};
 
-    // Example: Looking for coords in course data (Mock if missing)
-    const green = teeData.greens?.[holeIdx] || {
-        lat: lat + 0.002, // Mock 200m away north
-        lon: lon + 0.002,
-        frontOffset: -20,
-        backOffset: 20
-    };
+    // 1. Identify physical hole number (1-27)
+    let physicalHole = holeIdx + 1; // Default fallback
+    if (teeData.physicalHoles && teeData.physicalHoles[holeIdx]) {
+        physicalHole = teeData.physicalHoles[holeIdx];
+    }
 
-    const distMiddle = Math.round(getHaversineDistance(lat, lon, green.lat, green.lon));
+    // 2. Look up coordinates for that physical hole
+    const coords = KEPERRA_GPS[physicalHole];
 
-    if (UI.gpsMiddle) UI.gpsMiddle.textContent = distMiddle;
-    if (UI.gpsFront) UI.gpsFront.textContent = distMiddle + (green.frontOffset || -15);
-    if (UI.gpsBack) UI.gpsBack.textContent = distMiddle + (green.backOffset || 15);
+    if (coords && coords.length >= 6) {
+        const [cLat, cLon, fLat, fLon, bLat, bLon] = coords;
+
+        // 3. Calculate Haversine distance in meters
+        const distCenter = getDistance(lat, lon, cLat, cLon);
+        const distFront = getDistance(lat, lon, fLat, fLon);
+        const distBack = getDistance(lat, lon, bLat, bLon);
+
+        // 4. Update UI labels (meters)
+        if (UI.gpsMiddle) UI.gpsMiddle.textContent = `${Math.round(distCenter)}m`;
+        if (UI.gpsFront) UI.gpsFront.textContent = `${Math.round(distFront)}m`;
+        if (UI.gpsBack) UI.gpsBack.textContent = `${Math.round(distBack)}m`;
+    } else {
+        // Mock fallback if no coordinates found
+        if (UI.gpsMiddle) UI.gpsMiddle.textContent = "---m";
+        if (UI.gpsFront) UI.gpsFront.textContent = "---m";
+        if (UI.gpsBack) UI.gpsBack.textContent = "---m";
+    }
 }
 
-function getHaversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+/**
+ * Calculate distance between two points in meters using Haversine formula
+ */
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth radius in meters
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+    const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+        Math.cos(phi1) * Math.cos(phi2) *
+        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
     return R * c;
 }
 
