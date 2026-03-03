@@ -160,16 +160,24 @@ export function setupAuthUI(onAppReady) {
                         if (feedTabBtn) feedTabBtn.classList.remove('hidden');
                         // Roles and bootstrapping handled by individual modules
                         if (initializeAppCallback) initializeAppCallback();
+
+                        const cloak = document.getElementById('app-loading-cloak');
+                        if (cloak) cloak.classList.add('cloak-hidden');
                     } else {
                         // Blocked
                         UI.authOverlay.classList.add('hidden');
                         UI.mainApp.classList.add('hidden');
                         UI.authPending.classList.remove('hidden');
+                        // Hide cloak even on pending
+                        const cloak = document.getElementById('app-loading-cloak');
+                        if (cloak) cloak.classList.add('cloak-hidden');
                     }
                 } else {
                     UI.authOverlay.classList.add('hidden');
                     UI.mainApp.classList.add('hidden');
                     UI.authPending.classList.remove('hidden');
+                    const cloak = document.getElementById('app-loading-cloak');
+                    if (cloak) cloak.classList.add('cloak-hidden');
                 }
             } catch (e) {
                 console.error("Auth read explicitly failed (forcing bypass)", e);
@@ -179,6 +187,10 @@ export function setupAuthUI(onAppReady) {
                 UI.loggedInUserNameEl.textContent = user.displayName || user.email;
                 AppState.viewingPlayerId = user.uid;
                 window.currentUserIsAdmin = true;
+
+                const cloak = document.getElementById('app-loading-cloak');
+                if (cloak) cloak.classList.add('cloak-hidden');
+
                 if (initializeAppCallback) initializeAppCallback();
             }
         } else {
@@ -188,6 +200,9 @@ export function setupAuthUI(onAppReady) {
             UI.authOverlay.classList.remove('hidden');
             UI.mainApp.classList.add('hidden');
             UI.authPending.classList.add('hidden');
+
+            const cloak = document.getElementById('app-loading-cloak');
+            if (cloak) cloak.classList.add('cloak-hidden');
         }
     });
 

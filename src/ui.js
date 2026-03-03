@@ -225,16 +225,19 @@ export function switchTab(targetId) {
 }
 
 export function setupTabs() {
-    const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
-
     // 1. Determine Initial Tab
-    let initialTab = savedTabId || 'tab-whs';
+    // PRIORITY: Always prioritize On-Course if a round is active
+    let initialTab = 'tab-oncourse'; // Base fallback (User request)
 
-    // Proactive Force: If a round is active, always go to On-Course
     if (AppState.activeRoundId) {
         initialTab = 'tab-oncourse';
+    } else {
+        const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
+        initialTab = savedTabId || 'tab-oncourse'; // Default to On-Course Hub
     }
 
+    // Force clear any potential "Ghost" states for hidden tabs
+    console.log(`[Startup] Routing to primary tab: ${initialTab}`);
     switchTab(initialTab);
 
     // 2. Global Event Delegation for all Tab Buttons
@@ -278,6 +281,26 @@ export function setupTabs() {
             }, true); // Use capture phase to ensure it fires
         }
     });
+
+    // 4. Click Sniffer Diagnostic (Temporary for Phase 8.4)
+    document.addEventListener('touchstart', (e) => {
+        const target = e.target;
+        const msg = `[TOUCH] Tag: ${target.tagName}, ID: ${target.id || 'none'}, Class: ${target.className || 'none'}`;
+        console.log(msg);
+
+        // Show a brief on-screen indicator (Debug Toast)
+        let toast = document.getElementById('debug-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'debug-toast';
+            toast.style.cssText = 'position:fixed; top:10px; left:10px; right:10px; background:rgba(0,0,0,0.8); color:lime; font-size:10px; padding:8px; border-radius:4px; z-index:10002; pointer-events:none; font-family:monospace;';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        clearTimeout(window.debugToastTimer);
+        window.debugToastTimer = setTimeout(() => toast.style.display = 'none', 3000);
+    }, true);
 
     // Dynamic Version Injection
     try {

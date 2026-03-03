@@ -36,7 +36,13 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 
 function bootstrapApplication() {
     console.log("App Ready: Bootstrapping modules...");
+
+    // 1. Restore state first (Critical for routing)
+    initializeAppRouting();
+
+    // 2. Setup UI
     setupTabs();
+
     listenToWHSRounds();
     initCompetitions();
     initPractice();
@@ -56,9 +62,6 @@ function bootstrapApplication() {
     // Feed tab — init when first opened
     const feedBtn = document.getElementById('tab-btn-feed');
     if (feedBtn) feedBtn.addEventListener('click', () => initSocialFeed(), { once: true });
-
-    // Restore state and handle routing overrides
-    initializeAppRouting();
 }
 
 // Kickoff Authentication Flow

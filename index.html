@@ -16,6 +16,23 @@
 </head>
 
 <body>
+    <!-- App Loading Cloak (Fixes Flash of Unauthenticated Content) -->
+    <div id="app-loading-cloak"
+        style="position: fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index: 10001; transition: opacity 0.4s ease-out;">
+        <div
+            style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #10b981; border-radius: 50%; animation: cloak-spin 1s linear infinite;">
+        </div>
+        <p
+            style="color: white; margin-top: 20px; font-weight: 600; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">
+            GOLF TRACKER INITIALIZING...</p>
+        <style>
+            @keyframes cloak-spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+    </div>
 
     <!-- Authentication Overlay -->
     <div id="auth-overlay" class="auth-overlay">

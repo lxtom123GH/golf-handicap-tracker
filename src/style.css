@@ -517,6 +517,9 @@ body {
     overflow: hidden;
     margin-bottom: 25px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    position: relative;
+    z-index: 9999;
+    /* Force above all overlays */
 }
 
 .tab-btn {
@@ -544,8 +547,19 @@ body {
 }
 
 .tab-content {
+    display: none;
+    /* Block all flashes */
     animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     will-change: opacity, transform;
+}
+
+.tab-content.active {
+    display: block !important;
+}
+
+#app-loading-cloak.cloak-hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 @keyframes fadeIn {
