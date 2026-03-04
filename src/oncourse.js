@@ -192,17 +192,25 @@ function bindCompQuickAdd() {
         });
 
         UI.btnOcQuickAdd.addEventListener('click', () => {
-            const sel = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
-            const regulars = JSON.parse(sel.getAttribute('data-regulars') || "[]");
-            if (regulars.length === 0) return;
+            const container = document.getElementById('oc-comp-regulars-select');
+            if (!container) return;
+
+            const checkedInputs = Array.from(container.querySelectorAll('input:checked'));
+            if (checkedInputs.length === 0) {
+                alert("Please select at least one player to add.");
+                return;
+            }
 
             let addedCount = 0;
             const currentGroups = [...AppState.liveRoundGroups];
-            regulars.forEach(p => {
-                if (!currentGroups.find(existing => existing.uid === p.uid)) {
+
+            checkedInputs.forEach(input => {
+                const uid = input.value;
+                const name = input.getAttribute('data-name');
+                if (!currentGroups.find(existing => existing.uid === uid)) {
                     currentGroups.push({
-                        uid: p.uid,
-                        name: p.name,
+                        uid: uid,
+                        name: name,
                         scores: {},
                         compStats: {},
                         simpleStats: {}
@@ -210,13 +218,48 @@ function bindCompQuickAdd() {
                     addedCount++;
                 }
             });
+
             AppState.liveRoundGroups = currentGroups;
             if (addedCount > 0) {
-                // Done
+                // Done - list re-renders reactively because of AppState proxy
+                // Optionally clear checkboxes here
+                checkedInputs.forEach(i => i.checked = false);
             } else {
-                alert("All regulars are already in the group.");
+                alert("Selected players are already in the group.");
             }
         });
+
+        if (UI.ocLinkComp) {
+            UI.ocLinkComp.addEventListener('change', () => {
+                const sel = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
+                const regulars = JSON.parse(sel.getAttribute('data-regulars') || "[]");
+
+                const container = document.getElementById('oc-comp-regulars-select');
+                if (!container) return;
+
+                if (sel.value && regulars.length > 0) {
+                    container.classList.remove('hidden');
+                    // Create checkbox list for regulars
+                    let html = '<label style="display:block; font-weight:bold; margin-bottom:8px; font-size:0.9rem;">Select Regulars:</label>';
+                    html += '<div style="display:flex; flex-direction:column; gap:5px; max-height:150px; overflow-y:auto; border:1px solid #e2e8f0; padding:10px; border-radius:6px; background:#fff;">';
+                    regulars.forEach(p => {
+                        html += `
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" value="${p.uid}" data-name="${p.name}">
+                                <span>${p.name}</span>
+                            </label>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                    UI.btnOcQuickAdd.classList.remove('hidden'); // Show the "Add Selected" button
+                } else {
+                    container.classList.add('hidden');
+                    container.innerHTML = '';
+                    UI.btnOcQuickAdd.classList.add('hidden');
+                }
+            });
+        }
     }
 }
 function bindStartRound() {
@@ -1329,7 +1372,7 @@ function renderBagButtons() {
         wedges: ['56'],
         putter: true
     };
-    const bag = (AppState.myBag && Object.keys(AppState.myBag).length > 0) ? AppState.myBag : defaultBag;
+    const bag = (AppState.playerClubs && Object.keys(AppState.playerClubs).length > 0) ? AppState.playerClubs : defaultBag;
 
     const categories = [
         { key: 'driver', label: 'Dr', standalone: true },
@@ -1441,7 +1484,8 @@ export function bindBagSettings() {
                 }
             });
 
-            AppState.myBag = newBag;
+            AppState.playerClubs = newBag;
+            localStorage.setItem('golfAppClubs', JSON.stringify(newBag));
             const msg = document.getElementById('bag-msg');
             if (msg) {
                 msg.classList.remove('hidden');
@@ -1451,14 +1495,14 @@ export function bindBagSettings() {
     }
 
     // Sync UI with state
-    if (AppState.myBag) {
+    if (AppState.playerClubs) {
         document.querySelectorAll('.bag-check').forEach(chk => {
             const cat = chk.getAttribute('data-cat');
             const val = chk.getAttribute('data-val');
             if (cat === 'driver' || cat === 'putter') {
-                chk.checked = !!AppState.myBag[cat];
+                chk.checked = !!AppState.playerClubs[cat];
             } else {
-                chk.checked = AppState.myBag[cat]?.includes(val);
+                chk.checked = AppState.playerClubs[cat]?.includes(val);
             }
         });
     }

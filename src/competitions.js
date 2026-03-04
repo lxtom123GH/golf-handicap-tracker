@@ -66,6 +66,16 @@ function listenToCompetitions() {
                 const opt2 = opt.cloneNode(true);
                 UI.ocLinkComp.appendChild(opt2);
             }
+
+            // Populate template select dropdown
+            const tmplSelect = document.getElementById('comp-template-select');
+            if (tmplSelect) {
+                const opt3 = document.createElement('option');
+                opt3.value = t.id;
+                opt3.textContent = r.name;
+                opt3.setAttribute('data-rules', JSON.stringify(r.rules || []));
+                tmplSelect.appendChild(opt3);
+            }
         });
 
         // Restore active selection if activeCompId exists
@@ -108,6 +118,18 @@ export function setActiveCompetition(compId) {
         rules: rulesArray,
         startingPoints: startingPoints
     };
+
+    // UI Sync: Update Banner Name and Rules Summary
+    const nameEl = document.getElementById('active-comp-name');
+    const rulesSummaryEl = document.getElementById('active-comp-rules-summary');
+    if (nameEl) nameEl.textContent = AppState.currentCompData.name;
+    if (rulesSummaryEl) {
+        if (rulesArray.length > 0) {
+            rulesSummaryEl.innerHTML = rulesArray.map(r => `<strong>${r.name}</strong>: ${r.pts} pts`).join(' | ');
+        } else {
+            rulesSummaryEl.textContent = "No custom rules.";
+        }
+    }
 
     if (activeCompView) activeCompView.classList.remove('hidden');
     if (noCompEmpty) noCompEmpty.classList.add('hidden');
@@ -340,6 +362,20 @@ function bindCompetitionCreation() {
             if (btnShowCreateComp) btnShowCreateComp.classList.remove('hidden');
             UI.createCompForm.reset();
             rules = [];
+            renderRulesList();
+        });
+    }
+
+    // Config Template Selection
+    const tmplSelect = document.getElementById('comp-template-select');
+    if (tmplSelect) {
+        tmplSelect.addEventListener('change', (e) => {
+            if (!e.target.value) {
+                rules = [];
+            } else {
+                const sel = tmplSelect.options[tmplSelect.selectedIndex];
+                rules = JSON.parse(sel.getAttribute('data-rules') || "[]");
+            }
             renderRulesList();
         });
     }

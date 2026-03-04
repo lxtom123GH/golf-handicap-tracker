@@ -31,14 +31,25 @@ const initialState = {
     currentHoleShots: [],
     activeRoundId: null,
     currentRoundDate: null,
-    myBag: {
-        driver: true,
-        woods: ['3 Wood'],
-        irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
-        wedges: ['56°'],
-        putter: true
-    }
+    playerClubs: null
 };
+
+try {
+    const savedClubs = localStorage.getItem('golfAppClubs');
+    if (savedClubs) {
+        initialState.playerClubs = JSON.parse(savedClubs);
+    } else {
+        initialState.playerClubs = {
+            driver: true,
+            woods: ['3 Wood'],
+            irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
+            wedges: ['56°'],
+            putter: true
+        };
+    }
+} catch (e) {
+    console.warn("Failed to parse playerClubs from localStorage", e);
+}
 
 /**
  * AppState Proxy
