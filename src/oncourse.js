@@ -1335,6 +1335,9 @@ function showLockerRoom(isPartialFail = false) {
             if (msgDisplay) msgDisplay.textContent = "Round Saved Successfully";
         }
     }
+
+    const lockerFallback = document.getElementById('oc-locker-room');
+    if (lockerFallback) lockerFallback.classList.remove('hidden');
 }
 
 function setWizardActive(isActive) {
