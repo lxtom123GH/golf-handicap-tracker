@@ -1305,13 +1305,20 @@ async function saveRoundToDatabase() {
  * @param {boolean} isPartialFail - Whether cloud sync failed.
  */
 function showLockerRoom(isPartialFail = false) {
-    // Hide active containers
+    // Hide active containers explicitly
     const hub = document.getElementById('oncourse-hub');
     const setup = document.getElementById('oncourse-setup');
     const finishModal = document.getElementById('oc-finish-modal');
+    const jumper = document.getElementById('hole-jumper-container');
+    const subNav = document.getElementById('oc-sub-nav');
+    const exitBar = document.getElementById('oc-exit-bar');
+
     if (hub) hub.classList.add('hidden');
     if (setup) setup.classList.add('hidden');
     if (finishModal) finishModal.classList.add('hidden');
+    if (jumper) jumper.classList.add('hidden');
+    if (subNav) subNav.classList.add('hidden');
+    if (exitBar) exitBar.classList.add('hidden');
 
     // Show Locker Room
     const locker = document.getElementById('oc-locker-room');
