@@ -418,10 +418,23 @@ function bindCompetitionCreation() {
 
     // Submit Comp
     if (UI.createCompForm) {
+        // Dynamic Save Button Validation
+        const compNameInput = document.getElementById('comp-name');
+        const submitBtn = UI.createCompForm.querySelector('button[type="submit"]');
+        if (compNameInput && submitBtn) {
+            submitBtn.disabled = compNameInput.value.trim() === '';
+            compNameInput.addEventListener('input', () => {
+                submitBtn.disabled = compNameInput.value.trim() === '';
+            });
+        }
+
         UI.createCompForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('comp-name').value.trim();
-            if (!name) return;
+            if (!name) {
+                alert("Competition Name is required.");
+                return;
+            }
 
             const spRoundEnable = document.getElementById('sp-round-enable').checked;
             const spHoleEnable = document.getElementById('sp-hole-enable').checked;

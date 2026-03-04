@@ -122,10 +122,21 @@ export function initPractice() {
 
     const btnAskAi = document.getElementById('btn-ask-ai');
     if (btnAskAi) {
-        btnAskAi.addEventListener('click', () => {
+        btnAskAi.addEventListener('click', async () => {
             if (!AppState.currentUser) return;
-            bindAiGenerator();
-            generateAIResponse(AppState.currentUser.uid, 'player');
+            const originalText = btnAskAi.textContent || "Ask AI Coach";
+            btnAskAi.disabled = true;
+            btnAskAi.textContent = "Thinking...";
+            try {
+                bindAiGenerator();
+                await generateAIResponse(AppState.currentUser.uid, 'player');
+            } catch (e) {
+                console.error("AI Coach error:", e);
+                alert("Failed to contact Ask AI Coach.");
+            } finally {
+                btnAskAi.disabled = false;
+                btnAskAi.textContent = originalText;
+            }
         });
     }
 

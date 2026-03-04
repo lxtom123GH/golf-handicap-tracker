@@ -11,6 +11,7 @@ import { AppState } from './state.js';
 
 let _lastAiUid = null;
 let _lastAiRole = null;
+let _aiGeneratorBound = false;
 
 /**
  * Initializes and binds event listeners for the AI Coach interface.
@@ -18,6 +19,8 @@ let _lastAiRole = null;
  * role-based visibility for the "Ask AI" buttons.
  */
 export function bindAiGenerator() {
+    if (_aiGeneratorBound) return;
+    _aiGeneratorBound = true;
     // Inject the modal if it doesn't exist
     if (!document.getElementById('ai-modal-overlay')) {
         const modalContainer = document.createElement('div');
