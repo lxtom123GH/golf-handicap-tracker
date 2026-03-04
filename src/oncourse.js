@@ -13,6 +13,11 @@ import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS
 import { httpsCallable } from "firebase/functions";
 import { functions } from './firebase-config.js';
 
+/**
+ * Initializes the on-course tracking module and binds global event listeners.
+ * Configures UI states for the start of a round.
+ * @returns {void}
+ */
 export function initOnCourse() {
     bindSetupToggles();
     bindCourseSelect();
@@ -262,6 +267,11 @@ function bindCompQuickAdd() {
         }
     }
 }
+/**
+ * Binds the 'Start Round' button to initialize the round state.
+ * Validates player count, course par, fetches handicaps, and transitions the UI to the live hub.
+ * @returns {void}
+ */
 function bindStartRound() {
     if (UI.btnOcStart) {
         UI.btnOcStart.addEventListener('click', async () => {
@@ -379,6 +389,11 @@ function bindGlobalRoundActions() {
     });
 }
 
+/**
+ * Clears the active round state and gracefully resets the UI back to the setup screen.
+ * Ensures no stale data carries over to the next round.
+ * @returns {void}
+ */
 export function endRoundCleanup() {
     document.body.classList.remove('round-active');
     document.getElementById('oncourse-setup').classList.remove('hidden');
@@ -418,6 +433,11 @@ async function getPlayerHandicap(uid) {
     return 0;
 }
 
+/**
+ * Renders the interface for the current active hole.
+ * Updates par, yardages, shot history, and resets input states for the new hole context.
+ * @returns {void}
+ */
 export function loadHole() {
     const fh = document.getElementById('oc-hole-display');
     const ph = document.getElementById('oc-par-display');
@@ -580,6 +600,11 @@ function openFinishModal() {
     if (btnSave) btnSave.scrollIntoView({ behavior: 'smooth' });
 }
 
+/**
+ * Aggregates live statistics (shots, points, putts, FIR, GIR) for the current player's round review.
+ * Called immediately prior to displaying the end-of-round summary.
+ * @returns {Object} An object containing aggregated statistics: { shots, points, putts, fir, gir, penalties }
+ */
 function recalculateReviewStats() {
     const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
     if (!p) return { shots: 0, points: 0, putts: 0, fir: 0, gir: 0, penalties: 0 };
@@ -879,7 +904,12 @@ function updateGPSDistances(lat, lon) {
 }
 
 /**
- * Calculate distance between two points in meters using Haversine formula
+ * Calculates the exact geographic distance between two sets of coordinates using the Haversine formula.
+ * @param {number} lat1 - Latitude of the first point.
+ * @param {number} lon1 - Longitude of the first point.
+ * @param {number} lat2 - Latitude of the second point.
+ * @param {number} lon2 - Longitude of the second point.
+ * @returns {number} The distance in meters.
  */
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3; // Earth radius in meters
@@ -949,6 +979,11 @@ async function processVoiceQuery(text) {
     UI.rulesResponseContent.innerHTML = `<strong>Rule Clarification:</strong> ${mockAns}`;
 }
 
+/**
+ * Sends a natural language query to the AI Rules Engine via Firebase Cloud Functions.
+ * @param {string} text - The user's spoken or typed rules question.
+ * @returns {Promise<string>} The AI-generated answer or fallback error message.
+ */
 async function queryRulesAI(text) {
     try {
         const rulesFn = httpsCallable(functions, 'processRulesQuery');
@@ -1020,6 +1055,12 @@ function bindHoleNav() {
 // ==========================================
 // Hole Jumper: jump to any hole directly
 // ==========================================
+/**
+ * Navigates the user interface directly to a specified hole index.
+ * Useful for reviewing past holes or skipping ahead.
+ * @param {number} holeIndex - The round-relative hole number to jump to (1-indexed).
+ * @returns {void}
+ */
 export function jumpToHole(holeIndex) {
     const total = AppState.currentRoundHoles || 9;
     if (holeIndex < 1 || holeIndex > total) return;
@@ -1062,6 +1103,11 @@ function renderHoleJumper() {
 
 
 
+/**
+ * Compiles the final round data, calculates adjusted gross scores and differentials,
+ * and persists the completed round to Firestore.
+ * @returns {Promise<void>}
+ */
 async function saveRoundToDatabase() {
     const holesPlayedEl = document.getElementById('oc-finish-holes');
     const holesPlayedStr = holesPlayedEl ? holesPlayedEl.value : "9";
@@ -1324,6 +1370,11 @@ function loadExistingShotData(shotId) {
     }
 }
 
+/**
+ * Synchronizes the visual state of the Shot Wizard UI to match the current in-memory shot data.
+ * Updates button active states across all intent/result grids.
+ * @returns {void}
+ */
 function syncShotWizardUI() {
     renderBagButtons();
 
