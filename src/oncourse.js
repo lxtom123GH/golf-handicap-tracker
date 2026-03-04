@@ -409,6 +409,8 @@ export function endRoundCleanup() {
     if (subNav) subNav.classList.add('hidden');
     const locker = document.getElementById('oc-locker-room');
     if (locker) locker.classList.add('hidden');
+    const tabOnCourse = document.getElementById('tab-oncourse');
+    if (tabOnCourse) tabOnCourse.classList.add('hidden');
 
     AppState.liveRoundGroups = [];
     AppState.currentHole = 1;
@@ -1312,6 +1314,7 @@ function showLockerRoom(isPartialFail = false) {
     const jumper = document.getElementById('hole-jumper-container');
     const subNav = document.getElementById('oc-sub-nav');
     const exitBar = document.getElementById('oc-exit-bar');
+    const tabOnCourse = document.getElementById('tab-oncourse');
 
     if (hub) hub.classList.add('hidden');
     if (setup) setup.classList.add('hidden');
@@ -1319,6 +1322,7 @@ function showLockerRoom(isPartialFail = false) {
     if (jumper) jumper.classList.add('hidden');
     if (subNav) subNav.classList.add('hidden');
     if (exitBar) exitBar.classList.add('hidden');
+    if (tabOnCourse) tabOnCourse.classList.add('hidden');
 
     // Show Locker Room
     const locker = document.getElementById('oc-locker-room');
@@ -1336,8 +1340,8 @@ function showLockerRoom(isPartialFail = false) {
         }
     }
 
-    const lockerFallback = document.getElementById('oc-locker-room');
-    if (lockerFallback) lockerFallback.classList.remove('hidden');
+    const lockerEl = document.getElementById('oc-locker-room');
+    if (lockerEl) lockerEl.classList.remove('hidden');
 }
 
 function setWizardActive(isActive) {
