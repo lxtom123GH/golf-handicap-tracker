@@ -407,6 +407,8 @@ export function endRoundCleanup() {
     if (exitBar) exitBar.classList.add('hidden');
     const subNav = document.getElementById('oc-sub-nav');
     if (subNav) subNav.classList.add('hidden');
+    const locker = document.getElementById('oc-locker-room');
+    if (locker) locker.classList.add('hidden');
 
     AppState.liveRoundGroups = [];
     AppState.currentHole = 1;
@@ -415,6 +417,13 @@ export function endRoundCleanup() {
     AppState.currentHoleShots = [];
     AppState.activeRoundId = null;
     AppState.currentRoundDate = null;
+
+    // v6.7.0 FIX: Reset ALL round-scoped state to prevent stale data leaking
+    AppState.currentCoursePars = [];
+    AppState.currentRoundCourseName = '';
+    AppState.currentRoundHoles = 9;
+    AppState.currentTrackingMode = 'simple';
+    AppState.currentShotData = {};
 
     if (UI.ocAddedPlayersList) UI.ocAddedPlayersList.innerHTML = '';
 }
@@ -608,6 +617,27 @@ function openFinishModal() {
     document.getElementById('oc-finish-holes').value = AppState.currentRoundHoles || (AppState.currentHole > 9 ? 18 : 9);
 
     // Smooth scroll to the buttons
+    const btnSync = document.getElementById('btn-sync-rounds');
+    if (btnSync) btnSync.onclick = () => { /* Sync logic */ };
+
+    // v6.7.0 Locker Room Actions
+    const btnPostHome = document.getElementById('btn-post-home');
+    if (btnPostHome) btnPostHome.onclick = () => endRoundCleanup();
+
+    const btnPostAnalyze = document.getElementById('btn-post-analyze');
+    if (btnPostAnalyze) {
+        btnPostAnalyze.onclick = () => {
+            alert("Starting deep stat analysis... (Stub)");
+        };
+    }
+
+    const btnPostAudio = document.getElementById('btn-post-audio');
+    if (btnPostAudio) {
+        btnPostAudio.onclick = () => {
+            alert("Opening audio diary recorder... (Stub)");
+        };
+    }
+
     const btnSave = document.getElementById('btn-oc-save-whs');
     if (btnSave) btnSave.scrollIntoView({ behavior: 'smooth' });
 }
@@ -1135,6 +1165,22 @@ async function saveRoundToDatabase() {
     const teeName = UI.ocTeeSelect ? UI.ocTeeSelect.value : null;
     const teeData = COURSE_DATA[courseName]?.[teeName] || {};
 
+    // Helper for defensive serialization: deep clone & strip non-serializable objects (DOM/Functions)
+    const safeSerialize = (obj) => {
+        try {
+            return JSON.parse(JSON.stringify(obj, (key, value) => {
+                if (value instanceof HTMLElement || (value && typeof value === 'object' && value.nodeType)) return undefined;
+                if (typeof value === 'undefined') return null;
+                return value;
+            }));
+        } catch (e) {
+            console.warn("Serialization warning:", e);
+            return null;
+        }
+    };
+
+    let anyCloudFail = false;
+
     try {
         for (let p of AppState.liveRoundGroups) {
             let totalGross = 0;
@@ -1165,7 +1211,7 @@ async function saveRoundToDatabase() {
                 }
             }
 
-            const payload = {
+            const payload = safeSerialize({
                 uid: p.uid,
                 course: AppState.currentRoundCourseName + ` (${holesPlayedStr}H)`,
                 courseName: AppState.currentRoundCourseName,
@@ -1176,14 +1222,20 @@ async function saveRoundToDatabase() {
                 totalScore: totalGross,
                 totalStableford: totalStableford,
                 dailyHandicap: p.dailyHandicap,
-                date: AppState.currentRoundDate ? new Date(AppState.currentRoundDate) : serverTimestamp(),
                 isLiveTracked: true,
                 liveRoundsMode: AppState.currentTrackingMode,
                 stats: { putts: sumPutts, gir: sumGIR, fwy: sumFwy },
                 totalPutts: sumPutts
-            };
+            });
+            // Inject date AFTER serialization to preserve sentinel/Date object
+            payload.date = AppState.currentRoundDate ? new Date(AppState.currentRoundDate) : serverTimestamp();
 
-            await addDoc(collection(db, "whs_rounds"), payload);
+            try {
+                await addDoc(collection(db, "whs_rounds"), payload);
+            } catch (cloudErr) {
+                console.error("Cloud Save Fail (WHS):", cloudErr);
+                anyCloudFail = true;
+            }
 
             // If a competition is linked, save to results collection
             if (AppState.currentLiveCompId) {
@@ -1204,41 +1256,77 @@ async function saveRoundToDatabase() {
                     }
                 }
 
-                await addDoc(collection(db, "competition_results"), {
+                const compPayload = safeSerialize({
                     compId: AppState.currentLiveCompId,
                     uid: p.uid,
-                    playerName: p.name,
+                    playerName: p.playerName || p.name,
                     stablefordPoints: totalStableford,
                     netScore: totalGross,
                     rulePoints: totalRulePoints,
                     totalCompScore: totalStableford + totalRulePoints,
-                    date: serverTimestamp(),
                     ruleCounts: ruleCounts,
                     isLiveSynced: true
                 });
+                // Inject date AFTER serialization
+                compPayload.date = serverTimestamp();
 
-                // Maintain legacy comp_rounds for backward compat if needed, 
-                // but main logic now targets competition_results as requested.
-                await addDoc(collection(db, "comp_rounds"), {
-                    compId: AppState.currentLiveCompId,
-                    uid: p.uid,
-                    playerName: p.name,
-                    totalPoints: totalStableford + totalRulePoints,
-                    score: totalGross,
-                    date: serverTimestamp(),
-                    ruleCounts: ruleCounts
-                });
+                try {
+                    await addDoc(collection(db, "competition_results"), compPayload);
+                    await addDoc(collection(db, "comp_rounds"), compPayload); // Backward compat
+                } catch (cloudErr) {
+                    console.error("Cloud Save Fail (Comp):", cloudErr);
+                    anyCloudFail = true;
+                }
             }
         }
-        alert("Scores Saved successfully.");
-        endRoundCleanup();
+
+        // Resilient Backup: Always write to localStorage as well
+        const backupId = `round_backup_${Date.now()}`;
+        localStorage.setItem(backupId, JSON.stringify({
+            date: new Date().toISOString(),
+            course: AppState.currentRoundCourseName,
+            players: safeSerialize(AppState.liveRoundGroups),
+            synced: !anyCloudFail
+        }));
+
+        showLockerRoom(anyCloudFail);
 
         // Remove fixed finish button if exists
         const fab = document.getElementById('oc-fixed-finish-btn');
         if (fab) fab.remove();
     } catch (err) {
-        console.error(err);
-        alert("Failed to save.");
+        console.error("Critical Save Loop Error:", err);
+        alert("A critical error occurred while preparing the save. Your data is still in memory; please do not refresh.");
+    }
+}
+
+/**
+ * Transitions the UI to the Post-Round Locker Room.
+ * @param {boolean} isPartialFail - Whether cloud sync failed.
+ */
+function showLockerRoom(isPartialFail = false) {
+    // Hide active containers
+    const hub = document.getElementById('oncourse-hub');
+    const setup = document.getElementById('oncourse-setup');
+    const finishModal = document.getElementById('oc-finish-modal');
+    if (hub) hub.classList.add('hidden');
+    if (setup) setup.classList.add('hidden');
+    if (finishModal) finishModal.classList.add('hidden');
+
+    // Show Locker Room
+    const locker = document.getElementById('oc-locker-room');
+    if (locker) {
+        locker.classList.remove('hidden');
+        // Handle Error Toggle
+        const errDisplay = document.getElementById('locker-room-err');
+        const msgDisplay = document.getElementById('locker-room-msg');
+        if (isPartialFail) {
+            if (errDisplay) errDisplay.classList.remove('hidden');
+            if (msgDisplay) msgDisplay.textContent = "Round Saved Locally";
+        } else {
+            if (errDisplay) errDisplay.classList.add('hidden');
+            if (msgDisplay) msgDisplay.textContent = "Round Saved Successfully";
+        }
     }
 }
 

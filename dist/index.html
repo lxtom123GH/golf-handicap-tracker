@@ -12,7 +12,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-Cglqf0Cn.js"></script>
+  <script type="module" crossorigin src="/assets/index-DgR_BBPF.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-brNNGDVP.css">
 </head>
 
@@ -746,6 +746,41 @@
         </div>
     </div>
     <!-- ON COURSE TRACKER TAB END -->
+
+    <!-- ========================================== -->
+    <!-- POST-ROUND LOCKER ROOM DASHBOARD           -->
+    <!-- ========================================== -->
+    <div id="oc-locker-room" class="tab-content hidden">
+        <header class="header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+            <div class="header-content">
+                <div class="branding">
+                    <h1>Locker Room</h1>
+                    <p>Round Completed & Saved</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="card" style="text-align:center; padding: 40px 20px; max-width: 600px; margin: 20px auto;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">⛳</div>
+            <h2 id="locker-room-msg" style="color: var(--primary-color); margin-bottom: 10px;">Round Saved Successfully
+            </h2>
+            <p id="locker-room-err" class="hidden"
+                style="background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; border: 1px solid #fecaca;">
+                ⚠️ Cloud sync failed. Round saved locally for now.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 30px;">
+                <button id="btn-post-analyze" class="btn btn-primary"
+                    style="width:100%; padding: 15px; font-size: 1.1rem;">📊 Run Stat Analysis</button>
+                <button id="btn-post-audio" class="btn btn-secondary"
+                    style="width:100%; padding: 15px; font-size: 1.1rem;">🎙️ Record Audio Diary</button>
+                <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <button id="btn-post-home" class="btn-text"
+                        style="width:100%; font-weight: 700; color: #64748b;">Return to Home - Analyze Later</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ========================================== -->
     <!-- SETTINGS TAB                               -->
