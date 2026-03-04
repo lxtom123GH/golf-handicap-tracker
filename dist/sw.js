@@ -1,7 +1,7 @@
-const CACHE_NAME = 'golf-cache-v6.1.3';
+const CACHE_NAME = 'golf-cache-v6.2.1-cleanup';
 
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker] Installing golf-cache-v6.1.3 and skipping wait...');
+    console.log('[Service Worker] Installing golf-cache-v6.2.1-cleanup and skipping wait...');
     self.skipWaiting();
 });
 
