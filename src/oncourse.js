@@ -28,6 +28,16 @@ export function initOnCourse() {
     bindCompQuickAdd();
     bindHoleNav();
 
+    // Bind the exit-round bar button
+    const btnExit = document.getElementById('btn-oc-exit');
+    if (btnExit) {
+        btnExit.addEventListener('click', () => {
+            if (confirm("Are you sure you want to exit this round? All unsaved data will be cleared.")) {
+                endRoundCleanup();
+            }
+        });
+    }
+
     // Default init
     if (typeof updateModeVisibility === 'function') updateModeVisibility();
     if (UI.ocCourseSelect && UI.ocCourseSelect.value) {
@@ -261,8 +271,9 @@ function bindStartRound() {
             // Show new sub-nav and progress bar
             const subNav = document.getElementById('oc-sub-nav');
             if (subNav) subNav.classList.remove('hidden');
-            const progress = document.getElementById('oc-progress-bar');
+            const progress = document.getElementById('hole-jumper-container');
             if (progress) progress.classList.remove('hidden');
+            renderHoleJumper();
             const exitBar = document.getElementById('oc-exit-bar');
             if (exitBar) exitBar.classList.remove('hidden');
 
@@ -332,7 +343,7 @@ export function endRoundCleanup() {
     if (hub) hub.classList.add('hidden');
     const finishModal = document.getElementById('oc-finish-modal');
     if (finishModal) finishModal.classList.add('hidden');
-    const progress = document.getElementById('oc-progress-bar');
+    const progress = document.getElementById('hole-jumper-container');
     if (progress) progress.classList.add('hidden');
     const exitBar = document.getElementById('oc-exit-bar');
     if (exitBar) exitBar.classList.add('hidden');
@@ -387,6 +398,9 @@ export function loadHole() {
             dotsContainer.appendChild(dot);
         }
     }
+
+    // Update hole jumper active state
+    renderHoleJumper();
 
     if (AppState.currentUser) {
         AppState.currentHoleShots = []; // Clear for new hole
@@ -863,8 +877,15 @@ function initVoiceRules() {
     };
 
     recognition.onerror = (event) => {
-        UI.voiceStatus.textContent = "Error: " + event.error;
-        setTimeout(() => UI.voiceOverlay.classList.add('hidden'), 2000);
+        if (event.error === 'not-allowed') {
+            // Permission was denied — reset so next tap re-triggers the browser prompt
+            recognition = null;
+            UI.voiceStatus.textContent = "Mic access denied. Tap the mic again to retry.";
+            setTimeout(() => UI.voiceOverlay.classList.add('hidden'), 2500);
+        } else {
+            UI.voiceStatus.textContent = "Error: " + event.error;
+            setTimeout(() => UI.voiceOverlay.classList.add('hidden'), 2000);
+        }
     };
 
     recognition.onend = () => {
@@ -952,6 +973,51 @@ function bindHoleNav() {
         });
     }
 }
+
+// ==========================================
+// Hole Jumper: jump to any hole directly
+// ==========================================
+export function jumpToHole(holeIndex) {
+    const total = AppState.currentRoundHoles || 9;
+    if (holeIndex < 1 || holeIndex > total) return;
+    AppState.currentHole = holeIndex;
+    loadHole();
+    // Scroll hub back to top
+    const hub = document.getElementById('oncourse-hub');
+    if (hub) hub.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderHoleJumper() {
+    const container = document.getElementById('hole-jumper-container');
+    if (!container) return;
+    const total = AppState.currentRoundHoles || 9;
+    container.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = i;
+        const isCurrent = i === AppState.currentHole;
+        const isDone = i < AppState.currentHole;
+        const baseStyle = 'min-width:44px; height:44px; border-radius:50%; border:2px solid; font-weight:700; font-size:0.85rem; cursor:pointer; flex-shrink:0;';
+        if (isCurrent) {
+            btn.style.cssText = baseStyle + 'border-color:#1e3c72; background:#1e3c72; color:white;';
+        } else if (isDone) {
+            btn.style.cssText = baseStyle + 'border-color:#10b981; background:#dcfce7; color:#065f46;';
+        } else {
+            btn.style.cssText = baseStyle + 'border-color:#cbd5e1; background:white; color:#475569;';
+        }
+        btn.setAttribute('aria-label', `Go to hole ${i}`);
+        btn.addEventListener('click', () => jumpToHole(i));
+        container.appendChild(btn);
+    }
+    // Auto-center active hole button
+    const activeBtn = container.children[AppState.currentHole - 1];
+    if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+}
+
+
 
 async function saveRoundToDatabase() {
     const holesPlayedEl = document.getElementById('oc-finish-holes');

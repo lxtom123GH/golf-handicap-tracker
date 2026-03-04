@@ -541,6 +541,11 @@ function populateRegularsPool() {
         if (UI.compRegularsList.innerHTML === '') {
             UI.compRegularsList.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem;">No approved players found.</p>';
         }
+    }).catch(err => {
+        console.error('[Competitions] Failed to load regulars pool:', err);
+        if (UI.compRegularsList) {
+            UI.compRegularsList.innerHTML = '<p style="color:#ef4444; font-size:0.85rem;">Failed to load players.</p>';
+        }
     });
 }
 

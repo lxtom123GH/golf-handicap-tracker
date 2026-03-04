@@ -248,9 +248,12 @@ export function switchTab(targetId) {
         // Task 2: Auto-Scroll (On-Course)
         if (targetId === 'tab-oncourse') {
             setTimeout(() => {
-                const btnStart = document.getElementById('btn-oc-start');
-                if (btnStart) {
-                    btnStart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const isRoundActive = document.body.classList.contains('round-active');
+                const scrollTarget = isRoundActive
+                    ? document.getElementById('oncourse-hub')
+                    : document.getElementById('oncourse-setup');
+                if (scrollTarget) {
+                    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             }, 300);
         }

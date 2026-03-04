@@ -1,66 +1,52 @@
 # Golf Handicap Tracker - Cloud Edition
 
-A professional-grade Golf Handicap Tracker and Performance Analytics platform built with modern web technologies. Focused on World Handicap System (WHS) compliance, sequential shot tracking, and AI-driven coaching insights.
+A premium, PWA-ready golf score and activity tracker designed for high-performance use on the course.
 
-## 🚀 Key Features
+## 📱 PWA Features
+- **Standalone Display**: Native application feel with dedicated splash screens and no browser chrome.
+- **Service Worker Lifecycle**: Automated cache purging and version management (currently v6.1.8).
+- **Safe Area Support**: Optimized for edge-to-edge mobile displays with `safe-area-inset` protection for navigation.
+- **Glassmorphism UI**: High-end translucent navigation with backdrop blurring for a premium experience.
+- **GPS Integration**: Real-time yardage tracking (Front/Center/Back) with high-contrast, glove-friendly font sizes.
 
-- **WHS Compliant Scoring**: Automatic calculation of Slopes, Ratings, and Handicap Differentials based on Australian WHS guidelines.
-- **On-Course Tracking**: Real-time hole-by-hole score entry with integrated shot-level detail (Distance, Curve, Result).
-- **Tempo Audio Engine**: An advanced metronome and swing cadence tool (`src/tempo.js`) to help players maintain consistent rhythms on the range.
-- **AI Coach**: Powered by Google Gemini, the AI analyzes your last 10 rounds and practice sessions to generate custom lesson plans.
-- **Coach Portal**: Professional interface for coaches to manage rosters, view athlete performance trends, and release students.
-- **Custom Competitions**: Create and log rounds for multi-player competitions with custom scoring rules.
+## 🔥 Firestore Architecture
 
-## 🏗️ Architecture
+The application uses Google Firestore for real-time synchronization across devices.
 
-- **Frontend**: [Vite](https://vitejs.dev/) - Fast, modular ES6 development and optimized production builds.
-- **Backend & Persistence**: [Firebase](https://firebase.google.com/)
-    - **Firestore**: Real-time NoSQL database for player scores, shots, and user profiles.
-    - **Authentication**: Secure email/password login and professional role-based access.
-    - **Cloud Functions**: Backend logic for secure AI prompt generation.
-    - **Hosting**: Scalable delivery of the application to mobile and desktop browsers.
-- **State Management**: Reactive Proxy-based state system in `src/state.js` for seamless UI updates.
-- **Scoring Engine**: Mathematical implementation of Stableford and WHS Adjusted Gross Score (AGS) in `src/whs.js`.
+### `/users` Collection
+Stores player identity and permission tiers.
+- `displayName`: Player's public name.
+- `handicapIndex`: The current calculated WHS Index.
+- `isAdmin`: Boolean flag for Administrative Dashboard access.
+- `isCoach`: Boolean flag for Coach Portal access.
+- `following`: Sub-collection of followed player UIDs for social feed integration.
+- `coaches`: Array of coach UIDs permitted to view the player's data.
 
-## 🛠️ Local Development
+### `/whs_rounds` Collection
+Stores official round data for handicap calculation.
+- `course`: Name of the golf course.
+- `date`: Firestore Timestamp of the round.
+- `adjustedGross`: The AGS used for WHS calculations.
+- `rating / slope`: Course difficulty metrics.
+- `stats`: Optional nested object containing `putts`, `gir`, and `fwy` hit percentages.
 
-### Prerequisites
-
-- Node.js (v18+)
-- Firebase CLI (`npm install -g firebase-tools`)
-
-### Setup
-
-1. **Clone and Install**:
-    ```bash
-    git clone [repository-url]
-    cd golf_handicap_tracker
-    npm install
-    ```
-
-2. **Configure Firebase**:
-    - Create a project on the [Firebase Console](https://console.firebase.google.com/).
-    - Enable Firestore, Authentication, and Hosting.
-    - Copy your config into `src/firebase-config.js`.
-
-3. **Run Locally**:
-    ```bash
-    npm run dev
-    ```
-    The app will be available at `http://localhost:5173`.
-
-### Testing
-
-- **Unit Tests**: `npm run test:unit`
-- **Security Rules**: `npm run test:rules`
-- **End-to-End**: `npm run test:e2e`
-
-## 📦 Deployment
-
-```bash
-npm run build
-firebase deploy --only hosting
-```
+### `/shots` Collection
+Stores granular tracking data for live rounds.
+- `holeNumber`: The hole index (1-18).
+- `club`: The club used (e.g., Driver, 7i, SW).
+- `outcome`: The result of the shot (e.g., Fairway, Green, Miss-Left).
+- `coordX / coordY`: Visual coordinates for shot plotting.
 
 ---
-*Created with the help of Antigravity AI.*
+
+## 🧭 Navigation Lifecycle (v6.1.8)
+
+The application employs a **Dynamic Refresh Architecture** to ensure data consistency without full-page reloads.
+
+1.  **Direct Boot**: Upon authentication, the `Security Heartbeat` automatically redirects the user to their last-visted tab (persisted in `localStorage`).
+2.  **Universal Hooks**: The `switchTab` navigation bridge triggers specific "Lifecycle Hooks" for dynamic modules:
+    - **Admin Dashboard**: Triggers `refreshAdminDashboard()` to fetch the latest user management list.
+    - **Coach Portal**: Triggers `refreshCoachDashboard()` to sync the athlete roster.
+    - **Social Feed**: Triggers `refreshSocialFeed()` to pull the latest activity from your network.
+3.  **Scroll Reset**: Every tab switch automatically executes `window.scrollTo(0, 0)` for a clean UI entry.
+4.  **Authorized Initialization**: Admin and Coach specific logic is initialized **only after** roles are confirmed by the Firebase Auth callback, preventing empty dashboards.
