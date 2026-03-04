@@ -439,64 +439,65 @@ async function getPlayerHandicap(uid) {
  * @returns {void}
  */
 export function loadHole() {
-    const fh = document.getElementById('oc-hole-display');
-    const ph = document.getElementById('oc-par-display');
-    const dotsContainer = document.getElementById('oc-hole-dots');
+    try {
+        const fh = document.getElementById('oc-hole-display');
+        const ph = document.getElementById('oc-par-display');
+        const dotsContainer = document.getElementById('oc-hole-dots');
 
-    const parForHole = AppState.currentCoursePars[AppState.currentHole - 1] || 4;
-    const parSelect = document.getElementById('oc-par-select');
-    if (parSelect) parSelect.value = parForHole;
+        const parForHole = AppState.currentCoursePars[AppState.currentHole - 1] || 4;
+        const parSelect = document.getElementById('oc-par-select');
+        if (parSelect) parSelect.value = parForHole;
 
-    if (fh) fh.textContent = `Hole ${AppState.currentHole}`;
-    if (ph) ph.textContent = parForHole > 0 ? `Par ${parForHole}` : `Par ?`;
+        if (fh) fh.textContent = `Hole ${AppState.currentHole}`;
+        if (ph) ph.textContent = parForHole > 0 ? `Par ${parForHole}` : `Par ?`;
 
-    if (dotsContainer) {
-        dotsContainer.innerHTML = '';
-        const totalHoles = AppState.currentRoundHoles || 9;
-        for (let i = 1; i <= totalHoles; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'hole-dot';
-            if (i < AppState.currentHole) dot.classList.add('done');
-            else if (i === AppState.currentHole) dot.classList.add('current');
-            dotsContainer.appendChild(dot);
+        if (dotsContainer) {
+            dotsContainer.innerHTML = '';
+            const totalHoles = AppState.currentRoundHoles || 9;
+            for (let i = 1; i <= totalHoles; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'hole-dot';
+                if (i < AppState.currentHole) dot.classList.add('done');
+                else if (i === AppState.currentHole) dot.classList.add('current');
+                dotsContainer.appendChild(dot);
+            }
         }
-    }
 
-    // Update hole jumper active state
-    renderHoleJumper();
+        // Update hole jumper active state
+        renderHoleJumper();
 
-    if (AppState.currentUser) {
-        AppState.currentHoleShots = []; // Clear for new hole
-    }
-
-    const scoresContainer = document.getElementById('oc-group-scores');
-    if (!scoresContainer) return;
-    scoresContainer.innerHTML = '';
-
-    // MAP MULTIPLE PLAYERS INTO SCORING GRID
-    AppState.liveRoundGroups.forEach((p, index) => {
-        const pDiv = document.createElement('div');
-        pDiv.style.cssText = 'margin-bottom:12px; background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:10px;';
-
-        const nameRow = document.createElement('div');
-        nameRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
-
-        // Calculate cumulative score (gross)
-        let totalSoFar = 0;
-        for (let h = 1; h < AppState.currentHole; h++) {
-            totalSoFar += (p.scores[h] || 0);
+        if (AppState.currentUser) {
+            AppState.currentHoleShots = []; // Clear for new hole
         }
-        const holeScore = p.scores[AppState.currentHole] || 0;
 
-        nameRow.innerHTML = `
+        const scoresContainer = document.getElementById('oc-group-scores');
+        if (!scoresContainer) return;
+        scoresContainer.innerHTML = '';
+
+        // MAP MULTIPLE PLAYERS INTO SCORING GRID
+        AppState.liveRoundGroups.forEach((p, index) => {
+            const pDiv = document.createElement('div');
+            pDiv.style.cssText = 'margin-bottom:12px; background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:10px;';
+
+            const nameRow = document.createElement('div');
+            nameRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
+
+            // Calculate cumulative score (gross)
+            let totalSoFar = 0;
+            for (let h = 1; h < AppState.currentHole; h++) {
+                totalSoFar += (p.scores[h] || 0);
+            }
+            const holeScore = p.scores[AppState.currentHole] || 0;
+
+            nameRow.innerHTML = `
             <span style="font-weight:700; font-size:1.1rem; color:#1e293b;">${p.name}</span>
             <span style="font-size:0.85rem; color:#64748b; font-weight:600;">Total: <span style="color:var(--primary-color); font-size:1rem;">${totalSoFar + holeScore}</span></span>
         `;
-        pDiv.appendChild(nameRow);
+            pDiv.appendChild(nameRow);
 
-        const controlRow = document.createElement('div');
-        controlRow.style.cssText = 'display:flex; align-items:center; gap:15px;';
-        controlRow.innerHTML = `
+            const controlRow = document.createElement('div');
+            controlRow.style.cssText = 'display:flex; align-items:center; gap:15px;';
+            controlRow.innerHTML = `
             <div style="flex:1; font-size:0.9rem; font-weight:600; color:#475569;">Hole ${AppState.currentHole} Strokes</div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <button class="btn-grid-minus" style="width:44px; height:44px; border-radius:12px; border:2px solid #cbd5e1; background:white; font-size:1.4rem; font-weight:bold;">−</button>
@@ -505,30 +506,30 @@ export function loadHole() {
             </div>
         `;
 
-        controlRow.querySelector('.btn-grid-plus').onclick = () => {
-            p.scores[AppState.currentHole] = (p.scores[AppState.currentHole] || 0) + 1;
-            loadHole();
-            updateLiveLeaderboard();
-        };
-        controlRow.querySelector('.btn-grid-minus').onclick = () => {
-            if (p.scores[AppState.currentHole] > 0) {
-                p.scores[AppState.currentHole]--;
+            controlRow.querySelector('.btn-grid-plus').onclick = () => {
+                p.scores[AppState.currentHole] = (p.scores[AppState.currentHole] || 0) + 1;
                 loadHole();
                 updateLiveLeaderboard();
-            }
-        };
+            };
+            controlRow.querySelector('.btn-grid-minus').onclick = () => {
+                if (p.scores[AppState.currentHole] > 0) {
+                    p.scores[AppState.currentHole]--;
+                    loadHole();
+                    updateLiveLeaderboard();
+                }
+            };
 
-        pDiv.appendChild(controlRow);
+            pDiv.appendChild(controlRow);
 
-        // Optional Simple Stats Row (Small icons for GIR/Fwy + Plus/Minus for Putts)
-        const statsRow = document.createElement('div');
-        statsRow.style.cssText = 'display:flex; gap:10px; margin-top:5px; align-items:center;';
+            // Optional Simple Stats Row (Small icons for GIR/Fwy + Plus/Minus for Putts)
+            const statsRow = document.createElement('div');
+            statsRow.style.cssText = 'display:flex; gap:10px; margin-top:5px; align-items:center;';
 
-        const fwySet = p.simpleStats[AppState.currentHole]?.fwy;
-        const girSet = p.simpleStats[AppState.currentHole]?.gir;
-        const putts = p.simpleStats[AppState.currentHole]?.putts || 0;
+            const fwySet = p.simpleStats[AppState.currentHole]?.fwy;
+            const girSet = p.simpleStats[AppState.currentHole]?.gir;
+            const putts = p.simpleStats[AppState.currentHole]?.putts || 0;
 
-        statsRow.innerHTML = `
+            statsRow.innerHTML = `
             <button class="mini-stat ${fwySet === true ? 'active-fwy' : (fwySet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🌿 FW</button>
             <button class="mini-stat ${girSet === true ? 'active-gir' : (girSet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🟢 GIR</button>
             <div style="flex:1.5; display:flex; align-items:center; justify-content:space-between; padding:4px 8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc;">
@@ -538,43 +539,54 @@ export function loadHole() {
             </div>
         `;
 
-        statsRow.querySelector('.mini-stat:nth-child(1)').onclick = () => {
-            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            p.simpleStats[AppState.currentHole].fwy = !p.simpleStats[AppState.currentHole].fwy;
-            loadHole();
-        };
-        statsRow.querySelector('.mini-stat:nth-child(2)').onclick = () => {
-            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            p.simpleStats[AppState.currentHole].gir = !p.simpleStats[AppState.currentHole].gir;
-            loadHole();
-        };
-        statsRow.querySelector('.putt-plus').onclick = () => {
-            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            p.simpleStats[AppState.currentHole].putts = (p.simpleStats[AppState.currentHole].putts || 0) + 1;
-            loadHole();
-        };
-        statsRow.querySelector('.putt-minus').onclick = () => {
-            if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-            const cur = p.simpleStats[AppState.currentHole].putts || 0;
-            if (cur > 0) p.simpleStats[AppState.currentHole].putts = cur - 1;
-            loadHole();
-        };
+            statsRow.querySelector('.mini-stat:nth-child(1)').onclick = () => {
+                if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+                p.simpleStats[AppState.currentHole].fwy = !p.simpleStats[AppState.currentHole].fwy;
+                loadHole();
+            };
+            statsRow.querySelector('.mini-stat:nth-child(2)').onclick = () => {
+                if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+                p.simpleStats[AppState.currentHole].gir = !p.simpleStats[AppState.currentHole].gir;
+                loadHole();
+            };
+            statsRow.querySelector('.putt-plus').onclick = () => {
+                if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+                p.simpleStats[AppState.currentHole].putts = (p.simpleStats[AppState.currentHole].putts || 0) + 1;
+                loadHole();
+            };
+            statsRow.querySelector('.putt-minus').onclick = () => {
+                if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
+                const cur = p.simpleStats[AppState.currentHole].putts || 0;
+                if (cur > 0) p.simpleStats[AppState.currentHole].putts = cur - 1;
+                loadHole();
+            };
 
-        pDiv.appendChild(statsRow);
-        scoresContainer.appendChild(pDiv);
-    });
+            pDiv.appendChild(statsRow);
+            scoresContainer.appendChild(pDiv);
+        });
 
-    // Hide single-player stats block if group round
-    const simpleStatsBlock = document.getElementById('oc-simple-stats-container');
-    if (simpleStatsBlock) {
-        if (AppState.liveRoundGroups.length > 1) {
-            simpleStatsBlock.classList.add('hidden');
-        } else {
-            simpleStatsBlock.classList.remove('hidden');
+        // Hide single-player stats block if group round
+        const simpleStatsBlock = document.getElementById('oc-simple-stats-container');
+        if (simpleStatsBlock) {
+            if (AppState.liveRoundGroups.length > 1) {
+                simpleStatsBlock.classList.add('hidden');
+            } else {
+                simpleStatsBlock.classList.remove('hidden');
+            }
+        }
+
+        updateLiveLeaderboard();
+    } catch (e) {
+        console.error("UI Error Boundary caught generic hole load failure:", e);
+        const scoresContainer = document.getElementById('oc-group-scores');
+        if (scoresContainer) {
+            scoresContainer.innerHTML = '';
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = 'padding:15px; background:#fee2e2; color:#b91c1c; border-radius:8px; text-align:center; font-weight:bold; margin-top:20px;';
+            errDiv.textContent = 'Unable to load hole data. Please try skipping to the next hole.';
+            scoresContainer.appendChild(errDiv);
         }
     }
-
-    updateLiveLeaderboard();
 }
 
 function openFinishModal() {

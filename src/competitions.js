@@ -124,8 +124,16 @@ export function setActiveCompetition(compId) {
     const rulesSummaryEl = document.getElementById('active-comp-rules-summary');
     if (nameEl) nameEl.textContent = AppState.currentCompData.name;
     if (rulesSummaryEl) {
+        rulesSummaryEl.innerHTML = ''; // Clear safely
         if (rulesArray.length > 0) {
-            rulesSummaryEl.innerHTML = rulesArray.map(r => `<strong>${r.name}</strong>: ${r.pts} pts`).join(' | ');
+            rulesArray.forEach((r, idx) => {
+                const strong = document.createElement('strong');
+                strong.textContent = r.name;
+                rulesSummaryEl.appendChild(strong);
+
+                const textNode = document.createTextNode(`: ${r.pts} pts${idx < rulesArray.length - 1 ? ' | ' : ''}`);
+                rulesSummaryEl.appendChild(textNode);
+            });
         } else {
             rulesSummaryEl.textContent = "No custom rules.";
         }
