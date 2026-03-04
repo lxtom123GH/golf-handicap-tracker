@@ -6,7 +6,7 @@ import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
-import { bindAiGenerator } from './ai.js';
+import { bindAiGenerator, generateAIResponse } from './ai.js';
 
 let unsubscribePractice = null;
 let currentDrillDefinition = null;
@@ -121,7 +121,13 @@ export function initPractice() {
     initCoachSelection();
 
     const btnAskAi = document.getElementById('btn-ask-ai');
-    if (btnAskAi) btnAskAi.addEventListener('click', bindAiGenerator);
+    if (btnAskAi) {
+        btnAskAi.addEventListener('click', () => {
+            if (!AppState.currentUser) return;
+            bindAiGenerator();
+            generateAIResponse(AppState.currentUser.uid, 'player');
+        });
+    }
 
     const dateInput = document.getElementById('drill-date');
     if (dateInput) dateInput.valueAsDate = new Date();
@@ -216,18 +222,26 @@ export function initPractice() {
 
     if (UI.btnEmailCoach) {
         UI.btnEmailCoach.addEventListener('click', () => {
-            const dataStr = AppState.currentPracticeRounds.map(r =>
-                `${new Date(r.date?.toDate?.() || r.date).toLocaleDateString()} - ${r.drillName}: ${r.score}`
-            ).join('\n');
+            const dataStr = AppState.currentPracticeRounds.map(r => {
+                let details = "";
+                if (r.data && Object.keys(r.data).length > 0) {
+                    details = " | Details: " + Object.entries(r.data).map(([k, v]) => `${k.replace('_', ' ')}: ${v}`).join(', ');
+                }
+                return `${new Date(r.date?.toDate?.() || r.date).toLocaleDateString()} - ${r.drillName}: ${r.score}${details}`;
+            }).join('\n');
             window.location.href = `mailto:?subject=Golf Practice Logs&body=Here are my recent practice sessions:\n\n${encodeURIComponent(dataStr)}`;
         });
     }
 
     if (UI.btnExportPractice) {
         UI.btnExportPractice.addEventListener('click', () => {
-            const csv = "Date,Drill,Score\n" + AppState.currentPracticeRounds.map(r =>
-                `${new Date(r.date?.toDate?.() || r.date).toLocaleDateString()},${r.drillName},${r.score}`
-            ).join('\n');
+            const csv = "Date,Drill,Score,Details\n" + AppState.currentPracticeRounds.map(r => {
+                let details = "";
+                if (r.data && Object.keys(r.data).length > 0) {
+                    details = Object.entries(r.data).map(([k, v]) => `${k.replace('_', ' ')}: ${v}`).join(' | ');
+                }
+                return `${new Date(r.date?.toDate?.() || r.date).toLocaleDateString()},"${r.drillName}",${r.score},"${details}"`;
+            }).join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
