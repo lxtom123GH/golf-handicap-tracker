@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getAdjustmentFactor, calculateIndex } from '../../whs.js';
+import { getAdjustmentFactor, calculateIndex } from '../../src/whs.js';
 
 // Mock dependencies that rely on DOM or Firebase
 vi.mock('../../firebase-config.js', () => ({
