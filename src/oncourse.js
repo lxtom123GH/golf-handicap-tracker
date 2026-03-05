@@ -1361,6 +1361,15 @@ async function runStatAnalysis() {
     if (modal) modal.classList.remove('hidden');
     if (btnClose) btnClose.onclick = () => {
         if (modal) modal.classList.add('hidden');
+        // UX State Progression: Update original button to show completion
+        const mainBtn = document.getElementById('btn-post-analyze');
+        if (mainBtn) {
+            mainBtn.innerHTML = "✅ Quest Accepted";
+            mainBtn.disabled = true;
+            mainBtn.style.backgroundColor = "#10b981";
+            mainBtn.style.borderColor = "#10b981";
+            mainBtn.style.color = "white";
+        }
     };
 
     const p = AppState.liveRoundGroups.find(x => x.uid === auth.currentUser?.uid);
