@@ -347,9 +347,9 @@ export function setupTabs() {
     try {
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
-        if (footerVer) footerVer.textContent = 'v6.12.1 - Ironclad Mobile Fix';
-        if (headerVer) headerVer.textContent = 'v6.12.1 - Ironclad Mobile Fix';
-        console.log(`[UI] Version Injected: v6.12.1 - Ironclad Mobile Fix`);
+        if (footerVer) footerVer.textContent = 'v6.12.2 - Nav Layering Fix';
+        if (headerVer) headerVer.textContent = 'v6.12.2 - Nav Layering Fix';
+        console.log(`[UI] Version Injected: v6.12.2 - Nav Layering Fix`);
     } catch (e) {
         console.error("[UI] Version injection failed:", e);
     }

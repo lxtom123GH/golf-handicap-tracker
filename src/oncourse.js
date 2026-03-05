@@ -412,6 +412,8 @@ export function endRoundCleanup() {
         locker.classList.add('hidden');
         locker.classList.remove('active');
     }
+    const tabs = document.querySelector('.tabs-container');
+    if (tabs) tabs.classList.remove('hidden');
     const tabOnCourse = document.getElementById('tab-oncourse');
     if (tabOnCourse) tabOnCourse.classList.add('hidden');
 
@@ -1330,6 +1332,9 @@ function showLockerRoom(isPartialFail = false) {
     if (subNav) subNav.classList.add('hidden');
     if (exitBar) exitBar.classList.add('hidden');
     if (tabOnCourse) tabOnCourse.classList.add('hidden');
+
+    const tabs = document.querySelector('.tabs-container');
+    if (tabs) tabs.classList.add('hidden');
 
     // Show Locker Room — MUST add .active to override .tab-content base rule
     const locker = document.getElementById('oc-locker-room');
