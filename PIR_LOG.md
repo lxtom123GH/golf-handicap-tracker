@@ -51,6 +51,14 @@ This feature recovery proved that local testing is blind to PWA caching issues. 
 
 ---
 
+### v6.21.0 - Split-Brain Versioning Bug
+
+| The Ghost | The Silver Bullet | The Ward |
+| :--- | :--- | :--- |
+| **Split-Brain Versioning**: Decentralized, hardcoded version strings across multiple JS files led to UI mismatches and zombie cache confusion. | **Single-Source DOM Anchor**: Consolidated the version string into a single `<meta>` tag in `index.html` that all JavaScript modules dynamically read at runtime. | **The Ground Truth Rule**: Never hardcode application version strings inside JavaScript logic files. Always dynamically read from the HTML anchor. |
+
+---
+
 ## 📜 The Three Commandments of AI Coding
 1.  **Commandment I: The Sydney Anchor.** All AI Cloud Functions and Bucket-related logic must be pinned to `australia-southeast1` on both Frontend and Backend. No exceptions.
 2.  **Commandment II: The Cache Buster.** Every major UI/Backend handshake change MUST be accompanied by a `sw.js` `CACHE_NAME` bump to prevent "Zombie Code" from running on mobile devices.
