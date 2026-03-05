@@ -3,6 +3,12 @@
 // Main Entry Point & Global Event Bindings
 // ==========================================
 
+const CURRENT_VERSION = 'v6.7.4';
+if (localStorage.getItem('app_version') !== CURRENT_VERSION) {
+    localStorage.setItem('app_version', CURRENT_VERSION);
+    location.reload(true);
+}
+
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function (registrations) {
         for (let registration of registrations) {
