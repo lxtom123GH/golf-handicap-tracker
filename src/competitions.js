@@ -71,9 +71,9 @@ function listenToCompetitions() {
             const tmplSelect = document.getElementById('comp-template-select');
             if (tmplSelect) {
                 const opt3 = document.createElement('option');
-                opt3.value = t.id;
-                opt3.textContent = r.name;
-                opt3.setAttribute('data-rules', JSON.stringify(r.rules || []));
+                opt3.value = docSnap.id;
+                opt3.textContent = data.name;
+                opt3.setAttribute('data-rules', JSON.stringify(data.rules || []));
                 tmplSelect.appendChild(opt3);
             }
         });

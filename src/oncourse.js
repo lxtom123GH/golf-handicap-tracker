@@ -879,6 +879,28 @@ function bindAdvancedTools() {
             UI.rulesResponseCard.classList.add('hidden');
         });
     }
+
+    // v6.21.0: Surveyor Mode Bindings
+    if (UI.btnToggleSurveyor) {
+        UI.btnToggleSurveyor.addEventListener('click', () => {
+            import('./surveyor').then(m => m.toggleSurveyor());
+        });
+    }
+    if (UI.btnPinFront) {
+        UI.btnPinFront.addEventListener('click', () => {
+            import('./surveyor').then(m => m.capturePin('front'));
+        });
+    }
+    if (UI.btnPinBack) {
+        UI.btnPinBack.addEventListener('click', () => {
+            import('./surveyor').then(m => m.capturePin('back'));
+        });
+    }
+    if (UI.btnPinOverride) {
+        UI.btnPinOverride.addEventListener('click', () => {
+            import('./surveyor').then(m => m.capturePin('override'));
+        });
+    }
 }
 
 let gpsWatchId = null;
@@ -928,20 +950,48 @@ function updateGPSDistances(lat, lon) {
     }
 
     // 2. Look up coordinates for that physical hole
-    const coords = KEPERRA_GPS[physicalHole];
+    // Priority: 1. Survey Override, 2. Calculated Green Center, 3. Static GPS (KEPERRA_GPS)
+    let groundTruth = null;
+    const survey = AppState.surveyData?.[AppState.currentHole];
 
-    if (coords && coords.length >= 6) {
-        const [cLat, cLon, fLat, fLon, bLat, bLon] = coords;
+    if (survey) {
+        if (survey.override) {
+            groundTruth = {
+                c: [survey.override.lat, survey.override.lng],
+                f: survey.front ? [survey.front.lat, survey.front.lng] : null,
+                b: survey.back ? [survey.back.lat, survey.back.lng] : null
+            };
+        } else if (survey.greenCenter) {
+            groundTruth = {
+                c: [survey.greenCenter.lat, survey.greenCenter.lng],
+                f: survey.front ? [survey.front.lat, survey.front.lng] : null,
+                b: survey.back ? [survey.back.lat, survey.back.lng] : null
+            };
+        }
+    }
 
+    if (!groundTruth && KEPERRA_GPS[physicalHole]) {
+        const k = KEPERRA_GPS[physicalHole];
+        groundTruth = {
+            c: [k[0], k[1]],
+            f: [k[2], k[3]],
+            b: [k[4], k[5]]
+        };
+    }
+
+    if (groundTruth && groundTruth.c) {
         // 3. Calculate Haversine distance in meters
-        const distCenter = getDistance(lat, lon, cLat, cLon);
-        const distFront = getDistance(lat, lon, fLat, fLon);
-        const distBack = getDistance(lat, lon, bLat, bLon);
+        const distCenter = getDistance(lat, lon, groundTruth.c[0], groundTruth.c[1]);
+        const distFront = groundTruth.f ? getDistance(lat, lon, groundTruth.f[0], groundTruth.f[1]) : null;
+        const distBack = groundTruth.b ? getDistance(lat, lon, groundTruth.b[0], groundTruth.b[1]) : null;
 
         // 4. Update UI labels (meters)
         if (UI.gpsMiddle) UI.gpsMiddle.textContent = `${Math.round(distCenter)}m`;
-        if (UI.gpsFront) UI.gpsFront.textContent = `${Math.round(distFront)}m`;
-        if (UI.gpsBack) UI.gpsBack.textContent = `${Math.round(distBack)}m`;
+        if (UI.gpsFront) UI.gpsFront.textContent = distFront !== null ? `${Math.round(distFront)}m` : "---m";
+        if (UI.gpsBack) UI.gpsBack.textContent = distBack !== null ? `${Math.round(distBack)}m` : "---m";
+
+        // v6.21.0 Telemetry: Log if we are using Surveyor data
+        if (survey) console.log(`[GPS] Using Ground Truth (Survey) for Hole ${AppState.currentHole}`);
     } else {
         // Mock fallback if no coordinates found
         if (UI.gpsMiddle) UI.gpsMiddle.textContent = "---m";
@@ -2316,3 +2366,5 @@ function bindOcSubNav() {
         });
     });
 }
+
+export { getDistance, updateGPSDistances };

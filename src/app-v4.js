@@ -3,7 +3,9 @@
 // Main Entry Point & Global Event Bindings
 // ==========================================
 
-const CURRENT_VERSION = 'v6.20.2';
+const appMeta = document.querySelector('meta[name="application-version"]');
+const CURRENT_VERSION = appMeta ? appMeta.getAttribute('content') : 'v6.21.0';
+
 if (localStorage.getItem('app_version') !== CURRENT_VERSION) {
     localStorage.setItem('app_version', CURRENT_VERSION);
     location.reload(true);

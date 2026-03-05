@@ -4,7 +4,7 @@
 import { AppState } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
-import { doc, updateDoc, getDoc, setDoc, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db, functions } from './firebase-config.js';
 
 const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
@@ -188,8 +188,35 @@ export const UI = {
     rulesResponseCard: document.getElementById('rules-response-card'),
     rulesResponseContent: document.getElementById('rules-response-content'),
     btnCloseRulesCard: document.getElementById('btn-close-rules-card'),
-    mainApp: document.getElementById('main-app')
+    mainApp: document.getElementById('main-app'),
+
+    // v6.21.0: Surveyor Mode
+    btnToggleSurveyor: document.getElementById('btn-toggle-surveyor'),
+    surveyorContainer: document.getElementById('surveyor-container'),
+    btnPinFront: document.getElementById('btn-pin-front'),
+    btnPinBack: document.getElementById('btn-pin-back'),
+    btnPinOverride: document.getElementById('btn-pin-override')
 };
+
+/**
+ * Injects the application version from the meta tag into all matching displays.
+ */
+export function injectVersionFromMeta() {
+    const appMeta = document.querySelector('meta[name="application-version"]');
+    const version = appMeta ? appMeta.getAttribute('content') : 'vUnknown';
+
+    document.querySelectorAll('.version-display').forEach(el => {
+        el.textContent = version;
+    });
+
+    // Legacy support for specific IDs
+    const footerVer = document.getElementById('footer-version');
+    const headerVer = document.getElementById('header-version');
+    if (footerVer) footerVer.textContent = version;
+    if (headerVer) headerVer.textContent = version;
+
+    console.log(`[UI] Version Injected from Meta: ${version}`);
+}
 
 // ==========================================
 // TABS & NAVIGATION HELPER
@@ -307,13 +334,9 @@ export function setupTabs() {
     // But we keep it as a wrapper to avoid breaking bootstrapApplication
     initNavigation();
 
-    // Dynamic Version Injection
+    // Dynamic Version Injection (Single-Source)
     try {
-        const footerVer = document.getElementById('footer-version');
-        const headerVer = document.getElementById('header-version');
-        if (footerVer) footerVer.textContent = 'v6.20.2 - Housekeeping';
-        if (headerVer) headerVer.textContent = 'v6.20.2 - Housekeeping';
-        console.log(`[UI] Version Injected: v6.20.2 - Housekeeping`);
+        injectVersionFromMeta();
     } catch (e) {
         console.error("[UI] Version injection failed:", e);
     }
