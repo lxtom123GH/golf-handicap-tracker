@@ -640,7 +640,7 @@ function openFinishModal() {
     const btnPostAudio = document.getElementById('btn-post-audio');
     if (btnPostAudio) {
         btnPostAudio.onclick = () => {
-            alert("Opening audio diary recorder... (Stub)");
+            alert("Audio Diary integration is coming in the next sprint. Your stats have been saved!");
         };
     }
 
