@@ -118,8 +118,7 @@ function updateSurveyorUI(coords) {
  * @param {string} type - 'front', 'back', or 'override'
  */
 export async function capturePin(type) {
-    if (!currentPos || currentAccuracy > 5.0) return;
-    if (!AppState.currentRoundCourseName || !AppState.currentHole) return;
+    if (!currentPos || !AppState.currentRoundCourseName || !AppState.currentHole) return;
 
     // Retrieve button for visual feedback
     const btn = document.getElementById(`btn-pin-${type}`);
@@ -134,22 +133,33 @@ export async function capturePin(type) {
     const accuracy = currentPos.coords.accuracy;
     const cleanAcc = Math.round(accuracy * 100) / 100;
 
-    // 1. The 80m Sanity Check
-    if (existingData && existingData.lat && existingData.lng) {
-        const dist = getDistance(lat, lng, existingData.lat, existingData.lng);
-        if (dist > 80) {
-            if (!window.confirm("WARNING: You are over 80m from the existing green. Are you on the wrong hole? Overwrite anyway?")) {
-                return;
+    // 1. The 80m Sanity Check (Force Refresh Logic)
+    try {
+        let distanceToExisting = 0;
+        console.log(`[Surveyor] Capturing ${type}. Current: [${lat}, ${lng}], Existing:`, existingData);
+
+        if (existingData && existingData.lat && existingData.lng) {
+            distanceToExisting = getDistance(lat, lng, existingData.lat, existingData.lng);
+            console.log(`[Surveyor] 80m Check: Distance is ${distanceToExisting.toFixed(2)}m`);
+
+            if (distanceToExisting > 80) {
+                if (!window.confirm(`WARNING: You are ${Math.round(distanceToExisting)}m from the existing green. Are you on the wrong hole? Overwrite anyway?`)) {
+                    return;
+                }
+            } else {
+                if (!window.confirm("Overwrite existing coordinate for this pin?")) {
+                    return;
+                }
             }
         } else {
+            console.log("[Surveyor] No existing data found for this pin type. Skipping distance check.");
             if (!window.confirm("Overwrite existing coordinate for this pin?")) {
                 return;
             }
         }
-    } else {
-        if (!window.confirm("Overwrite existing coordinate for this pin?")) {
-            return;
-        }
+    } catch (e) {
+        console.error("[Surveyor] Math / Calculation Failure in Sanity Check:", e);
+        alert("Sanity Check Failed: " + e.message);
     }
 
     // 2. Visual Feedback Start
@@ -200,7 +210,8 @@ export async function capturePin(type) {
         alert("Pin saved successfully!");
     }
 
-    // Instantly refresh GPS distance bar
+    // Instantly refresh GPS distance bar using NEW coordinates
+    console.log("[Surveyor] Forcing UI Refresh with updated coordinates...");
     updateGPSDistances(lat, lng);
 }
 
