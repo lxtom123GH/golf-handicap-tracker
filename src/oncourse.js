@@ -1350,7 +1350,7 @@ function showLockerRoom(isPartialFail = false) {
 }
 
 /**
- * v6.9.0 Math Engine: Calculates arithmetic means, then calls the Cloud Coach.
+ * v6.10.0 Math Engine: Calculates enriched stats, then calls the Cloud Coach.
  */
 async function runStatAnalysis() {
     console.log("[Stats] Running Instant Analysis...");
@@ -1371,42 +1371,117 @@ async function runStatAnalysis() {
 
     const pars = AppState.currentCoursePars || [];
     const scores = p.scores;
+    const simpleStats = p.simpleStats || {};
 
-    const stats = {
-        3: { total: 0, count: 0 },
-        4: { total: 0, count: 0 },
-        5: { total: 0, count: 0 }
-    };
+    // 1. Math counters
+    const parStats = { 3: { total: 0, count: 0 }, 4: { total: 0, count: 0 }, 5: { total: 0, count: 0 } };
+    let holesPlayed = 0;
+    let totalPutts = 0;
+    let girCount = 0;
+    let fwyOpportunityCount = 0;
+    let fwyHitCount = 0;
+    let puttOnGirTotal = 0;
 
     Object.keys(scores).forEach(holeNum => {
         const score = parseInt(scores[holeNum]);
+        if (score <= 0) return;
+
+        holesPlayed++;
         const holeIdx = parseInt(holeNum) - 1;
-        const par = parseInt(pars[holeIdx]);
-        if (score > 0 && stats[par]) {
-            stats[par].total += score;
-            stats[par].count++;
+        const par = parseInt(pars[holeIdx]) || 4;
+
+        // Par Averages
+        if (parStats[par]) {
+            parStats[par].total += score;
+            parStats[par].count++;
+        }
+
+        // Advanced Stats from simpleStats
+        const stats = simpleStats[holeNum];
+        if (stats) {
+            if (stats.putts) totalPutts += stats.putts;
+            if (stats.gir) {
+                girCount++;
+                if (stats.putts) puttOnGirTotal += stats.putts;
+            }
+            if (par >= 4) {
+                fwyOpportunityCount++;
+                if (stats.fwy || stats.fir) fwyHitCount++;
+            }
         }
     });
 
-    // Create payload for cloud function
+    // 2. Shot-level analytics (Penalties, Mental Score, Shape)
+    let penaltyTotal = 0;
+    let routinePassCount = 0;
+    let routineTotal = 0;
+    const shapeCounts = {};
+    Object.keys(simpleStats).forEach(holeNum => {
+        const hStats = simpleStats[holeNum];
+        if (!hStats) return;
+        if (hStats.penalties && hStats.penalties > 0) penaltyTotal += hStats.penalties;
+        if (hStats.routines && hStats.routines.pre) {
+            routineTotal++;
+            if (hStats.routines.pre === 'Pass') routinePassCount++;
+        }
+        if (hStats.shape) {
+            shapeCounts[hStats.shape] = (shapeCounts[hStats.shape] || 0) + 1;
+        }
+    });
+
+    let dominantShape = null;
+    let maxShapeCount = 0;
+    for (const shape in shapeCounts) {
+        if (shapeCounts[shape] > maxShapeCount) {
+            maxShapeCount = shapeCounts[shape];
+            dominantShape = shape;
+        }
+    }
+
+    // 3. Final Payload (with divide-by-zero protection)
     const payload = {
-        par3Avg: stats[3].count > 0 ? parseFloat((stats[3].total / stats[3].count).toFixed(2)) : null,
-        par4Avg: stats[4].count > 0 ? parseFloat((stats[4].total / stats[4].count).toFixed(2)) : null,
-        par5Avg: stats[5].count > 0 ? parseFloat((stats[5].total / stats[5].count).toFixed(2)) : null
+        par3Avg: parStats[3].count > 0 ? parseFloat((parStats[3].total / parStats[3].count).toFixed(2)) : null,
+        par4Avg: parStats[4].count > 0 ? parseFloat((parStats[4].total / parStats[4].count).toFixed(2)) : null,
+        par5Avg: parStats[5].count > 0 ? parseFloat((parStats[5].total / parStats[5].count).toFixed(2)) : null,
+        holesPlayed,
+        totalPutts,
+        fairwaysHit: fwyOpportunityCount > 0 ? parseFloat((fwyHitCount / fwyOpportunityCount).toFixed(2)) : null,
+        girPercent: holesPlayed > 0 ? parseFloat((girCount / holesPlayed).toFixed(2)) : null,
+        puttsPerGir: girCount > 0 ? parseFloat((puttOnGirTotal / girCount).toFixed(2)) : null,
+        penalties: penaltyTotal,
+        mentalScore: routineTotal > 0 ? parseFloat((routinePassCount / routineTotal).toFixed(2)) : null,
+        shotShapeTendency: dominantShape
     };
 
     // Render local stats first
-    let html = "";
-    [3, 4, 5].forEach(par => {
-        const key = `par${par}Avg`;
-        const avgDisplay = payload[key] !== null ? payload[key].toFixed(1) : "N/A";
-        html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
-                <span style="font-weight: 600;">Par ${par} Average:</span>
-                <span style="font-size: 1.2rem; font-weight: 800; color: var(--primary-color);">${avgDisplay}</span>
+    let html = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase;">FIR%</div>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--primary-color);">${payload.fairwaysHit !== null ? Math.round(payload.fairwaysHit * 100) + '%' : 'N/A'}</div>
             </div>
-        `;
-    });
+            <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase;">GIR%</div>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--primary-color);">${payload.girPercent !== null ? Math.round(payload.girPercent * 100) + '%' : 'N/A'}</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase;">Putts/GIR</div>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--primary-color);">${payload.puttsPerGir !== null ? payload.puttsPerGir.toFixed(1) : 'N/A'}</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase;">Mental Routine</div>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--primary-color);">${payload.mentalScore !== null ? Math.round(payload.mentalScore * 100) + '%' : 'N/A'}</div>
+            </div>
+        </div>
+        <div style="text-align:left; font-size:0.85rem; background:#f1f5f9; padding:12px; border-radius:8px;">
+            <p><strong>Par Averages:</strong> 
+                3s: ${payload.par3Avg !== null ? payload.par3Avg.toFixed(1) : 'N/A'} | 
+                4s: ${payload.par4Avg !== null ? payload.par4Avg.toFixed(1) : 'N/A'} | 
+                5s: ${payload.par5Avg !== null ? payload.par5Avg.toFixed(1) : 'N/A'}</p>
+            <p><strong>Primary Shape:</strong> ${payload.shotShapeTendency || 'None Recorded'}</p>
+            <p><strong>Total Penalties:</strong> ${payload.penalties}</p>
+        </div>
+    `;
 
     // Add loading state for AI response
     html += `<div id="ai-coach-feedback" style="margin-top: 15px; border-top: 1px solid #dee2e6; padding-top: 15px;">
