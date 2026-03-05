@@ -1,6 +1,6 @@
 {
   "name": "golf_handicap_tracker",
-  "version": "6.13.0",
+  "version": "6.19.0",
   "description": "Golf Handicap Tracker with Sequential Shot Tracking",
   "main": "app.js",
   "type": "module",
@@ -21,6 +21,7 @@
     "@playwright/test": "^1.58.2",
     "firebase-tools": "^15.8.0",
     "jsdom": "^28.1.0",
+    "playwright": "^1.58.2",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
   },
