@@ -345,12 +345,11 @@ export function setupTabs() {
 
     // Dynamic Version Injection
     try {
-        const versionStr = 'v6.1.8 - UX Polish & Safe Areas';
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
-        if (footerVer) footerVer.textContent = `Golf Handicap Tracker ${versionStr}`;
-        if (headerVer) headerVer.textContent = versionStr;
-        console.log(`[UI] Version Injected: ${versionStr}`);
+        if (footerVer) footerVer.textContent = 'v6.7.5 - CLEAN SLATE';
+        if (headerVer) headerVer.textContent = 'v6.7.5 - CLEAN SLATE';
+        console.log(`[UI] Version Injected: v6.7.5 - CLEAN SLATE`);
     } catch (e) {
         console.error("[UI] Version injection failed:", e);
     }

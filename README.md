@@ -4,7 +4,7 @@ A premium, PWA-ready golf score and activity tracker designed for high-performan
 
 ## 📱 PWA Features
 - **Standalone Display**: Native application feel with dedicated splash screens and no browser chrome.
-- **Service Worker Lifecycle**: Automated cache purging and version management (currently v6.1.8).
+- **Service Worker Lifecycle**: Automated cache purging and version management (currently v6.7.5).
 - **Safe Area Support**: Optimized for edge-to-edge mobile displays with `safe-area-inset` protection for navigation.
 - **Glassmorphism UI**: High-end translucent navigation with backdrop blurring for a premium experience.
 - **GPS Integration**: Real-time yardage tracking (Front/Center/Back) with high-contrast, glove-friendly font sizes.
@@ -39,7 +39,7 @@ Stores granular tracking data for live rounds.
 
 ---
 
-## 🧭 Navigation Lifecycle (v6.1.8)
+## 🧭 Navigation Lifecycle (v6.7.5)
 
 The application employs a **Dynamic Refresh Architecture** to ensure data consistency without full-page reloads.
 

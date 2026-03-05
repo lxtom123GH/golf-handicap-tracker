@@ -1,6 +1,6 @@
 # Changelog - Golf Handicap Tracker
 
-## [v6.1.8] - 2026-03-04
+## [v6.7.5] - 2026-03-05
 ### Added
 - **Glassmorphism Navigation**: Implemented translucent tab bar with backdrop-filter blur for a premium UI feel.
 - **Safe Area Hardening**: Added `env(safe-area-inset-bottom)` support for edge-to-edge mobile displays.

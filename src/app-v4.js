@@ -10,11 +10,8 @@ if (localStorage.getItem('app_version') !== CURRENT_VERSION) {
 }
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-            registration.unregister();
-        }
-    });
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
 }
 
 import { UI, setupTabs } from './ui.js';
