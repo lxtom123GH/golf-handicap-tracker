@@ -1370,6 +1370,11 @@ async function runStatAnalysis() {
             mainBtn.style.borderColor = "#10b981";
             mainBtn.style.color = "white";
         }
+        // v6.11.1 Final Exit UX: Highlight remaining options
+        const btnAudio = document.getElementById('btn-post-audio');
+        const btnHome = document.getElementById('btn-post-home');
+        if (btnAudio) btnAudio.classList.add('pulse-highlight');
+        if (btnHome) btnHome.classList.add('pulse-highlight');
     };
 
     const p = AppState.liveRoundGroups.find(x => x.uid === auth.currentUser?.uid);
