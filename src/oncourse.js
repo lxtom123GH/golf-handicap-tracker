@@ -408,7 +408,10 @@ export function endRoundCleanup() {
     const subNav = document.getElementById('oc-sub-nav');
     if (subNav) subNav.classList.add('hidden');
     const locker = document.getElementById('oc-locker-room');
-    if (locker) locker.classList.add('hidden');
+    if (locker) {
+        locker.classList.add('hidden');
+        locker.classList.remove('active');
+    }
     const tabOnCourse = document.getElementById('tab-oncourse');
     if (tabOnCourse) tabOnCourse.classList.add('hidden');
 
@@ -1307,6 +1310,9 @@ async function saveRoundToDatabase() {
  * @param {boolean} isPartialFail - Whether cloud sync failed.
  */
 function showLockerRoom(isPartialFail = false) {
+    // CRITICAL: Remove round-active FIRST to disable the CSS override
+    document.body.classList.remove('round-active');
+
     // Hide active containers explicitly
     const hub = document.getElementById('oncourse-hub');
     const setup = document.getElementById('oncourse-setup');
@@ -1324,10 +1330,11 @@ function showLockerRoom(isPartialFail = false) {
     if (exitBar) exitBar.classList.add('hidden');
     if (tabOnCourse) tabOnCourse.classList.add('hidden');
 
-    // Show Locker Room
+    // Show Locker Room — MUST add .active to override .tab-content base rule
     const locker = document.getElementById('oc-locker-room');
     if (locker) {
         locker.classList.remove('hidden');
+        locker.classList.add('active');
         // Handle Error Toggle
         const errDisplay = document.getElementById('locker-room-err');
         const msgDisplay = document.getElementById('locker-room-msg');
@@ -1339,9 +1346,6 @@ function showLockerRoom(isPartialFail = false) {
             if (msgDisplay) msgDisplay.textContent = "Round Saved Successfully";
         }
     }
-
-    const lockerEl = document.getElementById('oc-locker-room');
-    if (lockerEl) lockerEl.classList.remove('hidden');
 }
 
 function setWizardActive(isActive) {
