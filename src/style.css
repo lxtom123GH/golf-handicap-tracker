@@ -111,6 +111,10 @@ body {
     display: none !important;
 }
 
+.text-success { color: #10b981 !important; }
+.text-warning { color: #f59e0b !important; }
+.text-danger { color: #ef4444 !important; }
+
 /* On-Course Scorecard Styling */
 .compact-score-card {
     margin-bottom: 6px;

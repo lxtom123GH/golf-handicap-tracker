@@ -82,18 +82,32 @@ function updateSurveyorUI(coords) {
 
     if (accuracySpan) accuracySpan.textContent = `Accuracy: ${coords.accuracy.toFixed(1)}m`;
 
-    const isAccurate = coords.accuracy <= 5.0;
+    // v6.23.0: Refined thresholds
+    const isAccurate = coords.accuracy <= 15.0;
+    const isExcellent = coords.accuracy < 5.0;
+
+    accuracySpan.classList.remove('text-success', 'text-warning', 'text-danger');
 
     if (isAccurate) {
-        if (statusMsg) {
-            statusMsg.textContent = "Ready for high-precision capture ✅";
-            statusMsg.style.color = "#10b981";
-        }
         pinButtons.forEach(btn => btn.disabled = false);
+        if (isExcellent) {
+            accuracySpan.classList.add('text-success');
+            if (statusMsg) {
+                statusMsg.textContent = "Excellent Accuracy ✅";
+                statusMsg.style.color = "#10b981";
+            }
+        } else {
+            accuracySpan.classList.add('text-warning');
+            if (statusMsg) {
+                statusMsg.textContent = "Good Accuracy (OK to Pin)";
+                statusMsg.style.color = "#f59e0b";
+            }
+        }
     } else {
+        accuracySpan.classList.add('text-danger');
         if (statusMsg) {
-            statusMsg.textContent = "Wait for high accuracy (< 5.0m)...";
-            statusMsg.style.color = "#64748b";
+            statusMsg.textContent = "Searching for Signal... (>15m)";
+            statusMsg.style.color = "#ef4444";
         }
         pinButtons.forEach(btn => btn.disabled = true);
     }
@@ -117,6 +131,8 @@ export async function capturePin(type) {
     const existingData = AppState.surveyData[AppState.currentHole][type];
     const lat = currentPos.coords.latitude;
     const lng = currentPos.coords.longitude;
+    const accuracy = currentPos.coords.accuracy;
+    const cleanAcc = Math.round(accuracy * 100) / 100;
 
     // 1. The 80m Sanity Check
     if (existingData && existingData.lat && existingData.lng) {
@@ -145,7 +161,7 @@ export async function capturePin(type) {
     const coords = {
         lat: lat,
         lng: lng,
-        acc: currentAccuracy,
+        accuracy: cleanAcc,
         timestamp: Date.now()
     };
 
