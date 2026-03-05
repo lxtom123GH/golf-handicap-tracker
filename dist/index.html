@@ -12,7 +12,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-DmV926rN.js"></script>
+  <script type="module" crossorigin src="/assets/index-DbQ05XuT.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-brNNGDVP.css">
 </head>
 
@@ -987,7 +987,7 @@
             <div class="header-content">
                 <div class="branding">
                     <h1>Handicap Tracker <span id="app-version"
-                            style="font-size: 0.7rem; color: #64748b; margin-left: 10px;">v6.7.6</span>
+                            style="font-size: 0.7rem; color: #64748b; margin-left: 10px;">v6.8.0</span>
                     </h1>
                     <p>World Handicap System (WHS)</p>
                 </div>
@@ -2073,10 +2073,23 @@
             </div>
         </div>
     </div>
+    <!-- Stat Analysis Modal (v6.8.0) -->
+    <div id="stat-analysis-modal" class="modal-overlay hidden" style="z-index: 10002;">
+        <div class="card" style="width: 90%; max-width: 450px; padding: 25px; text-align: center;">
+            <h2 style="color: var(--primary-color); margin-bottom: 20px;">📊 Instant Stat Analysis</h2>
+            <div id="stat-analysis-results"
+                style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;">
+                <!-- Dynamically populated -->
+                <p style="color: var(--text-muted);">Calculating performance metrics...</p>
+            </div>
+            <button id="btn-close-stats" class="btn btn-secondary" style="width: 100%;">Close Analysis</button>
+        </div>
+    </div>
+
     <!-- Global Version Footer -->
     <div id="footer-version"
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-        Golf Handicap Tracker v6.7.6 - Locker Room Unlocked
+        Golf Handicap Tracker v6.8.0 - Instant Stats
     </div>
     <script>
         if ('serviceWorker' in navigator) {

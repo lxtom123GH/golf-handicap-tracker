@@ -631,8 +631,9 @@ function openFinishModal() {
 
     const btnPostAnalyze = document.getElementById('btn-post-analyze');
     if (btnPostAnalyze) {
-        btnPostAnalyze.onclick = () => {
-            alert("Starting deep stat analysis... (Stub)");
+        btnPostAnalyze.onclick = (e) => {
+            e.preventDefault();
+            runStatAnalysis();
         };
     }
 
@@ -1346,6 +1347,60 @@ function showLockerRoom(isPartialFail = false) {
             if (msgDisplay) msgDisplay.textContent = "Round Saved Successfully";
         }
     }
+}
+
+/**
+ * v6.8.0 Math Engine: Calculates arithmetic means for scores grouped by par.
+ */
+async function runStatAnalysis() {
+    console.log("[Stats] Running Instant Analysis...");
+    const modal = document.getElementById('stat-analysis-modal');
+    const resultsDiv = document.getElementById('stat-analysis-results');
+    const btnClose = document.getElementById('btn-close-stats');
+
+    if (modal) modal.classList.remove('hidden');
+    if (btnClose) btnClose.onclick = () => {
+        if (modal) modal.classList.add('hidden');
+    };
+
+    const p = AppState.liveRoundGroups.find(x => x.uid === auth.currentUser?.uid);
+    if (!p || !p.scores) {
+        if (resultsDiv) resultsDiv.innerHTML = "<p>No score data found for analysis.</p>";
+        return;
+    }
+
+    const pars = AppState.currentCoursePars || [];
+    const scores = p.scores;
+
+    const stats = {
+        3: { total: 0, count: 0 },
+        4: { total: 0, count: 0 },
+        5: { total: 0, count: 0 }
+    };
+
+    Object.keys(scores).forEach(holeNum => {
+        const score = parseInt(scores[holeNum]);
+        const par = parseInt(pars[holeNum - 1]);
+        if (score > 0 && stats[par]) {
+            stats[par].total += score;
+            stats[par].count++;
+        }
+    });
+
+    let html = "";
+    [3, 4, 5].forEach(par => {
+        const s = stats[par];
+        const avg = s.count > 0 ? (s.total / s.count).toFixed(1) : "N/A";
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
+                <span style="font-weight: 600;">Par ${par} Average:</span>
+                <span style="font-size: 1.2rem; font-weight: 800; color: var(--primary-color);">${avg}</span>
+            </div>
+        `;
+    });
+
+    if (resultsDiv) resultsDiv.innerHTML = html;
+    console.log("[Stats] Analysis Complete:", stats);
 }
 
 function setWizardActive(isActive) {

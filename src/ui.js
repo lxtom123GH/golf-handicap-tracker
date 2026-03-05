@@ -347,9 +347,9 @@ export function setupTabs() {
     try {
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
-        if (footerVer) footerVer.textContent = 'v6.7.6 - Locker Room Unlocked';
-        if (headerVer) headerVer.textContent = 'v6.7.6 - Locker Room Unlocked';
-        console.log(`[UI] Version Injected: v6.7.6 - Locker Room Unlocked`);
+        if (footerVer) footerVer.textContent = 'v6.8.0 - Instant Stats';
+        if (headerVer) headerVer.textContent = 'v6.8.0 - Instant Stats';
+        console.log(`[UI] Version Injected: v6.8.0 - Instant Stats`);
     } catch (e) {
         console.error("[UI] Version injection failed:", e);
     }

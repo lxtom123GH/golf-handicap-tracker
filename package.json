@@ -1,6 +1,6 @@
 {
   "name": "golf_handicap_tracker",
-  "version": "6.7.6",
+  "version": "6.8.0",
   "description": "Golf Handicap Tracker with Sequential Shot Tracking",
   "main": "app.js",
   "type": "module",
