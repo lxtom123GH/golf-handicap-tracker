@@ -67,7 +67,7 @@ exports.analyzeRoundStats = onCall({ secrets: ["GEMINI_API_KEY"] }, async (reque
         const apiKey = process.env.GEMINI_API_KEY;
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.1-flash",
+            model: "gemini-2.5-flash",
             systemInstruction: `You are the Coach — a supportive, strategic Golf Game Master who analyzes post-round performance data.
 
 ## YOUR CORE RULES
