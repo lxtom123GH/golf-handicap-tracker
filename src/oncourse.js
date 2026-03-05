@@ -1350,7 +1350,7 @@ function showLockerRoom(isPartialFail = false) {
 }
 
 /**
- * v6.8.0 Math Engine: Calculates arithmetic means for scores grouped by par.
+ * v6.9.0 Math Engine: Calculates arithmetic means, then calls the Cloud Coach.
  */
 async function runStatAnalysis() {
     console.log("[Stats] Running Instant Analysis...");
@@ -1380,27 +1380,72 @@ async function runStatAnalysis() {
 
     Object.keys(scores).forEach(holeNum => {
         const score = parseInt(scores[holeNum]);
-        const par = parseInt(pars[holeNum - 1]);
+        const holeIdx = parseInt(holeNum) - 1;
+        const par = parseInt(pars[holeIdx]);
         if (score > 0 && stats[par]) {
             stats[par].total += score;
             stats[par].count++;
         }
     });
 
+    // Create payload for cloud function
+    const payload = {
+        par3Avg: stats[3].count > 0 ? parseFloat((stats[3].total / stats[3].count).toFixed(2)) : null,
+        par4Avg: stats[4].count > 0 ? parseFloat((stats[4].total / stats[4].count).toFixed(2)) : null,
+        par5Avg: stats[5].count > 0 ? parseFloat((stats[5].total / stats[5].count).toFixed(2)) : null
+    };
+
+    // Render local stats first
     let html = "";
     [3, 4, 5].forEach(par => {
-        const s = stats[par];
-        const avg = s.count > 0 ? (s.total / s.count).toFixed(1) : "N/A";
+        const key = `par${par}Avg`;
+        const avgDisplay = payload[key] !== null ? payload[key].toFixed(1) : "N/A";
         html += `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
                 <span style="font-weight: 600;">Par ${par} Average:</span>
-                <span style="font-size: 1.2rem; font-weight: 800; color: var(--primary-color);">${avg}</span>
+                <span style="font-size: 1.2rem; font-weight: 800; color: var(--primary-color);">${avgDisplay}</span>
             </div>
         `;
     });
 
+    // Add loading state for AI response
+    html += `<div id="ai-coach-feedback" style="margin-top: 15px; border-top: 1px solid #dee2e6; padding-top: 15px;">
+                <p style="color: var(--text-muted); font-style: italic;">Consulting the Game Master...</p>
+             </div>`;
+
     if (resultsDiv) resultsDiv.innerHTML = html;
-    console.log("[Stats] Analysis Complete:", stats);
+
+    try {
+        const analyzeRoundStats = httpsCallable(functions, 'analyzeRoundStats');
+        const result = await analyzeRoundStats(payload);
+
+        const feedbackDiv = document.getElementById('ai-coach-feedback');
+        if (feedbackDiv) {
+            feedbackDiv.innerHTML = `
+                <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+                    ${renderMarkdownLite(result.data.answer)}
+                </div>
+            `;
+        }
+        console.log("[Stats] AI analysis received.");
+    } catch (error) {
+        console.error("[Stats] AI Error:", error);
+        const feedbackDiv = document.getElementById('ai-coach-feedback');
+        if (feedbackDiv) feedbackDiv.innerHTML = "<p style='color: #dc3545; font-size:0.85rem;'>The Game Master is unavailable. Focus on your averages above!</p>";
+    }
+}
+
+/**
+ * Lightweight, zero-dependency Markdown-lite renderer.
+ * Converts headers, bold text, and line breaks into safe HTML.
+ */
+function renderMarkdownLite(text) {
+    if (!text) return '';
+    return text
+        .replace(/^### (.+)$/gm, '<h3 style="margin:12px 0 4px; color:var(--primary-color);">$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2 style="margin:14px 0 4px;">$1</h2>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
 }
 
 function setWizardActive(isActive) {

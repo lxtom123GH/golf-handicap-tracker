@@ -19,3 +19,7 @@
 2.  **Execution Audits:** Every AI execution MUST include an Agent Execution Audit checking for 'malformed edit' errors, file write failures, and tag-balance anomalies.
 3.  **Terminal Commands:** Execute commands natively in PowerShell (e.g., `npm run build`). DO NOT wrap commands in `cmd /c`.
 4.  **Deployment Verification:** Remind the user to perform a 'Hard Refresh' or use Incognito mode to bypass the Service Worker zombie cache after every deployment.
+
+### UI State Toggle Rule (v6.7.6)
+**The Ward:** When writing JavaScript to toggle UI visibility, you must verify the base CSS rules for the target element (e.g., checking if it requires a secondary `.active` class) and audit the stylesheet for `!important` parent overrides. Never assume `classList.remove('hidden')` is sufficient for complex PWA transitions.
+**Context:** During the v6.7.x sprint, the Locker Room remained invisible because `.tab-content` required an `.active` class to trigger `display: block`, and a `body.round-active` CSS rule was forcing the previous tab to stay visible via `!important`.

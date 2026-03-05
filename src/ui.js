@@ -347,9 +347,9 @@ export function setupTabs() {
     try {
         const footerVer = document.getElementById('footer-version');
         const headerVer = document.getElementById('header-version');
-        if (footerVer) footerVer.textContent = 'v6.8.0 - Instant Stats';
-        if (headerVer) headerVer.textContent = 'v6.8.0 - Instant Stats';
-        console.log(`[UI] Version Injected: v6.8.0 - Instant Stats`);
+        if (footerVer) footerVer.textContent = 'v6.9.0 - Cloud Coach';
+        if (headerVer) headerVer.textContent = 'v6.9.0 - Cloud Coach';
+        console.log(`[UI] Version Injected: v6.9.0 - Cloud Coach`);
     } catch (e) {
         console.error("[UI] Version injection failed:", e);
     }
