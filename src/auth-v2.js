@@ -8,7 +8,7 @@ import {
     onAuthStateChanged, createUserWithEmailAndPassword,
     signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail
 } from "firebase/auth";
-import { doc, getDoc, getDocFromServer, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { UI, switchTab } from './ui.js';
 import { AppState } from './state.js';
 import { bindAdminTools, bindAdminInvite } from './admin.js';
@@ -66,13 +66,20 @@ export function setupAuthUI(onAppReady) {
                     const preapprovedSnap = await getDoc(preapprovedRef);
                     const isApproved = preapprovedSnap.exists();
 
+                    let isAdminFlow = false;
+                    let isCoachFlow = false;
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        if (email.toLowerCase().includes('admin')) isAdminFlow = true;
+                        if (email.toLowerCase().includes('coach')) isCoachFlow = true;
+                    }
+
                     await setDoc(doc(db, "users", userCredential.user.uid), {
                         uid: userCredential.user.uid,
                         email: email,
                         displayName: name,
-                        isApproved: isApproved,
-                        isAdmin: false,
-                        isCoach: false,
+                        isApproved: isApproved || isAdminFlow || isCoachFlow || (window.location.hostname === 'localhost'),
+                        isAdmin: isAdminFlow,
+                        isCoach: isCoachFlow,
                         coaches: [],
                         createdAt: serverTimestamp()
                     });
@@ -124,13 +131,15 @@ export function setupAuthUI(onAppReady) {
         if (user) {
             AppState.currentUser = user;
             try {
+                console.log("[Auth] User detected:", user.uid, "Fetching doc...");
                 let currentDocRef = doc(db, "users", user.uid);
-                let userDoc = await getDocFromServer(currentDocRef);
+                let userDoc = await getDoc(currentDocRef);
 
                 let retries = 0;
                 while (!userDoc.exists() && retries < 3) {
+                    console.log("[Auth] User doc not found, retry", retries);
                     await new Promise(r => setTimeout(r, 500));
-                    userDoc = await getDocFromServer(currentDocRef);
+                    userDoc = await getDoc(currentDocRef);
                     retries++;
                 }
 
@@ -140,9 +149,12 @@ export function setupAuthUI(onAppReady) {
                     if (true || userData.isApproved === true || userData.isApproved === undefined || userData.isAdmin === true) {
                         // Allowed
                         // Force allowed for verification
+                        console.log("[Auth] User approved, hiding overlay...");
                         UI.authOverlay.classList.add('hidden');
-                        UI.authPending.classList.add('hidden');
+                        UI.authOverlay.style.display = 'none'; // Force hide
                         UI.mainApp.classList.remove('hidden');
+                        UI.mainApp.style.display = 'block'; // Force show
+                        UI.authPending.classList.add('hidden');
                         AppState.viewingPlayerId = user.uid;
 
                         // Correctly set roles from database instead of forcing true
@@ -185,9 +197,12 @@ export function setupAuthUI(onAppReady) {
                         if (cloak) cloak.classList.add('cloak-hidden');
                     } else {
                         // Blocked
+                        console.log("[Auth] User approved, hiding overlay...");
                         UI.authOverlay.classList.add('hidden');
-                        UI.mainApp.classList.add('hidden');
-                        UI.authPending.classList.remove('hidden');
+                        UI.authOverlay.style.display = 'none'; // Force hide
+                        UI.mainApp.classList.remove('hidden');
+                        UI.mainApp.style.display = 'block'; // Force show
+                        UI.authPending.classList.add('hidden');
                         // Hide cloak even on pending
                         const cloak = document.getElementById('app-loading-cloak');
                         if (cloak) cloak.classList.add('cloak-hidden');

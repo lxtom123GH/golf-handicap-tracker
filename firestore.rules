@@ -40,6 +40,15 @@ service cloud.firestore {
       match /prefs/{prefId} {
         allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       }
+
+      match /practice_plans/{planId} {
+        allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
+    }
+
+    match /global_drills/{drillId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     match /profiles/{userId} {

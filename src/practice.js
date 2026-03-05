@@ -7,6 +7,7 @@ import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp,
 import { AppState } from './state.js';
 import { UI } from './ui.js';
 import { bindAiGenerator, generateAIResponse } from './ai.js';
+import { bindPracticeCaddyUI } from './ui.js';
 
 let unsubscribePractice = null;
 let currentDrillDefinition = null;
@@ -119,6 +120,7 @@ export function initPractice() {
     populatePracticeSelect();
     listenToPractice();
     initCoachSelection();
+    bindPracticeCaddyUI();
 
     const btnAskAi = document.getElementById('btn-ask-ai');
     if (btnAskAi) {

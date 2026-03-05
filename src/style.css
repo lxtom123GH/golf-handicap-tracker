@@ -1,3 +1,16 @@
+/* ==========================================
+   LAYER MAP (Z-INDEX HIERARCHY)
+   ==========================================
+   10-50    : Tab Content & Basic Overlays
+   99       : Sticky Progress Bars / Sub-nav
+   500      : Full-screen Active Round (tab-oncourse)
+   1001     : Floating Action Buttons (Fixed)
+   2000-2001: Wizard Mode & Special Nav Feet
+   9999     : Global Modal Overlays
+   10001    : App Initialization Cloak (index.html inline)
+   99999    : Main Tab Navigation (Tabs-Container)
+   ========================================== */
+
 :root {
     --primary-color: #0b2e13;
     /* Deep Golf Green */
@@ -96,6 +109,18 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+/* On-Course Scorecard Styling */
+.compact-score-card {
+    margin-bottom: 6px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Dashboard Grid */
@@ -563,6 +588,7 @@ body {
 #app-loading-cloak.cloak-hidden {
     opacity: 0;
     pointer-events: none;
+    display: none !important;
 }
 
 @keyframes fadeIn {

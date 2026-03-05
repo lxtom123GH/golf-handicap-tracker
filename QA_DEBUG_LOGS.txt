@@ -1,0 +1,239 @@
+﻿
+
+Running 5 tests using 3 workers
+
+[1A[2K[1/5] [chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0
+[1A[2K[2/5] [chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation
+[1A[2K[3/5] [chromium] ΓÇ║ tests\logic-boundaries.spec.js:74:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Fuzzing Scores: Assert UI rejects scores <= 0 and >= 20 for a single hole
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:74:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Fuzzing Scores: Assert UI rejects scores <= 0 and >= 20 for a single hole
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:74:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Fuzzing Scores: Assert UI rejects scores <= 0 and >= 20 for a single hole
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0
+[Browser] LOG: ServiceWorker registration successful with scope:  http://localhost:5000/
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation
+[Browser] LOG: ServiceWorker registration successful with scope:  http://localhost:5000/
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:74:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Fuzzing Scores: Assert UI rejects scores <= 0 and >= 20 for a single hole
+[Browser] LOG: ServiceWorker registration successful with scope:  http://localhost:5000/
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0
+[Browser] ERROR: Failed to load resource: the server responded with a status of 400 (Bad Request)
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:74:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Fuzzing Scores: Assert UI rejects scores <= 0 and >= 20 for a single hole
+[Browser] ERROR: Failed to load resource: the server responded with a status of 400 (Bad Request)
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation
+[Browser] ERROR: Failed to load resource: the server responded with a status of 400 (Bad Request)
+
+[1A[2K[Browser] ERROR: Failed to load resource: the server responded with a status of 400 (Bad Request)
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0
+[Browser] ERROR: Failed to load resource: the server responded with a status of 400 (Bad Request)
+
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:74:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Fuzzing Scores: Assert UI rejects scores <= 0 and >= 20 for a single hole
+[Browser] LOG: [State] currentUser changed: Fr
+
+[1A[2K[Browser] LOG: [Auth] User detected: PMmv7mktTCXKtJgH6MKlTg5qlbns Fetching doc...
+
+[1A[2K[Browser] LOG: [Auth] User doc not found, retry 0
+
+[1A[2K[Browser] LOG: [State] viewingPlayerId changed: PMmv7mktTCXKtJgH6MKlTg5qlbns
+
+[1A[2K[Browser] LOG: App Ready: Bootstrapping modules...
+
+[1A[2K[Browser] LOG: [Navigation] Screen failsafe disabled.
+
+[1A[2K[Browser] LOG: [Navigation] Initializing Clean Slate Architecture...
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[Browser] LOG: [UI] Version Injected: v6.19.0 - AI Practice Caddy
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[Browser] LOG: [Auth] Bootstrap complete, removing cloak.
+
+[1A[2K[Browser] LOG: [State] usedIds changed: []
+
+[1A[2K[Browser] LOG: [State] handicapIndex changed: 0
+
+[1A[2K[Browser] LOG: [State] currentRounds changed: []
+
+[1A[2K[Browser] LOG: [State] currentPracticeRounds changed: []
+
+[1A[2K[Browser] ERROR: [Practice Caddy] Load error: FirebaseError: No matching allow statements
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[4/5] [chromium] ΓÇ║ tests\logic-boundaries.spec.js:95:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Sub-Score Logic: Assert UI throws an error if Putts > Total Score or Penalties >= Total Score
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:95:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Sub-Score Logic: Assert UI throws an error if Putts > Total Score or Penalties >= Total Score
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[Browser] LOG: ServiceWorker registration successful with scope:  http://localhost:5000/
+
+[1A[2K[Browser] LOG: [State] currentUser changed: Fr
+
+[1A[2K[Browser] LOG: [Auth] User detected: PMmv7mktTCXKtJgH6MKlTg5qlbns Fetching doc...
+
+[1A[2K[Browser] LOG: [State] viewingPlayerId changed: PMmv7mktTCXKtJgH6MKlTg5qlbns
+
+[1A[2K[Browser] LOG: App Ready: Bootstrapping modules...
+
+[1A[2K[Browser] LOG: [Navigation] Screen failsafe disabled.
+
+[1A[2K[Browser] LOG: [Navigation] Initializing Clean Slate Architecture...
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[Browser] LOG: [UI] Version Injected: v6.19.0 - AI Practice Caddy
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[Browser] LOG: [Auth] Bootstrap complete, removing cloak.
+
+[1A[2K[Browser] LOG: [State] usedIds changed: []
+
+[1A[2K[Browser] LOG: [State] handicapIndex changed: 0
+
+[1A[2K[Browser] LOG: [State] currentRounds changed: []
+
+[1A[2K[Browser] LOG: [State] currentPracticeRounds changed: []
+
+[1A[2K[Browser] ERROR: [Practice Caddy] Load error: FirebaseError: No matching allow statements
+
+[1A[2K[5/5] [chromium] ΓÇ║ tests\logic-boundaries.spec.js:99:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Chip-in Validation: Explicitly verify that Putts = 0 is successfully accepted when Score > 0
+[1A[2K[chromium] ΓÇ║ tests\logic-boundaries.spec.js:99:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Chip-in Validation: Explicitly verify that Putts = 0 is successfully accepted when Score > 0
+[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[Browser] LOG: [Dev] Connecting to Firebase Local Emulators...
+
+[1A[2K[Browser] INFO: WARNING: You are using the Auth Emulator, which is intended for local testing only.  Do not use with production credentials.
+
+[1A[2K[Browser] LOG: ServiceWorker registration successful with scope:  http://localhost:5000/
+
+[1A[2K[Browser] LOG: [State] currentUser changed: Fr
+
+[1A[2K[Browser] LOG: [Auth] User detected: PMmv7mktTCXKtJgH6MKlTg5qlbns Fetching doc...
+
+[1A[2K[Browser] LOG: [State] viewingPlayerId changed: PMmv7mktTCXKtJgH6MKlTg5qlbns
+
+[1A[2K[Browser] LOG: App Ready: Bootstrapping modules...
+
+[1A[2K[Browser] LOG: [Navigation] Screen failsafe disabled.
+
+[1A[2K[Browser] LOG: [Navigation] Initializing Clean Slate Architecture...
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[Browser] LOG: [UI] Version Injected: v6.19.0 - AI Practice Caddy
+
+[1A[2K[Browser] LOG: [Navigation] switching to: tab-oncourse
+
+[1A[2K[Browser] LOG: [Auth] Bootstrap complete, removing cloak.
+
+[1A[2K[Browser] LOG: [State] usedIds changed: []
+
+[1A[2K[Browser] LOG: [State] handicapIndex changed: 0
+
+[1A[2K[Browser] LOG: [State] currentRounds changed: []
+
+[1A[2K[Browser] LOG: [State] currentPracticeRounds changed: []
+
+[1A[2K[Browser] ERROR: [Practice Caddy] Load error: FirebaseError: No matching allow statements
+
+[1A[2K  1) [chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeHidden[2m([22m[2m)[22m failed
+
+    Locator:  locator('#auth-overlay')
+    Expected: hidden
+    Received: visible
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toBeHidden" with timeout 10000ms[22m
+    [2m  - waiting for locator('#auth-overlay')[22m
+    [2m    13 ├ù locator resolved to <div id="auth-overlay" class="auth-overlay">ΓÇª</div>[22m
+    [2m       - unexpected value "visible"[22m
+
+
+      31 |             }
+      32 |
+    > 33 |             await expect(page.locator('#auth-overlay')).toBeHidden({ timeout: 10000 });
+         |                                                         ^
+      34 |         }
+      35 |     });
+      36 |
+        at C:\Users\lxtom\.gemini\antigravity\scratch\golf_handicap_tracker\tests\logic-boundaries.spec.js:33:57
+
+    Error Context: test-results\logic-boundaries-Phase-2-L-7e734-ure-dates-in-round-creation-chromium\error-context.md
+
+
+[1A[2K  2) [chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeHidden[2m([22m[2m)[22m failed
+
+    Locator:  locator('#auth-overlay')
+    Expected: hidden
+    Received: visible
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toBeHidden" with timeout 10000ms[22m
+    [2m  - waiting for locator('#auth-overlay')[22m
+    [2m    13 ├ù locator resolved to <div id="auth-overlay" class="auth-overlay">ΓÇª</div>[22m
+    [2m       - unexpected value "visible"[22m
+
+
+      31 |             }
+      32 |
+    > 33 |             await expect(page.locator('#auth-overlay')).toBeHidden({ timeout: 10000 });
+         |                                                         ^
+      34 |         }
+      35 |     });
+      36 |
+        at C:\Users\lxtom\.gemini\antigravity\scratch\golf_handicap_tracker\tests\logic-boundaries.spec.js:33:57
+
+    Error Context: test-results\logic-boundaries-Phase-2-L-6ec3e-cts-handicaps--10-0-or-54-0-chromium\error-context.md
+
+
+[1A[2K  2 failed
+    [chromium] ΓÇ║ tests\logic-boundaries.spec.js:37:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ Time Travel: Assert UI rejects future dates in round creation 
+    [chromium] ΓÇ║ tests\logic-boundaries.spec.js:57:5 ΓÇ║ Phase 2: Logic & Boundary Suite - Golf Math Constraints ΓÇ║ WHS Limits: Assert UI rejects handicaps < -10.0 or > 54.0 
+  3 passed (30.5s)

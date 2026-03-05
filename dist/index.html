@@ -12,8 +12,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-  <script type="module" crossorigin src="/assets/index-Dox_vEk0.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-brNNGDVP.css">
+  <script type="module" crossorigin src="/assets/index-Bk3-8bT_.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-D4WFn0Mr.css">
 </head>
 
 <body>
@@ -179,6 +179,97 @@
             <button class="tab-btn" id="tab-btn-settings" data-target="tab-settings" style="margin-left:auto;">⚙️
                 Settings</button>
         </div>
+
+        <!-- ========================================== -->
+        <!-- PRACTICE DRILLS TAB                        -->
+        <!-- ========================================== -->
+        <div id="tab-practice" class="tab-content hidden">
+            <header class="header" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+                <div class="header-content">
+                    <div class="branding">
+                        <h1>🎯 Practice Caddy</h1>
+                        <p>AI-powered drills built from your last round.</p>
+                    </div>
+                </div>
+            </header>
+
+            <div style="padding: 20px; max-width: 600px; margin: 0 auto;">
+
+                <!-- STATE A: No active drill — show generate button -->
+                <div id="practice-state-empty" class="card" style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 3.5rem; margin-bottom: 16px;">🏌️</div>
+                    <h2 style="margin-bottom: 8px; color: var(--primary-color);">Ready to Train?</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 28px;">Your AI Caddy will analyze your latest
+                        round summary and build a targeted 3-step practice plan.</p>
+                    <button id="btn-generate-practice" class="btn btn-primary"
+                        style="width: 100%; padding: 18px; font-size: 1.1rem; font-weight: 700; border-radius: 12px; background: linear-gradient(135deg, #0f3460, #533483);">
+                        ⚡ Generate Drill from Last Round
+                    </button>
+                    <div id="practice-generate-error" class="hidden"
+                        style="margin-top: 14px; color: #ef4444; font-size: 0.9rem; font-weight: 600;"></div>
+                </div>
+
+                <!-- STATE B: Active drill — show checklist steps -->
+                <div id="practice-state-active" class="hidden">
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div>
+                                <h2 style="margin-bottom: 4px; color: var(--primary-color);">Active Drill</h2>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span id="practice-category-badge"
+                                        style="background: #dbeafe; color: #1d4ed8; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 99px;"></span>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">Target: <strong
+                                            id="practice-target-metric"></strong></span>
+                                </div>
+                            </div>
+                            <button id="btn-reset-practice" class="btn btn-secondary btn-sm"
+                                style="margin: 0; width: auto; font-size: 0.75rem; opacity: 0.7;">↺ New Drill</button>
+                        </div>
+
+                        <!-- 3 Step Checklist -->
+                        <div id="practice-steps-list" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Steps injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Rating section (shown only when all steps checked) -->
+                    <div id="practice-rating-section" class="card hidden"
+                        style="text-align: center; border: 2px solid #10b981; background: #f0fdf4;">
+                        <h3 style="margin-bottom: 8px; color: #065f46;">🏆 Drill Complete!</h3>
+                        <p style="color: #047857; font-size: 0.9rem; margin-bottom: 20px;">How effective was this drill?
+                        </p>
+                        <div id="practice-star-rating"
+                            style="display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;">
+                            <button class="star-btn" data-rating="1"
+                                style="font-size: 2rem; background: none; border: none; cursor: pointer; transition: transform 0.1s;">⭐</button>
+                            <button class="star-btn" data-rating="2"
+                                style="font-size: 2rem; background: none; border: none; cursor: pointer; transition: transform 0.1s;">⭐</button>
+                            <button class="star-btn" data-rating="3"
+                                style="font-size: 2rem; background: none; border: none; cursor: pointer; transition: transform 0.1s;">⭐</button>
+                            <button class="star-btn" data-rating="4"
+                                style="font-size: 2rem; background: none; border: none; cursor: pointer; transition: transform 0.1s;">⭐</button>
+                            <button class="star-btn" data-rating="5"
+                                style="font-size: 2rem; background: none; border: none; cursor: pointer; transition: transform 0.1s;">⭐</button>
+                        </div>
+                        <button id="btn-submit-rating" class="btn btn-primary" style="width: 100%; opacity: 0.4;"
+                            disabled>
+                            Submit Rating &amp; Close Drill
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STATE C: Loading spinner -->
+                <div id="practice-state-loading" class="card hidden" style="text-align: center; padding: 40px;">
+                    <div
+                        style="font-size: 2.5rem; margin-bottom: 16px; animation: cloak-spin 1s linear infinite; display: inline-block;">
+                        ⚙️</div>
+                    <p style="font-weight: 600; color: var(--text-muted);">Your Caddy is thinking...</p>
+                </div>
+
+            </div>
+        </div>
+        <!-- PRACTICE DRILLS TAB END -->
 
         <!-- ========================================== -->
         <!-- ON COURSE TRACKER TAB                      -->
@@ -445,7 +536,7 @@
 
 
                 <div id="oc-group-scores"
-                    style="margin-bottom: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    style="flex: 1; overflow-y: auto; min-height: 0; margin-bottom: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
                     <!-- Dynamically populated rows for each player -> JS injects minus/plus block -->
                 </div>
 
@@ -1015,7 +1106,17 @@
                 </div>
                 <div class="index-display">
                     <span class="index-label">Handicap Index®</span>
-                    <span class="index-value" id="handicap-index">--</span>
+                    <input type="number" step="0.1" class="index-value" id="handicap-index" value="0.0" min="-10"
+                        max="54"
+                        style="background: transparent; border: none; color: white; font-size: inherit; font-weight: inherit; font-family: inherit; width: 120px; text-align: center; outline: none; -moz-appearance: textfield; appearance: textfield;">
+                    <style>
+                        #handicap-index::-webkit-outer-spin-button,
+                        #handicap-index::-webkit-inner-spin-button {
+                            -webkit-appearance: none;
+                            appearance: none;
+                            margin: 0;
+                        }
+                    </style>
                     <span class="index-subtext" id="index-subtext">Submit 54 counting holes to establish</span>
                     <button id="btn-export-whs" class="btn btn-secondary btn-sm"
                         style="margin-top: 15px; border-color: white; color: white; background: rgba(0,0,0,0.1);">Email
@@ -1246,17 +1347,18 @@
     <div id="tab-comp" class="tab-content hidden">
 
         <!-- Competition Selection Bar -->
-        <div class="player-management-bar" style="margin-top: 20px;">
+        <div class="player-management-bar" style="margin-top: 20px; flex-wrap: wrap; gap: 15px;">
             <div class="player-selector">
                 <label for="comp-select">Active Competition:</label>
                 <select id="comp-select">
                     <option value="">-- Select a Competition --</option>
                 </select>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%;">
                 <button id="btn-toggle-archived" class="btn btn-secondary btn-sm"
-                    style="margin: 0; width: auto; font-size: 0.8rem;">📦 Show Archived</button>
-                <button id="btn-show-create-comp" class="btn btn-primary btn-sm" style="margin: 0; width: auto;">+
+                    style="margin: 0; width: 100%; font-size: 0.8rem;">📦 Show Archived</button>
+                <button id="btn-show-create-comp" class="btn btn-primary btn-sm" style="margin: 0; width: 100%;">+
                     New
                     Competition</button>
             </div>
@@ -2113,7 +2215,7 @@
     <!-- Global Version Footer -->
     <div id="footer-version"
         style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-        Golf Handicap Tracker v6.13.0 - Audio Diary Logic
+        Golf Handicap Tracker v6.19.0 - AI Practice Caddy
     </div>
     <script>
         if ('serviceWorker' in navigator) {

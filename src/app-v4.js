@@ -3,7 +3,7 @@
 // Main Entry Point & Global Event Bindings
 // ==========================================
 
-const CURRENT_VERSION = 'v6.7.4';
+const CURRENT_VERSION = 'v6.20.2';
 if (localStorage.getItem('app_version') !== CURRENT_VERSION) {
     localStorage.setItem('app_version', CURRENT_VERSION);
     location.reload(true);

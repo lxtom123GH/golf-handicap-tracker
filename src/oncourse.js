@@ -12,6 +12,7 @@ import { initNotifications } from './notifications.js';
 import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
 import { httpsCallable } from "firebase/functions";
 import { functions } from './firebase-config.js';
+import { AudioService } from './services/audioService.js';
 
 /**
  * Initializes the on-course tracking module and binds global event listeners.
@@ -32,6 +33,8 @@ export function initOnCourse() {
     bindOcSubNav();
     bindCompQuickAdd();
     bindHoleNav();
+    bindAudioDiaryUI();
+
 
     // Bind the exit-round bar button
     const btnExit = document.getElementById('btn-oc-exit');
@@ -493,7 +496,7 @@ export function loadHole() {
         // MAP MULTIPLE PLAYERS INTO SCORING GRID
         AppState.liveRoundGroups.forEach((p, index) => {
             const pDiv = document.createElement('div');
-            pDiv.style.cssText = 'margin-bottom:12px; background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:10px;';
+            pDiv.className = 'compact-score-card';
 
             const nameRow = document.createElement('div');
             nameRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
@@ -506,7 +509,7 @@ export function loadHole() {
             const holeScore = p.scores[AppState.currentHole] || 0;
 
             nameRow.innerHTML = `
-            <span style="font-weight:700; font-size:1.1rem; color:#1e293b;">${p.name}</span>
+            <span style="font-weight:700; font-size:0.95rem; color:#1e293b;">${p.name}</span>
             <span style="font-size:0.85rem; color:#64748b; font-weight:600;">Total: <span style="color:var(--primary-color); font-size:1rem;">${totalSoFar + holeScore}</span></span>
         `;
             pDiv.appendChild(nameRow);
@@ -639,12 +642,6 @@ function openFinishModal() {
         };
     }
 
-    const btnPostAudio = document.getElementById('btn-post-audio');
-    if (btnPostAudio) {
-        btnPostAudio.onclick = () => {
-            alert("Audio Diary integration is coming in the next sprint. Your stats have been saved!");
-        };
-    }
 
     const btnSave = document.getElementById('btn-oc-save-whs');
     if (btnSave) btnSave.scrollIntoView({ behavior: 'smooth' });
@@ -977,6 +974,11 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 let recognition = null;
+let audioBlob = null;
+let audioTimerInterval = null;
+let recordingSeconds = 0;
+let audioDiaryState = 'idle'; // 'idle', 'recording', 'review'
+let _audioObjectUrl = null; // Tracked for revocation to prevent memory leaks
 function initVoiceRules() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -1042,6 +1044,178 @@ async function queryRulesAI(text) {
     } catch (e) {
         console.error("AI Rules Query Error:", e);
         return "Rules engine is currently unavailable. Please check the USGA handbook manually.";
+    }
+}
+
+/**
+ * v6.14.0: Audio Capture UI Logic
+ * Binds the click listener for the Audio Diary button and manages the 3-state UI flow.
+ */
+function bindAudioDiaryUI() {
+    const btnAudio = document.getElementById('btn-post-audio');
+    if (!btnAudio) return;
+
+    btnAudio.addEventListener('click', handleAudioDiaryClick);
+}
+
+async function handleAudioDiaryClick() {
+    const btnAudio = document.getElementById('btn-post-audio');
+    if (!btnAudio) return;
+
+    // State Machine
+    if (audioDiaryState === 'idle') {
+        try {
+            audioDiaryState = 'recording';
+            recordingSeconds = 0;
+            updateAudioUI();
+            await AudioService.startRecording();
+            startAudioTimer();
+        } catch (err) {
+            console.error("Recording start failed:", err);
+            audioDiaryState = 'idle';
+            updateAudioUI();
+            alert("Could not start recording. Please ensure microphone permissions are granted.");
+        }
+    } else if (audioDiaryState === 'recording') {
+        try {
+            stopAudioTimer();
+            audioBlob = await AudioService.stopRecording();
+            audioDiaryState = 'review';
+            updateAudioUI();
+        } catch (err) {
+            console.error("Recording stop failed:", err);
+            audioDiaryState = 'idle';
+            updateAudioUI();
+        }
+    } else if (audioDiaryState === 'review') {
+        // Handled by specific sub-buttons or re-tap logic
+        // For simplicity, we'll implement sub-button click listeners in updateAudioUI
+    }
+}
+
+function startAudioTimer() {
+    if (audioTimerInterval) clearInterval(audioTimerInterval);
+    audioTimerInterval = setInterval(() => {
+        recordingSeconds++;
+        updateAudioUI();
+    }, 1000);
+}
+
+function stopAudioTimer() {
+    if (audioTimerInterval) {
+        clearInterval(audioTimerInterval);
+        audioTimerInterval = null;
+    }
+}
+
+function updateAudioUI() {
+    const btnAudio = document.getElementById('btn-post-audio');
+    if (!btnAudio) return;
+
+    if (audioDiaryState === 'idle') {
+        btnAudio.innerHTML = "🎙️ Record Audio Diary";
+        btnAudio.className = "btn btn-secondary";
+        btnAudio.disabled = false;
+        btnAudio.style.width = "100%";
+    }
+    else if (audioDiaryState === 'recording') {
+        const mins = Math.floor(recordingSeconds / 60).toString().padStart(2, '0');
+        const secs = (recordingSeconds % 60).toString().padStart(2, '0');
+        btnAudio.innerHTML = `🛑 Stop (${mins}:${secs})`;
+        btnAudio.className = "btn btn-danger pulse-highlight";
+    }
+    else if (audioDiaryState === 'review') {
+        // Modern split UI for Play and Upload
+        // We replace the button content with two smaller buttons
+        btnAudio.innerHTML = "";
+        btnAudio.disabled = true; // Disable the parent container click
+        btnAudio.style.display = "flex";
+        btnAudio.style.gap = "8px";
+        btnAudio.style.background = "none";
+        btnAudio.style.border = "none";
+        btnAudio.style.padding = "0";
+
+        const btnPlay = document.createElement('button');
+        btnPlay.className = "btn btn-primary";
+        btnPlay.style.flex = "1";
+        btnPlay.innerHTML = "▶️ Play";
+        btnPlay.onclick = (e) => {
+            e.stopPropagation();
+            playRecordedAudio();
+        };
+
+        const btnUpload = document.createElement('button');
+        btnUpload.className = "btn btn-success";
+        btnUpload.style.flex = "2";
+        btnUpload.innerHTML = "📤 Upload Diary";
+        btnUpload.onclick = (e) => {
+            e.stopPropagation();
+            uploadRecordedDiary();
+        };
+
+        btnAudio.appendChild(btnPlay);
+        btnAudio.appendChild(btnUpload);
+    }
+}
+
+function playRecordedAudio() {
+    if (!audioBlob) return;
+    // Revoke the previous object URL before creating a new one to prevent RAM leaks on mobile
+    if (_audioObjectUrl) {
+        URL.revokeObjectURL(_audioObjectUrl);
+    }
+    _audioObjectUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(_audioObjectUrl);
+    audio.play();
+}
+
+async function uploadRecordedDiary() {
+    if (!audioBlob) return;
+
+    const btnAudio = document.getElementById('btn-post-audio');
+    const uploadBtn = btnAudio?.querySelector('.btn-success');
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = "⌛ Uploading...";
+    }
+
+    try {
+        const roundId = AppState.activeRoundId || `manual_${Date.now()}`;
+        const url = await AudioService.uploadDiary(audioBlob, roundId);
+        console.log("Diary uploaded successfully:", url);
+
+        // v6.15.0: The Handshake — persist the audioUrl to the specific round document
+        if (AppState.activeRoundId && auth.currentUser) {
+            const docId = `${AppState.activeRoundId}_${auth.currentUser.uid}`;
+            const roundRef = doc(db, "whs_rounds", docId);
+            try {
+                await updateDoc(roundRef, { audioUrl: url });
+                console.log("[Data Handshake] audioUrl saved to Firestore:", docId);
+            } catch (err) {
+                console.warn("[Data Handshake] Failed to update round doc with audioUrl:", err);
+            }
+        }
+
+        // Final State: Success
+        if (btnAudio) {
+            btnAudio.innerHTML = "✅ Diary Saved to Cloud";
+            btnAudio.className = "btn btn-success";
+            btnAudio.disabled = true;
+            btnAudio.style.display = "block";
+            btnAudio.style.width = "100%";
+            btnAudio.style.background = "#10b981";
+        }
+    } catch (err) {
+        console.error("Upload failed:", err);
+        alert(err.message || "Upload failed. Please try again.");
+        if (uploadBtn) {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = "📤 Upload Diary";
+        }
+    } finally {
+        // CRITICAL: Guaranteed revocation and memory release per Audit Specification
+        if (_audioObjectUrl) { URL.revokeObjectURL(_audioObjectUrl); _audioObjectUrl = null; }
+        audioBlob = null;
     }
 }
 
@@ -1239,7 +1413,9 @@ async function saveRoundToDatabase() {
             payload.date = AppState.currentRoundDate ? new Date(AppState.currentRoundDate) : serverTimestamp();
 
             try {
-                await addDoc(collection(db, "whs_rounds"), payload);
+                // v6.15.0: Use predictable ID format {roundId}_{uid} to allow later updates (e.g. audioUrl)
+                const docId = `${AppState.activeRoundId}_${p.uid}`;
+                await setDoc(doc(db, "whs_rounds", docId), payload);
             } catch (cloudErr) {
                 console.error("Cloud Save Fail (WHS):", cloudErr);
                 anyCloudFail = true;

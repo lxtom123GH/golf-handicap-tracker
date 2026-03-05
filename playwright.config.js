@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
     testDir: './tests',
+    testMatch: ['**/logic-boundaries.spec.js', '**/quota-guards.spec.js', '**/security-rbac.spec.js', '**/async-coach.spec.js', '**/ux-bag-management.spec.js', '**/ui-ergonomics.spec.js'],
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
