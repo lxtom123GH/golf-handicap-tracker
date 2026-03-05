@@ -3,7 +3,7 @@
  * Handles recording and uploading of audio diaries to Firebase Storage.
  * Using native MediaRecorder API for maximum PWA compatibility.
  */
-import { auth } from './firebase-config.js';
+import { auth } from '../firebase-config.js';
 // import { storage } from './firebase-config.js'; // To be enabled after config update
 // import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
