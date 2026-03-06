@@ -337,17 +337,7 @@ export function initNavigation() {
         });
     });
 
-    // Inject & Bind Floating Action Buttons (FABs)
-    document.querySelectorAll('.view-container, .tab-content').forEach(view => {
-        if (view.id !== 'view-home' && !view.querySelector('.fab-home')) {
-            const fab = document.createElement('button');
-            fab.className = 'fab-home';
-            fab.textContent = '🏠';
-            fab.addEventListener('click', () => MapsTo('view-home'));
-            view.appendChild(fab);
-        }
-    });
-
+    
     // Tournament Mode Toggle
     const tourneyToggle = document.getElementById('toggle-tournament-mode');
     if (tourneyToggle) {
