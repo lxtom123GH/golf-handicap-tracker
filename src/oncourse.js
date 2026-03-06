@@ -54,6 +54,13 @@ export function initOnCourse() {
 
     const dateInput = document.getElementById('oc-round-date');
     if (dateInput) dateInput.valueAsDate = new Date();
+
+    // v6.26.3: Hard Re-Fetch (Ground Truth Sync)
+    window.addEventListener('holeUpdate', async () => {
+        console.log("[SYNC] Hard Re-Fetch Triggered...");
+        await loadHoleData(AppState.currentHole);
+        if (typeof loadHole === 'function') loadHole();
+    });
 }
 
 function bindSetupToggles() {
@@ -450,6 +457,29 @@ async function getPlayerHandicap(uid) {
         }
     } catch (e) { }
     return 0;
+}
+
+/**
+ * v6.26.3 Hard Re-Fetch
+ * Pulls the absolute ground truth for a hole's survey data directly from Firestore.
+ * @param {number} holeNum 
+ */
+export async function loadHoleData(holeNum) {
+    const courseId = AppState.currentRoundCourseName;
+    if (!courseId || !holeNum) return;
+
+    try {
+        const holeRef = doc(db, "courses", courseId, "holes", holeNum.toString());
+        const snap = await getDoc(holeRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            if (!AppState.surveyData) AppState.surveyData = {};
+            AppState.surveyData[holeNum] = data.surveyData || {};
+            console.log(`[SYNC] Hole ${holeNum} data re-fetched from Firestore.`);
+        }
+    } catch (e) {
+        console.error("[SYNC] Failed to re-fetch hole data:", e);
+    }
 }
 
 /**

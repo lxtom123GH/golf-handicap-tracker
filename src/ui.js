@@ -236,42 +236,50 @@ export function ensureScreensExist() {
 }
 
 /**
- * Switches the active application tab and scrolls to the top.
- * @param {string} targetId - The ID of the tab content to show.
+ * Maps to a new dashboard view (v7.0.0 replacement for switchTab).
+ * @param {string} viewId - The ID of the view container to show.
  * @returns {void}
  */
-export function switchTab(targetId) {
-    if (!targetId) return;
+export function MapsTo(viewId) {
+    if (!viewId) return;
 
-    // v6.20.0: Reset scroll position for tab switch comfort
+    // v6.20.0: Reset scroll position
     window.scrollTo(0, 0);
 
-    const target = document.getElementById(targetId);
+    const target = document.getElementById(viewId);
     if (!target) {
-        console.error(`[Navigation] Target screen not found: #${targetId}`);
+        console.error(`[Navigation] Target screen not found: #${viewId}`);
         return;
     }
 
-    // Hide all tabs
-    UI.tabContents.forEach(tab => {
-        tab.classList.add('hidden');
-        tab.classList.remove('active');
+    // Hide all view-containers
+    document.querySelectorAll('.view-container, .tab-content').forEach(view => {
+        view.classList.add('hidden');
+        view.classList.remove('active');
     });
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
-    // Show target tab
+    // Show target view
     target.classList.remove('hidden');
     target.classList.add('active');
 
-    // Update active button state
-    const btn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+    // Update active button state (legacy)
+    const btn = document.querySelector(`.tab-btn[data-target="${viewId}"]`);
     if (btn) btn.classList.add('active');
 
     // Persist as default
-    localStorage.setItem(DEFAULT_TAB_KEY, targetId);
+    localStorage.setItem(DEFAULT_TAB_KEY, viewId);
 
-    console.log(`[Navigation] switching to: ${targetId}`);
+    console.log(`[Navigation] MapsTo: ${viewId}`);
 }
+
+/**
+ * Legacy alias for backwards compatibility.
+ */
+export function switchTab(targetId) {
+    MapsTo(targetId);
+}
+
 
 /**
  * Refreshes the settings UI with current user information.
@@ -299,30 +307,62 @@ window.refreshSettingsUI = () => {
  */
 export function initNavigation() {
     ensureScreensExist();
-    console.log("[Navigation] Initializing Clean Slate Architecture...");
+    console.log("[Navigation] Initializing Dashboard Router (v7.0.0)...");
 
+    // Phase 1: Dashboard Grid Buttons
+    document.querySelectorAll('.dash-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target');
+            if (target) MapsTo(target);
+        });
+    });
+
+    // Inject & Bind Floating Action Buttons (FABs)
+    document.querySelectorAll('.view-container, .tab-content').forEach(view => {
+        if (view.id !== 'view-home' && !view.querySelector('.fab-home')) {
+            const fab = document.createElement('button');
+            fab.className = 'fab-home';
+            fab.textContent = '🏠';
+            fab.addEventListener('click', () => MapsTo('view-home'));
+            view.appendChild(fab);
+        }
+    });
+
+    // Tournament Mode Toggle
+    const tourneyToggle = document.getElementById('toggle-tournament-mode');
+    if (tourneyToggle) {
+        tourneyToggle.addEventListener('change', (e) => {
+            AppState.isTournamentMode = e.target.checked;
+            if (e.target.checked) {
+                document.body.classList.add('tournament-active');
+            } else {
+                document.body.classList.remove('tournament-active');
+            }
+            console.log(`[Tournament Mode] ${e.target.checked ? 'ENABLED' : 'DISABLED'}`);
+        });
+    }
+
+    // Legacy Tab Buttons
     const tabButtons = document.querySelectorAll('.tab-btn');
-
     tabButtons.forEach(btn => {
-        // Task 3: Strict Direct Binding (No Clone Purge)
         btn.addEventListener('click', (e) => {
             const target = btn.getAttribute('data-target');
             if (target) {
-                switchTab(target);
+                MapsTo(target);
             }
         });
     });
 
     // Determine and set initial tab
-    let initialTab = 'tab-oncourse';
+    let initialTab = 'view-home';
     if (AppState.activeRoundId) {
         initialTab = 'tab-oncourse';
     } else {
         const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
-        initialTab = savedTabId || 'tab-oncourse';
+        initialTab = savedTabId || 'view-home';
     }
 
-    switchTab(initialTab);
+    MapsTo(initialTab);
 }
 
 /**
