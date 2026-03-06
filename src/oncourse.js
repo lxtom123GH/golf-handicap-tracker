@@ -318,6 +318,7 @@ function bindStartRound() {
             AppState.currentHole = 1;
             AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
+            AppState.isActiveRound = true; // Route Phase 2
 
             // Fetch Daily Handicaps for all players
             const teeData = COURSE_DATA[courseName]?.[UI.ocTeeSelect.value] || {};
@@ -433,6 +434,7 @@ export function endRoundCleanup() {
     AppState.currentLiveCompRules = [];
     AppState.currentHoleShots = [];
     AppState.activeRoundId = null;
+    AppState.isActiveRound = false; // Route Phase 2
     AppState.currentRoundDate = null;
 
     // v6.7.0 FIX: Reset ALL round-scoped state to prevent stale data leaking
@@ -947,8 +949,17 @@ function toggleGPS() {
         }
 
         if (UI.btnToggleGps) UI.btnToggleGps.textContent = "⌛ Locating...";
+
+        // Phase 2: Instant Resume from State Cache
+        if (AppState.currentPos) {
+            updateGPSDistances(AppState.currentPos.coords.latitude, AppState.currentPos.coords.longitude);
+            if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: ON";
+            if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden');
+        }
+
         gpsWatchId = navigator.geolocation.watchPosition(
             (pos) => {
+                AppState.currentPos = pos; // Persist globally
                 const { latitude, longitude } = pos.coords;
                 updateGPSDistances(latitude, longitude);
                 if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: ON";

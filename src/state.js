@@ -31,7 +31,11 @@ const initialState = {
     currentHoleShots: [],
     activeRoundId: null,
     currentRoundDate: null,
-    playerClubs: null
+    playerClubs: null,
+
+    // Router Phase 2: State Persistence Trackers
+    isActiveRound: false,
+    currentPos: null
 };
 
 try {
@@ -80,3 +84,6 @@ export const AppState = new Proxy(initialState, {
         return true;
     }
 });
+
+// v7.1.0: Global Hoist for external script / DOM element tracking without imports
+window.appState = AppState;

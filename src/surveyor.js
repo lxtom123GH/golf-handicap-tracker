@@ -37,9 +37,17 @@ function startSurveyor() {
     const container = document.getElementById('surveyor-container');
     if (container) container.classList.remove('hidden');
 
+    // Phase 2: Instant Resume
+    if (AppState.currentPos) {
+        currentPos = AppState.currentPos;
+        currentAccuracy = AppState.currentPos.coords.accuracy;
+        updateSurveyorUI(AppState.currentPos.coords);
+    }
+
     surveyorWatchId = navigator.geolocation.watchPosition(
         (pos) => {
             currentPos = pos;
+            AppState.currentPos = pos; // Persist
             currentAccuracy = pos.coords.accuracy;
             updateSurveyorUI(pos.coords);
         },
