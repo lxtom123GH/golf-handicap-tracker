@@ -12,8 +12,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <meta name="application-version" content="v7.0.0-alpha - Dashboard Router">
-  <script type="module" crossorigin src="/assets/index-B8MM59gX.js"></script>
+    <meta name="application-version" content="v7.4.2-alpha - System Stable">
+  <script type="module" crossorigin src="/assets/index-DOY_GCf1.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-DwEaRoB7.css">
 </head>
 
@@ -190,7 +190,7 @@
                     <div class="branding">
                         <h1>Golf Tracker</h1>
                         <p style="color:var(--text-muted); font-size:0.85rem;">Version: <span
-                                class="version-display">v7.0.0</span></p>
+                                class="version-display">v7.4.2-alpha 🟢</span></p>
                     </div>
                     <!-- Tournament Mode Toggle -->
                     <div style="display:flex; flex-direction:column; align-items:flex-end;">
@@ -586,7 +586,7 @@
                     </div>
                     <div id="surveyor-status-msg"
                         style="margin-top: 8px; font-size: 0.7rem; color: #64748b; font-style: italic;">Wait for high
-                        accuracy (< 5.0m)</div>
+                        accuracy (&lt; 5.0m)</div>
                             <button id="btn-undo-pin" class="btn btn-secondary hidden"
                                 style="width:100%; margin-top:10px; background:#f1f5f9; color:#475569; border:1px dashed #cbd5e1; font-weight:700; font-size:0.8rem;">↺
                                 Undo Last Pin</button>
@@ -2362,6 +2362,9 @@
                 });
             }
         </script>
+        <button id="global-fab-home" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: none; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color, #10b981); color: white; font-size: 1.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: none; cursor: pointer; align-items: center; justify-content: center;">
+            🏠
+        </button>
 </body>
 
 </html>

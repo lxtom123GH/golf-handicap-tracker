@@ -243,6 +243,20 @@ export function ensureScreensExist() {
 export function MapsTo(viewId) {
     if (!viewId) return;
 
+    // Global FAB Logic & Clean Slate Purge
+    const globalFab = document.getElementById('global-fab-home');
+    if (globalFab) {
+        if (viewId === 'view-home') {
+            globalFab.style.display = 'none';
+            // THE PURGE: Wipe stale round data so Start Round buttons unfreeze
+            AppState.selectedHoles = null;
+            AppState.selectedTee = null;
+            AppState.isStartingRound = false;
+        } else {
+            globalFab.style.display = 'flex';
+        }
+    }
+
     // v6.20.0: Reset scroll position
     window.scrollTo(0, 0);
 
@@ -308,6 +322,12 @@ window.refreshSettingsUI = () => {
 export function initNavigation() {
     ensureScreensExist();
     console.log("[Navigation] Initializing Dashboard Router (v7.0.0)...");
+
+    // Bind Global FAB
+    const globalFab = document.getElementById('global-fab-home');
+    if (globalFab) {
+        globalFab.addEventListener('click', () => MapsTo('view-home'));
+    }
 
     // Phase 1: Dashboard Grid Buttons
     document.querySelectorAll('.dash-btn').forEach(btn => {

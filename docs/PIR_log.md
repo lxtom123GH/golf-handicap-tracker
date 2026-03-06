@@ -1,5 +1,30 @@
 # Post-Implementation Review (PIR) Log
 
+## [2026-03-06] PIR: AST Parser Crash (-32099) & State Lock
+**Symptoms:** 
+1. Antigravity Language Server repeatedly crashed with `Code -32099: Cannot call write after a stream was destroyed`.
+2. Start Round UI toggles (9/18 Holes, Tees) visually clicked but failed to bind to `AppState`.
+3. Large "Omnibus" AI prompts resulted in malformed text edits and OOM crashes.
+Root Causes:
+
+Fatal Syntax 1: Unescaped < symbol in index.html (Wait for high accuracy (< 5.0m)).
+
+Fatal Syntax 2: Duplicate function declaration of bindPracticeCaddyUI in src/ui.js.
+
+Ghost State: AppState proxy retained stale selectedHoles data from previous sessions, preventing new UI clicks from registering.
+
+Cognitive Overload: Asking the AI to rewrite 4 files simultaneously broke the file-writer stream.
+
+Resolutions Applied (v7.4.2-alpha):
+
+Sanitisation: Manual character escape (&lt;) and amputation of duplicate functions via Cursor bypass.
+
+The Clean Slate Purge: Injected AppState.selectedHoles = null; AppState.selectedTee = null; into the MapsTo('view-home') routing function to guarantee a factory reset on every dashboard visit.
+
+Safe-Boot: Wrapped initial getDocs() calls in a 3000ms Promise.race() offline-fallback wrapper (fetchWithTimeout) to prevent network hanging.
+
+Chunking Protocol: Adopted micro-deployments (One Feature, One Prompt) to prevent AI buffer exhaustion.
+
 Date: 2026-03-06
 Symptom: Agent hangs on "Retrieved Console Logs" after a Malformed Edit.
 Ghost: The edit corrupted the syntax of surveyor.js, preventing the UI from loading for Playwright.
