@@ -4,7 +4,7 @@
 import { AppState } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
-import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db, functions } from './firebase-config.js';
 
 const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
@@ -168,9 +168,9 @@ export const UI = {
     ocDetailedReviewModal: document.getElementById('oc-detailed-review-modal'),
     ocDetailedTbody: document.getElementById('oc-detailed-tbody'),
     ocHoleEditorModal: document.getElementById('oc-hole-editor-modal'),
-    editorScoreVal: document.getElementById('editor-score-val'),
-    editorPuttsVal: document.getElementById('editor-putts-val'),
-    editorPenVal: document.getElementById('editor-pen-val'),
+    editorScoreVal: document.getElementById('editorScoreVal'),
+    editorPuttsVal: document.getElementById('editorPuttsVal'),
+    editorPenVal: document.getElementById('editorPenVal'),
     btnEditorSave: document.getElementById('btn-editor-save'),
     btnEditorCancel: document.getElementById('btn-editor-cancel'),
 
@@ -496,14 +496,6 @@ export async function playHistoricalAudio(url) {
  * - Saves to Firestore after first generation
  * - Shows a toast when a fresh summary is saved
  */
-/**
- * AI Briefing Logic — Quota Protection & Persistence.
- * Checks local round object first, then generates and saves to Firestore.
- * @param {Object} round - The round object to brief.
- * @param {HTMLElement} btn - The button element that triggered the briefing.
- * @param {HTMLElement} roundRow - The table row containing the round.
- * @returns {Promise<void>}
- */
 export async function showAiBriefing(round, btn, roundRow) {
     const originalText = btn.textContent.trim();
 
@@ -775,7 +767,6 @@ window.addEventListener('stateChange', (e) => {
             if (UI.handicapIndexEl && document.activeElement !== UI.handicapIndexEl) {
                 UI.handicapIndexEl.value = newValue > 0 ? newValue : '0.0';
             }
-            break;
             if (UI.indexSubtextEl) {
                 UI.indexSubtextEl.textContent = AppState.currentRounds.filter(r => r.notCounting !== true).length < 3 ? "Need 3 scores to establish index" : "Current WHS Index";
             }
@@ -850,10 +841,6 @@ export function renderPracticeSteps(steps, completedSteps, drillId) {
     });
 }
 
-/**
- * Binds events and logic for the AI Practice Caddy module.
- * @returns {void}
- */
 /**
  * Binds events and logic for the AI Practice Caddy module.
  * @returns {void}
