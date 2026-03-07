@@ -7,7 +7,8 @@ import { db } from './firebase-config';
 import { doc, updateDoc } from 'firebase/firestore';
 import { AppState } from './state';
 import { UI } from './ui';
-import { getDistance, updateGPSDistances } from './oncourse';
+import { getDistance } from './modules/gps-engine.js';
+import { updateGPSDistances } from './modules/gps.js';
 import { COURSE_DATA, KEPERRA_GPS } from './course-data';
 
 let surveyorWatchId = null;

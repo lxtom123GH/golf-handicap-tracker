@@ -78,3 +78,19 @@ Symptom: Fractured State / 1609m Display Stuck
 Ghost: The UI remained stuck on static coordinates (1609m) because it exclusively relied on event payloads that were sometimes malformed or dropped. The 80m guardrail also bypassed because it check only against non-existent surveyData.
 Silver Bullet: Implement "Hard Re-Fetch" — stop trusting payloads and force a fresh Firestore read on every `holeUpdate`. Implement static mapping fallback in the guardrail to ensure sanity checks work even on first capture.
 Ward: When state complexity increases, favor re-fetching the absolute ground truth over passing mutable payloads.
+
+## [2026-03-07] PIR: Output Buffer Exhaustion
+**[PIR-2026-03-07-01] Output Buffer Exhaustion**
+Status: RESOLVED (via Atomic Payload Protocol)
+Incident: Persistent truncation of CSS and JS code blocks across multiple turns.
+Root Cause: Platform-level token limits and formatting collisions.
+Impact: Deployment delay; 7x malformed edits.
+Action: Transitioned to Atomic Base64 for all logic writes.
+Context: PERSONAL Golf Project.
+
+## Lessons Learned
+**[Lesson-01] The Monolithic Ceiling**
+Discovery: Single-file updates exceeding ~50 lines of code + 500 words of context consistently trigger "Output Buffer Exhaustion."
+SOP Change: > 1. Micro-Modularization: All new features must be built in dedicated sub-files (e.g., ui-gps.js instead of ui.js).
+2. Shadow Writing: Write complex logic to .new files first to verify integrity before overwriting "Last Known Good" code.
+3. Payload Standard: Base64 is the mandatory transport for logic-heavy modules.

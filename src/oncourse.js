@@ -13,7 +13,7 @@ import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS
 import { httpsCallable } from "firebase/functions";
 import { functions } from './firebase-config.js';
 import { AudioService } from './services/audioService.js';
-
+import { toggleGPS, updateGPSDistances } from './modules/gps.js';
 /**
  * Initializes the on-course tracking module and binds global event listeners.
  * Configures UI states for the start of a round.
@@ -933,135 +933,6 @@ function bindAdvancedTools() {
             import('./surveyor').then(m => m.capturePin('override'));
         });
     }
-}
-
-let gpsWatchId = null;
-function toggleGPS() {
-    if (gpsWatchId) {
-        navigator.geolocation.clearWatch(gpsWatchId);
-        gpsWatchId = null;
-        if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: OFF";
-        if (UI.ocGpsWidget) UI.ocGpsWidget.classList.add('hidden');
-    } else {
-        if (!navigator.geolocation) {
-            showToast("GPS not supported on this device.");
-            return;
-        }
-
-        if (UI.btnToggleGps) UI.btnToggleGps.textContent = "⌛ Locating...";
-
-        // Phase 2: Instant Resume from State Cache
-        if (AppState.currentPos) {
-            updateGPSDistances(AppState.currentPos.coords.latitude, AppState.currentPos.coords.longitude);
-            if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: ON";
-            if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden');
-        }
-
-        gpsWatchId = navigator.geolocation.watchPosition(
-            (pos) => {
-                AppState.currentPos = pos; // Persist globally
-                const { latitude, longitude } = pos.coords;
-                updateGPSDistances(latitude, longitude);
-                if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: ON";
-                if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden');
-            },
-            (err) => {
-                console.error("GPS Error:", err);
-                let msg = "GPS Error";
-                if (err.code === 1) msg = "GPS Permission Denied";
-                else if (err.code === 2) msg = "GPS Position Unavailable";
-                showToast(msg);
-                toggleGPS(); // Turn off
-            },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-        );
-    }
-}
-
-function updateGPSDistances(lat, lon) {
-    const holeIdx = AppState.currentHole - 1;
-    const courseName = AppState.currentRoundCourseName;
-    const teeName = UI.ocTeeSelect.value;
-    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
-
-    // 1. Identify physical hole number (1-27)
-    let physicalHole = holeIdx + 1; // Default fallback
-    if (teeData.physicalHoles && teeData.physicalHoles[holeIdx]) {
-        physicalHole = teeData.physicalHoles[holeIdx];
-    }
-
-    // 2. Look up coordinates for that physical hole
-    // Priority: 1. Survey Override, 2. Calculated Green Center, 3. Static GPS (KEPERRA_GPS)
-    let groundTruth = null;
-    const survey = AppState.surveyData?.[AppState.currentHole];
-
-    if (survey) {
-        if (survey.override) {
-            groundTruth = {
-                c: [survey.override.lat, survey.override.lng],
-                f: survey.front ? [survey.front.lat, survey.front.lng] : null,
-                b: survey.back ? [survey.back.lat, survey.back.lng] : null
-            };
-        } else if (survey.greenCenter) {
-            groundTruth = {
-                c: [survey.greenCenter.lat, survey.greenCenter.lng],
-                f: survey.front ? [survey.front.lat, survey.front.lng] : null,
-                b: survey.back ? [survey.back.lat, survey.back.lng] : null
-            };
-        }
-    }
-
-    if (!groundTruth && KEPERRA_GPS[physicalHole]) {
-        const k = KEPERRA_GPS[physicalHole];
-        groundTruth = {
-            c: [k[0], k[1]],
-            f: [k[2], k[3]],
-            b: [k[4], k[5]]
-        };
-    }
-
-    if (groundTruth && groundTruth.c) {
-        // 3. Calculate Haversine distance in meters
-        const distCenter = getDistance(lat, lon, groundTruth.c[0], groundTruth.c[1]);
-        const distFront = groundTruth.f ? getDistance(lat, lon, groundTruth.f[0], groundTruth.f[1]) : null;
-        const distBack = groundTruth.b ? getDistance(lat, lon, groundTruth.b[0], groundTruth.b[1]) : null;
-
-        // 4. Update UI labels (meters)
-        if (UI.gpsMiddle) UI.gpsMiddle.textContent = `${Math.round(distCenter)}m`;
-        if (UI.gpsFront) UI.gpsFront.textContent = distFront !== null ? `${Math.round(distFront)}m` : "---m";
-        if (UI.gpsBack) UI.gpsBack.textContent = distBack !== null ? `${Math.round(distBack)}m` : "---m";
-
-        // v6.21.0 Telemetry: Log if we are using Surveyor data
-        if (survey) console.log(`[GPS] Using Ground Truth (Survey) for Hole ${AppState.currentHole}`);
-    } else {
-        // Mock fallback if no coordinates found
-        if (UI.gpsMiddle) UI.gpsMiddle.textContent = "---m";
-        if (UI.gpsFront) UI.gpsFront.textContent = "---m";
-        if (UI.gpsBack) UI.gpsBack.textContent = "---m";
-    }
-}
-
-/**
- * Calculates the exact geographic distance between two sets of coordinates using the Haversine formula.
- * @param {number} lat1 - Latitude of the first point.
- * @param {number} lon1 - Longitude of the first point.
- * @param {number} lat2 - Latitude of the second point.
- * @param {number} lon2 - Longitude of the second point.
- * @returns {number} The distance in meters.
- */
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth radius in meters
-    const phi1 = lat1 * Math.PI / 180;
-    const phi2 = lat2 * Math.PI / 180;
-    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
-    const deltaLambda = (lon2 - lon1) * Math.PI / 180;
-
-    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-        Math.cos(phi1) * Math.cos(phi2) *
-        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
 }
 
 let recognition = null;
@@ -2409,5 +2280,3 @@ function bindOcSubNav() {
         });
     });
 }
-
-export { getDistance, updateGPSDistances };

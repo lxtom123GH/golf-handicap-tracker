@@ -1,3 +1,4 @@
+import { toggleGPS } from './modules/gps.js';
 // ==========================================
 // Centralized DOM Element Caching & UI Helpers
 // ==========================================
@@ -329,6 +330,14 @@ export function initNavigation() {
         globalFab.addEventListener('click', () => MapsTo('view-home'));
     }
 
+    // GPS Toggle Binding
+    if (UI.btnToggleGps) {
+        UI.btnToggleGps.addEventListener('click', () => {
+            console.log("GPS Button Clicked");
+            toggleGPS();
+        });
+    }
+
     // Phase 1: Dashboard Grid Buttons
     document.querySelectorAll('.dash-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -373,6 +382,7 @@ export function initNavigation() {
     }
 
     MapsTo(initialTab);
+    UI.btnToggleGps.addEventListener('click', toggleGPS);
 }
 
 /**
