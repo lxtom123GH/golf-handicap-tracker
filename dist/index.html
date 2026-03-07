@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <meta name="application-version" content="v7.4.2-alpha - System Stable">
-  <script type="module" crossorigin src="/assets/index-2crer4PA.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DwEaRoB7.css">
+  <script type="module" crossorigin src="/assets/index-BzRF9STe.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BEHsbhH4.css">
 </head>
 
 <body>
@@ -2348,23 +2348,24 @@
 
         <!-- Global Version Footer -->
         <div id="footer-version" class="version-display"
-            style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
-            <!-- Version injected from meta -->
-        </div>
-        <script>
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js').then((registration) => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    }, (error) => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
-                });
-            }
-        </script>
-        <button id="global-fab-home" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: none; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color, #10b981); color: white; font-size: 1.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: none; cursor: pointer; align-items: center; justify-content: center;">
-            🏠
-        </button>
-</body>
+        style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
+        </div>
 
+    <button id="global-fab-home" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: none; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color, #10b981); color: white; font-size: 1.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: none; cursor: pointer; align-items: center; justify-content: center;">
+        🏠
+    </button>
+
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (error) => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+            });
+        }
+    </script>
+</body>
 </html>
