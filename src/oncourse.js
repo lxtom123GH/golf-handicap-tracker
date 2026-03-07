@@ -1823,13 +1823,51 @@ function loadExistingShotData(shotId) {
 /**
  * Synchronizes the visual state of the Shot Wizard UI to match the current in-memory shot data.
  * Updates button active states across all intent/result grids.
+ * Guarded so we do not render club-specific DOM until GPS + club storage are ready.
  * @returns {void}
  */
 function syncShotWizardUI() {
-    renderBagButtons();
-
     const wizard = document.getElementById('oncourse-wizard');
     if (!wizard) return;
+
+    const hasGpsLock = typeof window !== 'undefined' && window.golfGpsReady === true;
+
+    const hasClubsDefined = (bag) => {
+        if (!bag || typeof bag !== 'object') return false;
+        return Boolean(
+            bag.driver ||
+            bag.putter ||
+            (Array.isArray(bag.woods) && bag.woods.length) ||
+            (Array.isArray(bag.irons) && bag.irons.length) ||
+            (Array.isArray(bag.wedges) && bag.wedges.length)
+        );
+    };
+
+    const areClubsResolved = () => {
+        if (AppState.playerClubs && hasClubsDefined(AppState.playerClubs)) return true;
+        try {
+            const raw = localStorage.getItem('golfAppClubs');
+            if (!raw) return false;
+            const parsed = JSON.parse(raw);
+            return hasClubsDefined(parsed);
+        } catch {
+            return false;
+        }
+    };
+
+    const clubsReady = areClubsResolved();
+
+    if (!hasGpsLock || !clubsReady) {
+        if (UI.bagButtonsGrid) {
+            const msg = hasGpsLock
+                ? 'Loading your club data...'
+                : 'Waiting for GPS lock and club data...';
+            UI.bagButtonsGrid.innerHTML = `<div style="padding:10px; font-size:0.85rem; color:#64748b; text-align:center;">${msg}</div>`;
+        }
+        return;
+    }
+
+    renderBagButtons();
 
     // Reset all intent/grid buttons
     wizard.querySelectorAll('.btn-grid-compact').forEach(btn => btn.classList.remove('active-choice'));
@@ -1856,63 +1894,94 @@ function syncShotWizardUI() {
         UI.btnWizardDelete.classList.toggle('hidden', !data.id);
     }
 
-  // Toggle Putter Section
-  const puttingSection = document.getElementById('section-putting-outcome');
-  if (data.club === 'Putter') puttingSection.classList.remove('hidden');
-  else puttingSection.classList.add('hidden');
+    // Toggle Putter Section
+    const puttingSection = document.getElementById('section-putting-outcome');
+    if (puttingSection) {
+        if (data.club === 'Putter') puttingSection.classList.remove('hidden');
+        else puttingSection.classList.add('hidden');
+    }
 }
 
 function renderBagButtons() {
-  if (!UI.bagButtonsGrid) return;
-  UI.bagButtonsGrid.innerHTML = '';
+    if (!UI.bagButtonsGrid) return;
+    UI.bagButtonsGrid.innerHTML = '';
 
-  // DYNAMIC SYNC: Priorities Live AppState, then LocalStorage, then hardcoded fallback
-  // Sydney Protocol: Null-safe bag retrieval
-const rawClubs = localStorage.getItem('golfAppClubs');
-const savedClubs = rawClubs ? JSON.parse(rawClubs) : [];
-  const bag = (AppState.playerClubs && Object.keys(AppState.playerClubs).length > 0) 
-              ? AppState.playerClubs 
-              : (savedClubs || {
-                  driver: true,
-                  woods: ['3 Wood'],
-                  irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
-                  wedges: ['56'],
-                  putter: true
-              });
+    // DYNAMIC SYNC: Prioritises live AppState, then LocalStorage.
+    // Sydney Protocol: Null-safe bag retrieval
+    let savedClubs = null;
+    try {
+        const rawClubs = localStorage.getItem('golfAppClubs');
+        if (rawClubs) {
+            const parsed = JSON.parse(rawClubs);
+            if (parsed && typeof parsed === 'object') {
+                savedClubs = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('[Clubs] Failed to parse golfAppClubs from storage. Clearing invalid value.', e);
+        try {
+            localStorage.removeItem('golfAppClubs');
+        } catch {
+            // Ignore storage failures; UI will fall back to "No Clubs Defined".
+        }
+    }
 
-  const categories = [
-      { key: 'driver', label: 'Dr', standalone: true },
-      { key: 'woods', label: 'Woods', items: bag.woods },
-      { key: 'irons', label: 'Irons', items: bag.irons },
-      { key: 'wedges', label: 'Wedges', items: bag.wedges },
-      { key: 'putter', label: 'Putter', standalone: true }
-  ];
+    const hasClubsDefined = (bag) => {
+        if (!bag || typeof bag !== 'object') return false;
+        return Boolean(
+            bag.driver ||
+            bag.putter ||
+            (Array.isArray(bag.woods) && bag.woods.length) ||
+            (Array.isArray(bag.irons) && bag.irons.length) ||
+            (Array.isArray(bag.wedges) && bag.wedges.length)
+        );
+    };
 
-  categories.forEach(cat => {
-      if (cat.standalone && bag[cat.key]) {
-          addButton(cat.label, cat.key === 'driver' ? 'Driver' : 'Putter');
-      } else if (cat.items && cat.items.length > 0) {
-          cat.items.forEach(item => {
-              // Shorten labels for pills
-              let display = item.replace('Wood', 'W').replace('Iron', 'i').replace('Wedge', 'W');
-              if (display === 'Long i') display = 'Li';
-              if (display === 'Mid i') display = 'Mi';
-              if (display === 'Short i') display = 'Si';
-              addButton(display, item);
-          });
-      }
-  });
+    const hasPlayerBag = AppState.playerClubs && hasClubsDefined(AppState.playerClubs);
+    const bag = hasPlayerBag ? AppState.playerClubs : (savedClubs && hasClubsDefined(savedClubs) ? savedClubs : null);
 
-  function addButton(label, val) {
-      const btn = document.createElement('button');
-      btn.className = 'btn-grid-compact';
-      btn.style.minWidth = '60px';
-      btn.style.whiteSpace = 'nowrap';
-      if (AppState.currentShotData.club === val) btn.classList.add('active-choice');
-      btn.setAttribute('data-val', val);
-      btn.textContent = label;
-      UI.bagButtonsGrid.appendChild(btn);
-  }
+    // If no clubs are defined anywhere, surface a clear UI state instead of throwing.
+    if (!hasClubsDefined(bag)) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'padding:10px; font-size:0.85rem; color:#64748b; text-align:center;';
+        empty.textContent = 'No Clubs Defined. Configure your bag in Settings.';
+        UI.bagButtonsGrid.appendChild(empty);
+        return;
+    }
+
+    const categories = [
+        { key: 'driver', label: 'Dr', standalone: true },
+        { key: 'woods', label: 'Woods', items: bag.woods },
+        { key: 'irons', label: 'Irons', items: bag.irons },
+        { key: 'wedges', label: 'Wedges', items: bag.wedges },
+        { key: 'putter', label: 'Putter', standalone: true }
+    ];
+
+    categories.forEach(cat => {
+        if (cat.standalone && bag[cat.key]) {
+            addButton(cat.label, cat.key === 'driver' ? 'Driver' : 'Putter');
+        } else if (Array.isArray(cat.items) && cat.items.length > 0) {
+            cat.items.forEach(item => {
+                // Shorten labels for pills
+                let display = item.replace('Wood', 'W').replace('Iron', 'i').replace('Wedge', 'W');
+                if (display === 'Long i') display = 'Li';
+                if (display === 'Mid i') display = 'Mi';
+                if (display === 'Short i') display = 'Si';
+                addButton(display, item);
+            });
+        }
+    });
+
+    function addButton(label, val) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-grid-compact';
+        btn.style.minWidth = '60px';
+        btn.style.whiteSpace = 'nowrap';
+        if (AppState.currentShotData.club === val) btn.classList.add('active-choice');
+        btn.setAttribute('data-val', val);
+        btn.textContent = label;
+        UI.bagButtonsGrid.appendChild(btn);
+    }
 }
 
 function bindPenaltyModal() {

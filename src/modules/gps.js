@@ -6,6 +6,11 @@ import { UI } from '../ui.js';
 
 let watchId = null;
 
+// Global flag used by Shot Wizard guard to ensure GPS has a valid lock
+if (typeof window !== 'undefined' && typeof window.golfGpsReady === 'undefined') {
+    window.golfGpsReady = false;
+}
+
 export const toggleGPS = () => {
     if (!navigator.geolocation) {
         alert("GPS is not supported by this device.");
@@ -23,18 +28,22 @@ const startGpsTracking = () => {
 };
 
 const onGpsSuccess = (position) => {
-  if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden'); // Fix: Show widget
-  if (UI.btnToggleGps) {
-      UI.btnToggleGps.innerText = "🛰️ GPS: ON";
-      UI.btnToggleGps.classList.add('active-gps');
-  }
-  
-  // --- PRO STEP: Extract coordinates and fire the updater ---
-  const lat = position.coords.latitude;
-  const lng = position.coords.longitude;
-  console.log(`[GPS] Signal Acquired at ${lat}, ${lng}`);
-  
-  updateGPSDistances(lat, lng); 
+    if (typeof window !== 'undefined') {
+        window.golfGpsReady = true;
+    }
+
+    if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden'); // Fix: Show widget
+    if (UI.btnToggleGps) {
+        UI.btnToggleGps.innerText = "🛰️ GPS: ON";
+        UI.btnToggleGps.classList.add('active-gps');
+    }
+
+    // --- PRO STEP: Extract coordinates and fire the updater ---
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    console.log(`[GPS] Signal Acquired at ${lat}, ${lng}`);
+
+    updateGPSDistances(lat, lng); 
 };
 
 const onGpsError = (error) => {
@@ -44,7 +53,13 @@ const onGpsError = (error) => {
 };
 
 const stopGpsTracking = () => {
-    if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+    if (typeof window !== 'undefined') {
+        window.golfGpsReady = false;
+    }
     if (UI.btnToggleGps) {
         UI.btnToggleGps.innerText = "🛰️ Start GPS";
         UI.btnToggleGps.classList.remove('active-gps');

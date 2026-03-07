@@ -34,7 +34,20 @@ export const evaluate_hazard_proximity = (player_location, course_key = "Keperra
 
                 if (is_inside) {
                     // 3. Apply the 5x5 Risk Matrix logic from ui-scoring.js
-                    const risk_assessment = calculate_hazard_rating(hazard.likelihood, hazard.consequence);
+                    let risk_assessment = calculate_hazard_rating(hazard.likelihood, hazard.consequence);
+
+                    // PSPF Alignment: Water hazards are always treated as high severity,
+                    // regardless of their likelihood score in the raw 5x5 inputs.
+                    if (typeof hazard.type === 'string' && hazard.type.toLowerCase().includes('water')) {
+                        risk_assessment = {
+                            ...risk_assessment,
+                            rating: "EXTREME",
+                            // Preserve or elevate penalty; never below 1 for water.
+                            penalty: Math.max(risk_assessment.penalty ?? 1, 1),
+                            colour: "#d32f2f"
+                        };
+                    }
+
                     trigger_hazard_alert(hazard.type, risk_assessment);
                 }
             });

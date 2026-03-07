@@ -8,24 +8,57 @@ import { db } from '../firebase-config.js';
 import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 
 /**
+ * Internal helper: determines whether we have a non-empty, structured bag object.
+ */
+const hasClubsDefined = (bag) => {
+    if (!bag || typeof bag !== 'object') return false;
+    return Boolean(
+        bag.driver ||
+        bag.putter ||
+        (Array.isArray(bag.woods) && bag.woods.length) ||
+        (Array.isArray(bag.irons) && bag.irons.length) ||
+        (Array.isArray(bag.wedges) && bag.wedges.length)
+    );
+};
+
+/**
  * Renders the club selection buttons based on the user's bag settings.
+ * Fully null-safe around `golfAppClubs` and AppState.playerClubs.
  */
 export function renderBagButtons() {
     if (!UI.bagButtonsGrid) return;
     UI.bagButtonsGrid.innerHTML = '';
 
-   // Sydney Protocol: Null-safe bag retrieval
-const rawClubs = localStorage.getItem('golfAppClubs');
-const savedClubs = rawClubs ? JSON.parse(rawClubs) : [];
-    const bag = (AppState.playerClubs && Object.keys(AppState.playerClubs).length > 0) 
-                ? AppState.playerClubs 
-                : (savedClubs || {
-                    driver: true,
-                    woods: ['3 Wood'],
-                    irons: ['Long Irons', 'Mid Irons', 'Short Iron'],
-                    wedges: ['56'],
-                    putter: true
-                });
+    // Sydney Protocol: Null-safe bag retrieval
+    let savedClubs = null;
+    try {
+        const rawClubs = localStorage.getItem('golfAppClubs');
+        if (rawClubs) {
+            const parsed = JSON.parse(rawClubs);
+            if (parsed && typeof parsed === 'object') {
+                savedClubs = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('[Clubs] Failed to parse golfAppClubs from storage. Clearing invalid value.', e);
+        try {
+            localStorage.removeItem('golfAppClubs');
+        } catch {
+            // Ignore storage failures; UI will fall back to "No Clubs Defined".
+        }
+    }
+
+    const hasPlayerBag = AppState.playerClubs && hasClubsDefined(AppState.playerClubs);
+    const bag = hasPlayerBag ? AppState.playerClubs : (savedClubs && hasClubsDefined(savedClubs) ? savedClubs : null);
+
+    // If no clubs are defined anywhere, surface a clear UI state instead of throwing.
+    if (!hasClubsDefined(bag)) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'padding:10px; font-size:0.85rem; color:#64748b; text-align:center;';
+        empty.textContent = 'No Clubs Defined. Configure your bag in Settings.';
+        UI.bagButtonsGrid.appendChild(empty);
+        return;
+    }
 
     const categories = [
         { key: 'driver', label: 'Dr', standalone: true },
@@ -62,12 +95,42 @@ const savedClubs = rawClubs ? JSON.parse(rawClubs) : [];
 }
 
 /**
+ * Lightweight guard: checks whether club storage has been resolved to a usable structure.
+ */
+const areClubsResolved = () => {
+    if (AppState.playerClubs && hasClubsDefined(AppState.playerClubs)) return true;
+    try {
+        const raw = localStorage.getItem('golfAppClubs');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        return hasClubsDefined(parsed);
+    } catch {
+        return false;
+    }
+};
+
+/**
  * Syncs the visual state of the Shot Wizard UI.
+ * Guarded so we do not render club-specific DOM until GPS + club storage are ready.
  */
 export function syncShotWizardUI() {
-    renderBagButtons();
     const wizard = document.getElementById('oncourse-wizard');
     if (!wizard) return;
+
+    const hasGpsLock = typeof window !== 'undefined' && window.golfGpsReady === true;
+    const clubsReady = areClubsResolved();
+
+    if (!hasGpsLock || !clubsReady) {
+        if (UI.bagButtonsGrid) {
+            const msg = hasGpsLock
+                ? 'Loading your club data...'
+                : 'Waiting for GPS lock and club data...';
+            UI.bagButtonsGrid.innerHTML = `<div style="padding:10px; font-size:0.85rem; color:#64748b; text-align:center;">${msg}</div>`;
+        }
+        return;
+    }
+
+    renderBagButtons();
 
     wizard.querySelectorAll('.btn-grid-compact').forEach(btn => btn.classList.remove('active-choice'));
 
@@ -91,8 +154,10 @@ export function syncShotWizardUI() {
     }
 
     const puttingSection = document.getElementById('section-putting-outcome');
-    if (data.club === 'Putter') puttingSection.classList.remove('hidden');
-    else puttingSection.classList.add('hidden');
+    if (puttingSection) {
+        if (data.club === 'Putter') puttingSection.classList.remove('hidden');
+        else puttingSection.classList.add('hidden');
+    }
 }
 
 /**
