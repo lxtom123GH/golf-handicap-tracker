@@ -1867,7 +1867,9 @@ function renderBagButtons() {
   UI.bagButtonsGrid.innerHTML = '';
 
   // DYNAMIC SYNC: Priorities Live AppState, then LocalStorage, then hardcoded fallback
-  const savedClubs = JSON.parse(localStorage.getItem('golfAppClubs'));
+  // Sydney Protocol: Null-safe bag retrieval
+const rawClubs = localStorage.getItem('golfAppClubs');
+const savedClubs = rawClubs ? JSON.parse(rawClubs) : [];
   const bag = (AppState.playerClubs && Object.keys(AppState.playerClubs).length > 0) 
               ? AppState.playerClubs 
               : (savedClubs || {

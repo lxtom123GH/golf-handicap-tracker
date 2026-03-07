@@ -14,7 +14,9 @@ export function renderBagButtons() {
     if (!UI.bagButtonsGrid) return;
     UI.bagButtonsGrid.innerHTML = '';
 
-    const savedClubs = JSON.parse(localStorage.getItem('golfAppClubs'));
+   // Sydney Protocol: Null-safe bag retrieval
+const rawClubs = localStorage.getItem('golfAppClubs');
+const savedClubs = rawClubs ? JSON.parse(rawClubs) : [];
     const bag = (AppState.playerClubs && Object.keys(AppState.playerClubs).length > 0) 
                 ? AppState.playerClubs 
                 : (savedClubs || {
