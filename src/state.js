@@ -66,7 +66,14 @@ export const AppState = new Proxy(initialState, {
         target[prop] = value;
 
         // Only dispatch if the value actually changed
-        if (oldValue !== value) {
+        let hasChanged = false;
+        try {
+            hasChanged = JSON.stringify(oldValue) !== JSON.stringify(value);
+        } catch (e) {
+            hasChanged = oldValue !== value;
+        }
+
+        if (hasChanged) {
             const event = new CustomEvent('stateChange', {
                 detail: {
                     property: prop,

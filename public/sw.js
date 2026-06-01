@@ -1,7 +1,7 @@
 const CACHE_NAME = 'golf-app-v6.26.3';
 
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker] Installing golf-cache-v6.21.0-SURVEYOR and skipping wait...');
+    console.log(`[Service Worker] Installing ${CACHE_NAME} and skipping wait...`);
     self.skipWaiting();
 });
 

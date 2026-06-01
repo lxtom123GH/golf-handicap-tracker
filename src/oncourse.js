@@ -57,6 +57,7 @@ export function initOnCourse() {
 
     // v6.26.3: Hard Re-Fetch (Ground Truth Sync)
     window.addEventListener('holeUpdate', async () => {
+        if (!AppState.activeRoundId) return;
         console.log("[SYNC] Hard Re-Fetch Triggered...");
         await loadHoleData(AppState.currentHole);
         if (typeof loadHole === 'function') loadHole();

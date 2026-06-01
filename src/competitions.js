@@ -6,6 +6,7 @@ import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, or } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
+import { initCompSync } from './modules/comp-sync.js';
 
 let unsubscribeComps = null;
 let unsubscribeCompRounds = null;
@@ -21,6 +22,13 @@ export function initCompetitions() {
     if (UI.compSelect) {
         UI.compSelect.addEventListener('change', (e) => {
             setActiveCompetition(e.target.value);
+        });
+    }
+
+    const uid = AppState.currentUser?.uid || auth.currentUser?.uid;
+    if (uid) {
+        initCompSync(uid, (data) => {
+            console.log("[SYNC] Live Comp Data:", data);
         });
     }
 }
@@ -576,6 +584,8 @@ function bindCompetitionLogging() {
                 select.appendChild(opt);
             }
         });
+    }).catch(err => {
+        console.error('[Competitions] Failed to load players for logging:', err);
     });
 }
 

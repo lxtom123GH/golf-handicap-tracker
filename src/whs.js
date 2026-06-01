@@ -270,7 +270,7 @@ export function renderTrendChart(rounds) {
 async function updateUserHandicapIndexArray(index) {
     if (!AppState.currentUser) return;
     try {
-        const docRef = doc(db, "profiles", AppState.currentUser.uid);
+        const docRef = doc(db, "users", AppState.currentUser.uid);
         const docSnap = await getDoc(docRef);
 
         // Ensure indexHistory exists and push new index if it has changed

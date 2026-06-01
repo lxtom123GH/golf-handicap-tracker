@@ -1,0 +1,117 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - heading "Welcome to Golf Tracker" [level=2] [ref=e4]
+    - paragraph [ref=e5]: Please log in to access your databases.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: Email
+        - textbox "Email" [ref=e9]
+      - generic [ref=e10]:
+        - generic [ref=e11]: Password
+        - textbox "Password" [ref=e12]
+      - generic [ref=e13]:
+        - button "Login" [ref=e14] [cursor=pointer]
+        - button "Register New Account" [ref=e15] [cursor=pointer]
+      - link "Forgot password?" [ref=e17] [cursor=pointer]:
+        - /url: "#"
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: "Viewing Dashboard Of:"
+        - combobox "Viewing Dashboard Of:" [ref=e22]
+      - button "Manage My Coaches" [ref=e23] [cursor=pointer]
+    - banner [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - heading "Handicap Tracker v6.9.0" [level=1] [ref=e27]
+          - paragraph [ref=e28]: World Handicap System (WHS)
+        - generic [ref=e29]:
+          - generic [ref=e30]: Handicap Index®
+          - spinbutton [ref=e31]: "0.0"
+          - generic [ref=e32]: Submit 54 counting holes to establish
+          - button "Email / Export Report" [ref=e33] [cursor=pointer]
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - heading "Daily Playing Handicap" [level=2] [ref=e36]
+        - paragraph [ref=e37]: Calculate the viewing player's daily handicap.
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - generic [ref=e41]: Scratch Rating
+              - spinbutton "Scratch Rating" [ref=e42]
+            - generic [ref=e43]:
+              - generic [ref=e44]: Slope Rating
+              - spinbutton "Slope Rating" [ref=e45]
+            - generic [ref=e46]:
+              - generic [ref=e47]: Course Par
+              - spinbutton "Course Par" [ref=e48]
+          - button "Calculate" [ref=e50] [cursor=pointer]
+      - generic [ref=e51]:
+        - heading "Log a New Round" [level=2] [ref=e52]
+        - paragraph [ref=e53]: You are logging this round to your official WHS profile.
+        - generic [ref=e54]:
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: Course
+              - combobox "Course" [ref=e58]:
+                - option "Select Course..." [disabled] [selected]
+            - generic [ref=e59]:
+              - generic [ref=e60]: Date Played
+              - textbox "Date Played" [ref=e61]
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]: Course Rating (CR)
+              - spinbutton "Course Rating (CR)" [ref=e65]
+            - generic [ref=e66]:
+              - generic [ref=e67]: Slope Rating (SR)
+              - spinbutton "Slope Rating (SR)" [ref=e68]
+            - generic [ref=e69]:
+              - generic [ref=e70]: Course Par
+              - spinbutton "Course Par" [ref=e71]
+          - generic [ref=e73]:
+            - generic [ref=e74]: Score Entry Mode
+            - generic [ref=e75]:
+              - generic [ref=e76] [cursor=pointer]:
+                - radio "Hole-by-Hole (Auto Stableford)" [checked] [ref=e77]
+                - text: Hole-by-Hole (Auto Stableford)
+              - generic [ref=e78] [cursor=pointer]:
+                - radio "Total Stableford (Quick)" [ref=e79]
+                - text: Total Stableford (Quick)
+              - generic [ref=e80] [cursor=pointer]:
+                - radio "Manual AGS (Legacy)" [ref=e81]
+                - text: Manual AGS (Legacy)
+          - generic [ref=e82]:
+            - paragraph [ref=e83]: Enter your gross strokes. Daily Handicap and Stroke Index applies.
+            - strong [ref=e85]: "Estimated Stableford: 0 pts"
+          - generic [ref=e87]:
+            - checkbox "Mark as Counting Round (Affects Handicap)" [checked] [ref=e88]
+            - generic [ref=e89]: Mark as Counting Round (Affects Handicap)
+          - group [ref=e90]:
+            - 'generic "📊 Optional: Add Advanced Stats" [ref=e91] [cursor=pointer]'
+          - button "Save Round to Profile" [ref=e92] [cursor=pointer]
+    - generic [ref=e93]:
+      - heading "WHS Scoring Record ()" [level=2] [ref=e95]:
+        - text: WHS Scoring Record (
+        - text: )
+      - table [ref=e97]:
+        - rowgroup [ref=e98]:
+          - row "Date Course Holes Score CR / SR Diff. Status Action" [ref=e99]:
+            - columnheader "Date" [ref=e100]
+            - columnheader "Course" [ref=e101]
+            - columnheader "Holes" [ref=e102]
+            - columnheader "Score" [ref=e103]
+            - columnheader "CR / SR" [ref=e104]
+            - columnheader "Diff." [ref=e105]
+            - columnheader "Status" [ref=e106]
+            - columnheader "Action" [ref=e107]
+        - rowgroup
+      - paragraph [ref=e109]: No rounds logged yet.
+      - paragraph [ref=e111]: Loading WHS data...
+    - generic [ref=e112]:
+      - heading "📈 Handicap Index Trend" [level=2] [ref=e113]
+      - paragraph [ref=e114]: Your handicap index over time — lower is better.
+  - paragraph [ref=e118]: Running in emulator mode. Do not use with production credentials.
+```

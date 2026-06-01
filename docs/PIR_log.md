@@ -79,6 +79,30 @@ Ghost: The UI remained stuck on static coordinates (1609m) because it exclusivel
 Silver Bullet: Implement "Hard Re-Fetch" — stop trusting payloads and force a fresh Firestore read on every `holeUpdate`. Implement static mapping fallback in the guardrail to ensure sanity checks work even on first capture.
 Ward: When state complexity increases, favor re-fetching the absolute ground truth over passing mutable payloads.
 
+Date: 2026-03-11
+Symptom: Tier 1 Firebase Restoration & Hardening (Phase 1)
+Ghost: Stale Vue/legacy files causing framework leakage and silent state mutations not triggering Proxy events for array changes.
+Silver Bullet: Cleared ghost files (`ScoreEntryOverlay.vue`, `app-v4.js`, `coach.js.tmp`) and replaced strict equality `!==` with `JSON.stringify()` serialization in `src/state.js` Proxy `set` trap to ensure array mutations fire stateChange events.
+Ward: Run explicit file-deletion commands to halt leakage, and strictly enforce deep-value comparison in state tracking.
+
+Date: 2026-03-11
+Symptom: Tier 1 Hardening (Phase 2)
+Ghost: Potential null-reference Firestore queries during app boot, lingering old PWA caches blocking updates, and dev audio files polluting production bucket.
+Silver Bullet: Injected `if (!AppState.activeRoundId) return;` into `holeUpdate` in `src/oncourse.js`, unified `CACHE_NAME` in `public/sw.js` using a template literal for accurate old cache deletion, and wired `connectStorageEmulator(storage, '127.0.0.1', 9199);` in `src/firebase-config.js`.
+Ward: Guard state initialization callbacks carefully, utilize strict template literals for cache tracking, and map all active Firebase services to local emulators defensively.
+
+Date: 2026-03-11
+Symptom: Tier 1 Hardening (Phase 3)
+Ghost: Permissive Firestore security rules potentially allowing unauthorized data access or mutation across `comp_rounds`, `tempo`, and `feed` collections.
+Silver Bullet: Updated `firestore.rules` to strictly scope `comp_rounds` reads to document owners, joined competition participants, or admins. Locked `tempo` read/write access to the `docId` (userId) or `uid` field owner. Locked `feed` collection to allow authenticated reads but strictly limited writes/deletes to the `request.resource.data.uid` or `resource.data.uid` owner.
+Ward: Default all security rules to strict owner/admin access unless specific public visibility conditions are explicitly met via `get()` lookups.
+
+Date: 2026-03-11
+Symptom: Tier 1 Exit Gate Sign-Off
+Ghost: System vulnerability and silent leakage remaining pre-hardening.
+Silver Bullet: Successfully completed Phase 1, Phase 2, and Phase 3 of the Tier 1 Hardening block. BL-1.01 through BL-1.07 resolved.
+Ward: Architecture baseline is hardened and secured. Ready for next phase feature execution.
+
 ## [2026-03-07] PIR: Output Buffer Exhaustion
 **[PIR-2026-03-07-01] Output Buffer Exhaustion**
 Status: RESOLVED (via Atomic Payload Protocol)
