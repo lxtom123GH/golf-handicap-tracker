@@ -63,27 +63,3 @@ This feature recovery proved that local testing is blind to PWA caching issues. 
 1.  **Commandment I: The Sydney Anchor.** All AI Cloud Functions and Bucket-related logic must be pinned to `australia-southeast1` on both Frontend and Backend. No exceptions.
 2.  **Commandment II: The Cache Buster.** Every major UI/Backend handshake change MUST be accompanied by a `sw.js` `CACHE_NAME` bump to prevent "Zombie Code" from running on mobile devices.
 3.  **Commandment III: The Log Oracle.** Never attempt to "patch" a 404 or a connection error without first reading the raw stderr in the Firebase Google Cloud Console. The log is the only source of truth.
-
-## [2026-03-07] The Antigravity Collapse (v8.1.0)
-**Status:** Environment Stabilised
-
-### 👻 The Ghost (Root Causes)
-1. **LSP Stream Destruction (-32099):** The web-based IDE could not handle the concurrent Base64 logic streams, leading to a "Stream Destroyed" crash.
-2. **Context Degradation:** Repeated attempts to "patch" corrupted files led to AI hallucinations and loss of project structure.
-
-### 🛡️ The Silver Bullet (Fixes)
-1. **IDE Migration:** Moved the entire `golf_handicap_tracker` workspace to **Cursor IDE** for local processing.
-2. **Protocol Hardening:** Initialised `.cursorrules` at the root to act as a permanent "Sydney Protocol" auditor.
-3. **Base64 Deprecation:** Reverted to clear-text writes now that the desktop LSP is stable.
-
-| Date | Component | Event | Resolution |
-| :--- | :--- | :--- | :--- |
-| 2026-03-07 | System | LSP Crash (-32099) | Migrated to Cursor IDE. |
-| 2026-03-07 | Protocol | v8.1-Cursor | Initialised `.cursorrules` in project root. |
-| 2026-03-07 | Logic | Base64 Deprecation | Reverted to clear-text writes; LSP stable. |
-
-2026-03-07 | ui-hazards | New Module | Initialised 5x5 risk evaluation for GPS proximity.
-Date	Component	Event	Resolution
-2026-03-07	ui-scoring	File Restoration	Re-created missing scoring engine after IDE migration.
-Date	Component	Event	Resolution
-2026-03-08	ui-hazards	Export Mismatch	Refactored to match COURSE_DATA casing and Keperra nested object structure.

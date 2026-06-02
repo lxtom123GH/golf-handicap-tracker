@@ -12,9 +12,9 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <meta name="application-version" content="v7.4.2-alpha - System Stable">
-  <script type="module" crossorigin src="/assets/index-BzRF9STe.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BEHsbhH4.css">
+    <meta name="application-version" content="v6.23.0 - GPS Precision Tuning">
+  <script type="module" crossorigin src="/assets/index-DeTPIyG4.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Bz0wmD55.css">
 </head>
 
 <body>
@@ -165,8 +165,8 @@
             </div>
         </div>
 
-        <!-- Tab Navigation (Deprecated for Dashboard Model) -->
-        <div class="tabs-container hidden" style="display:none !important;">
+        <!-- Tab Navigation -->
+        <div class="tabs-container">
             <button class="tab-btn active" data-target="tab-whs">WHS Handicap Database</button>
             <button class="tab-btn" data-target="tab-comp">Custom Competitions</button>
             <button class="tab-btn" data-target="tab-practice">Practice Drills</button>
@@ -179,83 +179,6 @@
                 style="background-color: #ffeaa7; color: #d35400;">Admin Dashboard</button>
             <button class="tab-btn" id="tab-btn-settings" data-target="tab-settings" style="margin-left:auto;">⚙️
                 Settings</button>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- HOME DASHBOARD (v7.0.0)                    -->
-        <!-- ========================================== -->
-        <div id="view-home" class="tab-content active view-container">
-            <header class="header" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
-                <div class="header-content" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div class="branding">
-                        <h1>Golf Tracker</h1>
-                        <p style="color:var(--text-muted); font-size:0.85rem;">Version: <span
-                                class="version-display">v7.4.2-alpha 🟢</span></p>
-                    </div>
-                    <!-- Tournament Mode Toggle -->
-                    <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                        <label
-                            style="font-size:0.75rem; color:#94a3b8; font-weight:700; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em;">Tournament
-                            Mode</label>
-                        <label class="switch" style="position:relative; display:inline-block; width:50px; height:28px;">
-                            <input type="checkbox" id="toggle-tournament-mode" style="opacity:0; width:0; height:0;">
-                            <span class="slider round"
-                                style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#64748b; transition:.4s; border-radius:34px;"></span>
-                        </label>
-                    </div>
-                </div>
-            </header>
-
-            <div style="padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 80px;">
-                <!-- Weather Widget Placeholder -->
-                <div id="weather-widget"
-                    style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:20px; text-align:center; min-height:80px; display:flex; flex-direction:column; justify-content:center;">
-                    <span style="font-size:1.5rem; margin-bottom:5px;">🌤️</span>
-                    <span style="font-size:0.9rem; font-weight:600; color:#475569;">Weather Widget</span>
-                </div>
-
-                <!-- 2x3 Dashboard Grid -->
-                <div class="dashboard-grid">
-                    <button class="dash-btn" data-target="tab-oncourse">
-                        <span class="dash-icon" style="background:#dbeafe; color:#2563eb;">⛳</span>
-                        <span class="dash-label">Play Round</span>
-                    </button>
-                    <button class="dash-btn" data-target="tab-practice">
-                        <span class="dash-icon" style="background:#fef08a; color:#ca8a04;">🎯</span>
-                        <span class="dash-label">Drills</span>
-                    </button>
-                    <button class="dash-btn" data-target="tab-whs">
-                        <span class="dash-icon" style="background:#dcfce7; color:#16a34a;">📈</span>
-                        <span class="dash-label">Handicap</span>
-                    </button>
-                    <button class="dash-btn" data-target="tab-comp">
-                        <span class="dash-icon" style="background:#fee2e2; color:#dc2626;">🏆</span>
-                        <span class="dash-label">Competitions</span>
-                    </button>
-                    <button class="dash-btn" data-target="tab-tempo">
-                        <span class="dash-icon" style="background:#f3e8ff; color:#9333ea;">⏱️</span>
-                        <span class="dash-label">Tempo</span>
-                    </button>
-                    <button class="dash-btn" data-target="tab-settings">
-                        <span class="dash-icon" style="background:#f1f5f9; color:#475569;">⚙️</span>
-                        <span class="dash-label">Settings</span>
-                    </button>
-                </div>
-
-                <!-- Admin/Coach Hidden Section -->
-                <div id="dash-admin-grid" class="dashboard-grid hidden" style="margin-top:10px;">
-                    <button class="dash-btn" data-target="tab-coach" id="dash-btn-coach"
-                        style="border: 2px dashed #93c5fd; background:#e0f2fe;">
-                        <span class="dash-icon" style="background:transparent; color:#0284c7;">👨‍🏫</span>
-                        <span class="dash-label">Coach Portal</span>
-                    </button>
-                    <button class="dash-btn" data-target="tab-admin" id="dash-btn-admin-dash"
-                        style="border: 2px dashed #fcd34d; background:#fef3c7;">
-                        <span class="dash-icon" style="background:transparent; color:#d97706;">🛠️</span>
-                        <span class="dash-label">Admin Pane</span>
-                    </button>
-                </div>
-            </div>
         </div>
 
         <!-- ========================================== -->
@@ -586,10 +509,7 @@
                     </div>
                     <div id="surveyor-status-msg"
                         style="margin-top: 8px; font-size: 0.7rem; color: #64748b; font-style: italic;">Wait for high
-                        accuracy (&lt; 5.0m)</div>
-                            <button id="btn-undo-pin" class="btn btn-secondary hidden"
-                                style="width:100%; margin-top:10px; background:#f1f5f9; color:#475569; border:1px dashed #cbd5e1; font-weight:700; font-size:0.8rem;">↺
-                                Undo Last Pin</button>
+                        accuracy (< 5.0m)</div>
                     </div>
 
                     <div style="display:flex; gap:10px; justify-content:center; margin-bottom:10px; padding: 0 15px;">
@@ -2348,24 +2268,20 @@
 
         <!-- Global Version Footer -->
         <div id="footer-version" class="version-display"
-        style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
+            style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: var(--text-muted); font-size: 0.85rem; z-index: 1000; background-color: rgba(244, 247, 246, 0.9);">
+            <!-- Version injected from meta -->
         </div>
-
-    <button id="global-fab-home" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: none; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color, #10b981); color: white; font-size: 1.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: none; cursor: pointer; align-items: center; justify-content: center;">
-        🏠
-    </button>
-
-    
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then((registration) => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, (error) => {
-                    console.log('ServiceWorker registration failed: ', error);
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').then((registration) => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, (error) => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
                 });
-            });
-        }
-    </script>
+            }
+        </script>
 </body>
+
 </html>

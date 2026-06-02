@@ -38,15 +38,7 @@ import { initWakeLock } from './wakelock.js';
 
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, where } from "firebase/firestore";
-// ==========================================
-// SAFE-BOOT: Offline-First Timeout Wrapper
-// ==========================================
-export const fetchWithTimeout = async (firebasePromise, ms = 3000) => {
-    const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('TIMEOUT_OR_OFFLINE')), ms)
-    );
-    return Promise.race([firebasePromise, timeout]);
-};
+
 function bootstrapApplication() {
     console.log("App Ready: Bootstrapping modules...");
 
@@ -382,7 +374,7 @@ async function populatePlayerSelect() {
             } else {
                 q = query(usersRef, where("coaches", "array-contains", AppState.currentUser.uid)); // Coaches get students
             }
-            const snap = await fetchWithTimeout(getDocs(q), 3000);
+            const snap = await getDocs(q);
             snap.forEach(d => {
                 if (d.id !== AppState.currentUser.uid) { // Don't duplicate self
                     const data = d.data();

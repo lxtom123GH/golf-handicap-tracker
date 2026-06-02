@@ -13,25 +13,32 @@ import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS
 import { httpsCallable } from "firebase/functions";
 import { functions } from './firebase-config.js';
 import { AudioService } from './services/audioService.js';
-import { toggleGPS, updateGPSDistances } from './modules/gps.js';
+
+import { updateLiveLeaderboard, renderDetailedReview, renderBagButtons, renderHoleJumper } from './modules/card-render.js';
+import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast } from './modules/score-input.js';
+import { bindAddPlayer, bindCompQuickAdd, bindSetupToggles, bindCourseSelect, bindStartRound, bindGlobalRoundActions, bindOcSubNav, bindShotWizard } from './modules/event-binders.js';
+
+
 /**
  * Initializes the on-course tracking module and binds global event listeners.
  * Configures UI states for the start of a round.
  * @returns {void}
  */
 export function initOnCourse() {
-    bindSetupToggles();
-    bindCourseSelect();
-    bindAddPlayer();
-    bindShotWizard();
-    bindStartRound();
-    bindGlobalRoundActions();
+    import('./modules/event-binders.js').then(binders => {
+        binders.bindSetupToggles();
+        binders.bindCourseSelect();
+        binders.bindAddPlayer();
+        binders.bindShotWizard();
+        binders.bindStartRound();
+        binders.bindGlobalRoundActions();
+        binders.bindCompQuickAdd();
+        binders.bindOcSubNav();
+    });
     bindReviewModal();
     bindPenaltyModal();
     bindReviewActions();
     bindAdvancedTools();
-    bindOcSubNav();
-    bindCompQuickAdd();
     bindHoleNav();
     bindAudioDiaryUI();
 
@@ -54,352 +61,35 @@ export function initOnCourse() {
 
     const dateInput = document.getElementById('oc-round-date');
     if (dateInput) dateInput.valueAsDate = new Date();
-
-    // v6.26.3: Hard Re-Fetch (Ground Truth Sync)
-    window.addEventListener('holeUpdate', async () => {
-        if (!AppState.activeRoundId) return;
-        console.log("[SYNC] Hard Re-Fetch Triggered...");
-        await loadHoleData(AppState.currentHole);
-        if (typeof loadHole === 'function') loadHole();
-    });
 }
 
-function bindSetupToggles() {
-    if (UI.btnModeSimple && UI.btnModeDetailed) {
-        UI.btnModeSimple.addEventListener('click', () => {
-            AppState.currentTrackingMode = 'simple';
-            UI.btnModeSimple.classList.add('active');
-            UI.btnModeSimple.style.background = 'white';
-            UI.btnModeSimple.style.color = 'black';
-            UI.btnModeDetailed.classList.remove('active');
-            UI.btnModeDetailed.style.background = 'transparent';
-            UI.btnModeDetailed.style.color = '#64748b';
-            if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Simple: fairway, GIR, putts per hole";
-            updateModeVisibility();
-        });
-        UI.btnModeDetailed.addEventListener('click', () => {
-            AppState.currentTrackingMode = 'detailed';
-            UI.btnModeDetailed.classList.add('active');
-            UI.btnModeDetailed.style.background = 'white';
-            UI.btnModeDetailed.style.color = 'black';
-            UI.btnModeSimple.classList.remove('active');
-            UI.btnModeSimple.style.background = 'transparent';
-            UI.btnModeSimple.style.color = '#64748b';
-            if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Detailed: Tracking ball flight, start line, curve, & outcomes";
-            updateModeVisibility();
-        });
-    }
+
+/* MOVED TO MODULE: bindSetupToggles */
 
 
 
-    if (UI.btnRound9 && UI.btnRound18) {
-        UI.btnRound9.addEventListener('click', () => {
-            AppState.currentRoundHoles = 9;
-            UI.btnRound9.classList.add('active');
-            UI.btnRound9.style.background = 'var(--primary-color)';
-            UI.btnRound9.style.color = 'white';
-            UI.btnRound18.classList.remove('active');
-            UI.btnRound18.style.background = 'white';
-            UI.btnRound18.style.color = '#64748b';
-            const ocKeperraCombosOptgroup = document.getElementById('oc-keperra-18h-group');
-            if (ocKeperraCombosOptgroup) ocKeperraCombosOptgroup.classList.add('hidden');
-        });
-        UI.btnRound18.addEventListener('click', () => {
-            AppState.currentRoundHoles = 18;
-            UI.btnRound18.classList.add('active');
-            UI.btnRound18.style.background = 'var(--primary-color)';
-            UI.btnRound18.style.color = 'white';
-            UI.btnRound9.classList.remove('active');
-            UI.btnRound9.style.background = 'white';
-            UI.btnRound9.style.color = '#64748b';
-            const ocKeperraCombosOptgroup = document.getElementById('oc-keperra-18h-group');
-            if (ocKeperraCombosOptgroup) ocKeperraCombosOptgroup.classList.remove('hidden');
-        });
-    }
-}
+/* MOVED TO MODULE: bindCourseSelect */
 
-function bindCourseSelect() {
-    if (UI.ocCourseSelect) {
-        UI.ocCourseSelect.addEventListener('change', () => {
-            const courseName = UI.ocCourseSelect.value;
-            AppState.currentRoundCourseName = courseName;
 
-            if (UI.ocTeeSelect && COURSE_DATA[courseName]) {
-                UI.ocTeeSelect.innerHTML = '';
-                for (const tee in COURSE_DATA[courseName]) {
-                    const opt = document.createElement('option');
-                    opt.value = tee;
-                    opt.textContent = tee;
-                    UI.ocTeeSelect.appendChild(opt);
-                }
-                UI.ocTeeSelect.dispatchEvent(new Event('change'));
-            }
-        });
-    }
 
-    if (UI.ocTeeSelect) {
-        UI.ocTeeSelect.addEventListener('change', async () => {
-            const courseName = UI.ocCourseSelect.value;
-            const teeName = UI.ocTeeSelect.value;
-            if (COURSE_DATA[courseName] && COURSE_DATA[courseName][teeName]) {
-                const data = COURSE_DATA[courseName][teeName];
-                const parText = data.par > 0 ? data.par : '<input type="number" id="oc-manual-par" style="width:50px; display:inline;" class="form-control form-control-sm" placeholder="Par">';
+/* MOVED TO MODULE: bindAddPlayer */
 
-                if (UI.ocCourseInfoLine) {
-                    UI.ocCourseInfoLine.innerHTML = `Par: ${parText} | CR: <input type="number" id="oc-manual-cr" value="${data.rating || 0}" style="width:60px; display:inline;"> | SR: <input type="number" id="oc-manual-sr" value="${data.slope || 0}" style="width:60px; display:inline;">`;
-                }
 
-                AppState.currentCoursePars = data.pars || [];
 
-                if (AppState.currentUser) {
-                    const hi = await getPlayerHandicap(AppState.currentUser.uid);
-                    if (hi !== undefined && data.par > 0) {
-                        const dh = Math.round(hi * ((data.slope || 113) / 113) + ((data.rating || 72) - (data.par || 72)));
-                        if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <strong><input type="number" id="oc-manual-dh" value="${dh}" style="width:60px; display:inline; font-weight:bold; color:var(--primary-color);"></strong>`;
-                    } else {
-                        if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <input type="number" id="oc-manual-dh" value="0" style="width:60px; display:inline; font-weight:bold;">`;
-                    }
-                }
+/* MOVED TO MODULE: bindCompQuickAdd */
 
-                // Force UI isolation check on tee/mode change
-                updateModeVisibility();
-            }
-        });
-    }
-}
-
-function bindAddPlayer() {
-    if (UI.btnOcAddPlayer && UI.ocPlayerSelect) {
-        UI.btnOcAddPlayer.addEventListener('click', () => {
-            const sel = UI.ocPlayerSelect.options[UI.ocPlayerSelect.selectedIndex];
-            if (!sel.value) return;
-
-            if (AppState.liveRoundGroups.find(p => p.uid === sel.value)) {
-                alert("Player already added.");
-                return;
-            }
-
-            // Update state triggers Proxy 'set' and thus reactive render
-            AppState.liveRoundGroups = [...AppState.liveRoundGroups, {
-                uid: sel.value,
-                name: sel.text,
-                scores: {},
-                compStats: {},
-                simpleStats: {}
-            }];
-        });
-    }
-}
-
-function bindCompQuickAdd() {
-    if (UI.ocLinkComp && UI.btnOcQuickAdd) {
-        UI.ocLinkComp.addEventListener('change', () => {
-            const sel = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
-            if (!sel || !sel.value) {
-                UI.btnOcQuickAdd.classList.add('hidden');
-                return;
-            }
-            const regulars = JSON.parse(sel.getAttribute('data-regulars') || "[]");
-            if (regulars.length > 0) {
-                UI.btnOcQuickAdd.classList.remove('hidden');
-            } else {
-                UI.btnOcQuickAdd.classList.add('hidden');
-            }
-        });
-
-        UI.btnOcQuickAdd.addEventListener('click', () => {
-            const container = document.getElementById('oc-comp-regulars-select');
-            if (!container) return;
-
-            const checkedInputs = Array.from(container.querySelectorAll('input:checked'));
-            if (checkedInputs.length === 0) {
-                alert("Please select at least one player to add.");
-                return;
-            }
-
-            let addedCount = 0;
-            const currentGroups = [...AppState.liveRoundGroups];
-
-            checkedInputs.forEach(input => {
-                const uid = input.value;
-                const name = input.getAttribute('data-name');
-                if (!currentGroups.find(existing => existing.uid === uid)) {
-                    currentGroups.push({
-                        uid: uid,
-                        name: name,
-                        scores: {},
-                        compStats: {},
-                        simpleStats: {}
-                    });
-                    addedCount++;
-                }
-            });
-
-            AppState.liveRoundGroups = currentGroups;
-            if (addedCount > 0) {
-                // Done - list re-renders reactively because of AppState proxy
-                // Optionally clear checkboxes here
-                checkedInputs.forEach(i => i.checked = false);
-            } else {
-                alert("Selected players are already in the group.");
-            }
-        });
-
-        if (UI.ocLinkComp) {
-            UI.ocLinkComp.addEventListener('change', () => {
-                const sel = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
-                const regulars = JSON.parse(sel.getAttribute('data-regulars') || "[]");
-
-                const container = document.getElementById('oc-comp-regulars-select');
-                if (!container) return;
-
-                if (sel.value && regulars.length > 0) {
-                    container.classList.remove('hidden');
-                    // Create checkbox list for regulars
-                    let html = '<label style="display:block; font-weight:bold; margin-bottom:8px; font-size:0.9rem;">Select Regulars:</label>';
-                    html += '<div style="display:flex; flex-direction:column; gap:5px; max-height:150px; overflow-y:auto; border:1px solid #e2e8f0; padding:10px; border-radius:6px; background:#fff;">';
-                    regulars.forEach(p => {
-                        html += `
-                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" value="${p.uid}" data-name="${p.name}">
-                                <span>${p.name}</span>
-                            </label>
-                        `;
-                    });
-                    html += '</div>';
-                    container.innerHTML = html;
-                    UI.btnOcQuickAdd.classList.remove('hidden'); // Show the "Add Selected" button
-                } else {
-                    container.classList.add('hidden');
-                    container.innerHTML = '';
-                    UI.btnOcQuickAdd.classList.add('hidden');
-                }
-            });
-        }
-    }
-}
 /**
  * Binds the 'Start Round' button to initialize the round state.
  * Validates player count, course par, fetches handicaps, and transitions the UI to the live hub.
  * @returns {void}
  */
-function bindStartRound() {
-    if (UI.btnOcStart) {
-        UI.btnOcStart.addEventListener('click', async () => {
-            if (AppState.liveRoundGroups.length === 0) {
-                alert("Please add at least one player to track.");
-                return;
-            }
 
-            const courseName = UI.ocCourseSelect.value;
-            let manualParInput = document.getElementById('oc-manual-par');
-            const totalPar = manualParInput ? parseInt(manualParInput.value) : (COURSE_DATA[courseName]?.[UI.ocTeeSelect.value]?.par || 0);
+/* MOVED TO MODULE: bindStartRound */
 
-            if (!totalPar) {
-                if (document.getElementById('tab-oncourse').classList.contains('active')) {
-                    alert("Please specify a valid total Par for this course.");
-                }
-                return;
-            }
 
-            const compId = UI.ocLinkComp ? UI.ocLinkComp.value : null;
-            if (compId) {
-                AppState.currentLiveCompId = compId;
-                const selectedOpt = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
-                try {
-                    AppState.currentLiveCompRules = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
-                } catch (e) { }
-            } else {
-                AppState.currentLiveCompRules = [];
-            }
 
-            const dateInput = document.getElementById('oc-round-date');
-            AppState.currentRoundDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+/* MOVED TO MODULE: bindGlobalRoundActions */
 
-            AppState.currentHole = 1;
-            AppState.activeRoundId = `round_${Date.now()}`;
-            AppState.currentHoleShots = [];
-            AppState.isActiveRound = true; // Route Phase 2
-
-            // Fetch Daily Handicaps for all players
-            const teeData = COURSE_DATA[courseName]?.[UI.ocTeeSelect.value] || {};
-            for (let p of AppState.liveRoundGroups) {
-                const hi = await getPlayerHandicap(p.uid);
-                p.handicapIndex = hi;
-                p.dailyHandicap = Math.round(hi * ((teeData.slope || 113) / 113) + ((teeData.rating || 72) - totalPar));
-            }
-
-            document.body.classList.add('round-active');
-            document.getElementById('oncourse-setup').classList.add('hidden');
-            document.getElementById('oncourse-hub').classList.remove('hidden');
-
-            // Show new sub-nav and progress bar
-            const subNav = document.getElementById('oc-sub-nav');
-            if (subNav) subNav.classList.remove('hidden');
-            const progress = document.getElementById('hole-jumper-container');
-            if (progress) progress.classList.remove('hidden');
-            renderHoleJumper();
-            const exitBar = document.getElementById('oc-exit-bar');
-            if (exitBar) exitBar.classList.remove('hidden');
-
-            loadHole();
-            bindHoleNav(); // Re-bind on start
-        });
-    }
-
-    const abortBtn = document.getElementById('btn-oc-abort-round');
-    if (abortBtn) {
-        abortBtn.addEventListener('click', () => {
-            if (confirm("Are you sure you want to end this round session? All unsaved data will be cleared.")) {
-                endRoundCleanup();
-            }
-        });
-    }
-}
-
-function bindGlobalRoundActions() {
-    const btnDiscard = document.getElementById('btn-oc-discard');
-    if (btnDiscard) {
-        btnDiscard.addEventListener('click', async () => {
-            if (confirm("Are you sure you want to discard this round and ALL recorded shots?")) {
-                try {
-                    const batch = writeBatch(db);
-                    const shotsQuery = query(collection(db, "shots"), where("roundId", "==", AppState.activeRoundId));
-                    const shotSnaps = await getDocs(shotsQuery);
-                    shotSnaps.forEach(sdoc => batch.delete(sdoc.ref));
-
-                    // CRITICAL FIX: Delete the round document itself
-                    const roundRef = doc(db, "whs_rounds", AppState.activeRoundId);
-                    batch.delete(roundRef);
-
-                    await batch.commit();
-
-                    // Note: Assuming showToast exists in the file, otherwise replace with console.log
-                    if (typeof showToast !== 'undefined') showToast("Round & Shots discarded 🗑️");
-                    endRoundCleanup();
-                } catch (e) {
-                    alert("Failed to discard round data cleanly.");
-                }
-            }
-        });
-    }
-
-    // Add floating finish button
-    const fab = document.createElement('button');
-    fab.id = 'oc-fixed-finish-btn';
-    fab.className = 'fixed-action-btn hidden';
-    fab.innerHTML = '🏁 Finish Round';
-    fab.addEventListener('click', openFinishModal);
-    document.body.appendChild(fab);
-
-    // Show/Hide FAB based on round state
-    window.addEventListener('stateChange', (e) => {
-        if (e.detail.property === 'activeRoundId') {
-            if (e.detail.newValue) fab.classList.remove('hidden');
-            else fab.classList.add('hidden');
-        }
-    });
-}
 
 /**
  * Clears the active round state and gracefully resets the UI back to the setup screen.
@@ -435,7 +125,6 @@ export function endRoundCleanup() {
     AppState.currentLiveCompRules = [];
     AppState.currentHoleShots = [];
     AppState.activeRoundId = null;
-    AppState.isActiveRound = false; // Route Phase 2
     AppState.currentRoundDate = null;
 
     // v6.7.0 FIX: Reset ALL round-scoped state to prevent stale data leaking
@@ -448,7 +137,7 @@ export function endRoundCleanup() {
     if (UI.ocAddedPlayersList) UI.ocAddedPlayersList.innerHTML = '';
 }
 
-async function getPlayerHandicap(uid) {
+export async function getPlayerHandicap(uid) {
     if (AppState.currentUser && uid === AppState.currentUser.uid && window.currentHandicapIndex !== undefined) {
         return window.currentHandicapIndex;
     }
@@ -460,29 +149,6 @@ async function getPlayerHandicap(uid) {
         }
     } catch (e) { }
     return 0;
-}
-
-/**
- * v6.26.3 Hard Re-Fetch
- * Pulls the absolute ground truth for a hole's survey data directly from Firestore.
- * @param {number} holeNum 
- */
-export async function loadHoleData(holeNum) {
-    const courseId = AppState.currentRoundCourseName;
-    if (!courseId || !holeNum) return;
-
-    try {
-        const holeRef = doc(db, "courses", courseId, "holes", holeNum.toString());
-        const snap = await getDoc(holeRef);
-        if (snap.exists()) {
-            const data = snap.data();
-            if (!AppState.surveyData) AppState.surveyData = {};
-            AppState.surveyData[holeNum] = data.surveyData || {};
-            console.log(`[SYNC] Hole ${holeNum} data re-fetched from Firestore.`);
-        }
-    } catch (e) {
-        console.error("[SYNC] Failed to re-fetch hole data:", e);
-    }
 }
 
 /**
@@ -641,7 +307,7 @@ export function loadHole() {
     }
 }
 
-function openFinishModal() {
+export function openFinishModal() {
     const modal = document.getElementById('oc-finish-modal');
     if (!modal) return;
 
@@ -796,43 +462,9 @@ function openDetailedReview() {
     if (UI.ocFinishModal) UI.ocFinishModal.classList.add('hidden');
 }
 
-function renderDetailedReview() {
-    if (!UI.ocDetailedTbody) return;
-    UI.ocDetailedTbody.innerHTML = '';
 
-    const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
-    if (!p) return;
+/* MOVED TO MODULE: renderDetailedReview */
 
-    const courseName = AppState.currentRoundCourseName;
-    const teeName = UI.ocTeeSelect.value;
-    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
-
-    const maxHole = AppState.currentRoundHoles || 9;
-    for (let h = 1; h <= maxHole; h++) {
-        const score = p.scores[h] || 0;
-        const holeIdx = h - 1;
-        const hPar = AppState.currentCoursePars[holeIdx] || 4;
-        const hSI = teeData.strokeIndex?.[holeIdx] || (holeIdx + 1);
-        const points = calculateHoleStableford(score, hPar, hSI, p.dailyHandicap);
-        const putts = p.simpleStats[h]?.putts || 0;
-        const statsStr = [
-            (p.simpleStats[h]?.fir || p.simpleStats[h]?.fwy) ? 'FIR' : '',
-            p.simpleStats[h]?.gir ? 'GIR' : ''
-        ].filter(Boolean).join(', ') || '-';
-
-        const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.innerHTML = `
-            <td><strong>${h}</strong> <span style="font-size:0.7rem; opacity:0.6;">(P${hPar})</span></td>
-            <td style="font-weight:bold;">${score || '-'}</td>
-            <td>${points}</td>
-            <td>${putts}</td>
-            <td style="font-size:0.75rem;">${statsStr}</td>
-        `;
-        tr.addEventListener('click', () => openHoleEditor(h));
-        UI.ocDetailedTbody.appendChild(tr);
-    }
-}
 
 let currentEditingHole = null;
 let editorState = { score: 0, putts: 0, penalties: 0, fir: false, gir: false };
@@ -846,7 +478,7 @@ window.adjustEditorField = function (field, delta) {
     }
 }
 
-function openHoleEditor(holeNum) {
+export function openHoleEditor(holeNum) {
     currentEditingHole = holeNum;
     const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
     const score = p.scores[holeNum] || 0;
@@ -934,6 +566,126 @@ function bindAdvancedTools() {
             import('./surveyor').then(m => m.capturePin('override'));
         });
     }
+}
+
+let gpsWatchId = null;
+function toggleGPS() {
+    if (gpsWatchId) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+        if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: OFF";
+        if (UI.ocGpsWidget) UI.ocGpsWidget.classList.add('hidden');
+    } else {
+        if (!navigator.geolocation) {
+            showToast("GPS not supported on this device.");
+            return;
+        }
+
+        if (UI.btnToggleGps) UI.btnToggleGps.textContent = "⌛ Locating...";
+        gpsWatchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                updateGPSDistances(latitude, longitude);
+                if (UI.btnToggleGps) UI.btnToggleGps.textContent = "📡 GPS: ON";
+                if (UI.ocGpsWidget) UI.ocGpsWidget.classList.remove('hidden');
+            },
+            (err) => {
+                console.error("GPS Error:", err);
+                let msg = "GPS Error";
+                if (err.code === 1) msg = "GPS Permission Denied";
+                else if (err.code === 2) msg = "GPS Position Unavailable";
+                showToast(msg);
+                toggleGPS(); // Turn off
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    }
+}
+
+function updateGPSDistances(lat, lon) {
+    const holeIdx = AppState.currentHole - 1;
+    const courseName = AppState.currentRoundCourseName;
+    const teeName = UI.ocTeeSelect.value;
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+
+    // 1. Identify physical hole number (1-27)
+    let physicalHole = holeIdx + 1; // Default fallback
+    if (teeData.physicalHoles && teeData.physicalHoles[holeIdx]) {
+        physicalHole = teeData.physicalHoles[holeIdx];
+    }
+
+    // 2. Look up coordinates for that physical hole
+    // Priority: 1. Survey Override, 2. Calculated Green Center, 3. Static GPS (KEPERRA_GPS)
+    let groundTruth = null;
+    const survey = AppState.surveyData?.[AppState.currentHole];
+
+    if (survey) {
+        if (survey.override) {
+            groundTruth = {
+                c: [survey.override.lat, survey.override.lng],
+                f: survey.front ? [survey.front.lat, survey.front.lng] : null,
+                b: survey.back ? [survey.back.lat, survey.back.lng] : null
+            };
+        } else if (survey.greenCenter) {
+            groundTruth = {
+                c: [survey.greenCenter.lat, survey.greenCenter.lng],
+                f: survey.front ? [survey.front.lat, survey.front.lng] : null,
+                b: survey.back ? [survey.back.lat, survey.back.lng] : null
+            };
+        }
+    }
+
+    if (!groundTruth && KEPERRA_GPS[physicalHole]) {
+        const k = KEPERRA_GPS[physicalHole];
+        groundTruth = {
+            c: [k[0], k[1]],
+            f: [k[2], k[3]],
+            b: [k[4], k[5]]
+        };
+    }
+
+    if (groundTruth && groundTruth.c) {
+        // 3. Calculate Haversine distance in meters
+        const distCenter = getDistance(lat, lon, groundTruth.c[0], groundTruth.c[1]);
+        const distFront = groundTruth.f ? getDistance(lat, lon, groundTruth.f[0], groundTruth.f[1]) : null;
+        const distBack = groundTruth.b ? getDistance(lat, lon, groundTruth.b[0], groundTruth.b[1]) : null;
+
+        // 4. Update UI labels (meters)
+        if (UI.gpsMiddle) UI.gpsMiddle.textContent = `${Math.round(distCenter)}m`;
+        if (UI.gpsFront) UI.gpsFront.textContent = distFront !== null ? `${Math.round(distFront)}m` : "---m";
+        if (UI.gpsBack) UI.gpsBack.textContent = distBack !== null ? `${Math.round(distBack)}m` : "---m";
+
+        // v6.21.0 Telemetry: Log if we are using Surveyor data
+        if (survey) console.log(`[GPS] Using Ground Truth (Survey) for Hole ${AppState.currentHole}`);
+    } else {
+        // Mock fallback if no coordinates found
+        if (UI.gpsMiddle) UI.gpsMiddle.textContent = "---m";
+        if (UI.gpsFront) UI.gpsFront.textContent = "---m";
+        if (UI.gpsBack) UI.gpsBack.textContent = "---m";
+    }
+}
+
+/**
+ * Calculates the exact geographic distance between two sets of coordinates using the Haversine formula.
+ * @param {number} lat1 - Latitude of the first point.
+ * @param {number} lon1 - Longitude of the first point.
+ * @param {number} lat2 - Latitude of the second point.
+ * @param {number} lon2 - Longitude of the second point.
+ * @returns {number} The distance in meters.
+ */
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth radius in meters
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+    const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+        Math.cos(phi1) * Math.cos(phi2) *
+        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
 }
 
 let recognition = null;
@@ -1258,35 +1010,9 @@ export function jumpToHole(holeIndex) {
     if (hub) hub.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function renderHoleJumper() {
-    const container = document.getElementById('hole-jumper-container');
-    if (!container) return;
-    const total = AppState.currentRoundHoles || 9;
-    container.innerHTML = '';
-    for (let i = 1; i <= total; i++) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = i;
-        const isCurrent = i === AppState.currentHole;
-        const isDone = i < AppState.currentHole;
-        const baseStyle = 'min-width:44px; height:44px; border-radius:50%; border:2px solid; font-weight:700; font-size:0.85rem; cursor:pointer; flex-shrink:0;';
-        if (isCurrent) {
-            btn.style.cssText = baseStyle + 'border-color:#1e3c72; background:#1e3c72; color:white;';
-        } else if (isDone) {
-            btn.style.cssText = baseStyle + 'border-color:#10b981; background:#dcfce7; color:#065f46;';
-        } else {
-            btn.style.cssText = baseStyle + 'border-color:#cbd5e1; background:white; color:#475569;';
-        }
-        btn.setAttribute('aria-label', `Go to hole ${i}`);
-        btn.addEventListener('click', () => jumpToHole(i));
-        container.appendChild(btn);
-    }
-    // Auto-center active hole button
-    const activeBtn = container.children[AppState.currentHole - 1];
-    if (activeBtn) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-}
+
+/* MOVED TO MODULE: renderHoleJumper */
+
 
 
 
@@ -1681,326 +1407,52 @@ function renderMarkdownLite(text) {
         .replace(/\n/g, '<br>');
 }
 
-function setWizardActive(isActive) {
-    if (isActive) {
-        document.body.classList.add('active-wizard-mode');
-    } else {
-        document.body.classList.remove('active-wizard-mode');
-    }
-}
 
-function bindShotWizard() {
-    const btnTrackShot = document.getElementById('btn-oc-track-shot');
-    const wizardDiv = document.getElementById('oncourse-wizard');
+/* MOVED TO MODULE: setWizardActive */
 
-    if (btnTrackShot) {
-        btnTrackShot.addEventListener('click', () => {
-            startNewShotInput();
-        });
-    }
 
-    if (UI.btnBackToHole) {
-        UI.btnBackToHole.addEventListener('click', () => {
-            setWizardActive(false);
-            wizardDiv.classList.add('hidden');
-        });
-    }
 
-    const btnExitShot = document.getElementById('btn-wizard-cancel');
-    if (btnExitShot) {
-        btnExitShot.addEventListener('click', () => {
-            setWizardActive(false);
-            wizardDiv.classList.add('hidden');
-        });
-    }
+/* MOVED TO MODULE: bindShotWizard */
 
-    // Weapon Section (Manual Binding as it's dynamic)
-    if (UI.bagButtonsGrid) {
-        UI.bagButtonsGrid.addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn-grid-compact');
-            if (!btn) return;
-            const val = btn.getAttribute('data-val');
-            AppState.currentShotData.club = val;
 
-            // Toggle Putting Section
-            const puttingSection = document.getElementById('section-putting-outcome');
-            if (val === 'Putter') {
-                puttingSection.classList.remove('hidden');
-            } else {
-                puttingSection.classList.add('hidden');
-            }
 
-            // UI Feedback
-            UI.bagButtonsGrid.querySelectorAll('.btn-grid-compact').forEach(b => b.classList.remove('active-choice'));
-            btn.classList.add('active-choice');
-        });
-    }
+/* MOVED TO MODULE: startNewShotInput */
 
-    // Intent Grid & Putting Delegation
-    wizardDiv.addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-grid-compact');
-        if (!btn || btn.closest('#bag-buttons-grid')) return;
 
-        const group = btn.getAttribute('data-group');
-        const val = btn.getAttribute('data-val');
-        if (!group) return;
 
-        // Toggle Logic
-        if (btn.classList.contains('active-choice')) {
-            delete AppState.currentShotData[group];
-            btn.classList.remove('active-choice');
-        } else {
-            AppState.currentShotData[group] = val;
-            btn.closest('div').querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active-choice'));
-            btn.classList.add('active-choice');
-        }
-    });
+/* MOVED TO MODULE: loadExistingShotData */
 
-    // Final Save
-    if (UI.btnSaveShotFinal) {
-        UI.btnSaveShotFinal.addEventListener('click', saveShotData);
-    }
-
-    // Routine Toggles
-    document.querySelectorAll('.wiz-routine-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const b = e.target.closest('.wiz-routine-btn');
-            const field = b.getAttribute('data-routine');
-            const val = b.getAttribute('data-val');
-
-            if (!AppState.currentShotData.routines) AppState.currentShotData.routines = {};
-
-            // Toggle
-            if (AppState.currentShotData.routines[field] === val) {
-                delete AppState.currentShotData.routines[field];
-                b.classList.remove('active');
-            } else {
-                AppState.currentShotData.routines[field] = val;
-                // Deactivate sibling
-                b.parentElement.querySelectorAll('.wiz-routine-btn').forEach(sib => sib.classList.remove('active'));
-                b.classList.add('active');
-            }
-        });
-    });
-
-    if (UI.btnWizardDelete) {
-        UI.btnWizardDelete.addEventListener('click', deleteShotData);
-    }
-}
-
-function startNewShotInput(forcedShotNum = null) {
-    const shotNum = forcedShotNum || (AppState.currentHoleShots?.length || 0) + 1;
-    AppState.currentShotData = {
-        hole: AppState.currentHole,
-        shotNumber: shotNum,
-        roundId: AppState.activeRoundId,
-        timestamp: new Date().toISOString()
-    };
-
-    setWizardActive(true);
-    const wizard = document.getElementById('oncourse-wizard');
-    if (wizard) {
-        wizard.classList.remove('hidden');
-        wizard.scrollTop = 0;
-    }
-
-    syncShotWizardUI();
-}
-
-function loadExistingShotData(shotId) {
-    const existing = AppState.currentHoleShots.find(s => s.id === shotId);
-    if (existing) {
-        AppState.currentShotData = { ...existing };
-        setWizardActive(true);
-        const wizard = document.getElementById('oncourse-wizard');
-        if (wizard) {
-            wizard.classList.remove('hidden');
-            wizard.scrollTop = 0;
-        }
-        syncShotWizardUI();
-    }
-}
 
 /**
  * Synchronizes the visual state of the Shot Wizard UI to match the current in-memory shot data.
  * Updates button active states across all intent/result grids.
- * Guarded so we do not render club-specific DOM until GPS + club storage are ready.
  * @returns {void}
  */
-function syncShotWizardUI() {
-    const wizard = document.getElementById('oncourse-wizard');
-    if (!wizard) return;
 
-    const hasGpsLock = typeof window !== 'undefined' && window.golfGpsReady === true;
+/* MOVED TO MODULE: syncShotWizardUI */
 
-    const hasClubsDefined = (bag) => {
-        if (!bag || typeof bag !== 'object') return false;
-        return Boolean(
-            bag.driver ||
-            bag.putter ||
-            (Array.isArray(bag.woods) && bag.woods.length) ||
-            (Array.isArray(bag.irons) && bag.irons.length) ||
-            (Array.isArray(bag.wedges) && bag.wedges.length)
-        );
-    };
 
-    const areClubsResolved = () => {
-        if (AppState.playerClubs && hasClubsDefined(AppState.playerClubs)) return true;
-        try {
-            const raw = localStorage.getItem('golfAppClubs');
-            if (!raw) return false;
-            const parsed = JSON.parse(raw);
-            return hasClubsDefined(parsed);
-        } catch {
-            return false;
-        }
-    };
 
-    const clubsReady = areClubsResolved();
+/* MOVED TO MODULE: renderBagButtons */
 
-    if (!hasGpsLock || !clubsReady) {
-        if (UI.bagButtonsGrid) {
-            const msg = hasGpsLock
-                ? 'Loading your club data...'
-                : 'Waiting for GPS lock and club data...';
-            UI.bagButtonsGrid.innerHTML = `<div style="padding:10px; font-size:0.85rem; color:#64748b; text-align:center;">${msg}</div>`;
-        }
-        return;
-    }
 
-    renderBagButtons();
-
-    // Reset all intent/grid buttons
-    wizard.querySelectorAll('.btn-grid-compact').forEach(btn => btn.classList.remove('active-choice'));
-
-    // Populate choices
-    const data = AppState.currentShotData;
-    ['startLine', 'trajectory', 'strikeQuality', 'shape', 'puttControl'].forEach(group => {
-        if (data[group]) {
-            const btn = wizard.querySelector(`[data-group="${group}"][data-val="${data[group]}"]`);
-            if (btn) btn.classList.add('active-choice');
-        }
-    });
-
-    // Populate routines
-    document.querySelectorAll('.wiz-routine-btn').forEach(btn => {
-        const field = btn.getAttribute('data-routine');
-        const val = btn.getAttribute('data-val');
-        if (data.routines && data.routines[field] === val) btn.classList.add('active');
-        else btn.classList.remove('active');
-    });
-
-    // Show/Hide delete
-    if (UI.btnWizardDelete) {
-        UI.btnWizardDelete.classList.toggle('hidden', !data.id);
-    }
-
-    // Toggle Putter Section
-    const puttingSection = document.getElementById('section-putting-outcome');
-    if (puttingSection) {
-        if (data.club === 'Putter') puttingSection.classList.remove('hidden');
-        else puttingSection.classList.add('hidden');
-    }
-}
-
-function renderBagButtons() {
-    if (!UI.bagButtonsGrid) return;
-    UI.bagButtonsGrid.innerHTML = '';
-
-    // DYNAMIC SYNC: Prioritises live AppState, then LocalStorage.
-    // Sydney Protocol: Null-safe bag retrieval
-    let savedClubs = null;
-    try {
-        const rawClubs = localStorage.getItem('golfAppClubs');
-        if (rawClubs) {
-            const parsed = JSON.parse(rawClubs);
-            if (parsed && typeof parsed === 'object') {
-                savedClubs = parsed;
-            }
-        }
-    } catch (e) {
-        console.warn('[Clubs] Failed to parse golfAppClubs from storage. Clearing invalid value.', e);
-        try {
-            localStorage.removeItem('golfAppClubs');
-        } catch {
-            // Ignore storage failures; UI will fall back to "No Clubs Defined".
-        }
-    }
-
-    const hasClubsDefined = (bag) => {
-        if (!bag || typeof bag !== 'object') return false;
-        return Boolean(
-            bag.driver ||
-            bag.putter ||
-            (Array.isArray(bag.woods) && bag.woods.length) ||
-            (Array.isArray(bag.irons) && bag.irons.length) ||
-            (Array.isArray(bag.wedges) && bag.wedges.length)
-        );
-    };
-
-    const hasPlayerBag = AppState.playerClubs && hasClubsDefined(AppState.playerClubs);
-    const bag = hasPlayerBag ? AppState.playerClubs : (savedClubs && hasClubsDefined(savedClubs) ? savedClubs : null);
-
-    // If no clubs are defined anywhere, surface a clear UI state instead of throwing.
-    if (!hasClubsDefined(bag)) {
-        const empty = document.createElement('div');
-        empty.style.cssText = 'padding:10px; font-size:0.85rem; color:#64748b; text-align:center;';
-        empty.textContent = 'No Clubs Defined. Configure your bag in Settings.';
-        UI.bagButtonsGrid.appendChild(empty);
-        return;
-    }
-
-    const categories = [
-        { key: 'driver', label: 'Dr', standalone: true },
-        { key: 'woods', label: 'Woods', items: bag.woods },
-        { key: 'irons', label: 'Irons', items: bag.irons },
-        { key: 'wedges', label: 'Wedges', items: bag.wedges },
-        { key: 'putter', label: 'Putter', standalone: true }
-    ];
-
-    categories.forEach(cat => {
-        if (cat.standalone && bag[cat.key]) {
-            addButton(cat.label, cat.key === 'driver' ? 'Driver' : 'Putter');
-        } else if (Array.isArray(cat.items) && cat.items.length > 0) {
-            cat.items.forEach(item => {
-                // Shorten labels for pills
-                let display = item.replace('Wood', 'W').replace('Iron', 'i').replace('Wedge', 'W');
-                if (display === 'Long i') display = 'Li';
-                if (display === 'Mid i') display = 'Mi';
-                if (display === 'Short i') display = 'Si';
-                addButton(display, item);
-            });
-        }
-    });
-
-    function addButton(label, val) {
-        const btn = document.createElement('button');
-        btn.className = 'btn-grid-compact';
-        btn.style.minWidth = '60px';
-        btn.style.whiteSpace = 'nowrap';
-        if (AppState.currentShotData.club === val) btn.classList.add('active-choice');
-        btn.setAttribute('data-val', val);
-        btn.textContent = label;
-        UI.bagButtonsGrid.appendChild(btn);
-    }
-}
 
 function bindPenaltyModal() {
-  if (UI.btnWizardPenalty) {
-      UI.btnWizardPenalty.addEventListener('click', () => {
-          if (UI.penaltyModal) UI.penaltyModal.classList.remove('hidden');
-      });
-  }
+    if (UI.btnWizardPenalty) {
+        UI.btnWizardPenalty.addEventListener('click', () => {
+            if (UI.penaltyModal) UI.penaltyModal.classList.remove('hidden');
+        });
+    }
 
-  document.querySelectorAll('.penalty-opt').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-          const opt = e.target.closest('.penalty-opt');
-          const type = opt.getAttribute('data-type');
+    document.querySelectorAll('.penalty-opt').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const opt = e.target.closest('.penalty-opt');
+            const type = opt.getAttribute('data-type');
 
-          const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
-          if (!p) return;
+            const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
+            if (!p) return;
 
-          // Apply Penalty Strokes
+            // Apply Penalty Strokes
             let penaltyCount = 0;
             if (type === 'ob_lost') {
                 penaltyCount = 1;
@@ -2083,79 +1535,17 @@ export function bindBagSettings() {
     }
 }
 
-async function saveShotData() {
-    if (!AppState.currentUser) return;
-    document.getElementById('oncourse-wizard').classList.add('hidden');
-    setWizardActive(false); // Deactivate wizard mode
-    const payload = { uid: AppState.currentUser.uid, ...AppState.currentShotData };
-    try {
-        if (AppState.currentShotData.id) {
-            await updateDoc(doc(db, "shots", AppState.currentShotData.id), payload);
-            const idx = AppState.currentHoleShots.findIndex(s => s.id === AppState.currentShotData.id);
-            if (idx !== -1) AppState.currentHoleShots[idx] = { ...payload, id: AppState.currentShotData.id };
-        } else {
-            const docRef = await addDoc(collection(db, "shots"), payload);
-            AppState.currentHoleShots.push({ ...payload, id: docRef.id });
-            const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
-            if (p) {
-                p.scores[AppState.currentHole] = (p.scores[AppState.currentHole] || 0) + 1;
 
-                // TASK 1: Automated GIR Logic
-                const holeIdx = AppState.currentHole - 1;
-                const par = AppState.currentCoursePars[holeIdx] || 4;
-                if (payload.outcome === 'Green' && payload.shotNumber <= (par - 2)) {
-                    if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-                    p.simpleStats[AppState.currentHole].gir = true;
-                }
+/* MOVED TO MODULE: saveShotData */
 
-                // TASK 2: Putter Stats (Exclude Fringe)
-                if (payload.club === 'Putter' && !payload.isOffGreen) {
-                    if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
-                    p.simpleStats[AppState.currentHole].putts = (p.simpleStats[AppState.currentHole].putts || 0) + 1;
-                }
 
-                loadHole();
-            }
-        }
-        showToast("Shot Logged ⛳");
-    } catch (e) {
-        showToast("Error saving shot.");
-    }
-}
 
-async function deleteShotData() {
-    if (!AppState.currentUser || !AppState.currentShotData.id) return;
-    if (!confirm("Are you sure you want to delete this shot?")) return;
+/* MOVED TO MODULE: deleteShotData */
 
-    document.getElementById('oncourse-wizard').classList.add('hidden');
-    try {
-        await deleteDoc(doc(db, "shots", AppState.currentShotData.id));
 
-        // Remove from local state
-        AppState.currentHoleShots = AppState.currentHoleShots.filter(s => s.id !== AppState.currentShotData.id);
 
-        // Update player score
-        const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
-        if (p) {
-            p.scores[AppState.currentHole] = Math.max(0, (p.scores[AppState.currentHole] || 0) - 1);
-            loadHole();
-        }
+/* MOVED TO MODULE: showToast */
 
-        showToast("Shot Deleted 🗑️");
-        AppState.currentShotData = {};
-    } catch (e) {
-        console.error(e);
-        showToast("Error deleting shot.");
-    }
-}
-
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.textContent = message;
-    toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#10b981; color:white; padding:12px 24px; border-radius:30px; font-weight:bold; z-index:9999;';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
 
 function bindReviewModal() {
     if (UI.btnOcReviewRound) {
@@ -2283,72 +1673,12 @@ export function updateModeVisibility() {
  * Task 3: Live Leaderboard Logic
  * Calculates Stableford points across all players in current session
  */
-function updateLiveLeaderboard() {
-    const tbody = document.getElementById('oc-leaderboard-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
 
-    const courseName = AppState.currentRoundCourseName;
-    const teeName = UI.ocTeeSelect ? UI.ocTeeSelect.value : null;
-    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+/* MOVED TO MODULE: updateLiveLeaderboard */
 
-    const standings = AppState.liveRoundGroups.map(p => {
-        let pts = 0;
-        let thru = 0;
-        for (let h = 1; h <= AppState.currentRoundHoles; h++) {
-            const gross = p.scores[h];
-            if (gross > 0) {
-                thru = h;
-                const hIdx = h - 1;
-                const hPar = AppState.currentCoursePars[hIdx] || 4;
-                const hSI = teeData.strokeIndex?.[hIdx] || h;
-                pts += calculateHoleStableford(gross, hPar, hSI, p.dailyHandicap);
-            }
-        }
-        return { name: p.name, points: pts, thru: thru };
-    });
 
-    // Sort by Stableford points desc
-    standings.sort((a, b) => b.points - a.points);
 
-    standings.forEach((s, i) => {
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid #f1f5f9';
-        tr.innerHTML = `
-            <td style="padding:12px 8px; font-weight:700; color:#64748b;">${i + 1}</td>
-            <td style="padding:12px 8px; font-weight:600;">${s.name}</td>
-            <td style="padding:12px 8px; text-align:center; color:#64748b;">${s.thru}</td>
-            <td style="padding:12px 8px; text-align:right; font-weight:800; color:var(--primary-color);">${s.points}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
+/* MOVED TO MODULE: bindOcSubNav */
 
-function bindOcSubNav() {
-    const btns = document.querySelectorAll('.oc-sub-btn');
-    btns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-sub');
-            btns.forEach(b => {
-                b.classList.remove('active');
-                b.style.color = '#64748b';
-                b.style.borderBottom = 'none';
-            });
-            btn.classList.add('active');
-            btn.style.color = 'var(--primary-color)';
-            btn.style.borderBottom = '3px solid var(--primary-color)';
 
-            const isHub = target === 'hub';
-            const isSinglePlayer = AppState.liveRoundGroups.length <= 1;
-            const simpleStats = document.getElementById('oc-simple-stats');
-
-            if (simpleStats) {
-                simpleStats.classList.toggle('hidden', !isHub || !isSinglePlayer);
-            }
-
-            document.getElementById('oc-leaderboard').classList.toggle('hidden', target !== 'leaderboard');
-
-            if (target === 'leaderboard') updateLiveLeaderboard();
-        });
-    });
-}
+export { getDistance, updateGPSDistances };

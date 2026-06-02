@@ -111,17 +111,9 @@ body {
     display: none !important;
 }
 
-.text-success {
-    color: #10b981 !important;
-}
-
-.text-warning {
-    color: #f59e0b !important;
-}
-
-.text-danger {
-    color: #ef4444 !important;
-}
+.text-success { color: #10b981 !important; }
+.text-warning { color: #f59e0b !important; }
+.text-danger { color: #ef4444 !important; }
 
 /* On-Course Scorecard Styling */
 .compact-score-card {
@@ -135,85 +127,12 @@ body {
     gap: 8px;
 }
 
-/* Dashboard Grid & FAB Navigation */
+/* Dashboard Grid */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.dash-btn {
-    background: white;
-    border: none;
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-}
-
-.dash-btn:active {
-    transform: scale(0.96);
-}
-
-.dash-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-}
-
-.dash-label {
-    font-weight: 700;
-    color: var(--text-main);
-    font-size: 0.95rem;
-}
-
-.fab-home {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: white;
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    box-shadow: 0 4px 12px rgba(11, 46, 19, 0.4);
-    z-index: 1001;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.fab-home:active {
-    transform: scale(0.92);
-}
-
-/* Tournament Mode */
-body.tournament-active #weather-widget {
-    display: none !important;
-}
-
-/* Base View Logic */
-.view-container {
-    display: none;
-}
-
-.view-container.active {
-    display: block;
+    gap: 30px;
+    margin-bottom: 30px;
 }
 
 .section-desc {
@@ -1173,32 +1092,3 @@ body.active-wizard-mode #oncourse-wizard {
     display: none !important;
     visibility: hidden !important;
 }
-
-.gps-display {
-display: flex;
-align-items: center;
-justify-content: space-around;
-background: #1a1a1a;
-color: #2ecc71;
-padding: 12px 8px;
-border-radius: 12px;
-border: 1px solid #333;
-font-family: sans-serif;
-margin: 10px 0;
-}
-.gps-side {
-font-size: 0.7rem;
-text-align: center;
-opacity: 0.6;
-color: #ffffff;
-}
-.gps-hero {
-font-size: 2.8rem;
-font-weight: 900;
-display: flex;
-align-items: baseline;
-}
-.gps-hero span {
-font-size: 1rem;
-margin-left: 2px;
-}

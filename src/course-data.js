@@ -35,7 +35,7 @@ export const KEPERRA_GPS = {
     27: [-27.408589, 152.952474, -27.408505, 152.952533, -27.408706, 152.952423]
 };
 
-export const course_data = {
+export const COURSE_DATA = {
     // Keperra 18-hole Combos (The 27-hole property logic)
     "Keperra - Old (1-18)": {
         "Yellow (Men)": {
@@ -108,6 +108,3 @@ export const course_data = {
         "Custom Tee": { rating: 72, slope: 113, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
     }
 };
-
-// Backwards-compatible alias used throughout the on-course and hazard modules.
-export const COURSE_DATA = course_data;

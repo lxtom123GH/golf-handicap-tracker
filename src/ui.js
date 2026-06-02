@@ -1,23 +1,18 @@
-// Sydney Protocol: src/ui.js
-// Locale: en-AU (Australian Standard)
-// Status: [HARDENED & FULL RECOVERY] - Version 8.2.2
-
-import { toggleGPS } from './modules/gps.js';
+// ==========================================
+// Centralized DOM Element Caching & UI Helpers
+// ==========================================
 import { AppState } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
-import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db, functions } from './firebase-config.js';
 
 const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
 
-// ==========================================
-// Centralized DOM Element Caching
-// ==========================================
 export const UI = {
     // Core App
     authOverlay: document.getElementById('auth-overlay'),
-    mainApp: document.getElementById('main-app'), // FIX C2: Consolidated
+    mainApp: document.getElementById('main-app'),
     loggedInUserNameEl: document.getElementById('logged-in-user-name'),
     btnLogout: document.getElementById('btn-logout'),
 
@@ -62,7 +57,7 @@ export const UI = {
     dhValue: document.getElementById('dh-value'),
 
     // Competitions
-    tabBtnComp: document.getElementById('tab-btn-comp'),
+    tabBtnComp: document.getElementById('tab-btn-comp'), // may be null if data-target is used
     btnCreateCompContainer: document.getElementById('btn-show-create-comp'),
     createCompContainer: document.getElementById('create-comp-container'),
     createCompForm: document.getElementById('create-comp-form'),
@@ -87,7 +82,7 @@ export const UI = {
     btnEmailCoach: document.getElementById('btn-email-coach'),
     btnExportPractice: document.getElementById('btn-export-practice'),
     drillLiveTotalEl: document.getElementById('drill-live-total'),
-    btnCancelPractice: document.getElementById('btn-cancel-practice'),
+    btnCancelPractice: document.getElementById('btn-cancel-practice'), // Missing in HTML, safe if null
     practiceDashboardResults: document.getElementById('practice-best-score') ? document.getElementById('practice-best-score').parentElement.parentElement : null,
     practiceRecentTbody: document.getElementById('practice-history-tbody'),
 
@@ -159,7 +154,6 @@ export const UI = {
     btnPuttOnGreen: document.getElementById('btn-putt-on-green'),
     btnPuttFringe: document.getElementById('btn-putt-fringe'),
     penaltyModal: document.getElementById('penalty-modal'),
-    puttingSection: document.getElementById('section-putting-outcome'), // FIX M1: ADDED NULL-CHECK REF
 
     // Round Review Summary
     sumTotalShots: document.getElementById('sum-total-shots'),
@@ -174,9 +168,9 @@ export const UI = {
     ocDetailedReviewModal: document.getElementById('oc-detailed-review-modal'),
     ocDetailedTbody: document.getElementById('oc-detailed-tbody'),
     ocHoleEditorModal: document.getElementById('oc-hole-editor-modal'),
-    editorScoreVal: document.getElementById('editorScoreVal'),
-    editorPuttsVal: document.getElementById('editorPuttsVal'),
-    editorPenVal: document.getElementById('editorPenVal'),
+    editorScoreVal: document.getElementById('editor-score-val'),
+    editorPuttsVal: document.getElementById('editor-putts-val'),
+    editorPenVal: document.getElementById('editor-pen-val'),
     btnEditorSave: document.getElementById('btn-editor-save'),
     btnEditorCancel: document.getElementById('btn-editor-cancel'),
 
@@ -194,6 +188,7 @@ export const UI = {
     rulesResponseCard: document.getElementById('rules-response-card'),
     rulesResponseContent: document.getElementById('rules-response-content'),
     btnCloseRulesCard: document.getElementById('btn-close-rules-card'),
+    mainApp: document.getElementById('main-app'),
 
     // v6.21.0: Surveyor Mode
     btnToggleSurveyor: document.getElementById('btn-toggle-surveyor'),
@@ -214,91 +209,144 @@ export function injectVersionFromMeta() {
         el.textContent = version;
     });
 
+    // Legacy support for specific IDs
     const footerVer = document.getElementById('footer-version');
+    const headerVer = document.getElementById('header-version');
     if (footerVer) footerVer.textContent = version;
+    if (headerVer) headerVer.textContent = version;
 
     console.log(`[UI] Version Injected from Meta: ${version}`);
 }
 
+// ==========================================
+// TABS & NAVIGATION HELPER
+// ==========================================
 const DEFAULT_TAB_KEY = 'golfAppDefaultTab';
 
 /**
- * Maps to a new dashboard view (v7.0.0 replacement for switchTab).
+ * Ensures all mapped tab screens exist in the DOM.
+ * @returns {void}
  */
-export function MapsTo(viewId) {
-    if (!viewId) return;
-
-    const globalFab = document.getElementById('global-fab-home');
-    if (globalFab) {
-        if (viewId === 'view-home') {
-            globalFab.style.display = 'none';
-            AppState.selectedHoles = null;
-            AppState.selectedTee = null;
-            AppState.isStartingRound = false;
-        } else {
-            globalFab.style.display = 'flex';
+export function ensureScreensExist() {
+    ALL_SCREENS.forEach(id => {
+        if (!document.getElementById(id)) {
+            console.warn(`[Navigation] Missing screen element: #${id}`);
         }
-    }
+    });
+}
 
+/**
+ * Switches the active application tab and scrolls to the top.
+ * @param {string} targetId - The ID of the tab content to show.
+ * @returns {void}
+ */
+export function switchTab(targetId) {
+    if (!targetId) return;
+
+    // v6.20.0: Reset scroll position for tab switch comfort
     window.scrollTo(0, 0);
 
-    const target = document.getElementById(viewId) || document.getElementById('view-home'); // Fallback Fix
-    
-    document.querySelectorAll('.view-container, .tab-content').forEach(view => {
-        view.classList.add('hidden');
-        view.classList.remove('active');
-    });
+    const target = document.getElementById(targetId);
+    if (!target) {
+        console.error(`[Navigation] Target screen not found: #${targetId}`);
+        return;
+    }
 
+    // Hide all tabs
+    UI.tabContents.forEach(tab => {
+        tab.classList.add('hidden');
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Show target tab
     target.classList.remove('hidden');
     target.classList.add('active');
 
-    localStorage.setItem(DEFAULT_TAB_KEY, viewId);
+    // Update active button state
+    const btn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+    if (btn) btn.classList.add('active');
+
+    // Persist as default
+    localStorage.setItem(DEFAULT_TAB_KEY, targetId);
+
+    console.log(`[Navigation] switching to: ${targetId}`);
 }
+
 /**
- * Legacy alias for backwards compatibility.
- * Redirects older modules to the v7.0.0 MapsTo router.
+ * Refreshes the settings UI with current user information.
+ * @returns {void}
  */
-export function switchTab(targetId) {
-    MapsTo(targetId);
-}
+window.refreshSettingsUI = () => {
+    const info = document.getElementById('settings-account-info');
+    if (!info || !AppState.currentUser) return;
+
+    info.innerHTML = `
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p><strong>Name:</strong> ${AppState.currentUser.displayName || 'Guest User'}</p>
+            <p><strong>Email:</strong> ${AppState.currentUser.email}</p>
+            <p><strong>Role:</strong> ${window.currentUserIsAdmin ? 'Master Admin' : (window.currentUserIsCoach ? 'Coach' : 'Standard Player')}</p>
+            <p style="margin-top:10px; font-size: 0.75rem; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 8px;">
+                User ID: ${AppState.currentUser.uid}
+            </p>
+        </div>
+    `;
+};
+
 /**
- * Initializes navigation event listeners.
+ * Initializes navigation event listeners and sets the initial tab.
+ * @returns {void}
  */
 export function initNavigation() {
-    console.log("[Navigation] Initializing Dashboard Router (v7.0.0)...");
+    ensureScreensExist();
+    console.log("[Navigation] Initializing Clean Slate Architecture...");
 
-    const globalFab = document.getElementById('global-fab-home');
-    if (globalFab) {
-        globalFab.addEventListener('click', () => MapsTo('view-home'));
-    }
+    const tabButtons = document.querySelectorAll('.tab-btn');
 
-    // FIX C1: SINGLE BINDING with null-guard
-    if (UI.btnToggleGps) {
-        UI.btnToggleGps.addEventListener('click', () => {
-            toggleGPS();
-        });
-    }
-
-    document.querySelectorAll('.dash-btn, .tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+    tabButtons.forEach(btn => {
+        // Task 3: Strict Direct Binding (No Clone Purge)
+        btn.addEventListener('click', (e) => {
             const target = btn.getAttribute('data-target');
-            if (target) MapsTo(target);
+            if (target) {
+                switchTab(target);
+            }
         });
     });
 
-    let initialTab = AppState.activeRoundId ? 'tab-oncourse' : (localStorage.getItem(DEFAULT_TAB_KEY) || 'view-home');
-    MapsTo(initialTab);
-    
-    // REMOVED DUPLICATE LISTENERS FROM BOTTOM (FIX C1)
+    // Determine and set initial tab
+    let initialTab = 'tab-oncourse';
+    if (AppState.activeRoundId) {
+        initialTab = 'tab-oncourse';
+    } else {
+        const savedTabId = localStorage.getItem(DEFAULT_TAB_KEY);
+        initialTab = savedTabId || 'tab-oncourse';
+    }
+
+    switchTab(initialTab);
 }
 
+/**
+ * Setup tabs and version injection. Wrapper for initNavigation.
+ * @returns {void}
+ */
 export function setupTabs() {
+    // Deprecated in favor of initNavigation for Phase 8.6
+    // But we keep it as a wrapper to avoid breaking bootstrapApplication
     initNavigation();
-    try { injectVersionFromMeta(); } catch (e) { console.error("[UI] Version injection failed:", e); }
+
+    // Dynamic Version Injection (Single-Source)
+    try {
+        injectVersionFromMeta();
+    } catch (e) {
+        console.error("[UI] Version injection failed:", e);
+    }
 }
 
 /**
  * Renders the WHS round history table.
+ * @param {Array} rounds - Array of round objects.
+ * @param {Array} usedIds - Array of IDs for rounds contributing to the index.
+ * @returns {void}
  */
 export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = []) {
     if (!UI.historyTbody) return;
@@ -312,13 +360,24 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
         if (UI.emptyState) UI.emptyState.classList.add('hidden');
         rounds.forEach(round => {
             const tr = document.createElement('tr');
+
             if (round.notCounting) {
                 tr.style.opacity = '0.5';
                 tr.style.textDecoration = 'line-through';
             }
 
             const dif = ((113 / round.slope) * (round.adjustedGross - round.rating)).toFixed(1);
-            let dateObj = round.date?.toDate ? round.date.toDate() : new Date(round.date);
+            let diffSpan = `<span>${dif}</span>`;
+            if (usedIds.includes(round.id)) {
+                diffSpan = `<span class="asterisk-highlight">${dif} *</span>`;
+            }
+
+            let dateObj = round.date;
+            if (dateObj && dateObj.toDate) {
+                dateObj = dateObj.toDate();
+            } else if (typeof dateObj === 'string') {
+                dateObj = new Date(dateObj);
+            }
             const dateStr = dateObj ? dateObj.toLocaleDateString() : 'Unknown';
 
             tr.innerHTML = `
@@ -326,135 +385,571 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
                 <td>${round.course}</td>
                 <td>${round.rating} / ${round.slope}</td>
                 <td><strong>${round.adjustedGross}</strong></td>
-                <td>${usedIds.includes(round.id) ? `<span class="asterisk-highlight">${dif} *</span>` : dif}</td>
+                <td>${diffSpan}</td>
                 <td>
-                    ${round.audioUrl ? `<button class="btn btn-secondary btn-sm briefing-btn" data-id="${round.id}">💡</button>` : ''}
-                    <button class="btn btn-danger btn-sm del-round-btn" data-id="${round.id}">X</button>
+                    ${round.audioUrl ? `
+                        <button class="btn btn-secondary btn-sm play-audio-btn"
+                                data-url="${round.audioUrl}"
+                                title="Listen to Audio Diary">
+                            🔊
+                        </button>
+                        <button class="btn btn-secondary btn-sm briefing-btn"
+                                data-id="${round.id}"
+                                data-url="${round.audioUrl}"
+                                title="AI Caddy Briefing">
+                            💡
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-secondary btn-sm toggle-count-btn" data-id="${round.id}" title="Toggle Counting Rules">
+                        ${round.notCounting ? 'Include' : 'Exclude'}
+                    </button>
+                    ${(uidMatches || isAdmin) ? `<button class="btn btn-danger btn-sm del-round-btn" data-id="${round.id}">X</button>` : ''}
                 </td>
             `;
-            
-            const briefingBtn = tr.querySelector('.briefing-btn');
-            if (briefingBtn) {
-                briefingBtn.addEventListener('click', () => showAiBriefing(round, briefingBtn, tr));
+
+            // v6.15.0: Bind playback button
+            const playBtn = tr.querySelector('.play-audio-btn');
+            if (playBtn) {
+                playBtn.addEventListener('click', () => {
+                    const originalText = playBtn.textContent.trim();
+                    playBtn.textContent = '⏳';
+                    playHistoricalAudio(round.audioUrl)
+                        .then(() => playBtn.textContent = originalText)
+                        .catch(() => playBtn.textContent = '⚠️');
+                });
             }
 
-            UI.historyTbody.appendChild(tr);
+            // v6.17.0: Bind Briefing button
+            const briefingBtn = tr.querySelector('.briefing-btn');
+            if (briefingBtn) {
+                briefingBtn.addEventListener('click', () => {
+                    showAiBriefing(round, briefingBtn, tr);
+                });
+            }
+            if (UI.historyTbody) UI.historyTbody.appendChild(tr);
         });
     }
 }
 
 /**
- * AI Briefing Logic (RECOVERED FULL)
+ * Playback Engine for Historical Audio.
+ * Fetches and plays an audio file from a URL.
+ * @param {string} url - URL of the audio file to play.
+ * @returns {Promise<void>}
+ */
+export async function playHistoricalAudio(url) {
+    if (!url) return;
+    try {
+        const audio = new Audio(url);
+        // Returns a promise that resolves when the audio starts playing
+        await audio.play();
+    } catch (err) {
+        console.error("[Audio] Historical playback failed:", err);
+        alert("Audio Diary could not be loaded. This might be due to a poor network connection or a deleted file.");
+        throw err;
+    }
+}
+
+/**
+ * v6.17.8: AI Briefing Logic — Quota Protection & Persistence
+ * - Checks local round object first (in-memory cache)
+ * - Saves to Firestore after first generation
+ * - Shows a toast when a fresh summary is saved
+ */
+/**
+ * AI Briefing Logic — Quota Protection & Persistence.
+ * Checks local round object first, then generates and saves to Firestore.
+ * @param {Object} round - The round object to brief.
+ * @param {HTMLElement} btn - The button element that triggered the briefing.
+ * @param {HTMLElement} roundRow - The table row containing the round.
+ * @returns {Promise<void>}
  */
 export async function showAiBriefing(round, btn, roundRow) {
     const originalText = btn.textContent.trim();
+
+    // Toggle: if drawer already open, close it
     const nextRow = roundRow.nextElementSibling;
-    if (nextRow && nextRow.classList.contains('briefing-drawer')) { nextRow.remove(); return; }
+    if (nextRow && nextRow.classList.contains('briefing-drawer')) {
+        nextRow.remove();
+        return;
+    }
 
     try {
         let aiSummary = round.aiSummary;
+        let isCached = !!aiSummary;
+
         if (!aiSummary) {
-            btn.disabled = true; btn.textContent = '⏳';
+            btn.disabled = true;
+            btn.textContent = '⏳';
             const generateAudioBriefing = httpsCallable(functions, 'generateAudioBriefing');
             const result = await generateAudioBriefing({ audioUrl: round.audioUrl });
             aiSummary = result.data;
-            if (round.id) { await updateDoc(doc(db, "whs_rounds", round.id), { aiSummary: aiSummary }); }
+
+            // Persist to Firestore
+            if (round.id) {
+                const roundRef = doc(db, "whs_rounds", round.id);
+                await updateDoc(roundRef, { aiSummary: aiSummary });
+            }
+
+            // Mutate in-memory so repeat clicks skip the API entirely this session
             round.aiSummary = aiSummary;
+
+            // Success toast
+            showBriefingToast('💾 Briefing saved to history!');
         }
 
+        // Build the bullet list HTML
+        const bulletHtml = (aiSummary.writtenSummary || '')
+            .split('\n')
+            .filter(line => line.trim().length > 0)
+            .map(line => `<li style="margin-bottom:6px;">${line.replace(/^[*\-•]\s+/, '')}</li>`)
+            .join('');
+
+        const cachedBadge = isCached
+            ? `<span style="font-size:0.75rem; color: var(--text-muted); margin-left:8px;">⚡ Loaded from cache</span>`
+            : `<span style="font-size:0.75rem; color: #22c55e; margin-left:8px;">✨ Just generated</span>`;
+
+        // Build the Drawer Row
         const drawerRow = document.createElement('tr');
         drawerRow.className = 'briefing-drawer';
-        drawerRow.innerHTML = `<td colspan="100%" style="background: #f8fafc; padding: 20px;">
-            <h4>💡 AI Caddy Briefing</h4>
-            <ul>${aiSummary.writtenSummary.split('\n').map(l => `<li>${l}</li>`).join('')}</ul>
-            <button class="btn btn-secondary btn-sm close-briefing-btn">✖️ Close</button>
-        </td>`;
+
+        drawerRow.innerHTML = `
+            <td colspan="100%" style="padding: 20px; border-left: 4px solid var(--accent-light); background: #f8fafc;">
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <div style="display:flex; align-items:center; margin-bottom:12px;">
+                        <h4 style="margin:0; color: var(--accent-dark);">💡 AI Caddy Briefing</h4>
+                        ${cachedBadge}
+                    </div>
+                    <ul style="padding-left: 20px; margin-bottom: 20px; line-height: 1.6;">
+                        ${bulletHtml}
+                    </ul>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-sm close-briefing-btn">✖️ Close Briefing</button>
+                        ${aiSummary.verbalBriefing ? `<button class="btn btn-secondary btn-sm replay-btn">🔊 Replay Audio</button>` : ''}
+                    </div>
+                </div>
+            </td>
+        `;
+
         roundRow.after(drawerRow);
-        drawerRow.querySelector('.close-briefing-btn').onclick = () => drawerRow.remove();
-        if (aiSummary.verbalBriefing) speakBriefing(aiSummary.verbalBriefing);
-    } catch (err) { console.error(err); } finally { btn.disabled = false; btn.textContent = originalText; }
+
+        // Bind close
+        drawerRow.querySelector('.close-briefing-btn').onclick = () => {
+            window.speechSynthesis?.cancel();
+            drawerRow.remove();
+        };
+
+        // Bind optional replay button
+        const replayBtn = drawerRow.querySelector('.replay-btn');
+        if (replayBtn && aiSummary.verbalBriefing) {
+            replayBtn.addEventListener('click', () => speakBriefing(aiSummary.verbalBriefing));
+        }
+
+        // Auto-speak the verbal briefing
+        if (aiSummary.verbalBriefing) {
+            speakBriefing(aiSummary.verbalBriefing);
+        }
+
+    } catch (err) {
+        console.error("[AI Briefing] Error:", err);
+        alert("Could not generate AI briefing. Ensure your internet is connected.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 }
 
+/**
+ * Brief toast notification for feedback.
+ * @param {string} message - The message to display.
+ * @returns {void}
+ */
+export function showBriefingToast(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+        background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 8px;
+        font-size: 0.9rem; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: fadeInUp 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+/**
+ * The Narrator: Uses Web Speech API to read text aloud.
+ * @param {string} text - The text to speak.
+ * @returns {void}
+ */
 export function speakBriefing(text) {
     if (!window.speechSynthesis) return;
+
+    // Cancel any existing speech
     window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
+
+    // Try to find an Australian voice for that local caddy feel
     const voices = window.speechSynthesis.getVoices();
-    // FIX FROM PEER REVIEW: Handle Aussie voice timing
-    const auVoice = voices.find(v => v.lang.includes('AU')) || voices[0];
+    const auVoice = voices.find(v => v.lang === 'en-AU' || v.lang.includes('AU'));
     if (auVoice) utterance.voice = auVoice;
+
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
     window.speechSynthesis.speak(utterance);
 }
 
 /**
- * On-Course Player List (FIX M2: UID FILTER)
+ * Renders the live round players list for On-Course mode.
+ * @param {Array} groups - Array of player group objects.
+ * @returns {void}
  */
 export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
     if (!UI.ocAddedPlayersList) return;
-    UI.ocAddedPlayersList.innerHTML = groups.length === 0 ? '<li>No players added yet</li>' : '';
+    UI.ocAddedPlayersList.innerHTML = '';
 
-    groups.forEach((p) => {
+    if (groups.length === 0) {
+        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet</li>';
+        return;
+    }
+
+    groups.forEach((p, index) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${p.name}</span> <button class="btn btn-danger btn-sm remove-player-btn">Remove</button>`;
+        li.style.cssText = `
+            background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        `;
+        li.innerHTML = `
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-weight:600; color:var(--text-dark);">${p.name}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.uid.substring(0, 8)}...</span>
+            </div>
+            <button class="btn btn-danger btn-sm remove-player-btn" data-uid="${p.uid}">Remove</button>
+        `;
         UI.ocAddedPlayersList.appendChild(li);
 
+        // Bind remove button
         li.querySelector('.remove-player-btn').addEventListener('click', () => {
-            // FIX M2: Use UID filter instead of stale index
-            AppState.liveRoundGroups = AppState.liveRoundGroups.filter(player => player.uid !== p.uid);
-            renderOcPlayersList();
+            AppState.liveRoundGroups.splice(index, 1);
+            AppState.liveRoundGroups = [...AppState.liveRoundGroups];
         });
     });
+
+    if (groups.length > 0 && UI.ocAddedPlayersList) {
+        setTimeout(() => {
+            UI.ocAddedPlayersList.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    }
 }
 
-/**
- * Handicap Trend Chart (FIX T1: dateB)
- */
 let _trendChart = null;
+/**
+ * Renders the handicap trend chart using Chart.js.
+ * @param {Array} rounds - Array of round objects.
+ * @returns {void}
+ */
 export function renderTrendChart(rounds = AppState.currentRounds) {
     const canvas = document.getElementById('handicap-chart');
+    const noData = document.getElementById('chart-no-data');
     if (!canvas) return;
 
     const counting = rounds
         .filter(r => !r.notCounting && r.slope && r.adjustedGross && r.rating)
         .sort((a, b) => {
             const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-            const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date); // FIX T1: Rename db_ to dateB
-            return da - dateB;
+            const db_ = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return da - db_;
         });
 
-    if (counting.length < 3) { canvas.style.display = 'none'; return; }
+    if (counting.length < 3) {
+        canvas.style.display = 'none';
+        if (noData) noData.classList.remove('hidden');
+        return;
+    }
+    canvas.style.display = '';
+    if (noData) noData.classList.add('hidden');
 
-    if (_trendChart) _trendChart.destroy();
+    const labels = counting.map(r => {
+        const d = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+        return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+    });
+    const diffs = counting.map(r => +((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1));
+
+    if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
+
     _trendChart = new Chart(canvas, {
         type: 'line',
         data: {
-            labels: counting.map(r => (r.date?.toDate ? r.date.toDate() : new Date(r.date)).toLocaleDateString()),
-            datasets: [{ label: 'Differential', data: counting.map(r => r.adjustedGross), borderColor: '#3867d6', tension: 0.4 }]
+            labels,
+            datasets: [{
+                label: 'Differential',
+                data: diffs,
+                borderColor: '#3867d6',
+                backgroundColor: 'rgba(56,103,214,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3867d6',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` Differential: ${ctx.parsed.y}`
+                    }
+                },
+            },
+            scales: {
+                y: {
+                    reverse: false,
+                    title: { display: true, text: 'Differential (lower = better)' },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                x: { grid: { display: false } }
+            }
         }
     });
 }
 
-/**
- * Practice Caddy Logic (RECOVERED FULL)
- */
-export function bindPracticeCaddyUI() {
-    const btnGenerate = document.getElementById('btn-generate-practice');
-    if (!btnGenerate) return;
-    btnGenerate.addEventListener('click', async () => {
-        btnGenerate.disabled = true; btnGenerate.textContent = 'Generating...';
-        try {
-            const generatePlan = httpsCallable(functions, 'generatePracticePlan');
-            const result = await generatePlan({});
-            console.log("Plan generated:", result.data);
-        } catch (err) { console.error(err); } finally { btnGenerate.disabled = false; btnGenerate.textContent = 'Generate Plan'; }
-    });
-}
+// ==========================================
+// GLOBAL STATE LISTENER
+// ==========================================
 
 window.addEventListener('stateChange', (e) => {
     const { property, newValue } = e.detail;
-    if (property === 'currentRounds') { renderRoundsHistory(newValue, AppState.usedIds); renderTrendChart(newValue); }
-    if (property === 'liveRoundGroups') { renderOcPlayersList(newValue); }
+
+    switch (property) {
+        case 'currentRounds':
+            renderRoundsHistory(newValue, AppState.usedIds);
+            renderTrendChart(newValue);
+            break;
+        case 'handicapIndex':
+            if (UI.handicapIndexEl && document.activeElement !== UI.handicapIndexEl) {
+                UI.handicapIndexEl.value = newValue > 0 ? newValue : '0.0';
+            }
+            break;
+            if (UI.indexSubtextEl) {
+                UI.indexSubtextEl.textContent = AppState.currentRounds.filter(r => r.notCounting !== true).length < 3 ? "Need 3 scores to establish index" : "Current WHS Index";
+            }
+            break;
+        case 'usedIds':
+            // Re-render history if we know which ones are used
+            renderRoundsHistory(AppState.currentRounds, newValue);
+            break;
+        case 'liveRoundGroups':
+            renderOcPlayersList(newValue);
+            // If we're already in a round, we might need to refresh the current hole view
+            // but that's handled by loadHole in oncourse.js (which we might also want to decouple)
+            break;
+        case 'currentUser':
+            if (newValue) {
+                if (UI.loggedInUserNameEl) UI.loggedInUserNameEl.textContent = newValue.displayName || newValue.email;
+            } else {
+                if (UI.loggedInUserNameEl) UI.loggedInUserNameEl.textContent = '';
+            }
+            break;
+    }
 });
 
-// Bridge Rule: Exporting to hazards module
-export const update_ui_hazard_state = (loc) => import('./modules/ui-hazards.js').then(m => m.evaluate_hazard_proximity(loc));
+// ==========================================
+// Practice Caddy UI Controller (v6.19.0)
+// ==========================================
+
+let _activeDrillData = null; // cache the active drill in memory
+let _selectedRating = 0;
+
+/**
+ * Toggles the visibility of practice module state containers.
+ * @param {string} state - The state to show ('empty', 'active', 'loading').
+ * @returns {void}
+ */
+function setPracticeState(state) {
+    const stateEmpty = document.getElementById('practice-state-empty');
+    const stateActive = document.getElementById('practice-state-active');
+    const stateLoading = document.getElementById('practice-state-loading');
+    if (stateEmpty) stateEmpty.classList.toggle('hidden', state !== 'empty');
+    if (stateActive) stateActive.classList.toggle('hidden', state !== 'active');
+    if (stateLoading) stateLoading.classList.toggle('hidden', state !== 'loading');
+}
+
+/**
+ * Renders the 3-step practice plan in the active drill container.
+ * @param {Array} steps - Array of drill steps.
+ * @param {Array} completedSteps - Array of indices of completed steps.
+ * @param {string} drillId - The unique ID of the drill document.
+ * @returns {void}
+ */
+export function renderPracticeSteps(steps, completedSteps, drillId) {
+    const container = document.getElementById('practice-steps-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    steps.forEach((step, idx) => {
+        const isCompleted = (completedSteps || []).includes(idx);
+        const div = document.createElement('div');
+        div.className = `practice-step ${isCompleted ? 'completed' : ''}`;
+        div.innerHTML = `
+            <div class="step-check">
+                <input type="checkbox" ${isCompleted ? 'checked' : ''} data-idx="${idx}" data-id="${drillId}">
+            </div>
+            <div class="step-body">
+                <h4>Step ${idx + 1}: ${step.title}</h4>
+                <p>${step.description}</p>
+                <div class="step-meta">Target: ${step.goal} | Reps: ${step.reps}</div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+/**
+ * Binds events and logic for the AI Practice Caddy module.
+ * @returns {void}
+ */
+/**
+ * Binds events and logic for the AI Practice Caddy module.
+ * @returns {void}
+ */
+export function bindPracticeCaddyUI() {
+    const btnGenerate = document.getElementById('btn-generate-practice');
+    const btnArchive = document.getElementById('btn-archive-drill');
+    const errorEl = document.getElementById('practice-gen-error');
+
+    if (!btnGenerate) return;
+
+    /**
+     * Loads the current active practice plan for the user.
+     */
+    const loadActivePlan = async () => {
+        if (!AppState.currentUser) return;
+        setPracticeState('loading');
+        try {
+            const q = query(
+                collection(db, "practice_plans"),
+                where("userId", "==", AppState.currentUser.uid),
+                where("status", "==", "active")
+            );
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                const docData = snap.docs[0].data();
+                docData.id = snap.docs[0].id;
+                _activeDrillData = docData;
+                showActiveDrill(_activeDrillData);
+            } else {
+                setPracticeState('empty');
+            }
+        } catch (err) {
+            console.error("[Practice Caddy] Load active fail:", err);
+            setPracticeState('empty');
+        }
+    };
+
+    /**
+     * Populates the UI with active drill data.
+     * @param {Object} data - Drill data from Firestore.
+     */
+    const showActiveDrill = (data) => {
+        if (!data) return;
+        setPracticeState('active');
+        const titleEl = document.getElementById('active-drill-title');
+        const descEl = document.getElementById('active-drill-desc');
+        if (titleEl) titleEl.textContent = data.title || "Your Custom Drill";
+        if (descEl) descEl.textContent = data.description || "Based on your recent performance.";
+        renderPracticeSteps(data.steps, data.completedSteps, data.id);
+    };
+
+    btnGenerate.addEventListener('click', async () => {
+        if (!AppState.currentUser) return;
+        btnGenerate.disabled = true;
+        const originalText = btnGenerate.textContent;
+        btnGenerate.textContent = 'Generating...';
+        setPracticeState('loading');
+        if (errorEl) errorEl.classList.add('hidden');
+
+        try {
+            const generatePlan = httpsCallable(functions, 'generatePracticePlan');
+            const result = await generatePlan({});
+            _activeDrillData = result.data;
+            showActiveDrill(_activeDrillData);
+        } catch (err) {
+            console.error('[Practice Caddy] Generation error:', err);
+            setPracticeState('empty');
+            if (errorEl) {
+                errorEl.textContent = `Error: ${err.message}`;
+                errorEl.classList.remove('hidden');
+            }
+        } finally {
+            btnGenerate.disabled = false;
+            btnGenerate.textContent = originalText;
+        }
+    });
+
+    // Delegated listener for checkbox clicks
+    const stepsList = document.getElementById('practice-steps-list');
+    if (stepsList) {
+        stepsList.addEventListener('click', async (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+                const stepIdx = parseInt(e.target.getAttribute('data-idx'));
+                const drillId = e.target.getAttribute('data-id');
+                const isChecked = e.target.checked;
+
+                try {
+                    const drillRef = doc(db, "practice_plans", drillId);
+                    if (isChecked) {
+                        await updateDoc(drillRef, {
+                            completedSteps: arrayUnion(stepIdx)
+                        });
+                    } else {
+                        await updateDoc(drillRef, {
+                            completedSteps: arrayRemove(stepIdx)
+                        });
+                    }
+                    // Refresh local state
+                    if (_activeDrillData) {
+                        if (isChecked) {
+                            if (!_activeDrillData.completedSteps) _activeDrillData.completedSteps = [];
+                            _activeDrillData.completedSteps.push(stepIdx);
+                        } else {
+                            _activeDrillData.completedSteps = _activeDrillData.completedSteps.filter(s => s !== stepIdx);
+                        }
+                        e.target.closest('.practice-step').classList.toggle('completed', isChecked);
+                    }
+                } catch (err) {
+                    console.error("[Practice Caddy] Step update fail:", err);
+                    e.target.checked = !isChecked; // revert
+                }
+            }
+        });
+    }
+
+    if (btnArchive) {
+        btnArchive.addEventListener('click', async () => {
+            if (!_activeDrillData || !_activeDrillData.id) return;
+            const btnText = btnArchive.textContent;
+            btnArchive.disabled = true;
+            btnArchive.textContent = 'Archiving...';
+            try {
+                const drillRef = doc(db, "practice_plans", _activeDrillData.id);
+                await updateDoc(drillRef, { status: 'completed' });
+                _activeDrillData = null;
+                setPracticeState('empty');
+            } catch (err) {
+                console.error("[Practice Caddy] Archive fail:", err);
+            } finally {
+                btnArchive.disabled = false;
+                btnArchive.textContent = btnText;
+            }
+        });
+    }
+
+    // Trigger initial load
+    loadActivePlan();
+}

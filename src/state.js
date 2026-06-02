@@ -31,11 +31,7 @@ const initialState = {
     currentHoleShots: [],
     activeRoundId: null,
     currentRoundDate: null,
-    playerClubs: null,
-
-    // Router Phase 2: State Persistence Trackers
-    isActiveRound: false,
-    currentPos: null
+    playerClubs: null
 };
 
 try {
@@ -66,14 +62,7 @@ export const AppState = new Proxy(initialState, {
         target[prop] = value;
 
         // Only dispatch if the value actually changed
-        let hasChanged = false;
-        try {
-            hasChanged = JSON.stringify(oldValue) !== JSON.stringify(value);
-        } catch (e) {
-            hasChanged = oldValue !== value;
-        }
-
-        if (hasChanged) {
+        if (oldValue !== value) {
             const event = new CustomEvent('stateChange', {
                 detail: {
                     property: prop,
@@ -91,6 +80,3 @@ export const AppState = new Proxy(initialState, {
         return true;
     }
 });
-
-// v7.1.0: Global Hoist for external script / DOM element tracking without imports
-window.appState = AppState;
