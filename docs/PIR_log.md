@@ -17,3 +17,9 @@ Symptom: UX friction due to manual drive/approach shot tracking (BL-2.02).
 Ghost: Players had to manually log every shot, creating significant latency on the course.
 Silver Bullet: Scaffolded `src/modules/telemetry.js` to automatically infer drive distances via Haversine logic tied to `gpsLocation` AppState proxies, triggered strictly within `tab-oncourse`. Kept file size under 100 lines for mobile scannability. Added automated Firebase Preview channels via `.github/workflows/firebase-preview.yml`.
 Ward: Enforce the 100-line limit per module file for telemetry calculations to maintain high performance. Always isolate GPS background loops strictly to the active target tab to prevent battery drain or zombie DOM interactions.
+
+Date: 2026-06-03
+Symptom: Brittle and destructive DOM updates caused by raw `.innerHTML` string loops in coach and social modules, making state synchronization error-prone.
+Ghost: The usage of `.innerHTML` wiped out DOM state, dropping event listeners and creating high latency repaints, while preventing clean reactive state bindings.
+Silver Bullet: Split `src/coach.js` and `src/social.js` into sub-modules under `src/modules/` (enforcing <100 line limit). Removed all `.innerHTML` string builders, instead utilizing `document.createElement` and `replaceChildren()` tied specifically to proxy listeners on `AppState`.
+Ward: Ensure any new components adhere to non-destructive DOM manipulations (e.g. `replaceChildren`) and are directly responsive to the centralized `AppState` proxy. Never use `.innerHTML` loops for list rendering.
