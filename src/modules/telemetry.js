@@ -1,30 +1,48 @@
 import { AppState } from '../state.js';
-import { getDistance } from '../oncourse.js'; // Ensure getDistance calculates haversine
+import { getDistance } from '../oncourse.js';
 
-/**
- * Smart Score Defaults & Reverse-Engineered GPS Distance Tracking
- * Calculates drive distances and approach distances automatically based on current user location.
- */
-export function recordTeeBoxLocation(lat, lon) {
-    if (!AppState.currentShotData) return;
+export function initializeTelemetryListener() {
+    window.addEventListener('stateChange', (e) => {
+        if (e.detail.property !== 'gpsLocation') return;
+        const { lat, lon } = e.detail.newValue;
+        if (!lat || !lon) return;
 
-    // Store tee box location for the current hole
-    if (!AppState.currentHoleTelemetry) AppState.currentHoleTelemetry = {};
-    AppState.currentHoleTelemetry.teeLat = lat;
-    AppState.currentHoleTelemetry.teeLon = lon;
+        const activeTab = document.querySelector('.tab-content.active');
+        if (!activeTab || activeTab.id !== 'tab-oncourse') return;
+
+        processLocationUpdate(lat, lon);
+    });
 }
 
-export function inferDriveDistance(currentLat, currentLon) {
-    if (!AppState.currentHoleTelemetry || !AppState.currentHoleTelemetry.teeLat) return 0;
+function processLocationUpdate(lat, lon) {
+    if (!AppState.activeRoundId || !AppState.currentHole) return;
 
-    const teeLat = AppState.currentHoleTelemetry.teeLat;
-    const teeLon = AppState.currentHoleTelemetry.teeLon;
+    if (!AppState.currentHoleTelemetry) AppState.currentHoleTelemetry = {};
+    const t = AppState.currentHoleTelemetry;
 
-    // Calculate distance using existing Haversine from getDistance
-    return getDistance(teeLat, teeLon, currentLat, currentLon);
+    const shots = AppState.currentHoleShots || [];
+    if (shots.length === 0) {
+        t.teeLat = lat;
+        t.teeLon = lon;
+    } else if (shots.length === 1 && t.teeLat && t.teeLon) {
+        t.inferredDrive = getDistance(t.teeLat, t.teeLon, lat, lon);
+
+        const pars = AppState.currentCoursePars || [];
+        const holeIdx = AppState.currentHole - 1;
+
+        if (pars[holeIdx] === 3) {
+            t.inferredApproach = t.inferredDrive;
+        }
+    }
 }
 
 export function inferApproachDistance(currentLat, currentLon, greenLat, greenLon) {
-    // Distance from current location (e.g. fairway/rough) to Green center
+    if (!currentLat || !currentLon || !greenLat || !greenLon) return 0;
     return getDistance(currentLat, currentLon, greenLat, greenLon);
+}
+
+export function recordTeeBoxLocation(lat, lon) {
+    if (!AppState.currentHoleTelemetry) AppState.currentHoleTelemetry = {};
+    AppState.currentHoleTelemetry.teeLat = lat;
+    AppState.currentHoleTelemetry.teeLon = lon;
 }
