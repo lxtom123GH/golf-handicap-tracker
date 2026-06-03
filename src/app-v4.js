@@ -22,6 +22,7 @@ import { listenToWHSRounds, addRound } from './whs.js';
 import { initCompetitions } from './competitions.js';
 import { initPractice } from './practice.js';
 import { initOnCourse } from './oncourse.js';
+import { initializeTelemetryListener } from './modules/telemetry.js';
 import { AppState } from './state.js';
 import { initSocialFeed } from './social.js';
 import { initNotifications } from './notifications.js';
@@ -49,7 +50,7 @@ function bootstrapApplication() {
     try { listenToWHSRounds(); } catch (e) { console.error("[Bootstrap] listenToWHSRounds failed:", e); }
     try { initCompetitions(); } catch (e) { console.error("[Bootstrap] initCompetitions failed:", e); }
     try { initPractice(); } catch (e) { console.error("[Bootstrap] initPractice failed:", e); }
-    try { initOnCourse(); } catch (e) { console.error("[Bootstrap] initOnCourse failed:", e); }
+    try { initOnCourse(); initializeTelemetryListener(); } catch (e) { console.error("[Bootstrap] initOnCourse failed:", e); }
 
     try { bindWHSForm(); } catch (e) { console.error("[Bootstrap] bindWHSForm failed:", e); }
     try { bindCoachTools(); } catch (e) { console.error("[Bootstrap] bindCoachTools failed:", e); }
