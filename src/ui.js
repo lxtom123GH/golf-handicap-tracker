@@ -242,8 +242,6 @@ export function ensureScreensExist() {
  */
 export function switchTab(targetId) {
     if (!targetId) return;
-
-    // v6.20.0: Reset scroll position for tab switch comfort
     window.scrollTo(0, 0);
 
     const target = document.getElementById(targetId);
@@ -252,25 +250,13 @@ export function switchTab(targetId) {
         return;
     }
 
-    // Hide all tabs
-    UI.tabContents.forEach(tab => {
-        tab.classList.add('hidden');
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-
-    // Show target tab
-    target.classList.remove('hidden');
-    target.classList.add('active');
-
-    // Update active button state
-    const btn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
-    if (btn) btn.classList.add('active');
-
     // Persist as default
     localStorage.setItem(DEFAULT_TAB_KEY, targetId);
 
     console.log(`[Navigation] switching to: ${targetId}`);
+
+    // State-driven UI update
+    AppState.activeTab = targetId;
 }
 
 /**
@@ -748,6 +734,9 @@ window.addEventListener('stateChange', (e) => {
             renderOcPlayersList(newValue);
             // If we're already in a round, we might need to refresh the current hole view
             // but that's handled by loadHole in oncourse.js (which we might also want to decouple)
+            break;
+        case 'activeTab':
+            document.body.dataset.activeTab = newValue;
             break;
         case 'currentUser':
             if (newValue) {

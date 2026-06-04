@@ -6,3 +6,4 @@
 - [x] BL-2.03 Coach Roster and Social Feed State Isolation and Refactor
 
 ## Active Tasks
+- [x] BL-2.04 Extract & Refactor Global Navigation into State-Driven Architecture
