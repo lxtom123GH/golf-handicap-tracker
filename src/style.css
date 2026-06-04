@@ -582,11 +582,33 @@ body {
     will-change: opacity, transform;
 }
 
-.tab-content.active {
+body[data-active-tab="tab-oncourse"] #tab-oncourse,
+body[data-active-tab="tab-log"] #tab-log,
+body[data-active-tab="tab-history"] #tab-history,
+body[data-active-tab="tab-practice"] #tab-practice,
+body[data-active-tab="tab-feed"] #tab-feed,
+body[data-active-tab="tab-competitions"] #tab-competitions,
+body[data-active-tab="tab-admin"] #tab-admin,
+body[data-active-tab="tab-coach"] #tab-coach,
+body[data-active-tab="tab-settings"] #tab-settings {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
     z-index: 50 !important;
+}
+
+body[data-active-tab="tab-oncourse"] .tab-btn[data-target="tab-oncourse"],
+body[data-active-tab="tab-log"] .tab-btn[data-target="tab-log"],
+body[data-active-tab="tab-history"] .tab-btn[data-target="tab-history"],
+body[data-active-tab="tab-practice"] .tab-btn[data-target="tab-practice"],
+body[data-active-tab="tab-feed"] .tab-btn[data-target="tab-feed"],
+body[data-active-tab="tab-competitions"] .tab-btn[data-target="tab-competitions"],
+body[data-active-tab="tab-admin"] .tab-btn[data-target="tab-admin"],
+body[data-active-tab="tab-coach"] .tab-btn[data-target="tab-coach"],
+body[data-active-tab="tab-settings"] .tab-btn[data-target="tab-settings"] {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background-color: #f8f9fa;
 }
 
 #app-loading-cloak.cloak-hidden {
@@ -1079,13 +1101,6 @@ body.active-wizard-mode #oncourse-wizard {
     visibility: hidden;
     z-index: 10;
     padding-bottom: 120px;
-}
-
-.tab-content.active {
-    display: block !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    z-index: 50 !important;
 }
 
 .hidden {

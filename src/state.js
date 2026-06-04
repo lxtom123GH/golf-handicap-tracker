@@ -17,6 +17,7 @@ const initialState = {
     currentCompRounds: [], // Array of rounds for active competition
 
     currentPracticeRounds: [], // Practice instances for logged-in user
+    activeTab: 'tab-oncourse',
 
     // On-Course Tracker State
     currentTrackingMode: 'simple',

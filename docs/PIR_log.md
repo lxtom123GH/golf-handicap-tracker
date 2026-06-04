@@ -23,3 +23,12 @@ Symptom: Brittle and destructive DOM updates caused by raw `.innerHTML` string l
 Ghost: The usage of `.innerHTML` wiped out DOM state, dropping event listeners and creating high latency repaints, while preventing clean reactive state bindings.
 Silver Bullet: Split `src/coach.js` and `src/social.js` into sub-modules under `src/modules/` (enforcing <100 line limit). Removed all `.innerHTML` string builders, instead utilizing `document.createElement` and `replaceChildren()` tied specifically to proxy listeners on `AppState`.
 Ward: Ensure any new components adhere to non-destructive DOM manipulations (e.g. `replaceChildren`) and are directly responsive to the centralized `AppState` proxy. Never use `.innerHTML` loops for list rendering.
+
+## Post Incident Review: Tab Navigation Refactor
+**Issue:** Core navigation (`switchTab()`) manually injected `.hidden` and `.active` classes across disparate elements, violating State-Driven UI compliance. Playwright environment tests were timing out on container boot.
+**Resolution:**
+1. Increased `webServer` timeout in `playwright.config.js` to 240 seconds for CI reliability.
+2. Abstracted component visibility into pure CSS rules matching `body[data-active-tab]`.
+3. Rewrote `switchTab()` in `src/ui.js` to dispatch state changes (`AppState.activeTab = targetId`).
+4. Event listeners observe state changes to `activeTab` to update the document body dataset.
+**Result:** Passed all `npm run test:e2e` constraints while conforming to the 100-line logic cap and improving the application's clean state architecture.
