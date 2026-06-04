@@ -218,9 +218,9 @@ export function loadHole() {
             controlRow.innerHTML = `
             <div style="flex:1; font-size:0.9rem; font-weight:600; color:#475569;">Hole ${AppState.currentHole} Strokes</div>
             <div style="display:flex; align-items:center; gap:12px;">
-                <button class="btn-grid-minus" style="width:44px; height:44px; border-radius:12px; border:2px solid #cbd5e1; background:white; font-size:1.4rem; font-weight:bold;">−</button>
+                <button class="btn-grid-minus" aria-label="Decrease Score" style="width:44px; height:44px; border-radius:12px; border:2px solid #cbd5e1; background:white; font-size:1.4rem; font-weight:bold;">−</button>
                 <span style="min-width:30px; text-align:center; font-size:1.8rem; font-weight:800; color:#1e293b;">${holeScore}</span>
-                <button class="btn-grid-plus" style="width:44px; height:44px; border-radius:12px; background:var(--primary-color); color:white; border:none; font-size:1.4rem; font-weight:bold;">+</button>
+                <button class="btn-grid-plus" aria-label="Increase Score" style="width:44px; height:44px; border-radius:12px; background:var(--primary-color); color:white; border:none; font-size:1.4rem; font-weight:bold;">+</button>
             </div>
         `;
 
@@ -251,9 +251,9 @@ export function loadHole() {
             <button class="mini-stat ${fwySet === true ? 'active-fwy' : (fwySet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🌿 FW</button>
             <button class="mini-stat ${girSet === true ? 'active-gir' : (girSet === false ? 'active-miss' : '')}" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:0.75rem; font-weight:bold;">🟢 GIR</button>
             <div style="flex:1.5; display:flex; align-items:center; justify-content:space-between; padding:4px 8px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc;">
-                <button class="putt-minus" style="border:none; background:none; font-weight:bold; padding:4px 8px; font-size:1rem;">−</button>
+                <button class="putt-minus" aria-label="Decrease Putts" style="border:none; background:none; font-weight:bold; padding:4px 8px; font-size:1rem;">−</button>
                 <span style="font-size:0.85rem; font-weight:800; color:var(--primary-color);">⛳ ${putts} P</span>
-                <button class="putt-plus" style="border:none; background:none; font-weight:bold; padding:4px 8px; font-size:1rem;">+</button>
+                <button class="putt-plus" aria-label="Increase Putts" style="border:none; background:none; font-weight:bold; padding:4px 8px; font-size:1rem;">+</button>
             </div>
         `;
 

@@ -1107,3 +1107,26 @@ body.active-wizard-mode #oncourse-wizard {
     display: none !important;
     visibility: hidden !important;
 }
+/* Scroll Guarding (PIR-2026-03-08-01) */
+.table-responsive,
+.history-table tbody,
+#oc-leaderboard tbody,
+#oc-detailed-tbody {
+    overflow-anchor: none;
+}
+
+body[data-active-tab="tab-whs"] #tab-whs,
+body[data-active-tab="tab-comp"] #tab-comp,
+body[data-active-tab="tab-practice"] #tab-practice,
+body[data-active-tab="tab-oncourse"] #tab-oncourse,
+body[data-active-tab="tab-tempo"] #tab-tempo,
+body[data-active-tab="tab-feed"] #tab-feed,
+body[data-active-tab="tab-coach"] #tab-coach,
+body[data-active-tab="tab-admin"] #tab-admin,
+body[data-active-tab="tab-settings"] #tab-settings,
+body[data-active-tab="oc-locker-room"] #oc-locker-room {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    z-index: 50;
+}

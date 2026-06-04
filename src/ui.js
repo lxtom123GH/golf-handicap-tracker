@@ -389,7 +389,7 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
                     <button class="btn btn-secondary btn-sm toggle-count-btn" data-id="${round.id}" title="Toggle Counting Rules">
                         ${round.notCounting ? 'Include' : 'Exclude'}
                     </button>
-                    ${(uidMatches || isAdmin) ? `<button class="btn btn-danger btn-sm del-round-btn" data-id="${round.id}">X</button>` : ''}
+                    ${(uidMatches || isAdmin) ? `<button class="btn btn-danger btn-sm del-round-btn" aria-label="Delete Round" data-id="${round.id}">X</button>` : ''}
                 </td>
             `;
 

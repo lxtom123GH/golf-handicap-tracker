@@ -33,7 +33,7 @@ export function bindAiGenerator() {
                             <h2 id="ai-modal-title" style="margin:0;color:white;font-size:1.2rem;">✨ AI Coach</h2>
                             <p id="ai-modal-subtitle" style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:0.82rem;">Powered by Gemini</p>
                         </div>
-                        <button id="btn-close-ai-modal" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+                        <button id="btn-close-ai-modal" aria-label="Close AI Modal" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">✕</button>
                     </div>
                     <div id="ai-loading" class="hidden" style="padding:40px;text-align:center;">
                         <div style="width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#8b5cf6;border-radius:50%;animation:ai-spin 0.8s linear infinite;margin:0 auto 16px;"></div>

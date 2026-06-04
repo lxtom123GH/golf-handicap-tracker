@@ -166,9 +166,9 @@ function generateDynamicLogInputs(rulesArray) {
         div.innerHTML = `
             <label>${rule.name}</label>
             <div style="display:flex; align-items:center;">
-                <button type="button" class="btn btn-secondary stepper-minus" style="font-size:1.5rem; padding:0 15px; border-radius:12px 0 0 12px; height:50px;">-</button>
+                <button type="button" class="btn btn-secondary stepper-minus" aria-label="Decrease" style="font-size:1.5rem; padding:0 15px; border-radius:12px 0 0 12px; height:50px;">-</button>
                 <input type="number" class="dynamic-rule-input" data-rulename="${rule.name}" data-rulepts="${rule.pts}" value="0" style="text-align:center; border-radius:0; height:50px; flex:1;" readonly>
-                <button type="button" class="btn btn-secondary stepper-plus" style="font-size:1.5rem; padding:0 15px; border-radius:0 12px 12px 0; height:50px;">+</button>
+                <button type="button" class="btn btn-secondary stepper-plus" aria-label="Increase" style="font-size:1.5rem; padding:0 15px; border-radius:0 12px 12px 0; height:50px;">+</button>
             </div>
         `;
         dynamicBody.appendChild(div);
@@ -321,7 +321,7 @@ function renderRecentCompRounds() {
                 <td style="color:#16a34a; font-weight:bold;">${round.totalPoints}</td>
                 <td style="font-size: 0.8rem; color:#64748b;">${breakdown}</td>
                 <td>
-                    ${(uidMatches && AppState.currentUser.uid === round.uid || window.currentUserIsAdmin) ? `<button class="btn btn-danger btn-sm del-comp-round" data-id="${round.id}">X</button>` : ''}
+                    ${(uidMatches && AppState.currentUser.uid === round.uid || window.currentUserIsAdmin) ? `<button class="btn btn-danger btn-sm del-comp-round" aria-label="Delete Competition Round" data-id="${round.id}">X</button>` : ''}
                 </td>
             `;
             UI.compRecentRoundsTbody.appendChild(tr);
@@ -411,7 +411,7 @@ function bindCompetitionCreation() {
         rulesListEl.innerHTML = rules.map((r, i) => `
             <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0;">
                 <span><strong>${r.name}</strong>: ${r.pts} pts</span>
-                <button type="button" class="btn-text del-rule" data-index="${i}" style="color:#ef4444; padding:0;">✕</button>
+                <button type="button" class="btn-text del-rule" aria-label="Delete Rule" data-index="${i}" style="color:#ef4444; padding:0;">✕</button>
             </div>
         `).join('');
 
