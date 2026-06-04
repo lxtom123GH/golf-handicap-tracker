@@ -463,7 +463,7 @@ function renderRecentPractice() {
             <td><strong>${round.drillName}</strong></td>
             <td style="color:var(--primary-color); font-weight:bold; font-size:1.2rem;">${round.score}</td>
             <td>
-                ${(uidMatches && AppState.currentUser.uid === round.uid) ? `<button class="btn btn-danger btn-sm del-prac-round" data-id="${round.id}">X</button>` : ''}
+                ${(uidMatches && AppState.currentUser.uid === round.uid) ? `<button class="btn btn-danger btn-sm del-prac-round" aria-label="Delete Practice Round" data-id="${round.id}">X</button>` : ''}
             </td>
         `;
         UI.practiceRecentTbody.appendChild(tr);
