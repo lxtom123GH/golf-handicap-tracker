@@ -1,11 +1,20 @@
 import { AppState } from '../state.js';
 import { getDistance } from '../oncourse.js';
 
+let lastLoggedLocation = null;
+
 export function initializeTelemetryListener() {
     window.addEventListener('stateChange', (e) => {
         if (e.detail.property !== 'gpsLocation') return;
         const { lat, lon } = e.detail.newValue;
         if (!lat || !lon) return;
+
+        if (lastLoggedLocation) {
+            const distance = getDistance(lastLoggedLocation.lat, lastLoggedLocation.lon, lat, lon);
+            if (distance < 5) return;
+        }
+
+        lastLoggedLocation = { lat, lon };
 
         const activeTab = document.querySelector('.tab-content.active');
         if (!activeTab || activeTab.id !== 'tab-oncourse') return;
