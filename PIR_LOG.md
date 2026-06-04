@@ -63,3 +63,31 @@ This feature recovery proved that local testing is blind to PWA caching issues. 
 1.  **Commandment I: The Sydney Anchor.** All AI Cloud Functions and Bucket-related logic must be pinned to `australia-southeast1` on both Frontend and Backend. No exceptions.
 2.  **Commandment II: The Cache Buster.** Every major UI/Backend handshake change MUST be accompanied by a `sw.js` `CACHE_NAME` bump to prevent "Zombie Code" from running on mobile devices.
 3.  **Commandment III: The Log Oracle.** Never attempt to "patch" a 404 or a connection error without first reading the raw stderr in the Firebase Google Cloud Console. The log is the only source of truth.
+
+---
+
+## [2026-03-05] Frontend XSS Hardening (Phase 1)
+**Status:** Secured
+
+### 👻 The Ghost (Root Causes)
+1. **Unsanitized Injections:** Multiple UI modules (`social.js`, `coach.js`, `admin.js`) were passing raw user-generated strings (`displayName`, `email`, feed data) directly into DOM components using `.innerHTML = \`...\``. This exposed the frontend to critical Cross-Site Scripting (XSS) vulnerabilities.
+
+### 🛡️ The Silver Bullet (Fixes)
+1. **Safe DOM Construction:** Replaced all vulnerable `.innerHTML` assignments with native DOM API methods (`document.createElement()`, `.textContent`, `.appendChild()`). This enforces strict separation of data and markup, neutralizing script execution vectors.
+2. **Targeted Hardening:** Preserved `.innerHTML` only for controlled, non-user-generated layout scaffolding (e.g., hardcoded SVG badges or structural containers) where safe to do so.
+
+> [!IMPORTANT]
+> **The TextContent Mandate**: Never inject user-provided data directly via `.innerHTML`. Always use `.textContent` or safe DOM creation APIs to ensure all inputs are parsed as strings rather than executable nodes.
+
+---
+
+## [2026-03-05] Frontend XSS Hardening - Redeclaration Hotfix
+**Status:** Secured
+
+### 👻 The Ghost (Root Causes)
+1. **Scope Collisions:** When refactoring `.innerHTML` blocks in `src/coach.js` to use safe DOM `document.createElement()` APIs, local variables `viewBtn` and `releaseBtn` were accidentally redeclared within the same block scope. This triggered a fatal `SyntaxError: Identifier 'viewBtn' has already been declared` during the parsing phase.
+2. **Artifact Tracking:** Auto-generated Playwright test reports (`playwright-report/index.html` and `test-results/.last-run.json`) had previously slipped into the Git index.
+
+### 🛡️ The Silver Bullet (Fixes)
+1. **Scope Resolution:** Removed the `const` redeclarations for `viewBtn` and `releaseBtn` inside the `src/coach.js` `loadCoachRoster` loop. Instead, event listeners were correctly attached directly to the elements generated in the preceding `document.createElement()` block.
+2. **Untracking Artifacts:** Executed `git rm -r --cached` to purge the test artifacts from the Git index without deleting them locally. Added explicit `playwright-report/` and `test-results/` entries to `.gitignore` to prevent future contamination.
