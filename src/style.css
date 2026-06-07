@@ -536,21 +536,6 @@ body {
 /* TABS NAVIGATION                         */
 /* ======================================= */
 
-.tabs-container {
-    display: flex;
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-top: none;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    position: relative;
-    z-index: 9999;
-    /* Force above all overlays */
-}
-
 .tab-btn {
     flex: 1;
     padding: 15px 20px;
@@ -583,6 +568,8 @@ body {
 }
 
 body[data-active-tab="tab-oncourse"] #tab-oncourse,
+body[data-active-tab="tab-whs"] #tab-whs,
+body[data-active-tab="tab-comp"] #tab-comp,
 body[data-active-tab="tab-log"] #tab-log,
 body[data-active-tab="tab-history"] #tab-history,
 body[data-active-tab="tab-practice"] #tab-practice,
@@ -590,7 +577,9 @@ body[data-active-tab="tab-feed"] #tab-feed,
 body[data-active-tab="tab-competitions"] #tab-competitions,
 body[data-active-tab="tab-admin"] #tab-admin,
 body[data-active-tab="tab-coach"] #tab-coach,
-body[data-active-tab="tab-settings"] #tab-settings {
+body[data-active-tab="tab-settings"] #tab-settings,
+body[data-active-tab="tab-tempo"] #tab-tempo,
+body[data-active-tab="oc-locker-room"] #oc-locker-room {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
@@ -598,6 +587,8 @@ body[data-active-tab="tab-settings"] #tab-settings {
 }
 
 body[data-active-tab="tab-oncourse"] .tab-btn[data-target="tab-oncourse"],
+body[data-active-tab="tab-whs"] .tab-btn[data-target="tab-whs"],
+body[data-active-tab="tab-comp"] .tab-btn[data-target="tab-comp"],
 body[data-active-tab="tab-log"] .tab-btn[data-target="tab-log"],
 body[data-active-tab="tab-history"] .tab-btn[data-target="tab-history"],
 body[data-active-tab="tab-practice"] .tab-btn[data-target="tab-practice"],
@@ -605,7 +596,8 @@ body[data-active-tab="tab-feed"] .tab-btn[data-target="tab-feed"],
 body[data-active-tab="tab-competitions"] .tab-btn[data-target="tab-competitions"],
 body[data-active-tab="tab-admin"] .tab-btn[data-target="tab-admin"],
 body[data-active-tab="tab-coach"] .tab-btn[data-target="tab-coach"],
-body[data-active-tab="tab-settings"] .tab-btn[data-target="tab-settings"] {
+body[data-active-tab="tab-settings"] .tab-btn[data-target="tab-settings"],
+body[data-active-tab="tab-tempo"] .tab-btn[data-target="tab-tempo"] {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
     background-color: #f8f9fa;
@@ -1095,18 +1087,6 @@ body.active-wizard-mode #oncourse-wizard {
     box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
-.tab-content {
-    display: none;
-    opacity: 0;
-    visibility: hidden;
-    z-index: 10;
-    padding-bottom: 120px;
-}
-
-.hidden {
-    display: none !important;
-    visibility: hidden !important;
-}
 /* Scroll Guarding (PIR-2026-03-08-01) */
 .table-responsive,
 .history-table tbody,
@@ -1115,18 +1095,3 @@ body.active-wizard-mode #oncourse-wizard {
     overflow-anchor: none;
 }
 
-body[data-active-tab="tab-whs"] #tab-whs,
-body[data-active-tab="tab-comp"] #tab-comp,
-body[data-active-tab="tab-practice"] #tab-practice,
-body[data-active-tab="tab-oncourse"] #tab-oncourse,
-body[data-active-tab="tab-tempo"] #tab-tempo,
-body[data-active-tab="tab-feed"] #tab-feed,
-body[data-active-tab="tab-coach"] #tab-coach,
-body[data-active-tab="tab-admin"] #tab-admin,
-body[data-active-tab="tab-settings"] #tab-settings,
-body[data-active-tab="oc-locker-room"] #oc-locker-room {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-    z-index: 50;
-}
