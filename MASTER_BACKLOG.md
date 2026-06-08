@@ -54,3 +54,8 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 - TEST rewrites (TEST-02, TEST-05, TEST-06) — do after practice plan rebuild confirms the UI is stable.
 - CI-02: Add deploy approval gate — before first real-user release.
 - CI-03/04: Split and cache CI jobs — before first real-user release.
+
+## [2026-06-08] Log Deduplication (Task Complete)
+**Status**: Secured
+- **Action**: Consolidated dispersed PIR logs from 7 lenses into `docs/PIR_log_supermagic_charlie.md`.
+- **Reason**: Disparate footprints needed a single, cohesive timeline mapping E2E test failures to multi-lens execution steps for clarity and unified state coupling assessments.

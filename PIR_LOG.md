@@ -91,3 +91,14 @@ This feature recovery proved that local testing is blind to PWA caching issues. 
 ### 🛡️ The Silver Bullet (Fixes)
 1. **Scope Resolution:** Removed the `const` redeclarations for `viewBtn` and `releaseBtn` inside the `src/coach.js` `loadCoachRoster` loop. Instead, event listeners were correctly attached directly to the elements generated in the preceding `document.createElement()` block.
 2. **Untracking Artifacts:** Executed `git rm -r --cached` to purge the test artifacts from the Git index without deleting them locally. Added explicit `playwright-report/` and `test-results/` entries to `.gitignore` to prevent future contamination.
+
+## [2026-06-08] Global PIR Consolidation - Master Timeline
+**Status:** Secured
+
+### 👻 The Ghost (Root Causes)
+1. **PIR Log Fragmentation:** Administrative footprints from tonight's multi-lens audit were scattered across multiple disjointed `PIR_log_*.md` files in the `docs/` directory, making root-cause analysis difficult.
+2. **Analysis Correlation:** The underlying cause of 14 failing Playwright tests ("High State Coupling" bypassing `AppState` via direct DOM manipulation) was identified repeatedly across lenses but lacked a unified chronological record mapping test failures directly to these structural findings.
+
+### 🛡️ The Silver Bullet (Fixes)
+1. **Synthesis Matrix:** Extracted and parsed timestamps and events from 7 independent lens passes (o1, Claude, Llama, GPT, Gemini, R1, and Master) to weave a single definitive timeline.
+2. **Definitive Documentation:** Generated a consolidated record directly at `docs/PIR_log_supermagic_charlie.md`, merging chronological insights with the specific E2E test failures they contextualize.
