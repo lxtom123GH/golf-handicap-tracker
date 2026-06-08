@@ -610,3 +610,6 @@ Running 14 tests using 2 workers
     [chromium] › tests/ui-ergonomics.spec.js:40:5 › UI Ergonomics Suite › Live Scoring +/- buttons have touch target size >= 44x44 pixels
     [chromium] › tests/ui-ergonomics.spec.js:60:5 › UI Ergonomics Suite › Add Club modal tag-balance check does not swallow main-app
     [chromium] › tests/ux-bag-management.spec.js:28:5 › UX State Persistence Suite: Bag Management › Add/Remove custom club, assert persistence across reload, and assert in Live Scoring detailed stats
+
+## Post-Audit E2E Status
+Initial run of `npm run test:e2e` resulted in 14 total test failures, primarily driven by `Locator('#auth-overlay')` timeout indicating structural unreliability of the auth overlay rendering, or tests failing to successfully execute the login bootstrap. This strongly correlates to the UI/Layout manual toggling issues uncovered in the code diagnostic above.
