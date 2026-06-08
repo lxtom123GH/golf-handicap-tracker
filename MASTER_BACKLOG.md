@@ -54,5 +54,3 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 - TEST rewrites (TEST-02, TEST-05, TEST-06) — do after practice plan rebuild confirms the UI is stable.
 - CI-02: Add deploy approval gate — before first real-user release.
 - CI-03/04: Split and cache CI jobs — before first real-user release.
-
-- [ ] **Technical Debt (Opus Audit):** Remove all instances of hardcoded `style.display` toggling across the codebase (`src/ai.js`, `src/app-v4.js`, `src/auth-v2.js`, `src/oncourse.js`, `src/ui.js`, `src/whs.js`) and map their visibility to `AppState` and the `data-active-tab` layout contract.
