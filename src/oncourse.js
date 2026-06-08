@@ -97,6 +97,7 @@ export function initOnCourse() {
  * @returns {void}
  */
 export function endRoundCleanup() {
+    stopAudioTimer();
     document.body.classList.remove('round-active');
     document.getElementById('oncourse-setup').classList.remove('hidden');
     const hub = document.getElementById('oncourse-hub');
