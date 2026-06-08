@@ -54,7 +54,3 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 - TEST rewrites (TEST-02, TEST-05, TEST-06) — do after practice plan rebuild confirms the UI is stable.
 - CI-02: Add deploy approval gate — before first real-user release.
 - CI-03/04: Split and cache CI jobs — before first real-user release.
-
-### BL-3.07 🔴 Night 1 Architecture Governance Audit Debt
-- Audit execution reveals reactivity determinism score at 35%. Application heavily relies on imperative DOM manipulation (e.g. `.innerHTML`, `.classList.add('hidden')`, `.style`) instead of reactivity and `body[data-active-tab]`.
-- Detailed report in `docs/reviews/night1_master.md`
