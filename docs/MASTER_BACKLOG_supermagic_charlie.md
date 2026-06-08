@@ -1,74 +1,89 @@
-# The Grand Synthesis: Master Supermagic Backlog (Jules Engine)
+# THE GRAND SYNTHESIS: MASTER SUPERMAGIC BACKLOG
 
 ## I. The Architectural Verdict
-The Reactivity and State Ingestion Enclosure is fundamentally brittle. A comprehensive cross-examination of 12 adversarial peer-reviewed ledgers reveals that the core state-driven UI paradigm is frequently subverted by downstream maintainers.
 
-The primary architectural flaw is the `AppState` Proxy bounds in `state.js` being "shallow" by design (only tracking top-level assignment). This structural limitation has forced workarounds: some use in-place array mutations (`.push()`) that silently bypass reactivity, while others rely on redundant self-assignment hacks (`arr = [...arr]`). In parallel, the unified layout contract (`body[data-active-tab]`) has been broken by ad-hoc, imperative DOM manipulation (`classList.add/remove`, `style.display`, `!important` CSS overrides) spread across `auth-v2.js`, `oncourse.js`, and `style.css`. Finally, core state ingestion via Firestore `onSnapshot` lacks schema validation and cache-first persistence patterns.
+The Reactivity and State Ingestion Enclosure suffers from systemic fractures where the state-driven UI paradigm is manually subverted. The `AppState` proxy's shallow reactivity model (checking only reference equality via `oldValue !== value`) is frequently bypassed by in-place array mutations (`.push()`, `.splice()`), leading to silent reactivity drops. Concurrently, the exclusivity contract established by `body[data-active-tab]` is routinely violated by dual-lever visibility overrides, inline `.style.display` toggles, and global CSS `!important` directives.
 
-This Master Backlog distills these disparate findings into unified, atomic (~100-line limit) remediation chunks, strictly prioritizing the enforcement of AppState boundaries, state ingestion protocols, and data-active-tab visual contracts.
-
----
+The remediation strategy focuses on three core pillars:
+1.  **State Determinism:** Implement robust array mutation helpers (`mutateList`) to re-arm the proxy deterministically, and enforce payload validation on ingestion.
+2.  **UI Contract Enforcement:** Strip redundant DOM overrides (`classList` + `style.display`), remove `!important` CSS collisions, and migrate localized closures to respect `AppState` enumerations.
+3.  **Proxy Boundaries:** Re-arm proxy and ensure deep reactivity gaps are patched properly in state-driven UI patterns.
 
 ## II. The Definitive Master Backlog
 
-### 1. Shallow `AppState` Proxy Bounds & Deep Mutation Bypass
-* **Target:** `src/state.js:60-83` (Root Cause), `src/practice.js:370-372`, `src/social.js:23-31` (Concrete Instances)
-* **Violation:**
+### 1. Target: `src/state.js:60-83`
+**Violation:**
+`Proxy` set trap is reference-equality only (`oldValue !== value`); array mutations bypass `stateChange`.
 ```js
-// state.js — set trap only fires on top-level assignment:
-set(target, prop, value) { target[prop] = value; /* dispatch stateChange */ }
-
-// practice.js:370-372 — in-place mutation never reaches the trap:
-AppState.currentPracticeRounds = [];
-snapshot.forEach(docSnap => {
-    AppState.currentPracticeRounds.push({ id: docSnap.id, ...docSnap.data() });
-});
+export const AppState = new Proxy(initialState, {
+    set(target, prop, value) {
+        // ... oldValue !== value check ...
 ```
-* **Remediation Plan:** Introduce a `mutateList(AppState, key, fn)` utility in `state.js` that performs the mutation against a shallow copy and reassigns the array (e.g., `const copy = [...target[key]]; fn(copy); target[key] = copy;`). Refactor `practice.js` and `social.js` to utilize this utility instead of bare `.push()`, guaranteeing deterministic `stateChange` events while remaining inside Proxy bounds. (Chunk: ~30 lines).
 
-### 2. `#tab-oncourse` Layout Contract Collision (State Machine vs. CSS)
-* **Target:** `src/style.css` (Lines 869-870 vs 570-582)
-* **Violation:**
+**Remediation Plan:** Add a `mutateList(key, fn)` helper exported alongside `AppState` that performs a shallow copy, mutates, and reassigns (`AppState[key] = [...newList]`) to deterministically re-arm the proxy trap. (≤30 lines)
+
+### 2. Target: `src/state.js:66-74`
+**Violation:**
+Unfiltered global dispatch on every proxy write.
+```js
+window.dispatchEvent(new CustomEvent('stateChange', { detail: { property: prop... } }));
+```
+
+**Remediation Plan:** Do not restructure the dispatch. Instead, add a documented convention/helper `onStateChange(keys, handler)` that early-exits via `if (!keys.includes(e.detail.property)) return;` before invoking `handler`. (~40 lines)
+
+### 3. Target: `src/practice.js:370-372, src/social.js:23-26`
+**Violation:**
+Silent array mutations bypassing the proxy.
+```js
+AppState.currentPracticeRounds.push({ id: docSnap.id, ...docSnap.data() });
+```
+
+**Remediation Plan:** Replace direct array mutation with the new `mutateList` helper to ensure reactivity. (≤30 lines)
+
+### 4. Target: `src/ui.js:622-623`
+**Violation:**
+Bespoke undiscoverable proxy re-arming idiom.
+```js
+AppState.liveRoundGroups.splice(index, 1);
+AppState.liveRoundGroups = [...AppState.liveRoundGroups];
+```
+
+**Remediation Plan:** Promote this bespoke reassignment idiom to use the shared `mutateList` helper to standardize list updates across the app. (≤20 lines)
+
+### 5. Target: `src/style.css:868-871`
+**Violation:**
+Exclusivity contract CSS collision.
 ```css
-/* L570-582: state-machine-driven visibility */
-body[data-active-tab="tab-oncourse"] #tab-oncourse, ... { display: block !important; opacity: 1 !important; ... }
-
-/* L869-870: a second, independent lever that can win the cascade */
 body.round-active #tab-oncourse.hidden { display: block !important; }
 ```
-* **Remediation Plan:** Delete the `body.round-active #tab-oncourse.hidden` rule. Integrate the "round in progress" visibility logic directly into the `AppState.activeTab` state machine by transitioning `data-active-tab` to `tab-oncourse` when a round starts, thus restoring the `body[data-active-tab]` contract as the exclusive layout controller. (Chunk: ~20 lines).
 
-### 3. Imperative Display Toggles Subverting the Layout Contract
-* **Target:** `src/auth-v2.js` (Lines 25-28, 42-45, 153-157, 201-205)
-* **Violation:**
+**Remediation Plan:** Remove the `!important` directive which violently competes with the `data-active-tab` layout app contract. Enforce round-in-progress visibility entirely through the reactive `activeTab` state machine. (≤20 lines)
+
+### 6. Target: `src/auth-v2.js:153-157, 201-205`
+**Violation:**
+Dual-lever visibility overrides bypassing single-source-of-truth.
 ```js
 UI.authOverlay.classList.add('hidden');
-UI.authOverlay.style.display = 'none';   // Force hide
-UI.mainApp.classList.remove('hidden');
-UI.mainApp.style.display = 'block';      // Force show
+UI.authOverlay.style.display = 'none'; // Force hide
 ```
-* **Remediation Plan:** Collapse redundant visibility mutations strictly to `.classList.add('hidden')` and eradicate all explicit `.style.display` overrides. Emit a login success event that correctly delegates app entry to `AppState.activeTab = 'dashboard'`, allowing the `body[data-active-tab]` CSS architecture to manage display cleanly. (Chunk: ~25 lines).
 
-### 4. Core State Ingestion Lacking Schema Guards
-* **Target:** `src/practice.js:360-372`, `src/social.js:23-31`
-* **Violation:**
-```js
-// snapshot populates state directly with unvalidated payloads
-snapshot.forEach(docSnap => {
-    AppState.currentPracticeRounds.push({ id: docSnap.id, ...docSnap.data() });
-});
-```
-* **Remediation Plan:** Establish an explicit ingestion boundary by creating a `normalizeRoundDoc(docSnap)` and `normalizeUserDoc(docSnap)` shape-checker. Pipe all raw Firestore `docSnap.data()` reads through these pure functions before assigning them into the `AppState` store to ensure UI invariants. (Chunk: ~35 lines).
+**Remediation Plan:** Collapse component visibility exclusively to the `classList` token layer. Strip all imperative `.style.display` assignments across the auth module to restore single-authority styling. (≤25 lines)
 
-### 5. AppState Global Observer Broadcast Inefficiency
-* **Target:** `src/state.js:66-74`
-* **Violation:**
+### 7. Target: `src/oncourse.js:101-120, src/modules/event-binders.js:480-490`
+**Violation:**
+Rogue component visibility bypasses.
 ```js
-if (oldValue !== value) {
-    const event = new CustomEvent('stateChange', {
-        detail: { property: prop, oldValue: oldValue, newValue: value }
-    });
-    window.dispatchEvent(event);   // global, unfiltered — every listener wakes on every write
-}
+document.getElementById('oncourse-setup').classList.remove('hidden');
+if (simpleStats) simpleStats.classList.toggle('hidden', !isHub || !isSinglePlayer);
 ```
-* **Remediation Plan:** Refactor the proxy trap to emit property-specific namespaces (e.g., `stateChange:${prop}`) or introduce a lightweight subscription registry to `AppState`. This bounds the proxy's reactive scope so listeners only execute renders on relevant slice mutations, eliminating layout thrashing. (Chunk: ~20 lines).
+
+**Remediation Plan:** Refactor navigation events and localized view closures to react to `AppState` enumerations rather than imperatively firing `.classList.add/remove('hidden')` methods. Migrate in strict chunks of max 80 lines per feature block.
+
+### 8. Target: `src/whs.js:148-156`
+**Violation:**
+Firestore ingestion missing schema payload validation.
+```js
+// Raw Firestore doc data is spread directly into AppState with no shape validation.
+```
+
+**Remediation Plan:** Introduce `normalizeRoundDoc(raw)` and `normalizeUserDoc(raw)` shape checkers to provide defaults for missing fields. Route snapshot callbacks through them before assigning to `AppState`. (≤40 lines)
