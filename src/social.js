@@ -5,7 +5,7 @@ import { db } from './firebase-config.js';
 import { AppState } from './state.js';
 import {
     collection, doc, setDoc, deleteDoc, getDocs,
-    query, where, orderBy, limit, getDoc
+    query, where, orderBy, limit, getDoc, startAfter
 } from "firebase/firestore";
 
 export function initSocialFeed() {
@@ -114,61 +114,109 @@ async function loadFollowing() {
     }
 }
 
-async function loadFeed() {
+// Last document of the most recent feed page — fuels the "load more" cursor.
+let lastFeedDoc = null;
+
+function feedDash(value) {
+    return (value === null || value === undefined || value === '') ? '—' : String(value);
+}
+
+function feedDifferential(value) {
+    return (typeof value === 'number' && !Number.isNaN(value)) ? value.toFixed(1) : '—';
+}
+
+function feedDate(value) {
+    if (!value) return '';
+    const d = value?.toDate ? value.toDate() : new Date(value);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-AU');
+}
+
+function buildFeedCard(entry) {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+
+    const avatar = document.createElement('div');
+    avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3867d6,#4b7bec);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;';
+    avatar.textContent = (entry.actorDisplayName || '?').charAt(0).toUpperCase();
+
+    const nameBlock = document.createElement('div');
+    const nameEl = document.createElement('strong');
+    nameEl.textContent = entry.actorDisplayName || 'Unknown';
+    const dateEl = document.createElement('span');
+    dateEl.style.cssText = 'color:#94a3b8;font-size:0.8rem;margin-left:8px;';
+    dateEl.textContent = feedDate(entry.date);
+    nameBlock.appendChild(nameEl);
+    nameBlock.appendChild(dateEl);
+
+    header.appendChild(avatar);
+    header.appendChild(nameBlock);
+
+    const details = document.createElement('div');
+    details.style.cssText = 'font-size:0.88rem;color:#475569;';
+
+    const courseStrong = document.createElement('strong');
+    courseStrong.textContent = feedDash(entry.courseName);
+    const scoreStrong = document.createElement('strong');
+    scoreStrong.textContent = feedDash(entry.adjustedGrossScore);
+    const diffStrong = document.createElement('strong');
+    diffStrong.textContent = feedDifferential(entry.handicapDifferential);
+
+    details.append(
+        '⛳ ', courseStrong, ' ·  Score: ', scoreStrong,
+        ' ·  Diff: ', diffStrong
+    );
+
+    card.appendChild(header);
+    card.appendChild(details);
+    return card;
+}
+
+async function loadFeed(afterDoc = null) {
     try {
         const feedEl = document.getElementById('feed-activity-list');
         if (!feedEl) return;
         const myUid = AppState.currentUser?.uid;
         if (!myUid) return;
-        if (feedEl) feedEl.innerHTML = '<p style="color:#94a3b8;">Loading...</p>';
 
-        const followingSnap = await getDocs(collection(db, 'users', myUid, 'following'));
-        if (followingSnap.empty) {
-            if (feedEl) feedEl.innerHTML = '<p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>';
+        if (!afterDoc) {
+            feedEl.innerHTML = '<p style="color:#94a3b8;">Loading...</p>';
+        }
+
+        const constraints = [
+            where('recipientUid', '==', myUid),
+            orderBy('createdAt', 'desc'),
+        ];
+        if (afterDoc) constraints.push(startAfter(afterDoc));
+        constraints.push(limit(20));
+
+        const feedSnap = await getDocs(query(collection(db, 'feed'), ...constraints));
+
+        if (feedSnap.empty) {
+            if (!afterDoc) {
+                feedEl.innerHTML = '<p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>';
+            }
             return;
         }
 
-        const followedUids = followingSnap.docs.map(d => d.id);
-        const uidsChunk = followedUids.slice(0, 10);
+        lastFeedDoc = feedSnap.docs[feedSnap.docs.length - 1];
 
-        const roundsSnap = await getDocs(
-            query(collection(db, 'whs_rounds'), where('uid', 'in', uidsChunk), orderBy('date', 'desc'), limit(20))
-        );
+        if (!afterDoc) feedEl.innerHTML = '';
+        const existingLoadMore = feedEl.querySelector('.feed-load-more-btn');
+        if (existingLoadMore) existingLoadMore.remove();
 
-        if (roundsSnap.empty) {
-            if (feedEl) feedEl.innerHTML = '<p style="color:#94a3b8;">No recent rounds from people you follow.</p>';
-            return;
+        feedSnap.forEach(d => feedEl.appendChild(buildFeedCard(d.data())));
+
+        if (feedSnap.size === 20) {
+            const loadMoreBtn = document.createElement('button');
+            loadMoreBtn.className = 'btn btn-secondary btn-sm feed-load-more-btn';
+            loadMoreBtn.style.cssText = 'width:100%;margin-top:8px;';
+            loadMoreBtn.textContent = 'Load more';
+            loadMoreBtn.addEventListener('click', () => loadFeed(lastFeedDoc));
+            feedEl.appendChild(loadMoreBtn);
         }
-
-        const nameCache = {};
-        for (const uid of uidsChunk) {
-            const u = await getDoc(doc(db, 'users', uid));
-            nameCache[uid] = u.exists() ? (u.data().displayName || uid) : uid;
-        }
-
-        if (feedEl) feedEl.innerHTML = '';
-        roundsSnap.forEach(d => {
-            const r = d.data();
-            const diff = ((113 / r.slope) * (r.adjustedGross - r.rating)).toFixed(1);
-            const date = r.date?.toDate ? r.date.toDate().toLocaleDateString('en-AU') : new Date(r.date).toLocaleDateString('en-AU');
-            const card = document.createElement('div');
-            card.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;';
-            card.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3867d6,#4b7bec);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
-                        ${(nameCache[r.uid] || '?')[0].toUpperCase()}
-                    </div>
-                    <div>
-                        <strong>${nameCache[r.uid] || 'Unknown'}</strong>
-                        <span style="color:#94a3b8;font-size:0.8rem;margin-left:8px;">${date}</span>
-                    </div>
-                </div>
-                <div style="font-size:0.88rem;color:#475569;">
-                    ⛳ <strong>${r.course}</strong> &nbsp;·&nbsp; Score: <strong>${r.adjustedGross}</strong> &nbsp;·&nbsp; Diff: <strong>${diff}</strong>
-                </div>
-            `;
-            if (feedEl) feedEl.appendChild(card);
-        });
     } catch (err) {
         console.error("[Social] Failed to load feed:", err);
         const feedEl = document.getElementById('feed-activity-list');

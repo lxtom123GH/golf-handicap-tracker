@@ -128,8 +128,11 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
-    match /feed/{docId} {
-      allow read, write: if isAuthenticated();
+    match /feed/{feedId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.recipientUid || isAdmin());
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     match /users/{userId}/following/{followedId} {

@@ -3,6 +3,7 @@
  * v6.17.5: Region bridge fixed — frontend now targets australia-southeast1 explicitly.
  */
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { GoogleGenAI } = require("@google/genai");
 const admin = require("firebase-admin");
 
@@ -353,4 +354,106 @@ Return ONLY a valid JSON object with no markdown fences:
         console.error("[Practice Caddy] Fatal Error:", error);
         throw new HttpsError('internal', error.message || "Failed to generate practice plan.");
     }
+});
+
+// ==========================================
+// Activity Feed — write-time fan-out (v6.24.0)
+// ==========================================
+/**
+ * Followers are derived via a collectionGroup('following') scan, filtering for
+ * docs whose ID equals the author's UID — users/{followerUid}/following/{authorUid}.
+ * (users/{uid}/following holds who {uid} follows, NOT who follows {uid}, so a
+ * direct subcollection read on the author would yield the wrong audience.)
+ */
+const FEED_BATCH_CHUNK = 450;
+
+async function commitInChunks(db, items, applyToBatch) {
+    for (let i = 0; i < items.length; i += FEED_BATCH_CHUNK) {
+        const batch = db.batch();
+        const chunk = items.slice(i, i + FEED_BATCH_CHUNK);
+        for (const item of chunk) {
+            applyToBatch(batch, item);
+        }
+        await batch.commit();
+    }
+}
+
+// ==========================================
+// onRoundCreated — fan a logged round out to the author's followers
+// ==========================================
+exports.onRoundCreated = onDocumentCreated({ document: "whs_rounds/{roundId}", region: REGION }, async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const roundId = event.params.roundId;
+    const roundData = snap.data() || {};
+    const authorUid = roundData.uid;
+    if (!authorUid) return;
+
+    const db = admin.firestore();
+
+    const authorSnap = await db.collection('users').doc(authorUid).get();
+    const actorDisplayName = authorSnap.exists ? (authorSnap.data().displayName || null) : null;
+
+    const followingDocsSnap = await db.collectionGroup('following').get();
+    const followerUids = followingDocsSnap.docs
+        .filter(d => d.id === authorUid)
+        .map(d => d.ref.parent.parent.id);
+
+    if (followerUids.length === 0) {
+        console.log(`[Feed Fan-Out] ${authorUid} has no followers — skipping round ${roundId}`);
+        return;
+    }
+
+    const feedEntryBase = {
+        actorUid: authorUid,
+        actorDisplayName: actorDisplayName,
+        type: 'round_logged',
+        roundId: roundId,
+        courseName: roundData.courseName ?? roundData.course ?? null,
+        adjustedGrossScore: roundData.adjustedGrossScore ?? roundData.adjustedGross ?? null,
+        handicapDifferential: roundData.handicapDifferential ?? null,
+        date: roundData.date ?? null,
+    };
+
+    const feedCollection = db.collection('feed');
+    await commitInChunks(db, followerUids, (batch, recipientUid) => {
+        batch.set(feedCollection.doc(), {
+            ...feedEntryBase,
+            recipientUid: recipientUid,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    });
+
+    console.log(`[Feed Fan-Out] Round ${roundId} by ${authorUid} fanned out to ${followerUids.length} followers`);
+});
+
+// ==========================================
+// onRoundDeleted — clean up feed entries for a deleted round
+// ==========================================
+exports.onRoundDeleted = onDocumentDeleted({ document: "whs_rounds/{roundId}", region: REGION }, async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const roundId = event.params.roundId;
+    const roundData = snap.data() || {};
+    const authorUid = roundData.uid;
+    if (!authorUid) return;
+
+    const db = admin.firestore();
+    const matchingSnap = await db.collection('feed')
+        .where('roundId', '==', roundId)
+        .where('actorUid', '==', authorUid)
+        .get();
+
+    if (matchingSnap.empty) {
+        console.log(`[Feed Cleanup] No feed entries found for deleted round ${roundId}`);
+        return;
+    }
+
+    await commitInChunks(db, matchingSnap.docs, (batch, doc) => {
+        batch.delete(doc.ref);
+    });
+
+    console.log(`[Feed Cleanup] Removed ${matchingSnap.docs.length} feed entries for deleted round ${roundId}`);
 });
