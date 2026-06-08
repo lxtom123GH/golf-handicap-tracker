@@ -722,10 +722,6 @@ window.addEventListener('stateChange', (e) => {
                 UI.handicapIndexEl.value = newValue > 0 ? newValue : '0.0';
             }
             break;
-            if (UI.indexSubtextEl) {
-                UI.indexSubtextEl.textContent = AppState.currentRounds.filter(r => r.notCounting !== true).length < 3 ? "Need 3 scores to establish index" : "Current WHS Index";
-            }
-            break;
         case 'usedIds':
             // Re-render history if we know which ones are used
             renderRoundsHistory(AppState.currentRounds, newValue);
