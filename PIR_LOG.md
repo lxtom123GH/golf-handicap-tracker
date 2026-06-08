@@ -91,3 +91,8 @@ This feature recovery proved that local testing is blind to PWA caching issues. 
 ### 🛡️ The Silver Bullet (Fixes)
 1. **Scope Resolution:** Removed the `const` redeclarations for `viewBtn` and `releaseBtn` inside the `src/coach.js` `loadCoachRoster` loop. Instead, event listeners were correctly attached directly to the elements generated in the preceding `document.createElement()` block.
 2. **Untracking Artifacts:** Executed `git rm -r --cached` to purge the test artifacts from the Git index without deleting them locally. Added explicit `playwright-report/` and `test-results/` entries to `.gitignore` to prevent future contamination.
+
+### 2026-06-08T02:42:07Z - Night 1: Claude Opus Architectural Audit
+**Action:** Conducted read-only diagnostic pass of Core Reactivity and State Ingestion.
+**Result:** Discovered 30% Mutation Determinism. Logged strict proxy bypasses, manual DOM mutations ('display: none'), and state coupling bottlenecks.
+**Artifacts:** docs/reviews/night1_opus.md, docs/backlog_opus.md, docs/PIR_log_opus.md
