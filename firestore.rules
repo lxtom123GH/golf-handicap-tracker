@@ -44,6 +44,16 @@ service cloud.firestore {
       match /practice_plans/{planId} {
         allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       }
+
+      match /assignedDrills/{drillId} {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
+        allow update: if isAuthenticated() && (
+          (request.auth.uid == userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['completed'])) ||
+          isCoachOf(userId) ||
+          isAdmin()
+        );
+        allow create, delete: if isAuthenticated() && (isCoachOf(userId) || isAdmin());
+      }
     }
 
     match /global_drills/{drillId} {
