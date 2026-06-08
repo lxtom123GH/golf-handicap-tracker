@@ -1,1 +1,0 @@
-- [ ] **Technical Debt (Opus Audit):** Remove all instances of hardcoded `style.display` toggling across the codebase (`src/ai.js`, `src/app-v4.js`, `src/auth-v2.js`, `src/oncourse.js`, `src/ui.js`, `src/whs.js`) and map their visibility to `AppState` and the `data-active-tab` layout contract.
