@@ -22,6 +22,14 @@
 - **B2 — `auth-v2.js`:** Four `style.display` assignments and their `// Force hide`/`// Force show` comments removed from both approved-user branches. `classList`-only is now the single authority for auth overlay visibility. Collapsed from 4 dual-lever pairs to 0. (Note: `btnLogin`/`btnRegister` style.display lines in the login↔register toggle are a separate, single-lever-per-element pattern — left untouched.)
 - **E2E result:** 10/14 tests passing post-fix (was 0/14 before B2). Remaining 3 failures are pre-existing feature gaps (T3-dateValidation, FP-05, on-course setup panel visibility).
 
+### BL-3.16 ✅ T2-C: Firestore Document Normalisation
+*Completed: 2026-06-09 · commit 5476ac2*
+- **Pattern:** `onSnapshot`/`getDocs` callbacks spread raw Firestore doc data directly into `AppState` with no shape validation. Missing or malformed fields (`date`, `score`, `displayName`, `uid`, etc.) propagate silently into render-bound state.
+- **Fix:** `normalizeRoundDoc(raw)` and `normalizeUserDoc(raw)` added to `state.js` (alongside `mutateList`) — pure functions supplying typed defaults for expected fields while preserving all other fields via spread. Placed in `state.js` (not a new file) because all three consumers already import from it, so only existing import lines were extended.
+- **Wiring:** `whs.js` `onSnapshot` → `normalizeRoundDoc({ id, ...doc.data() })`; `practice.js` `onSnapshot` (inside the BL-3.14 `mutateList` call) → `normalizeRoundDoc(...)`; `social.js` `getDocs` `snap.docs.map` → `normalizeUserDoc({ uid: d.id, ...d.data() })`. Existing `mutateList` calls and the Proxy set trap left untouched.
+- **Diff:** 44 insertions, 6 deletions across 4 files (`state.js` +38, three consumers ±2 each) — within the 100-line budget.
+- **Closes:** T2-C
+
 
 ---
 
@@ -91,15 +99,6 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
   - `ui.js:622-623` — bespoke `splice` + spread-reassign idiom → `mutateList('liveRoundGroups', ...)`
 - **Closes:** T2-A
 
-
-### BL-3.16 🟡 T2-C: Firestore Document Normalisation
-- **Pattern:** `onSnapshot`/`getDocs` callbacks spread raw Firestore doc data directly into `AppState` with no shape validation. Missing or malformed fields (`date`, `score`, `displayName`, `uid`, etc.) propagate silently into render-bound state.
-- **Fix:** `normalizeRoundDoc(raw)` and `normalizeUserDoc(raw)` — pure functions supplying typed defaults for expected fields. Route `whs.js`, `practice.js`, and `social.js` snapshot callbacks through them before assigning to `AppState`. ~40 lines, additive only.
-- **Sequence:** Land after BL-3.14 Phase 2 — the normalizers slot naturally into the same callback functions being refactored.
-- **Do NOT scope:** Any work toward "fixing" unsubscribe handles in `whs.js`/`practice.js` — both are correctly implemented. See FP-02 in registry below.
-- **Tool:** Claude Code
-- **Closes:** T2-C
-
 ---
 
 ## Deferred / Future
@@ -148,4 +147,4 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 | FP-10 | "`score-input.js:166` `setTimeout` is a shared-element race condition" | The `toast` element is function-local, created via `document.body.appendChild(toast)`, and discarded after one use. It cannot be re-triggered against a stale handle and carries none of the shared-element race risk. Excluded from T3-setTimeout. |
 
 ---
-*Last updated: 2026-06-09 — BL-3.14 complete (Phase 1: 20ea34c, Phase 2: a7b70b5); BL-3.15 complete (B2: 225b98c, B1: f535c6d)*
+*Last updated: 2026-06-09 — BL-3.14 complete (Phase 1: 20ea34c, Phase 2: a7b70b5); BL-3.15 complete (B2: 225b98c, B1: f535c6d); BL-3.16 complete (5476ac2)*
