@@ -80,18 +80,16 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 - **Tool:** Claude Code
 - **Closes:** T1-B
 
-### BL-3.14 🟠 T2-A: `mutateList` Primitive + Proxy Consumer Migration
-*Root cause of silent reactivity drops across the app. Highest architectural ROI in the entire synthesis.*
+### BL-3.14 ✅ T2-A: `mutateList` Primitive + Proxy Consumer Migration
+*Completed: 2026-06-09 · Phase 1 commit 20ea34c · Phase 2 commit a7b70b5*
 - **Pattern:** `AppState` Proxy `set` trap fires on reference change only (`oldValue !== value`). In-place mutations — `.push()`, `.splice()`, and nested object key writes (`obj[k] = v`) — keep the same reference, so `stateChange` is never dispatched. Engineers stopped trusting the reactive layer for arrays and built a parallel imperative layer instead; this is why the `classList`/`style.display` sprawl exists at scale.
-- **The correct idiom already exists** at `ui.js:622-623` (mutate a copy, reassign to top-level key). Remediation is a promotion of an existing proven pattern, not new design work.
-- **Phase 1 — `state.js` only:** ✅ *Committed 2026-06-09 · commit 20ea34c.* `mutateList(key, fn)` exported from `state.js`. Handles both arrays (`[...copy]`) and objects (`{...copy}`). Proxy set trap untouched.
-- **Phase 2 — consumers (one coordinated commit):** ⏳ *Pending — next session.*
-  - `practice.js` — replace reset-then-push loop inside `onSnapshot`
-  - `social.js` — replace `allUsersCache` population via `.push()`
-  - `app-v4.js` — replace nested `profileUsersMap[d.id] = val` writes with spread-reassignment
-  - `ui.js:622-623` — promote to first canonical `mutateList` call site
-- **Tool:** Claude Code
-- **Closes:** T2-A (root cause + downstream consumers) — closes when Phase 2 lands
+- **Phase 1 — `state.js` only:** ✅ `mutateList(key, fn)` exported from `state.js`. Handles both arrays (`[...copy]`) and objects (`{...copy}`). Proxy set trap untouched.
+- **Phase 2 — consumers:** ✅ All four proxy-bypass sites migrated:
+  - `practice.js` — `onSnapshot` reset-then-push loop → `mutateList('currentPracticeRounds', ...)`
+  - `social.js` — `allUsersCache` population via `.push()` → direct `snap.docs.map(...)` assignment (Option A: full rebuild, single reference change)
+  - `app-v4.js` — two `profileUsersMap[key] = val` nested writes → `mutateList('profileUsersMap', ...)`
+  - `ui.js:622-623` — bespoke `splice` + spread-reassign idiom → `mutateList('liveRoundGroups', ...)`
+- **Closes:** T2-A
 
 
 ### BL-3.16 🟡 T2-C: Firestore Document Normalisation
@@ -150,4 +148,4 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 | FP-10 | "`score-input.js:166` `setTimeout` is a shared-element race condition" | The `toast` element is function-local, created via `document.body.appendChild(toast)`, and discarded after one use. It cannot be re-triggered against a stale handle and carries none of the shared-element race risk. Excluded from T3-setTimeout. |
 
 ---
-*Last updated: 2026-06-09 — BL-3.15 complete (B2: 225b98c, B1: f535c6d)*
+*Last updated: 2026-06-09 — BL-3.14 complete (Phase 1: 20ea34c, Phase 2: a7b70b5); BL-3.15 complete (B2: 225b98c, B1: f535c6d)*
