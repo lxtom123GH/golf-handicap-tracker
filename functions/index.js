@@ -253,22 +253,40 @@ exports.generatePracticePlan = onCall({ region: REGION, secrets: ["GEMINI_API_KE
         };
     }
 
-    // --- GENERATION: Fetch latest aiSummary from Firestore ---
-    const roundsSnap = await db.collection('users').doc(uid).collection('rounds')
+    // --- GENERATION: Fetch the user's recent rounds and handicap index ---
+    const roundsSnap = await db.collection('whs_rounds')
+        .where('uid', '==', uid)
         .orderBy('date', 'desc')
         .limit(5)
         .get();
 
-    let aiSummary = null;
-    for (const roundDoc of roundsSnap.docs) {
-        const d = roundDoc.data();
-        if (d.aiSummary) { aiSummary = d.aiSummary; break; }
+    // Read the player's handicap index from their profile (handle missing doc gracefully)
+    let handicapIndex = null;
+    const profileSnap = await db.collection('profiles').doc(uid).get();
+    if (profileSnap.exists && profileSnap.data().handicapIndex !== undefined) {
+        handicapIndex = profileSnap.data().handicapIndex;
     }
 
-    // Fallback: use generic stats if no AI summary exists yet
-    const inputText = aiSummary
-        ? `Round summary: ${aiSummary}`
-        : 'The golfer needs to improve consistency across all areas of the game, with particular focus on short game and putting.';
+    let inputText;
+    if (!roundsSnap.empty) {
+        const hiLine = handicapIndex !== null
+            ? `Handicap Index: ${handicapIndex}.`
+            : 'Handicap Index: not available.';
+
+        const roundLines = roundsSnap.docs.map((roundDoc, i) => {
+            const round = roundDoc.data();
+            const differential = ((113 / round.slope) * (round.adjustedGross - round.rating)).toFixed(1);
+            const putts = round.stats?.putts ?? 'N/A';
+            const gir = round.stats?.gir ?? 'N/A';
+            const fwy = round.stats?.fwy ?? 'N/A';
+            return `Round ${i + 1} at ${round.course}: adjusted gross ${round.adjustedGross}, differential ${differential}, putts ${putts}, GIR ${gir}, fairways hit ${fwy}.`;
+        });
+
+        inputText = `${hiLine}\nRecent rounds:\n${roundLines.join('\n')}`;
+    } else {
+        // Fallback: no rounds logged yet — use the generic prompt unchanged
+        inputText = 'The golfer needs to improve consistency across all areas of the game, with particular focus on short game and putting.';
+    }
 
     console.log(`[Practice Caddy] Input for Gemini (first 200 chars): ${inputText.substring(0, 200)}`);
 
