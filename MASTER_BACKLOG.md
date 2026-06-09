@@ -6,6 +6,7 @@
 - [x] BL-2.03 Coach Roster and Social Feed State Isolation and Refactor
 - [x] BL-2.04 Extract & Refactor Global Navigation into State-Driven Architecture
 - [x] BL-3.15 🟠 T2-B: Competing Visibility Authorities — CSS + `auth-v2.js`
+- [x] BL-3.16 Firestore document normalisation (normalizeRoundDoc / normalizeUserDoc)
 ---
 
 ## Completed — June 8 2026 Session
@@ -41,6 +42,7 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 - **Data shape mismatch:** Cloud Function returns `drillId`/`category`/`targetMetric`/string-array `steps`/boolean-array `completedSteps`; UI expects `id`/`title`/`description`/object `steps`/index-array `completedSteps`
 - **DOM ID mismatch:** `ui.js` references `active-drill-title`/`active-drill-desc`/`practice-gen-error`/`btn-archive-drill`; `index.html` has `practice-category-badge`/`practice-target-metric`/`practice-generate-error`/`btn-reset-practice`/`practice-rating-section`
 - **Cross-ref BL-3.11:** Root-level `practice_plans` queries throw `FirebaseError: No matching allow statements` because the only security rule lives at the subcollection path. BL-3.11 adds a temporary rules stopgap; DATA-02 above is the permanent fix. Once DATA-02 lands the stopgap rule can be removed.
+- **Root defect confirmed (overnight review 2026-06-09):** client never populates the personalisation input block when calling the Cloud Function — every plan is the generic fallback.
 - **Tool:** Claude Code (complex, multi-file, needs emulator test loop)
 
 ### BL-3.06 🔴 Coach Assign Drill — Add Missing Security Rule
@@ -60,6 +62,12 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 ### BL-3.09 🟢 Dead Code Cleanup — stateChange Listener
 `case 'handicapIndex':` in the `stateChange` listener in `ui.js` has code placed after its own `break` statement — unreachable. Likely a half-finished edit from the rogue agent session.
 - **Tool:** Jules (two-line delete, mechanical)
+
+### BL-3.17 🔴 SSRF Vulnerability — `generateAudioBriefing` Fetches Client-Supplied URL Server-Side
+`generateAudioBriefing` (`functions/index.js:152`) calls `await fetch(audioUrl)` where `audioUrl` comes directly from `request.data` with no validation. An authenticated user can point the function at arbitrary URLs (internal metadata endpoints, other tenants' signed URLs, etc.).
+- **Fix:** Validate `audioUrl` is within the project's Storage bucket before fetching (prefix-check against `https://firebasestorage.googleapis.com/...golf-handicap-tracker-b677c...`). ~5 lines.
+- **Priority:** Security — fix before production.
+- **Tool:** Claude Code
 
 ---
 
