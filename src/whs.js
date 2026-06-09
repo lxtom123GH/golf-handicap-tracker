@@ -5,7 +5,7 @@
 import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import Chart from 'chart.js/auto';
-import { AppState } from './state.js';
+import { AppState, normalizeRoundDoc } from './state.js';
 import { UI } from './ui.js';
 
 let unsubscribeWHS = null;
@@ -161,7 +161,7 @@ export function listenToWHSRounds() {
 
         const newRounds = [];
         snapshot.forEach((doc) => {
-            newRounds.push({ id: doc.id, ...doc.data() });
+            newRounds.push(normalizeRoundDoc({ id: doc.id, ...doc.data() }));
         });
 
         const { index, usedIds } = calculateIndex(newRounds);

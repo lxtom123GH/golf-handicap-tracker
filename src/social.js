@@ -2,7 +2,7 @@
 // social.js — Friends & Activity Feed
 // ==========================================
 import { db } from './firebase-config.js';
-import { AppState } from './state.js';
+import { AppState, normalizeUserDoc } from './state.js';
 import {
     collection, doc, setDoc, deleteDoc, getDocs,
     query, where, orderBy, limit, getDoc, startAfter
@@ -22,7 +22,7 @@ export function initSocialFeed() {
         try {
             if (!AppState.allUsersCache) {
                 const snap = await getDocs(collection(db, 'users'));
-                AppState.allUsersCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+                AppState.allUsersCache = snap.docs.map(d => normalizeUserDoc({ uid: d.id, ...d.data() }));
             }
 
             const matches = [];

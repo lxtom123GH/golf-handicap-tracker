@@ -106,3 +106,41 @@ export function mutateList(key, fn) {
     fn(copy);
     AppState[key] = copy;
 }
+
+/**
+ * Normalise a raw Firestore round document, applying safe defaults for the
+ * expected fields. All other fields are preserved via spread — the normaliser
+ * adds safety, it never strips unknown fields.
+ *
+ * @param {Object} raw - Raw Firestore round doc data.
+ * @returns {Object} Normalised round object.
+ */
+export function normalizeRoundDoc(raw) {
+    return {
+        ...raw,
+        date: raw.date || null,
+        score: typeof raw.score === 'number' ? raw.score : null,
+        courseName: raw.courseName || '',
+        holes: Array.isArray(raw.holes) ? raw.holes : [],
+        userId: raw.userId || null
+    };
+}
+
+/**
+ * Normalise a raw Firestore user document, applying safe defaults for the
+ * expected fields. All other fields are preserved via spread — the normaliser
+ * adds safety, it never strips unknown fields.
+ *
+ * @param {Object} raw - Raw Firestore user doc data.
+ * @returns {Object} Normalised user object.
+ */
+export function normalizeUserDoc(raw) {
+    return {
+        ...raw,
+        uid: raw.uid || null,
+        displayName: raw.displayName || '',
+        email: raw.email || '',
+        isCoach: raw.isCoach === true,
+        isAdmin: raw.isAdmin === true
+    };
+}
