@@ -865,11 +865,6 @@ body.round-active #tab-oncourse {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Remove hidden class on on-course tab during round */
-body.round-active #tab-oncourse.hidden {
-    display: block !important;
-}
-
 /* Progress bar dots */
 #oc-progress-bar {
     position: sticky;
