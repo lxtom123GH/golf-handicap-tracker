@@ -151,9 +151,7 @@ export function setupAuthUI(onAppReady) {
                         // Force allowed for verification
                         console.log("[Auth] User approved, hiding overlay...");
                         UI.authOverlay.classList.add('hidden');
-                        UI.authOverlay.style.display = 'none'; // Force hide
                         UI.mainApp.classList.remove('hidden');
-                        UI.mainApp.style.display = 'block'; // Force show
                         UI.authPending.classList.add('hidden');
                         AppState.viewingPlayerId = user.uid;
 
@@ -199,9 +197,7 @@ export function setupAuthUI(onAppReady) {
                         // Blocked
                         console.log("[Auth] User approved, hiding overlay...");
                         UI.authOverlay.classList.add('hidden');
-                        UI.authOverlay.style.display = 'none'; // Force hide
                         UI.mainApp.classList.remove('hidden');
-                        UI.mainApp.style.display = 'block'; // Force show
                         UI.authPending.classList.add('hidden');
                         // Hide cloak even on pending
                         const cloak = document.getElementById('app-loading-cloak');
