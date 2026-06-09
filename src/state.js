@@ -81,3 +81,28 @@ export const AppState = new Proxy(initialState, {
         return true;
     }
 });
+
+/**
+ * Safely mutate an AppState array or object and re-arm the Proxy set trap.
+ *
+ * The Proxy trap fires on *reassignment* (AppState.key = newValue) only —
+ * it compares old and new references. Mutating in place (.push(), .splice(),
+ * obj[k] = v) keeps the same reference, so oldValue === value, stateChange
+ * is never dispatched, and dependent UI goes stale silently.
+ *
+ * This helper creates a shallow copy first, so the final reassignment always
+ * produces a new reference, unconditionally triggering stateChange dispatch.
+ *
+ * @param {string} key - The AppState key to update.
+ * @param {function} fn - Receives the shallow copy; mutate it in place.
+ * @example
+ *   mutateList('currentPracticeRounds', list => list.push(newItem));
+ *   mutateList('profileUsersMap', map => { map[id] = value; });
+ */
+export function mutateList(key, fn) {
+    const copy = Array.isArray(AppState[key])
+        ? [...AppState[key]]
+        : { ...AppState[key] };
+    fn(copy);
+    AppState[key] = copy;
+}
