@@ -23,7 +23,7 @@ import { initCompetitions } from './competitions.js';
 import { initPractice } from './practice.js';
 import { initOnCourse } from './oncourse.js';
 import { initializeTelemetryListener } from './modules/telemetry.js';
-import { AppState } from './state.js';
+import { AppState, mutateList } from './state.js';
 import { initSocialFeed } from './social.js';
 import { initNotifications } from './notifications.js';
 import { COURSE_DATA } from './course-data.js';
@@ -363,7 +363,7 @@ async function populatePlayerSelect() {
     optSelf.textContent = AppState.currentUser.displayName || AppState.currentUser.email;
     optSelf.selected = true;
     UI.playerSelect.appendChild(optSelf);
-    AppState.profileUsersMap[AppState.currentUser.uid] = optSelf.textContent;
+    mutateList('profileUsersMap', map => { map[AppState.currentUser.uid] = optSelf.textContent; });
 
     // Fetch others if Admin or Coach
     if (window.currentUserIsAdmin || AppState.currentUser.isCoach) {
@@ -383,7 +383,7 @@ async function populatePlayerSelect() {
                     opt.value = d.id;
                     opt.textContent = data.displayName || data.email;
                     UI.playerSelect.appendChild(opt);
-                    AppState.profileUsersMap[d.id] = opt.textContent;
+                    mutateList('profileUsersMap', map => { map[d.id] = opt.textContent; });
                 }
             });
         } catch (e) { console.error("Error fetching player list: ", e); }

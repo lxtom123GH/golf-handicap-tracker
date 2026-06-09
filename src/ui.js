@@ -1,7 +1,7 @@
 // ==========================================
 // Centralized DOM Element Caching & UI Helpers
 // ==========================================
-import { AppState } from './state.js';
+import { AppState, mutateList } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment } from 'firebase/firestore';
@@ -619,8 +619,7 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
 
         // Bind remove button
         li.querySelector('.remove-player-btn').addEventListener('click', () => {
-            AppState.liveRoundGroups.splice(index, 1);
-            AppState.liveRoundGroups = [...AppState.liveRoundGroups];
+            mutateList('liveRoundGroups', list => list.splice(index, 1));
         });
     });
 

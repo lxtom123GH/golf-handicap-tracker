@@ -4,7 +4,7 @@
 // ==========================================
 import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
-import { AppState } from './state.js';
+import { AppState, mutateList } from './state.js';
 import { UI } from './ui.js';
 import { bindAiGenerator, generateAIResponse } from './ai.js';
 import { bindPracticeCaddyUI } from './ui.js';
@@ -367,9 +367,11 @@ function listenToPractice() {
     );
 
     unsubscribePractice = onSnapshot(q, (snapshot) => {
-        AppState.currentPracticeRounds = [];
-        snapshot.forEach(docSnap => {
-            AppState.currentPracticeRounds.push({ id: docSnap.id, ...docSnap.data() });
+        mutateList('currentPracticeRounds', list => {
+            list.length = 0;
+            snapshot.forEach(docSnap =>
+                list.push({ id: docSnap.id, ...docSnap.data() })
+            );
         });
         renderPracticeDashboard();
         renderRecentPractice();

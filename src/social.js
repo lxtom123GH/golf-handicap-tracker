@@ -22,8 +22,7 @@ export function initSocialFeed() {
         try {
             if (!AppState.allUsersCache) {
                 const snap = await getDocs(collection(db, 'users'));
-                AppState.allUsersCache = [];
-                snap.forEach(d => AppState.allUsersCache.push({ uid: d.id, ...d.data() }));
+                AppState.allUsersCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
             }
 
             const matches = [];
