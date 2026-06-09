@@ -84,14 +84,14 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 *Root cause of silent reactivity drops across the app. Highest architectural ROI in the entire synthesis.*
 - **Pattern:** `AppState` Proxy `set` trap fires on reference change only (`oldValue !== value`). In-place mutations — `.push()`, `.splice()`, and nested object key writes (`obj[k] = v`) — keep the same reference, so `stateChange` is never dispatched. Engineers stopped trusting the reactive layer for arrays and built a parallel imperative layer instead; this is why the `classList`/`style.display` sprawl exists at scale.
 - **The correct idiom already exists** at `ui.js:622-623` (mutate a copy, reassign to top-level key). Remediation is a promotion of an existing proven pattern, not new design work.
-- **Phase 1 — `state.js` only:** Export `mutateList(key, fn)` helper. Shallow-copies target, passes copy to `fn`, reassigns result through `AppState[key]`. Do NOT touch the existing Proxy `set` trap. Do NOT bundle with `onStateChange` wrapper (separate concern, deferred — see T3-onStateChange).
-- **Phase 2 — consumers (one coordinated commit):**
+- **Phase 1 — `state.js` only:** ✅ *Committed 2026-06-09 · commit 20ea34c.* `mutateList(key, fn)` exported from `state.js`. Handles both arrays (`[...copy]`) and objects (`{...copy}`). Proxy set trap untouched.
+- **Phase 2 — consumers (one coordinated commit):** ⏳ *Pending — next session.*
   - `practice.js` — replace reset-then-push loop inside `onSnapshot`
   - `social.js` — replace `allUsersCache` population via `.push()`
   - `app-v4.js` — replace nested `profileUsersMap[d.id] = val` writes with spread-reassignment
   - `ui.js:622-623` — promote to first canonical `mutateList` call site
 - **Tool:** Claude Code
-- **Closes:** T2-A (root cause + downstream consumers)
+- **Closes:** T2-A (root cause + downstream consumers) — closes when Phase 2 lands
 
 
 ### BL-3.16 🟡 T2-C: Firestore Document Normalisation
