@@ -38,7 +38,7 @@
 
 ### BL-3.05 🔴 AI Practice Plan — Full Rebuild (HIGH PRIORITY)
 Three layers of breakage from rogue agent session (ARCH-01). All specific, all fixable:
-- **DATA-02:** 3 stale path references in `src/ui.js` — `bindPracticeCaddyUI()` at lines 825, 894, 929 still query root-level `practice_plans` instead of `users/{uid}/practice_plans/active`
+- **DATA-02 ✅** *(Completed: 2026-06-09 · commit d3befec)* 3 stale path references in `src/ui.js` — `bindPracticeCaddyUI()` repointed to `users/{uid}/practice_plans/active`. Also fixed the `completedSteps` boolean/index-array schema mismatch (commit 293ccc1) and removed the now-superseded BL-3.12 rules stopgap (commit 3658bf7).
 - **Data shape mismatch:** Cloud Function returns `drillId`/`category`/`targetMetric`/string-array `steps`/boolean-array `completedSteps`; UI expects `id`/`title`/`description`/object `steps`/index-array `completedSteps`
 - **DOM ID mismatch:** `ui.js` references `active-drill-title`/`active-drill-desc`/`practice-gen-error`/`btn-archive-drill`; `index.html` has `practice-category-badge`/`practice-target-metric`/`practice-generate-error`/`btn-reset-practice`/`practice-rating-section`
 - **Cross-ref BL-3.11:** Root-level `practice_plans` queries throw `FirebaseError: No matching allow statements` because the only security rule lives at the subcollection path. BL-3.11 adds a temporary rules stopgap; DATA-02 above is the permanent fix. Once DATA-02 lands the stopgap rule can be removed.
@@ -86,6 +86,7 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 - **Fix:** Add root-level `match /practice_plans/{planId}` rule block to `firestore.rules`. Documents already carry `userId` field. Do NOT touch the JS query — that is DATA-02 in BL-3.05. ~8 lines.
 - **Can be batched with BL-3.06** — both are `firestore.rules` additions
 - **Superseded by:** BL-3.05 DATA-02 (once query path is corrected to subcollection, this root rule can be removed)
+- **Stopgap removed:** 2026-06-09 · commit 3658bf7 — BL-3.05 DATA-02 repointed the client query, so the root-level rule block is gone.
 - **Tool:** Claude Code
 - **Closes:** T1-A
 
