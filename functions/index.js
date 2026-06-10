@@ -249,7 +249,7 @@ exports.generatePracticePlan = onCall({ region: REGION, secrets: ["GEMINI_API_KE
             steps: drillSnap.exists ? drillSnap.data().steps : [],
             category: drillSnap.exists ? drillSnap.data().category : 'General',
             targetMetric: drillSnap.exists ? drillSnap.data().targetMetric : '',
-            completedSteps: existingData.completedSteps || [false, false, false],
+            completedSteps: existingData.completedSteps || [],
         };
     }
 
@@ -353,7 +353,7 @@ Return ONLY a valid JSON object with no markdown fences:
         await activePlanRef.set({
             drillId: drillRef.id,
             status: 'active',
-            completedSteps: [false, false, false],
+            completedSteps: [],
             userRating: null,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
@@ -365,7 +365,7 @@ Return ONLY a valid JSON object with no markdown fences:
             steps: drillData.steps,
             category: drillData.category || 'General',
             targetMetric: drillData.targetMetric || '',
-            completedSteps: [false, false, false],
+            completedSteps: [],
         };
 
     } catch (error) {
