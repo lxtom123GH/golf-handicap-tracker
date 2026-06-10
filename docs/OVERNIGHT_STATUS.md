@@ -7,3 +7,7 @@
 ## Issues Addressed
 - Scattered, disjointed PIR logs.
 - Missing correlation between Playwright timeout failures and specific architectural "High State Coupling" findings.
+
+## [2026-06-10] Manual Production Deployment Workflow
+**Status:** Sprint completed.
+- Added deploy-production.yml workflow.
