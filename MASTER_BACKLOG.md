@@ -137,3 +137,12 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 
 ---
 *Last updated: 2026-06-09 — BL-3.14 complete (Phase 1: 20ea34c, Phase 2: a7b70b5); BL-3.15 complete (B2: 225b98c, B1: f535c6d); BL-3.16 complete (5476ac2)*
+
+## Practice Caddy Upgrades (Adaptive Engine)
+- [ ] Phase 1: Hybrid Session Configurator & State Persistence
+  - [ ] Replace star ratings with a 1-5 Post-Drill Confidence Slider (Self-Efficacy Metric).
+  - [ ] Add Time Available (Slider/Buttons) & Focus Toggle (Deep Dive vs. Circuit) UI inputs.
+  - [ ] Bind state to AppState.activePracticeSession and serialize to IndexedDB for offline-first crash recovery.
+- [ ] Phase 2: Contextual Scoring & "Drill Handicap" Normalization
+  - [ ] Implement drill-specific scoring schemas (ratios, streaks, points).
+  - [ ] Build math normalization layer to calculate a 0-100/Handicap baseline index per drill over time.
