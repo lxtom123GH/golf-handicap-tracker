@@ -4,7 +4,7 @@
 import { AppState, mutateList } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
-import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db, functions } from './firebase-config.js';
 
 const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
@@ -816,15 +816,10 @@ export function bindPracticeCaddyUI() {
         if (!AppState.currentUser) return;
         setPracticeState('loading');
         try {
-            const q = query(
-                collection(db, "practice_plans"),
-                where("userId", "==", AppState.currentUser.uid),
-                where("status", "==", "active")
-            );
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                const docData = snap.docs[0].data();
-                docData.id = snap.docs[0].id;
+            const snap = await getDoc(doc(db, "users", AppState.currentUser.uid, "practice_plans", "active"));
+            if (snap.exists() && snap.data().status === 'active') {
+                const docData = snap.data();
+                docData.id = snap.id;
                 _activeDrillData = docData;
                 showActiveDrill(_activeDrillData);
             } else {
@@ -882,11 +877,10 @@ export function bindPracticeCaddyUI() {
         stepsList.addEventListener('click', async (e) => {
             if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
                 const stepIdx = parseInt(e.target.getAttribute('data-idx'));
-                const drillId = e.target.getAttribute('data-id');
                 const isChecked = e.target.checked;
 
                 try {
-                    const drillRef = doc(db, "practice_plans", drillId);
+                    const drillRef = doc(db, "users", AppState.currentUser.uid, "practice_plans", "active");
                     if (isChecked) {
                         await updateDoc(drillRef, {
                             completedSteps: arrayUnion(stepIdx)
@@ -916,12 +910,12 @@ export function bindPracticeCaddyUI() {
 
     if (btnArchive) {
         btnArchive.addEventListener('click', async () => {
-            if (!_activeDrillData || !_activeDrillData.id) return;
+            if (!_activeDrillData) return;
             const btnText = btnArchive.textContent;
             btnArchive.disabled = true;
             btnArchive.textContent = 'Archiving...';
             try {
-                const drillRef = doc(db, "practice_plans", _activeDrillData.id);
+                const drillRef = doc(db, "users", AppState.currentUser.uid, "practice_plans", "active");
                 await updateDoc(drillRef, { status: 'completed' });
                 _activeDrillData = null;
                 setPracticeState('empty');
