@@ -1,7 +1,7 @@
 // ==========================================
 // Centralized DOM Element Caching & UI Helpers
 // ==========================================
-import { AppState, mutateList } from './state.js';
+import { AppState, mutateList, normalizePracticePlan } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
 import { doc, updateDoc, getDoc, setDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -785,9 +785,8 @@ export function renderPracticeSteps(steps, completedSteps, drillId) {
                 <input type="checkbox" ${isCompleted ? 'checked' : ''} data-idx="${idx}" data-id="${drillId}">
             </div>
             <div class="step-body">
-                <h4>Step ${idx + 1}: ${step.title}</h4>
-                <p>${step.description}</p>
-                <div class="step-meta">Target: ${step.goal} | Reps: ${step.reps}</div>
+                <h4>Step ${idx + 1}</h4>
+                <p>${step.description || ''}</p>
             </div>
         `;
         container.appendChild(div);
@@ -818,9 +817,17 @@ export function bindPracticeCaddyUI() {
         try {
             const snap = await getDoc(doc(db, "users", AppState.currentUser.uid, "practice_plans", "active"));
             if (snap.exists() && snap.data().status === 'active') {
-                const docData = snap.data();
-                docData.id = snap.id;
-                _activeDrillData = docData;
+                const planData = snap.data();
+                // The personal plan doc only tracks {drillId, status,
+                // completedSteps, userRating} — the drill content (steps,
+                // category, targetMetric) lives in global_drills/{drillId}.
+                const drillSnap = planData.drillId
+                    ? await getDoc(doc(db, "global_drills", planData.drillId))
+                    : null;
+                _activeDrillData = normalizePracticePlan({
+                    ...(drillSnap && drillSnap.exists() ? drillSnap.data() : {}),
+                    ...planData
+                });
                 showActiveDrill(_activeDrillData);
             } else {
                 setPracticeState('empty');
@@ -855,8 +862,10 @@ export function bindPracticeCaddyUI() {
 
         try {
             const generatePlan = httpsCallable(functions, 'generatePracticePlan');
+            // TODO(BL-3.05): personalisation inputs are never sent to the
+            // function — every plan uses the generic fallback. Separate PR.
             const result = await generatePlan({});
-            _activeDrillData = result.data;
+            _activeDrillData = normalizePracticePlan(result.data);
             showActiveDrill(_activeDrillData);
         } catch (err) {
             console.error('[Practice Caddy] Generation error:', err);
