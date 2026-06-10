@@ -1,0 +1,27 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch: # Allows manual deployment trigger from GitHub UI (Computer or Phone)
+
+permissions:
+  checks: write
+  contents: read
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GOLF_HANDICAP_TRACKER_B677C }}'
+          projectId: golf-handicap-tracker-b677c
+          channelId: live
