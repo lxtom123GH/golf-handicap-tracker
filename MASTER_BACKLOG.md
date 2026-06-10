@@ -31,6 +31,20 @@
 - **Diff:** 44 insertions, 6 deletions across 4 files (`state.js` +38, three consumers ±2 each) — within the 100-line budget.
 - **Closes:** T2-C
 
+### BL-3.08 ✅ Tempo "Snap" Vibe — Add Missing buildTone() Case
+*Completed: 2026-06-10 · commits bfc8b51, 42ac23d*
+- UI offers "Snap" vibe option but `buildTone()` in `tempo.js` had no matching `case`. Silently fell through to default oscillator.
+- `bfc8b51` (Jules) added the missing branch but as a short pitched sine blip; `42ac23d` replaced it with a percussive high-frequency triangle (2000/2800 Hz, 5ms attack, full decay by 70ms) to meet the crisp-click design goal.
+
+### BL-3.09 ✅ Dead Code Cleanup — stateChange Listener
+*Completed: 2026-06-08 · commit bfc8b51*
+- `case 'handicapIndex':` in the `stateChange` listener in `ui.js` had code placed after its own `break` statement — unreachable. Removed by `bfc8b51` (Jules); verified absent on current main.
+
+### BL-3.13 ✅ T1-B: Audio Timer Leak — `endRoundCleanup` Never Calls `stopAudioTimer`
+*Completed: 2026-06-08 · commit aba4185*
+- **Pattern:** `audioTimerInterval` (1-second tick firing `updateAudioUI`) was only ever cleared by the manual stop-recording toggle. If a round ended or aborted while audio diary was recording, the interval ran indefinitely.
+- **Fix:** `stopAudioTimer();` added as the first line of `endRoundCleanup()` (`oncourse.js:100`) by `aba4185`. Safe no-op when no timer is running — verified present on current main.
+- **Closes:** T1-B
 
 ---
 
@@ -54,14 +68,6 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 ### BL-3.07 🟡 Competition Invite Players — Wire Dead UI
 `#comp-invite-container`/`#comp-invite-list` markup exists with no JS binding. `invitedUIDs` is queried but never written. The `array-contains` branch of the Firestore query and security rule can never be satisfied through the UI.
 - **Tool:** Claude Code (needs to wire event handlers + write invitedUIDs on competition create)
-
-### BL-3.08 🟢 Tempo "Snap" Vibe — Add Missing buildTone() Case
-UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `case`. Silently falls through to default oscillator.
-- **Tool:** Jules (one case block, contained)
-
-### BL-3.09 🟢 Dead Code Cleanup — stateChange Listener
-`case 'handicapIndex':` in the `stateChange` listener in `ui.js` has code placed after its own `break` statement — unreachable. Likely a half-finished edit from the rogue agent session.
-- **Tool:** Jules (two-line delete, mechanical)
 
 ### BL-3.17 🔴 SSRF Vulnerability — `generateAudioBriefing` Fetches Client-Supplied URL Server-Side
 `generateAudioBriefing` (`functions/index.js:152`) calls `await fetch(audioUrl)` where `audioUrl` comes directly from `request.data` with no validation. An authenticated user can point the function at arbitrary URLs (internal metadata endpoints, other tenants' signed URLs, etc.).
@@ -89,13 +95,6 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 - **Stopgap removed:** 2026-06-09 · commit 3658bf7 — BL-3.05 DATA-02 repointed the client query, so the root-level rule block is gone.
 - **Tool:** Claude Code
 - **Closes:** T1-A
-
-### BL-3.13 🔴 T1-B: Audio Timer Leak — `endRoundCleanup` Never Calls `stopAudioTimer`
-- **Pattern:** `audioTimerInterval` (1-second tick firing `updateAudioUI`) is only ever cleared by the manual stop-recording toggle. `endRoundCleanup()` has no `stopAudioTimer()` call. If a round ends or aborts while audio diary is recording, the interval runs indefinitely.
-- **Verify first (edge case):** Start round → begin audio recording → end round without stopping recording → open DevTools Performance or add `console.log` inside `updateAudioUI` → confirm interval keeps firing post-round-end.
-- **Fix:** Add `stopAudioTimer();` as the first line of `endRoundCleanup()`. Already a no-op when no timer is running — zero blast radius. ~3 lines.
-- **Tool:** Claude Code
-- **Closes:** T1-B
 
 ### BL-3.14 ✅ T2-A: `mutateList` Primitive + Proxy Consumer Migration
 *Completed: 2026-06-09 · Phase 1 commit 20ea34c · Phase 2 commit a7b70b5*
