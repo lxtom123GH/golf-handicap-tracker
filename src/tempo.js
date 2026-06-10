@@ -59,7 +59,13 @@ function buildTone(ctx, vibeType, startTime, duration, beatNumber) {
     else if (vibeType === 'glock') { freq = isImpact ? 1500 : 1000; oscType = 'sine'; decay = 0.6; sustain = 0.1; }
     else if (vibeType === 'marimba') { freq = isImpact ? 600 : 400; oscType = 'sine'; decay = 0.2; }
     else if (vibeType === 'bass') { freq = isImpact ? 100 : 65; oscType = 'sine'; decay = 0.3; }
-    else if (vibeType === 'snap') { freq = isImpact ? 1200 : 800; oscType = 'sine'; decay = 0.05; }
+    else if (vibeType === 'snap') {
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(isImpact ? 2800 : 2000, startTime); osc.connect(gainNode);
+        gainNode.gain.setValueAtTime(0, startTime); gainNode.gain.linearRampToValueAtTime(1, startTime + 0.005);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.07);
+        osc.start(startTime); osc.stop(startTime + 0.07);
+        return;
+    }
 
     osc.type = oscType; osc.frequency.setValueAtTime(freq, startTime); osc.connect(gainNode);
     gainNode.gain.setValueAtTime(0, startTime); gainNode.gain.linearRampToValueAtTime(1, startTime + 0.01);
