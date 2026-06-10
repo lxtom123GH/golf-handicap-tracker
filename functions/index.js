@@ -11,6 +11,7 @@ admin.initializeApp();
 
 const REGION = "australia-southeast1";
 const MODEL_NAME = "gemini-2.5-flash";
+const STORAGE_URL_PREFIX = "https://firebasestorage.googleapis.com/v0/b/golf-handicap-tracker-b677c.firebasestorage.app/o/";
 
 // ==========================================
 // Helper: Initialise AI client
@@ -132,6 +133,16 @@ exports.generateAudioBriefing = onCall({ region: REGION, secrets: ["GEMINI_API_K
 
     const { audioUrl } = request.data;
     if (!audioUrl) throw new HttpsError('invalid-argument', 'No audioUrl provided.');
+
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(audioUrl);
+    } catch {
+        throw new HttpsError('invalid-argument', 'audioUrl is not a valid URL.');
+    }
+    if (parsedUrl.protocol !== 'https:' || !audioUrl.startsWith(STORAGE_URL_PREFIX)) {
+        throw new HttpsError('permission-denied', 'audioUrl must be a project Storage URL.');
+    }
 
     try {
         const ai = getAiClient();
