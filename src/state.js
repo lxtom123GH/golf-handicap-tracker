@@ -144,3 +144,30 @@ export function normalizeUserDoc(raw) {
         isAdmin: raw.isAdmin === true
     };
 }
+
+/**
+ * Normalise practice plan data into the shape the Practice Caddy renderer
+ * consumes. Accepts either the `generatePracticePlan` Cloud Function response
+ * (`drillId`/`category`/`targetMetric`/string-array `steps`) or the merged
+ * Firestore pair (`users/{uid}/practice_plans/active` + `global_drills/{id}`).
+ * The Cloud Function output shape is canonical and must not change — this
+ * adapter maps it client-side. All other fields are preserved via spread.
+ *
+ * @param {Object} raw - Raw plan data (function response or merged docs).
+ * @returns {Object} Normalised plan object.
+ */
+export function normalizePracticePlan(raw) {
+    const steps = Array.isArray(raw.steps) ? raw.steps : [];
+    return {
+        ...raw,
+        id: raw.drillId || raw.id || null,
+        category: raw.category || 'General',
+        targetMetric: raw.targetMetric || '',
+        // The function emits steps as plain strings ("Step 1: <instruction>");
+        // the renderer numbers steps itself, so strip the redundant prefix.
+        steps: steps.map(step => typeof step === 'string'
+            ? { description: step.replace(/^step\s*\d+\s*[:.\-]\s*/i, '') }
+            : step),
+        completedSteps: Array.isArray(raw.completedSteps) ? raw.completedSteps : []
+    };
+}

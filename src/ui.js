@@ -1,7 +1,7 @@
 // ==========================================
 // Centralized DOM Element Caching & UI Helpers
 // ==========================================
-import { AppState, mutateList } from './state.js';
+import { AppState, mutateList, normalizePracticePlan } from './state.js';
 import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
 import { doc, updateDoc, getDoc, setDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -785,9 +785,8 @@ export function renderPracticeSteps(steps, completedSteps, drillId) {
                 <input type="checkbox" ${isCompleted ? 'checked' : ''} data-idx="${idx}" data-id="${drillId}">
             </div>
             <div class="step-body">
-                <h4>Step ${idx + 1}: ${step.title}</h4>
-                <p>${step.description}</p>
-                <div class="step-meta">Target: ${step.goal} | Reps: ${step.reps}</div>
+                <h4>Step ${idx + 1}</h4>
+                <p>${step.description || ''}</p>
             </div>
         `;
         container.appendChild(div);
@@ -804,8 +803,11 @@ export function renderPracticeSteps(steps, completedSteps, drillId) {
  */
 export function bindPracticeCaddyUI() {
     const btnGenerate = document.getElementById('btn-generate-practice');
-    const btnArchive = document.getElementById('btn-archive-drill');
-    const errorEl = document.getElementById('practice-gen-error');
+    const btnReset = document.getElementById('btn-reset-practice');
+    const errorEl = document.getElementById('practice-generate-error');
+    const ratingSection = document.getElementById('practice-rating-section');
+    const starRow = document.getElementById('practice-star-rating');
+    const btnSubmitRating = document.getElementById('btn-submit-rating');
 
     if (!btnGenerate) return;
 
@@ -818,9 +820,17 @@ export function bindPracticeCaddyUI() {
         try {
             const snap = await getDoc(doc(db, "users", AppState.currentUser.uid, "practice_plans", "active"));
             if (snap.exists() && snap.data().status === 'active') {
-                const docData = snap.data();
-                docData.id = snap.id;
-                _activeDrillData = docData;
+                const planData = snap.data();
+                // The personal plan doc only tracks {drillId, status,
+                // completedSteps, userRating} — the drill content (steps,
+                // category, targetMetric) lives in global_drills/{drillId}.
+                const drillSnap = planData.drillId
+                    ? await getDoc(doc(db, "global_drills", planData.drillId))
+                    : null;
+                _activeDrillData = normalizePracticePlan({
+                    ...(drillSnap && drillSnap.exists() ? drillSnap.data() : {}),
+                    ...planData
+                });
                 showActiveDrill(_activeDrillData);
             } else {
                 setPracticeState('empty');
@@ -835,14 +845,25 @@ export function bindPracticeCaddyUI() {
      * Populates the UI with active drill data.
      * @param {Object} data - Drill data from Firestore.
      */
+    /**
+     * Shows the rating section only once every step is checked off.
+     */
+    const updateRatingVisibility = () => {
+        if (!ratingSection) return;
+        const total = _activeDrillData ? (_activeDrillData.steps || []).length : 0;
+        const done = _activeDrillData ? (_activeDrillData.completedSteps || []).length : 0;
+        ratingSection.classList.toggle('hidden', total === 0 || done < total);
+    };
+
     const showActiveDrill = (data) => {
         if (!data) return;
         setPracticeState('active');
-        const titleEl = document.getElementById('active-drill-title');
-        const descEl = document.getElementById('active-drill-desc');
-        if (titleEl) titleEl.textContent = data.title || "Your Custom Drill";
-        if (descEl) descEl.textContent = data.description || "Based on your recent performance.";
+        const categoryEl = document.getElementById('practice-category-badge');
+        const metricEl = document.getElementById('practice-target-metric');
+        if (categoryEl) categoryEl.textContent = data.category || 'General';
+        if (metricEl) metricEl.textContent = data.targetMetric || '—';
         renderPracticeSteps(data.steps, data.completedSteps, data.id);
+        updateRatingVisibility();
     };
 
     btnGenerate.addEventListener('click', async () => {
@@ -855,8 +876,10 @@ export function bindPracticeCaddyUI() {
 
         try {
             const generatePlan = httpsCallable(functions, 'generatePracticePlan');
+            // TODO(BL-3.05): personalisation inputs are never sent to the
+            // function — every plan uses the generic fallback. Separate PR.
             const result = await generatePlan({});
-            _activeDrillData = result.data;
+            _activeDrillData = normalizePracticePlan(result.data);
             showActiveDrill(_activeDrillData);
         } catch (err) {
             console.error('[Practice Caddy] Generation error:', err);
@@ -899,6 +922,7 @@ export function bindPracticeCaddyUI() {
                             _activeDrillData.completedSteps = _activeDrillData.completedSteps.filter(s => s !== stepIdx);
                         }
                         e.target.closest('.practice-step').classList.toggle('completed', isChecked);
+                        updateRatingVisibility();
                     }
                 } catch (err) {
                     console.error("[Practice Caddy] Step update fail:", err);
@@ -908,12 +932,12 @@ export function bindPracticeCaddyUI() {
         });
     }
 
-    if (btnArchive) {
-        btnArchive.addEventListener('click', async () => {
+    if (btnReset) {
+        btnReset.addEventListener('click', async () => {
             if (!_activeDrillData) return;
-            const btnText = btnArchive.textContent;
-            btnArchive.disabled = true;
-            btnArchive.textContent = 'Archiving...';
+            const btnText = btnReset.textContent;
+            btnReset.disabled = true;
+            btnReset.textContent = 'Archiving...';
             try {
                 const drillRef = doc(db, "users", AppState.currentUser.uid, "practice_plans", "active");
                 await updateDoc(drillRef, { status: 'completed' });
@@ -922,8 +946,40 @@ export function bindPracticeCaddyUI() {
             } catch (err) {
                 console.error("[Practice Caddy] Archive fail:", err);
             } finally {
-                btnArchive.disabled = false;
-                btnArchive.textContent = btnText;
+                btnReset.disabled = false;
+                btnReset.textContent = btnText;
+            }
+        });
+    }
+
+    if (starRow) {
+        starRow.addEventListener('click', (e) => {
+            const star = e.target.closest('.star-btn');
+            if (!star) return;
+            _selectedRating = parseInt(star.getAttribute('data-rating'));
+            starRow.querySelectorAll('.star-btn').forEach(btn => {
+                btn.style.opacity = parseInt(btn.getAttribute('data-rating')) <= _selectedRating ? '1' : '0.35';
+            });
+            if (btnSubmitRating) {
+                btnSubmitRating.disabled = false;
+                btnSubmitRating.style.opacity = '1';
+            }
+        });
+    }
+
+    if (btnSubmitRating) {
+        btnSubmitRating.addEventListener('click', async () => {
+            if (!_selectedRating || !AppState.currentUser) return;
+            btnSubmitRating.disabled = true;
+            try {
+                const drillRef = doc(db, "users", AppState.currentUser.uid, "practice_plans", "active");
+                await updateDoc(drillRef, { userRating: _selectedRating, status: 'completed' });
+                _activeDrillData = null;
+                _selectedRating = 0;
+                setPracticeState('empty');
+            } catch (err) {
+                console.error("[Practice Caddy] Rating submit fail:", err);
+                btnSubmitRating.disabled = false;
             }
         });
     }
