@@ -15,6 +15,8 @@ These rules are non-negotiable. If any constraint cannot be met, STOP and ask be
 - Use `mutateList(key, fn)` from `state.js` for all array/object mutations
 - Normaliser pattern: `normalizeRoundDoc`, `normalizeUserDoc`, `normalizePracticePlan` in `state.js` — all Firestore snapshot consumers must normalise before writing to `AppState`. Add new normalisers here when new document types are consumed.
 - `onStateChange(keys, handler)` filtered subscription wrapper is deferred (T3-onStateChange) — do not implement without explicit approval
+- Practice Session State: Must be fully serializable. `AppState.activePracticeSession` tracks active drill IDs, current step, configurations, and raw score inputs.
+- Offline Recovery: On application boot, check IndexedDB for uncommitted active practice sessions and re-hydrate State/UI seamlessly.
 
 ## Tooling
 - Runtime: Vanilla JS, Vite, Firebase (Auth, Firestore, Cloud Functions, Hosting)
