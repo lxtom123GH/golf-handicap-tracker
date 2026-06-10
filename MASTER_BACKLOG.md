@@ -12,6 +12,7 @@
 
 ## Completed — June 8 2026 Session
 
+- [x] BL-3.18 Manual Production Deployment Workflow — added `.github/workflows/deploy-production.yml` configured for `workflow_dispatch` to allow pushing to Firebase production directly from the GitHub UI (desktop or mobile) and added `runnpmbuild.md` for local testing instructions. PR merged via Jules.
 - [x] BL-3.01 CSS Duplicate Cleanup — resolved CSS-01, CSS-03, CSS-04, CSS-05. Duplicate `.hidden`, `.tabs-container`, `.tab-content`, and `body[data-active-tab]` blocks consolidated. PR merged via Jules.
 - [x] BL-3.02 Full Codebase Feature Audit — all ❓/⚠️ rows in `01_feature_map.md` resolved with file/line evidence. 9 new findings documented. Audit findings section appended to feature map.
 - [x] BL-3.03 Activity Feed Fan-Out Implementation — replaced broken cross-user `whs_rounds` query with write-time fan-out to `/feed` collection. `onRoundCreated`/`onRoundDeleted` Cloud Functions added (australia-southeast1), Firestore rules locked down, `loadFeed()` rewritten, composite index added, service worker bumped to v6.24.0. PR merged via Claude Code.
