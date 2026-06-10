@@ -10,4 +10,5 @@
 
 ## [2026-06-10] Manual Production Deployment Workflow
 **Status:** Sprint completed.
+- Added deploy-production.yml workflow to allow direct production deployments from the GitHub UI.
 - Added deploy-production.yml workflow.
