@@ -77,3 +77,10 @@ Claude Code cannot reliably manage this as a background process —
 treat the emulator as always-on infrastructure, not a step in a prompt.
 
 
+## Model Selection
+Default: Opus for all sessions.
+Switch to Sonnet only for purely mechanical single-file tasks
+(docs-only commits, single import additions, one-line fixes where
+the change is fully pre-specified).
+Rationale: Opus caught the app-v4.js N-copies-in-loop issue (BL-3.14)
+that Sonnet missed. Use the ceiling deliberately, not by default fallback.
