@@ -102,3 +102,14 @@ This feature recovery proved that local testing is blind to PWA caching issues. 
 ### 🛡️ The Silver Bullet (Fixes)
 1. **Synthesis Matrix:** Extracted and parsed timestamps and events from 7 independent lens passes (o1, Claude, Llama, GPT, Gemini, R1, and Master) to weave a single definitive timeline.
 2. **Definitive Documentation:** Generated a consolidated record directly at `docs/PIR_log_supermagic_charlie.md`, merging chronological insights with the specific E2E test failures they contextualize.
+
+## [2026-06-10] Manual Production Deployment Workflow
+**Status:** Secured
+
+### 👻 The Ghost (Issue)
+The user required a direct, manual method to deploy the application to the live production channel from any device (desktop or mobile) without relying on local CLI setups or PR merges.
+
+### 🛡️ The Silver Bullet (Fixes)
+1. **GitHub Actions `workflow_dispatch`:** Implemented `.github/workflows/deploy-production.yml` configured to trigger manually via the GitHub UI.
+2. **Direct Channel Targeting:** Configured the action to push directly to the `live` Firebase channel.
+3. **Local Testing Context:** Provided `runnpmbuild.md` with standalone instructions for compiling and locally serving the production build (`npx serve -s dist`) to allow mobile testing on the local network.
