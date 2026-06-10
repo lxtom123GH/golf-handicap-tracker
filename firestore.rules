@@ -104,14 +104,6 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
     }
 
-    // BL-3.12 / T1-A: temporary stopgap — client queries practice_plans at the
-    // root collection while the canonical rule lives at /users/{userId}/practice_plans.
-    // Remove once BL-3.05 DATA-02 repoints the query to the subcollection path.
-    match /practice_plans/{planId} {
-      allow read, write: if isAuthenticated()
-        && (request.auth.uid == resource.data.userId || isAdmin());
-    }
-
     // =========================================================================
     // 🏆 COMPETITIONS
     // =========================================================================
