@@ -7,6 +7,7 @@
 - [x] BL-2.04 Extract & Refactor Global Navigation into State-Driven Architecture
 - [x] BL-3.15 🟠 T2-B: Competing Visibility Authorities — CSS + `auth-v2.js`
 - [x] BL-3.16 Firestore document normalisation (normalizeRoundDoc / normalizeUserDoc)
+- [x] BL-3.17 SSRF allowlist for `generateAudioBriefing` plus Model Spy removal and error-message hygiene
 ---
 
 ## Completed — June 8 2026 Session
@@ -30,6 +31,14 @@
 - **Wiring:** `whs.js` `onSnapshot` → `normalizeRoundDoc({ id, ...doc.data() })`; `practice.js` `onSnapshot` (inside the BL-3.14 `mutateList` call) → `normalizeRoundDoc(...)`; `social.js` `getDocs` `snap.docs.map` → `normalizeUserDoc({ uid: d.id, ...d.data() })`. Existing `mutateList` calls and the Proxy set trap left untouched.
 - **Diff:** 44 insertions, 6 deletions across 4 files (`state.js` +38, three consumers ±2 each) — within the 100-line budget.
 - **Closes:** T2-C
+
+### BL-3.17 ✅ SSRF Vulnerability — `generateAudioBriefing` Fetches Client-Supplied URL Server-Side
+*Completed: 2026-06-09 · commit cad9ab0*
+- **Pattern:** `generateAudioBriefing` called `await fetch(audioUrl)` on a fully client-supplied URL with no validation, allowing an authenticated user to use the function as a server-side request proxy / internal-network probe / cost amplifier.
+- **Fix:** Added `STORAGE_URL_PREFIX` constant and a guard (parses `audioUrl`, requires `https:` and a `startsWith` match against the project's Storage bucket prefix) placed before the existing `try` block so `invalid-argument`/`permission-denied` codes reach the client undisturbed.
+- **Shipped alongside (same PR):** Model Spy removal (commit 84465c1) — deleted the per-call `ai.models.list()` enumeration in `generateAudioBriefing`, which added pure latency/log noise. Error-message hygiene (commit 3b7e5ec) — five client-facing `error.message`/`e.message` leaks across `askAiCoach`, `processRulesQuery`, `analyzeRoundStats`, `generateAudioBriefing`, and `generatePracticePlan` replaced with generic messages, `console.error`/`console.warn` logging preserved.
+- **Follow-up (not implemented):** robust fix is to accept a Storage object path + uid and have the function build a signed read URL via the Admin SDK, removing the arbitrary-fetch primitive — requires an `oncourse.js` client change.
+- **Closes:** BL-3.17
 
 
 ---
@@ -62,12 +71,6 @@ UI offers "Snap" vibe option but `buildTone()` in `tempo.js` has no matching `ca
 ### BL-3.09 🟢 Dead Code Cleanup — stateChange Listener
 `case 'handicapIndex':` in the `stateChange` listener in `ui.js` has code placed after its own `break` statement — unreachable. Likely a half-finished edit from the rogue agent session.
 - **Tool:** Jules (two-line delete, mechanical)
-
-### BL-3.17 🔴 SSRF Vulnerability — `generateAudioBriefing` Fetches Client-Supplied URL Server-Side
-`generateAudioBriefing` (`functions/index.js:152`) calls `await fetch(audioUrl)` where `audioUrl` comes directly from `request.data` with no validation. An authenticated user can point the function at arbitrary URLs (internal metadata endpoints, other tenants' signed URLs, etc.).
-- **Fix:** Validate `audioUrl` is within the project's Storage bucket before fetching (prefix-check against `https://firebasestorage.googleapis.com/...golf-handicap-tracker-b677c...`). ~5 lines.
-- **Priority:** Security — fix before production.
-- **Tool:** Claude Code
 
 ---
 
