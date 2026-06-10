@@ -11,6 +11,7 @@ admin.initializeApp();
 
 const REGION = "australia-southeast1";
 const MODEL_NAME = "gemini-2.5-flash";
+const STORAGE_URL_PREFIX = "https://firebasestorage.googleapis.com/v0/b/golf-handicap-tracker-b677c.firebasestorage.app/o/";
 
 // ==========================================
 // Helper: Initialise AI client
@@ -39,7 +40,7 @@ exports.askAiCoach = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, asy
         return { answer: response.text };
     } catch (e) {
         console.error("[AI Coach] Error:", e);
-        throw new HttpsError('internal', e.message);
+        throw new HttpsError('internal', 'AI request failed. Please try again.');
     }
 });
 
@@ -64,7 +65,7 @@ exports.processRulesQuery = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"]
         return { answer: response.text };
     } catch (error) {
         console.error("Rules Engine Error:", error);
-        return { answer: "AI Error: " + error.message };
+        return { answer: "Sorry — the rules assistant is unavailable right now." };
     }
 });
 
@@ -116,7 +117,7 @@ Warm, direct, and strategically sharp. Think: a caddie who also plays D&D. No co
         return { answer: response.text };
     } catch (error) {
         console.error("Coach Engine Error:", error);
-        return { answer: "Coach Error: " + error.message };
+        return { answer: "Sorry — the coach is unavailable right now." };
     }
 });
 
@@ -133,18 +134,18 @@ exports.generateAudioBriefing = onCall({ region: REGION, secrets: ["GEMINI_API_K
     const { audioUrl } = request.data;
     if (!audioUrl) throw new HttpsError('invalid-argument', 'No audioUrl provided.');
 
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(audioUrl);
+    } catch {
+        throw new HttpsError('invalid-argument', 'audioUrl is not a valid URL.');
+    }
+    if (parsedUrl.protocol !== 'https:' || !audioUrl.startsWith(STORAGE_URL_PREFIX)) {
+        throw new HttpsError('permission-denied', 'audioUrl must be a project Storage URL.');
+    }
+
     try {
         const ai = getAiClient();
-
-        // Model Spy — prints available models so we can diagnose issues in Cloud Logs
-        try {
-            const models = await ai.models.list();
-            const modelNames = [];
-            for await (const m of models) { modelNames.push(m.name); }
-            console.log("[Model Spy] Available models:", modelNames.join(", "));
-        } catch (spyErr) {
-            console.warn("[Model Spy] Could not list models:", spyErr.message);
-        }
 
         console.log(`[Audio AI] Using model: ${MODEL_NAME}`);
 
@@ -212,7 +213,7 @@ If the audio is silent, too short, or contains no golf-related content, return:
 
     } catch (error) {
         console.error("[Audio Briefing] Fatal Error:", error);
-        throw new HttpsError('internal', error.message || "Failed to generate briefing.");
+        throw new HttpsError('internal', 'Failed to generate briefing. Please try again.');
     }
 });
 
@@ -370,7 +371,7 @@ Return ONLY a valid JSON object with no markdown fences:
 
     } catch (error) {
         console.error("[Practice Caddy] Fatal Error:", error);
-        throw new HttpsError('internal', error.message || "Failed to generate practice plan.");
+        throw new HttpsError('internal', 'Failed to generate practice plan. Please try again.');
     }
 });
 

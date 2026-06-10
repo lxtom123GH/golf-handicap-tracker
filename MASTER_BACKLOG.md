@@ -7,6 +7,7 @@
 - [x] BL-2.04 Extract & Refactor Global Navigation into State-Driven Architecture
 - [x] BL-3.15 🟠 T2-B: Competing Visibility Authorities — CSS + `auth-v2.js`
 - [x] BL-3.16 Firestore document normalisation (normalizeRoundDoc / normalizeUserDoc)
+- [x] BL-3.17 SSRF allowlist for `generateAudioBriefing` plus Model Spy removal and error-message hygiene
 ---
 
 ## Completed — June 8 2026 Session
@@ -31,21 +32,6 @@
 - **Diff:** 44 insertions, 6 deletions across 4 files (`state.js` +38, three consumers ±2 each) — within the 100-line budget.
 - **Closes:** T2-C
 
-### BL-3.08 ✅ Tempo "Snap" Vibe — Add Missing buildTone() Case
-*Completed: 2026-06-10 · commits bfc8b51, 42ac23d*
-- UI offers "Snap" vibe option but `buildTone()` in `tempo.js` had no matching `case`. Silently fell through to default oscillator.
-- `bfc8b51` (Jules) added the missing branch but as a short pitched sine blip; `42ac23d` replaced it with a percussive high-frequency triangle (2000/2800 Hz, 5ms attack, full decay by 70ms) to meet the crisp-click design goal.
-
-### BL-3.09 ✅ Dead Code Cleanup — stateChange Listener
-*Completed: 2026-06-08 · commit bfc8b51*
-- `case 'handicapIndex':` in the `stateChange` listener in `ui.js` had code placed after its own `break` statement — unreachable. Removed by `bfc8b51` (Jules); verified absent on current main.
-
-### BL-3.13 ✅ T1-B: Audio Timer Leak — `endRoundCleanup` Never Calls `stopAudioTimer`
-*Completed: 2026-06-08 · commit aba4185*
-- **Pattern:** `audioTimerInterval` (1-second tick firing `updateAudioUI`) was only ever cleared by the manual stop-recording toggle. If a round ended or aborted while audio diary was recording, the interval ran indefinitely.
-- **Fix:** `stopAudioTimer();` added as the first line of `endRoundCleanup()` (`oncourse.js:100`) by `aba4185`. Safe no-op when no timer is running — verified present on current main.
-- **Closes:** T1-B
-
 ---
 
 ## Active Tasks
@@ -68,12 +54,6 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 ### BL-3.07 🟡 Competition Invite Players — Wire Dead UI
 `#comp-invite-container`/`#comp-invite-list` markup exists with no JS binding. `invitedUIDs` is queried but never written. The `array-contains` branch of the Firestore query and security rule can never be satisfied through the UI.
 - **Tool:** Claude Code (needs to wire event handlers + write invitedUIDs on competition create)
-
-### BL-3.17 🔴 SSRF Vulnerability — `generateAudioBriefing` Fetches Client-Supplied URL Server-Side
-`generateAudioBriefing` (`functions/index.js:152`) calls `await fetch(audioUrl)` where `audioUrl` comes directly from `request.data` with no validation. An authenticated user can point the function at arbitrary URLs (internal metadata endpoints, other tenants' signed URLs, etc.).
-- **Fix:** Validate `audioUrl` is within the project's Storage bucket before fetching (prefix-check against `https://firebasestorage.googleapis.com/...golf-handicap-tracker-b677c...`). ~5 lines.
-- **Priority:** Security — fix before production.
-- **Tool:** Claude Code
 
 ---
 
