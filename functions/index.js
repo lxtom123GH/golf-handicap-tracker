@@ -147,16 +147,6 @@ exports.generateAudioBriefing = onCall({ region: REGION, secrets: ["GEMINI_API_K
     try {
         const ai = getAiClient();
 
-        // Model Spy — prints available models so we can diagnose issues in Cloud Logs
-        try {
-            const models = await ai.models.list();
-            const modelNames = [];
-            for await (const m of models) { modelNames.push(m.name); }
-            console.log("[Model Spy] Available models:", modelNames.join(", "));
-        } catch (spyErr) {
-            console.warn("[Model Spy] Could not list models:", spyErr.message);
-        }
-
         console.log(`[Audio AI] Using model: ${MODEL_NAME}`);
 
         // 1. Fetch file from Storage
