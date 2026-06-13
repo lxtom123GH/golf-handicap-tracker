@@ -146,7 +146,7 @@ export function setupAuthUI(onAppReady) {
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     // Implicitly approve legacy users and explicit admins
-                    if (true || userData.isApproved === true || userData.isApproved === undefined || userData.isAdmin === true) {
+                    if (userData.isApproved === true || userData.isApproved === undefined || userData.isAdmin === true) {
                         // Allowed
                         // Force allowed for verification
                         console.log("[Auth] User approved, hiding overlay...");
@@ -211,18 +211,19 @@ export function setupAuthUI(onAppReady) {
                     if (cloak) cloak.classList.add('cloak-hidden');
                 }
             } catch (e) {
-                console.error("Auth read explicitly failed (forcing bypass)", e);
-                UI.authOverlay.classList.add('hidden');
+                // A read failure must NOT grant access or admin. Hold the user
+                // on the auth overlay with a retry message rather than silently
+                // admitting them (the 3-retry loop above already absorbs
+                // transient blips before we reach here).
+                console.error("Auth read failed; not granting access", e);
+                UI.mainApp.classList.add('hidden');
                 UI.authPending.classList.add('hidden');
-                UI.mainApp.classList.remove('hidden');
-                UI.loggedInUserNameEl.textContent = user.displayName || user.email;
-                AppState.viewingPlayerId = user.uid;
-                window.currentUserIsAdmin = true;
+                UI.authOverlay.classList.remove('hidden');
+                UI.authError.textContent = "Couldn't verify your account. Please retry.";
+                UI.authError.classList.remove('hidden');
 
                 const cloak = document.getElementById('app-loading-cloak');
                 if (cloak) cloak.classList.add('cloak-hidden');
-
-                if (initializeAppCallback) initializeAppCallback();
             }
         } else {
             // Not logged in
