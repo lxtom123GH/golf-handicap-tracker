@@ -5,25 +5,37 @@
 
 ## Current Test Inventory
 
+*Corrected 2026-06-13 (NIGHT2): `tests/unit/` contains **only** `whs.test.js`. The previously-listed six `tests/unit/*` rows were phantom — those files live at `tests/` root and are Playwright browser (E2E) tests, except `oncourse.test.js` (a Vitest unit test orphaned at `tests/` root, run by no script). See `docs/05_unit_test_audit.md` for the authoritative file-by-file status.*
+
 ### Test Files
-| File | Location | Type | Current State |
+| File | Location | Type | Current State (NIGHT2) |
 |---|---|---|---|
-| `app.spec.js` | `tests/` | E2E | ⚠️ Basic only — auth overlay check |
-| `round_flow.spec.js` | `tests/` | E2E | 🔴 Skips auth, incomplete |
-| `live_audit.spec.js` | `tests/e2e/` | E2E (PROD) | 🔴 Hits live app — never run in CI |
-| `quota-guards.spec.js` | `tests/` | E2E | ✅ Fixed this session |
-| `logic-boundaries.spec.js` | `tests/` | E2E | 🔴 3 of 5 tests empty/skipped |
-| `ui-ergonomics.spec.js` | `tests/` | E2E | ⚠️ 1 of 4 tests skipped |
-| `whs.test.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `async-coach.spec.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `logic-boundaries.spec.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `oncourse.test.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `security-rbac.spec.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `ui-ergonomics.spec.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `ux-bag-management.spec.js` | `tests/unit/` | Unit | ❓ Not audited |
-| `firestore.test.js` | `tests/rules/` | Rules | ❓ Not audited |
+| `whs.test.js` | `tests/unit/` | Unit | ✅ VALID (only schema-faithful unit file; mocks inert — T5). Runs green: 7/7 (2026-06-13) |
+| `firestore.test.js` | `tests/rules/` | Rules | 🔴 BROKEN — 2 of 3 fail when run (lines 44, 75-81); confirmed red 2026-06-13 |
+| `quota-guards.spec.js` | `tests/` | E2E | ✅ Reference standard (FP-05 title caveat) |
+| `logic-boundaries.spec.js` | `tests/` | E2E | 🔴 empty bodies pass green (T8/TEST-01) |
+| `ui-ergonomics.spec.js` | `tests/` | E2E | ⚠️ touch-target test fails on hidden setup panel (2026-06-13) |
+| `async-coach.spec.js` | `tests/` | E2E | 🔴 THEATRICAL — `expect(true)` (AUDIT-02/FP-06) |
+| `security-rbac.spec.js` | `tests/` | E2E | 🔴 THEATRICAL — both tests (T3/T4) |
+| `ux-bag-management.spec.js` | `tests/` | E2E | 🔴 THEATRICAL — runtime `test.fixme()` aborts (T6) |
+| `oncourse.test.js` | `tests/` | Unit (orphaned) | 🔴 run by no script (T1); shallow/tautological |
+| `app.spec.js` | `tests/e2e/` | E2E | ⚠️ not in `testMatch` — dormant |
+| `round_flow.spec.js` | `tests/e2e/` | E2E | 🔴 BROKEN & never executed (T9) |
+| `live_audit.spec.js` | `tests/e2e/` | E2E (PROD) | 🔴 hits live app + committed creds — not in `testMatch` |
 
 ---
+
+## Test Harness — What Actually Runs
+*Added 2026-06-13 (NIGHT2 Part 0).*
+
+| Runner | Command | Picks up | Misses |
+|---|---|---|---|
+| Vitest (unit) | `npm run test:unit` / `npm test` → `vitest run tests/unit` | `tests/unit/whs.test.js` only | `tests/oncourse.test.js` (orphaned) |
+| Vitest (rules) | `npm run test:rules` → `emulators:exec --only firestore "vitest run tests/rules"` | `tests/rules/firestore.test.js` | — |
+| Playwright | `npm run test:e2e` → `playwright test` (`testMatch` allowlist) | `logic-boundaries`, `quota-guards`, `security-rbac`, `async-coach`, `ux-bag-management`, `ui-ergonomics` (all `tests/` root) | **all of `tests/e2e/*`** — `app`, `round_flow`, `live_audit` are dormant (the last by design, the first two by accident) |
+
+- **2026-06-13 e2e baseline:** 14 tests → 10 passed / 3 failed / 1 skipped. The 3 failures (logic-boundaries Time-Travel, quota-guards Double-Tap, ui-ergonomics touch-target) match the BL-3.15 "3 pre-existing failures" note.
+- **Hazard:** a bare `npx vitest run` would also collect the six Playwright `*.spec.js` files (vitest.config.js excludes only node_modules/dist/tests/e2e) and crash on `@playwright/test` imports. Recommend an explicit `include: ['tests/unit/**', 'tests/rules/**']` in `vitest.config.js`.
 
 ## Test Tier Strategy
 
@@ -36,13 +48,16 @@ Tests should be organised into three tiers with different run triggers.
 - Pure JavaScript logic (WHS handicap calculations, scoring algorithms)
 - State management functions
 - Utility functions (date validation, score validation)
-- Firebase security rules (`firestore.test.js`)
+- **Static contract suite** (proposed — BL-4.00): jsdom-parse `index.html` for unique ids; JS-referenced ids ⊆ HTML ids ∪ allowlist; `getFunctions(` only in firebase-config.js; no `if (true ||` in src. No emulator.
 
-**Current files that likely belong here:**
-- `tests/unit/whs.test.js`
-- `tests/unit/logic-boundaries.spec.js`
-- `tests/unit/security-rbac.spec.js`
-- `tests/rules/firestore.test.js`
+**Current files that belong here:**
+- `tests/unit/whs.test.js` (the only real Tier 1 file today)
+- *(removed 2026-06-13: `tests/unit/logic-boundaries.spec.js` and `tests/unit/security-rbac.spec.js` were phantom paths — the real files are browser E2E tests at `tests/` root)*
+
+### Tier 1R — Rules Tests (Fast, Emulator-Required, Run on Every PR)
+**Run on:** Every PR via `npm run test:rules` (`emulators:exec --only firestore`).
+**Why a separate lane:** `tests/rules/firestore.test.js` is fast and deterministic like Tier 1 but **requires a running emulator**, which contradicts Tier 1's "every save locally, no infra" contract. Moved out of Tier 1 (2026-06-13).
+**Status:** statically red and confirmed red when run 2026-06-13 — 2 of 3 fail (unfiltered collection `get()` at line 44 is denied by per-doc rules; the `adjustedGross:500` create at lines 75-81 is allowed because no validation rule exists). Covers 1 of 15 rule surfaces.
 
 ### Tier 2 — Integration Tests (Medium, Run on PR)
 **Run on:** Pull requests to main, manual trigger
@@ -79,7 +94,7 @@ Tests should be organised into three tiers with different run triggers.
 **Tests:**
 - Double-Tap: 5 rapid clicks produce ≤1 API request ✅
 - Cache Hit: Active practice plan doesn't trigger new request ✅
-**Notes:** Cleanup hooks added this session. `{ force: true }` on rapid-click loop is intentional and acceptable — simulating forced rapid clicks to test the `isGeneratingPlan` guard.
+**Notes:** ⚠️ *Corrected 2026-06-13 (NIGHT3/TEST-03): the "cleanup hooks added this session" claim is false — the file contains no `afterEach`/cleanup, and the cited `tests/utils/clear-emulator.js` / `tests/firebase-admin-setup.js` exist on no ref. Claimed work never committed.* `{ force: true }` on the rapid-click loop is intentional and acceptable — simulating forced rapid clicks to test the `isGeneratingPlan` guard. Its Cache-Hit test asserts inside an `if (visible)` guard — vacuous on the empty-state path.
 
 ---
 
@@ -204,6 +219,8 @@ All Tier 2 tests should use the established pattern:
 const testEmail = `test-worker-${testInfo.workerIndex}@example.com`;
 ```
 This prevents worker collisions in parallel test runs.
+
+**Localhost role backdoor (documented 2026-06-13 — NIGHT2):** on localhost, registration grants roles by **email keyword** — an address containing `admin` is created with `isAdmin: true`, one containing `coach` with the coach role (auth-v2.js:71-73). This is the sanctioned way tests obtain elevated roles, and three suites already rely on it silently (`security-rbac`, `async-coach`). Tests needing a plain player must avoid those keywords. Note: if BL-4.07 removes the auth debug bypass/backdoor, every `beforeEach` depending on it silently demotes to an unapproved standard user — update those tests in the same brief.
 
 ### Data Cleanup Pattern
 All tests that write to Firestore must use `beforeEach` + `afterEach` cleanup:
