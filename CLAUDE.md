@@ -84,7 +84,8 @@ Claude Code cannot reliably manage this as a background process —
 treat the emulator as always-on infrastructure, not a step in a prompt.
 
 ## Model Selection
-Default: Fable for complex multi-file tasks and architectural work.
-Fallback: Opus for security-adjacent work (Fable routes these to Opus automatically).
+Default: Opus for complex multi-file tasks and architectural work.
 Sonnet: Only for purely mechanical single-file tasks (docs-only commits, single import additions, one-line fixes where the change is fully pre-specified).
 Haiku: Not recommended for this codebase — architectural context is too dense.
+Note: Fable and Mythos (Mythos-class) were withdrawn 2026-06-12 by US government
+export-control directive; no restoration date. Opus is the standing default in their absence.
