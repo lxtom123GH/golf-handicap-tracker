@@ -3,9 +3,9 @@
 // AI Coach — Live Gemini Integration
 // ==========================================
 
-import { db } from './firebase-config.js';
+import { db, functions } from './firebase-config.js';
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { UI } from './ui.js';
 import { AppState } from './state.js';
 
@@ -230,7 +230,6 @@ export async function generateAIResponse(uid, role) {
             prompt += `Generate a 60-minute lesson plan with:\n1. The single biggest leak identified from the data (cite exactly why)\n2. Three blocks: Warm-up/Discovery (10 min), Skill Acquisition (35 min), Pressure Testing (15 min)\n3. 2–3 discovery questions to ask the student at the start\n4. Specific drills for each block with constraints\n\nFormat with clear Markdown headers. Be concise and practical.`;
         }
 
-        const functions = getFunctions();
         const askAiCoach = httpsCallable(functions, 'askAiCoach');
 
         const response = await askAiCoach({ prompt: prompt });
