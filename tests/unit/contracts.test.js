@@ -247,3 +247,32 @@ describe('contract (d): no forced-true gates (`if (true ||`) in src/', () => {
         ).toEqual([]);
     });
 });
+
+// --------------------------------------------------------------------------
+// (e) No catch-path admin grant — no `currentUserIsAdmin = true` literal in
+//     src/. The dynamic counterpart to (d): BL-4.07's catch block used to set
+//     window.currentUserIsAdmin = true on a failed users/{uid} read, silently
+//     granting admin UI on a transient Firestore error. A read failure must
+//     never grant admin, so no source may hard-assign the flag to true.
+//     (Role-derived assignments like `= userData.isAdmin || false` are fine.)
+//     Goes GREEN with BL-4.07; stays the regression guard thereafter.
+// --------------------------------------------------------------------------
+describe('contract (e): no `currentUserIsAdmin = true` grant in src/', () => {
+    it('no src/ file hard-assigns currentUserIsAdmin to true', () => {
+        const re = /currentUserIsAdmin\s*=\s*true\b/g;
+        const offenders = [];
+        for (const file of SRC_FILES) {
+            const content = fs.readFileSync(file, 'utf8');
+            re.lastIndex = 0;
+            let m;
+            while ((m = re.exec(content)) !== null) {
+                offenders.push(`${rel(file)}:${lineOf(content, m.index)}`);
+            }
+        }
+
+        expect(
+            offenders,
+            `Hard admin grant(s) found (currentUserIsAdmin = true — must derive from the user doc):\n  ${offenders.join('\n  ')}`
+        ).toEqual([]);
+    });
+});
