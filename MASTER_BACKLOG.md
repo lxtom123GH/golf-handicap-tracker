@@ -17,7 +17,7 @@
 - [x] BL-3.02 Full Codebase Feature Audit — all ❓/⚠️ rows in `01_feature_map.md` resolved with file/line evidence. 9 new findings documented. Audit findings section appended to feature map.
 - [x] BL-3.03 Activity Feed Fan-Out Implementation — replaced broken cross-user `whs_rounds` query with write-time fan-out to `/feed` collection. `onRoundCreated`/`onRoundDeleted` Cloud Functions added (australia-southeast1), Firestore rules locked down, `loadFeed()` rewritten, composite index added, service worker bumped to v6.24.0. PR merged via Claude Code.
 - [x] BL-3.04 Repository Archive Cleanup — 50+ stale non-production files moved to `_ARCHIVE/` with `INDEX.md`. `MASTER_BACKLOG.md` and `PIR_LOG.md` preserved at root. PR merged via Jules.
-- [x] BL-3.10 Supermagic Adversarial Audit — 12-ledger, 6-lens adversarial synthesis completed. Tiered Master Synthesis produced. Methodology critique adopted: correlated model bias identified, line-number fragility documented, static-vs-dynamic analysis gap formalised. False Positive Registry (FP-01 through FP-10) established as permanent appendix. See `docs/PIR_log_supermagic_charlie.md` and `docs/TIERED_MASTER_SYNTHESIS.md`.
+- [x] BL-3.10 Supermagic Adversarial Audit — 12-ledger, 6-lens adversarial synthesis completed. Tiered Master Synthesis produced. Methodology critique adopted: correlated model bias identified, line-number fragility documented, static-vs-dynamic analysis gap formalised. False Positive Registry (FP-01 through FP-10) established as permanent appendix. See `docs/PIR_log_supermagic_charlie.md`. *(Note 2026-06-13, NIGHT3 Part 4: the previously-cited `docs/TIERED_MASTER_SYNTHESIS.md` was never committed on any ref — reference lost; `PIR_log_supermagic_charlie.md` is the surviving record.)*
 
 ### BL-3.15 ✅ T2-B: Competing Visibility Authorities — CSS + `auth-v2.js`
 *Completed: 2026-06-09 · B2 commit 225b98c · B1 commit f535c6d*
@@ -46,20 +46,24 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 - **Root defect confirmed (overnight review 2026-06-09) — SOLE REMAINING SUB-TASK:** client never populates the personalisation input block when calling the Cloud Function — every plan is the generic fallback. `// TODO(BL-3.05)` marker left at the `generatePlan({})` call site in `ui.js`. Separate future PR.
 - **Tool:** Claude Code (complex, multi-file, needs emulator test loop)
 
-### BL-3.06 🔴 Coach Assign Drill — Add Missing Security Rule
-`bindCoachDashboard()` (`coach.js` L128-151) writes to `users/{uid}/assignedDrills` but `firestore.rules` has no matching `match` block. Every write is currently rejected with `permission-denied`.
-- **Fix:** Add rule allowing coach to write, player to read/update `completed` status
-- **Can be batched with BL-3.11** — both are isolated `firestore.rules` additions, combined diff stays well under 150 lines
-- **Tool:** Claude Code (one rule block, needs rules context)
+### BL-3.06 🟡 Coach Assign Drill — Client Read Path + Rules-Test Coverage (RE-SCOPED)
+**Re-scoped 2026-06-13 (NIGHT3 Part 4 / Part 5):** the original premise is stale. The `assignedDrills` security rule **already exists** at `firestore.rules:48-56` (coach/admin write; player update limited to the `completed` field) — merged via `feature/assigned-drills-rules`. The `permission-denied` write failure is no longer the gap.
+- **Remaining scope:** (1) the client **read path** — `users/{uid}/assignedDrills` is written (coach.js:137-143) but read by nothing, so players never see assigned drills and `notif-drill-assign` can never fire (NIGHT1 N22). (2) **rules-test coverage** for `isCoachOf`/`assignedDrills` — currently zero (NIGHT2 tests-to-write item 12).
+- **Tool:** Claude Code (read path = feature work; rules tests in the `tests/rules` lane)
 
 ### BL-3.07 🟡 Competition Invite Players — Wire Dead UI
 `#comp-invite-container`/`#comp-invite-list` markup exists with no JS binding. `invitedUIDs` is queried but never written. The `array-contains` branch of the Firestore query and security rule can never be satisfied through the UI.
 - **Tool:** Claude Code (needs to wire event handlers + write invitedUIDs on competition create)
 
+### BL-3.08 🟢 Tempo "Snap" Vibe — REOPENED (still silently broken)
+**Reopened 2026-06-13 (NIGHT3 R4).** Marked complete (commits `bfc8b51`, `42ac23d`) but the user-facing bug persists: `buildTone()` has a real `'snap'` branch (tempo.js:62-68), yet the `<option>` labelled "Snap" emits `value="snare"` (index.html:2166), which matches no branch and falls through to the default 800 Hz sine. Both prior fixes patched the code half of a two-sided mismatch; the HTML half was **never committed on any ref**.
+- **Fix direction (do NOT apply here — docs session):** change `value="snare"` → `value="snap"` at index.html:2166 (or alias both in `buildTone`). One word.
+- **Tool:** Jules / single-line fix
+
 ---
 
 ## Supermagic Audit — Tiered Remediation Backlog
-*Sourced from the 12-ledger adversarial synthesis completed 2026-06-08. Line numbers are orientation references against the audit-time tree — verify against current HEAD before each execution step. Full mechanistic descriptions and dynamic verification protocols in `docs/TIERED_MASTER_SYNTHESIS.md`.*
+*Sourced from the 12-ledger adversarial synthesis completed 2026-06-08. Line numbers are orientation references against the audit-time tree — verify against current HEAD before each execution step. (The full-mechanism companion `docs/TIERED_MASTER_SYNTHESIS.md` was never committed on any ref — NIGHT3 Part 4; surviving record is `docs/PIR_log_supermagic_charlie.md`.)*
 
 ### BL-3.11 🔴 PREREQUISITE: Create `CLAUDE.md` — Project Architectural Contract
 *Must exist before any Claude Code CLI session is started. Prevents every future session from re-discovering retired findings or violating the Sydney Protocol.*
@@ -77,6 +81,11 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 - **Tool:** Claude Code
 - **Closes:** T1-A
 
+### BL-3.13 ✅ Audio Briefing Timer Leak Patch
+*Completed: 2026-06-09 · commit aba4185 (bundled with BL-3.12) · docs `4e54f3c`*
+- **Restored 2026-06-13 (NIGHT3 Part 4):** this entry was missing from the backlog though completion is claimed in CLAUDE.md and the `4e54f3c` docs commit. Confirmed on main: `aba4185` ("patch audio timer leak", oncourse.js +1) is an ancestor of HEAD.
+- **Pattern:** uncancelled audio `setTimeout` handle. Note the broader `T3-setTimeout` (oncourse.js:724,727,1519; notifications.js:53) remains deferred — BL-3.13 patched only the single audio-briefing timer.
+
 ### BL-3.14 ✅ T2-A: `mutateList` Primitive + Proxy Consumer Migration
 *Completed: 2026-06-09 · Phase 1 commit 20ea34c · Phase 2 commit a7b70b5*
 - **Pattern:** `AppState` Proxy `set` trap fires on reference change only (`oldValue !== value`). In-place mutations — `.push()`, `.splice()`, and nested object key writes (`obj[k] = v`) — keep the same reference, so `stateChange` is never dispatched. Engineers stopped trusting the reactive layer for arrays and built a parallel imperative layer instead; this is why the `classList`/`style.display` sprawl exists at scale.
@@ -89,6 +98,41 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 - **Closes:** T2-A
 
 ---
+
+## BL-4.x — Audit Remediation Backlog (NIGHT1–NIGHT3)
+*Added 2026-06-13. NIGHT1 proposed these as BL-3.18–BL-3.32, but BL-3.18 is already taken by the merged Manual Deployment Workflow (NIGHT3 R10 numbering collision). Renumbered to the BL-4.x series. Severity per NIGHT1 tiers (P1 broken / P2 silent no-op / P3 hygiene). "Ships with" = NIGHT2 tests-to-write item #. Line numbers are audit-time orientation — re-verify at HEAD.*
+
+**Renumber map (NIGHT1 proposed → BL-4.x):**
+
+| Old | New | Old | New | Old | New |
+|---|---|---|---|---|---|
+| BL-3.18 | BL-4.01 | BL-3.23 | BL-4.06 | BL-3.28 | BL-4.11 |
+| BL-3.19 | BL-4.02 | BL-3.24 | BL-4.07 | BL-3.29 | BL-4.12 |
+| BL-3.20 | BL-4.03 | BL-3.25 | BL-4.08 | BL-3.30 | BL-4.13 |
+| BL-3.21 | BL-4.04 | BL-3.26 | BL-4.09 | BL-3.31 | BL-4.14 |
+| BL-3.22 | BL-4.05 | BL-3.27 | BL-4.10 | BL-3.32 | BL-4.15 |
+
+**Entries:**
+
+| ID | Sev | Title | Bundles (NIGHT1) | Ships with (NIGHT2) |
+|---|---|---|---|---|
+| **BL-4.00** | — | **Static contract suite (FIRST — ship before any BL-4.x fix):** unique HTML ids; JS-referenced ids ⊆ HTML ids ∪ allowlist; `getFunctions(` only in firebase-config.js; no `if (true \|\|` in src | catches F5, F6, F7, F8-root, F10-tripwire, F1-root | item 1 |
+| BL-4.01 | P1 | WHS data-integrity cluster: live-round rating/slope/par constants; HI `.textContent`; notCounting passthrough; dead Exclude/Delete; fir/fwy save key | F1, F2, F3, F4, N17 | items 2,3,4,5 |
+| BL-4.02 | P1/P2 | On-Course setup rewiring: populate `oc-stat-*`/`oc-dh-*`; restore manual CR/SR/Par/DH; custom-course flow; fix dead `.active` alert gate | N2, F11, F1-root | items 3,6 |
+| BL-4.03 | P1 | Resolve duplicate `id="tab-practice"` — merge/retire legacy Practice Drills screen (product decision) | F5, N18 | item 1 |
+| BL-4.04 | P1 | Comp logging repair: dynamic rule inputs; live-round `totalPoints`; comp-empty-state; del-comp-round handler; starting-points display. **Folds NIGHT3 R-LIVE-1** (rule-less `competition_results` write at oncourse.js:1148 runs before `comp_rounds` in one try → denial aborts BOTH writes; drop the write or add a rule, write `comp_rounds` first) | F8, F9, N9, N10, N11, **R-LIVE-1** | items 7,8 |
+| BL-4.05 | P1 | Coach linkage unification: `coaches[]` vs `coachUid`; Add-Coach input ID (F6); HI source; assignedDrills read path (see BL-3.06) | F6, N22, coach-HI | items 9,12,14 |
+| BL-4.06 | P1 | Pin `askAiCoach` to the shared Sydney Functions instance | F7 | item 1 |
+| BL-4.07 | P1 | Remove auth debug bypasses (`if (true \|\|`, catch-path admin grant) — security sign-off | F10 | items 10,12 |
+| BL-4.08 | P1 | Shots schema reconciliation: `line/curve` vs `startLine/shape`; `outcome:'Green'` GIR; `isOffGreen` setter; simpleStats sourcing | F12, N4, N5, N15 | item 11 |
+| BL-4.09 | P2 | Feed differential: compute `handicapDifferential` at fan-out (after BL-4.01) or drop column | N6 | — |
+| BL-4.10 | P2 | Notifications: wire `triggerLocalNotif` honouring saved prefs, or descope settings panel | N7 | item 14 |
+| BL-4.11 | P2 | Legacy `.active`-class remnants: telemetry active-tab check + event-binders alert gate | N8, F11-part | item 6 |
+| BL-4.12 | P2 | Comp archive/delete: implement or strip dead UI (incl. delete-comp modal) | N1 | — |
+| BL-4.13 | P3 | Hygiene sweep: dead cache keys, whs.js render dups, admin template, `temp-submit-register`, `btn-sync-rounds`, `oc-hole-dots`, `oc-progress-bar` (+dead CSS), ai.js double-bind, mainApp dup key, normaliser realignment + `normalizePracticeRound`, `competition_results` write-only, `!important` (×44 — NIGHT3 H3), app-version, **NIGHT3 H22 dead CSS tab selectors, H23 sw.js version string, H24 package.json `main`, H25 unused tempo rule, H26 empty graveyard dir**. *Note: NIGHT1 H14 was INVALID (NIGHT3 R8) — exclude.* | H1–H21 (−H14) + NIGHT3 H22–H26 | items 13,15 |
+| BL-4.14 | P2 | Mid-round review scorecard: restore `btn-oc-review-round` trigger or delete unreachable feature + modal | N3 | — |
+| BL-4.15 | P2 | State-contract: route `liveRoundGroups` score/stat writes through `mutateList` so persistence auto-save fires | H21 | — |
+| **BL-4.16** | P2 | **Surveyor persistence — DECIDE (NIGHT3 R-LIVE-2):** pin save is triple-broken (no `courses` rule → denied; `updateDoc` on docs nothing creates; zero readers — `surveyData` only read from AppState) while UI alerts "Pin saved successfully!". Descope to local-only (XS) or build the feature (rule + `setDoc merge` + boot read, M) | R-LIVE-2 | — |
 
 ## Deferred / Future
 

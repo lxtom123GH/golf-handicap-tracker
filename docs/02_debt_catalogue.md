@@ -51,14 +51,8 @@
 **Why it matters:** Path changes require manual find-and-replace across files. Jules missed paths during the March 2026 migration. DATA-02 is a direct consequence.
 **Fix:** Create `src/services/firestore-paths.js` and `functions/firestore-paths.js`. All path strings imported from these files only.
 
-### [DATA-02] 🔴 Stale path references in `bindPracticeCaddyUI()`
-**What:** Confirmed by June 2026 audit. Exactly 3 live references to root-level `practice_plans` remain in `src/ui.js`:
-- `src/ui.js:825` — `loadActivePlan()` queries wrong root-level `practice_plans` collection
-- `src/ui.js:894` — drill-step checkbox handler writes to wrong root-level path
-- `src/ui.js:929` — archive-drill handler targets wrong root-level path (also references non-existent `#btn-archive-drill`)
-
-The Cloud Function (`functions/index.js` `generatePracticePlan`) was correctly migrated. The frontend was not.
-**Fix:** Update all three references to `users/${uid}/practice_plans/active`. Part of BL-3.05 (AI Practice Plan Rebuild).
+### [DATA-02] ✅ Stale path references in `bindPracticeCaddyUI()`
+**Resolved 2026-06-10 · commits d3befec / 293ccc1 / 3658bf7 (closed under BL-3.05).** Verified at HEAD by NIGHT3 Part 1: zero root-level `practice_plans` references remain in `src/`, `functions/`, or `tests/`. All client references now point to `users/{uid}/practice_plans/active` (ui.js:821, 906, 942, 975); the function writer matches (functions/index.js:240); the BL-3.12 root-rule stopgap was removed (3658bf7). The line numbers in the prior entry (ui.js:825/894/929) described the pre-fix tree.
 
 ### [DATA-03] ✅ `/practice_rounds` vs `/users/{uid}/practice_plans` ambiguity
 **Resolved June 2026 audit** — Documented distinction:
@@ -100,24 +94,25 @@ See DATA-02. Three compounding issues: wrong Firestore path, data shape mismatch
 
 ## Test Debt
 
-### [TEST-01] 🔴 3 test bodies completely empty
-**What:** In `tests/logic-boundaries.spec.js`, three tests have no assertions. Marked `test.skip()`.
+### [TEST-01] 🔴 3 test bodies completely empty — WORSE than catalogued
+**Amended 2026-06-13 (NIGHT2):** the three bodies are **not** `test.skip()` — they have empty/tautological bodies that **pass green** ("Sub-Score Logic" and "Chip-in Validation" empty; "Fuzzing Scores" asserts a literal `return true`). Empty-body Playwright tests count as passes, so the false-signal risk is higher than "skipped" implied. Consistent with AUDIT-02.
 **Fix:** Rewrite with real setup and assertions when on-course editor UI is confirmed stable.
 
 ### [TEST-02] 🔴 `live_audit.spec.js` runs against production with hardcoded credentials
 **What:** Hardcodes real credentials and hits the live production URL. Should never run in CI.
 **Fix:** Add `test.skip()` in CI environments or move to a separate manual-only workflow.
 
-### [TEST-03] ✅ Tests had no cleanup hooks causing data pollution
-**Resolved prior session** — Firebase Admin SDK cleanup hooks added to `quota-guards.spec.js`.
+### [TEST-03] 🔴 Tests had no cleanup hooks — REOPENED (claimed fix never committed)
+**Reopened 2026-06-13 (NIGHT3 Part 4).** The claimed Admin-SDK cleanup hooks do **not** exist at HEAD: `quota-guards.spec.js` has no `afterEach`/cleanup of any kind, and the cited utilities `tests/utils/clear-emulator.js` and `tests/firebase-admin-setup.js` exist on no ref (`git log --all` empty). The file was last touched 2026-03-06 (`a63e1f3`). Classification: claimed work **NEVER COMMITTED anywhere** — first confirmed instance of the claims-without-commits pattern (see PIR_LOG).
+**Fix:** Actually add cleanup; or descope. Ship the seeding/cleanup utility with BL-4.01 (TEST-06).
 
-### [TEST-04] 🟡 Hardcoded course name in ui-ergonomics test
-**What:** `selectOption('#oc-course-select', "Ashgrove GC")` — course doesn't exist in emulator. Marked `test.skip()`.
-**Fix:** Seed emulator with test course data, or select first available option dynamically.
+### [TEST-04] 🟡 ui-ergonomics test — premise wrong; real defect is panel visibility
+**Amended 2026-06-13 (NIGHT2 static + NIGHT3 Phase-1 dynamic):** "Ashgrove GC" **does** exist — static `<option>` (index.html:352) + `COURSE_DATA` key (course-data.js:98); the course list is static source, not emulator-seeded, so "course doesn't exist in emulator" was never the failure mode, and the test is not skip-marked. Observed dynamically (2026-06-13 e2e run): the test **fails** with `selectOption('#oc-course-select')` timing out because the element is *not visible* — the on-course setup panel visibility gap (BL-4.02), not a course-data problem.
+**Fix:** Addressed by BL-4.02 (setup-panel visibility); test then asserts touch-target sizes against a started round.
 
-### [TEST-05] 🟡 `round_flow.spec.js` skips auth entirely
-**What:** Skips actual round flow because "can't easily perform a real Firebase login."
-**Fix:** Add proper emulator auth setup matching `quota-guards.spec.js` pattern.
+### [TEST-05] 🔴 `round_flow.spec.js` — BROKEN and never executed
+**Amended 2026-06-13 (NIGHT2 T9):** worse than "skips auth". The file is **not in the Playwright `testMatch` allowlist** (playwright.config.js:9), so `npm run test:e2e` never runs it — confirmed by the 2026-06-13 e2e run, which collected only the 6 allowlisted specs. It also targets four nonexistent IDs (`#tab-btn-oncourse`, `#btn-start-round`, `#oc-course-name`, `#active-round-ui` — real IDs are `btn-oc-start`/`oc-course-select`/data-target nav) and hardcodes `127.0.0.1:3000` against a `:5173` baseURL.
+**Fix:** Rewrite against real IDs + emulator auth, then add to `testMatch`. Reclassify from "skips auth" to broken-and-dormant.
 
 ### [TEST-06] 🟡 No test data seeding strategy
 **What:** Tests rely on empty emulator state or leftover data from previous runs.
@@ -144,9 +139,8 @@ See DATA-02. Three compounding issues: wrong Firestore path, data shape mismatch
 
 ## Architecture Debt
 
-### [ARCH-01] 🟡 Rogue agent damage — audit complete, specific damage documented
-**What:** March 2026 AI agent session made uncontrolled changes. `_GRAVEYARD_20260308_1403/` contains archived code from that event.
-**Status updated June 2026:** Full feature audit complete. Specific damage identified: AI practice plan frontend-backend disconnect (BL-3.05/BRK-01), dead coach drill security rule (BRK-03), dead competition invite UI (BRK-04). All other features confirmed working or partially working.
+### [ARCH-01] ✅ Rogue agent damage — audit complete, successor work tracked
+**Closed 2026-06-13 (NIGHT1–NIGHT3).** The full-codebase audit this item called for is complete across three sessions (blast-radius, unit-test, residue). `_GRAVEYARD_20260308_1403/` is now an **empty directory** (NIGHT3 H26) — the archived code it once held is gone. The specific damage is fully enumerated and re-homed: practice-plan disconnect closed (BL-3.05/DATA-02), and the live P1/P2 findings plus hygiene now live in the **BL-4.x remediation backlog**. No open investigative scope remains under ARCH-01.
 
 ### [ARCH-02] 🟡 `src/ui.js` is doing too much
 **What:** `ui.js` contains event binding, state management, Firebase queries, and UI rendering all in one file.
@@ -159,15 +153,17 @@ See DATA-02. Three compounding issues: wrong Firestore path, data shape mismatch
 
 ## Debt Priority Order
 
+*Updated 2026-06-13: DATA-02 ✅, BRK-01 ✅ (practice-plan disconnect closed), BRK-03 re-scoped (rule exists — now BL-3.06 read path), ARCH-01 ✅. The P1/P2 remediation order now lives in the BL-4.x backlog; ship BL-4.00 (static contract suite) first.*
+
 | Priority | Item | Effort | Risk | Tool |
 |---|---|---|---|---|
-| 1 | BRK-01/DATA-02: AI Practice Plan rebuild | High | Medium | Claude Code |
-| 2 | BRK-03: Coach Assign Drill security rule | Low | Low | Claude Code |
-| 3 | BRK-04: Competition Invite Players UI | Medium | Low | Claude Code |
-| 4 | BRK-05: Tempo Snap vibe | Low | None | Jules |
-| 5 | BRK-06: Dead code in stateChange | Low | None | Jules |
-| 6 | DATA-01: Centralised Firestore paths | Medium | Low | Claude Code |
-| 7 | CI-02: Deploy approval gate | Low | None | Jules |
-| 8 | TEST rewrites (02, 05, 06) | Medium | Low | Claude Code |
+| 1 | **BL-4.00**: Static contract suite (ship before any BL-4.x fix) | Low | None | Claude Code |
+| 2 | **BL-4.01–4.08**: P1 cluster (WHS integrity, setup rewiring, comp logging incl. R-LIVE-1, coach linkage, askAiCoach pin, auth bypass removal, shots schema) | Med–High | Med | Claude Code |
+| 3 | BRK-05/**BL-3.08**: Tempo Snap (reopened — `value="snare"` fix) | Low | None | Jules |
+| 4 | BRK-06: Dead code in stateChange ✅ (BL-3.09) | — | — | — |
+| 5 | DATA-01: Centralised Firestore paths | Medium | Low | Claude Code |
+| 6 | CI-02: Deploy approval gate | Low | None | Jules |
+| 7 | TEST rewrites (TEST-03 reopened, 04, 05, 06) + BL-4.x regression tests | Medium | Low | Claude Code |
+| 8 | **BL-4.09–4.16**: P2/P3 (feed diff, notifications, archive/delete, hygiene sweep, review scorecard, mutateList, surveyor decide) | Med | Low | Claude Code |
 | 9 | STATE-01/02: Practice state through AppState | High | Medium | Claude Code |
 | 10 | ARCH-02: ui.js module extraction | High | High | Claude Code |
