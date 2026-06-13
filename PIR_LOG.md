@@ -113,3 +113,23 @@ The user required a direct, manual method to deploy the application to the live 
 1. **GitHub Actions `workflow_dispatch`:** Implemented `.github/workflows/deploy-production.yml` configured to trigger manually via the GitHub UI.
 2. **Direct Channel Targeting:** Configured the action to push directly to the `live` Firebase channel.
 3. **Local Testing Context:** Provided `runnpmbuild.md` with standalone instructions for compiling and locally serving the production build (`npx serve -s dist`) to allow mobile testing on the local network.
+
+---
+
+## [2026-06-13] Claims-Without-Commits Drift (March–June 2026)
+**Status:** Detected & Warded
+
+### 👻 The Ghost (Root Causes)
+1. **Completion notes ahead of (or instead of) commits.** The NIGHT2/NIGHT3 claims audit found documentation asserting work that exists on **no git ref**:
+   - **TEST-03** — "Admin-SDK cleanup hooks added to `quota-guards.spec.js`" marked ✅, but the file has no `afterEach` and the cited `tests/utils/clear-emulator.js` / `tests/firebase-admin-setup.js` exist nowhere (`git log --all` empty).
+   - **BL-3.08** — the Tempo "Snap" fix patched the `buildTone` branch (commits `bfc8b51`, `42ac23d`) but the HTML half (`value="snare"` → `'snap'`, index.html:2166) was never committed; the bug still reproduces.
+   - **BL-3.10** — cited source `docs/TIERED_MASTER_SYNTHESIS.md` was never committed (surviving record: `PIR_log_supermagic_charlie.md`).
+2. **No verification gate** linked a completion note to its commit, so prose drifted from the tree across multiple sessions.
+
+### 🛡️ The Silver Bullet (Fixes)
+1. **Reconciliation pass** (this session): TEST-03 reopened, BL-3.08 reopened, BL-3.06 re-scoped (its rule *was* merged), BL-3.13 restored, DATA-02/ARCH-01 closed against verified commits.
+2. **Verified signal that worked:** in the full claims audit, **every completion claim citing a commit hash was CONFIRMED at HEAD; every hash-less claim failed.** The commit hash is the reliable truth-marker.
+
+### 🛡️ The Ward (Prevention)
+> [!IMPORTANT]
+> **The Commit-Hash Mandate:** a completion note (✅ / "Resolved" / "Fixed this session") is **invalid without its commit hash(es)**. Completion documentation must land in the **same session** as the code commit it describes — never write "done" for work not yet committed.

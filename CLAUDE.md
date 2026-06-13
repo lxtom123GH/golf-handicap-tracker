@@ -51,11 +51,13 @@ See `MASTER_BACKLOG.md` for the full prioritised technical debt ledger.
 
 Remaining active tasks:
 - BL-3.05 (sole remaining sub-task) — personalisation inputs never sent to `generatePracticePlan`; every plan uses the generic fallback. `// TODO(BL-3.05)` marker in `ui.js`.
-- BL-3.06 — Coach Assign Drill security rule (security — needs explicit brief)
+- BL-3.06 (re-scoped 2026-06-13) — the `assignedDrills` rule **already exists** (firestore.rules:48-56); remaining work is the client read path (NIGHT1 N22) + rules-test coverage. NOT a missing-rule task.
 - BL-3.07 — Competition Invite Players wiring (dead UI, needs event handlers + Firestore writes)
+- BL-3.08 (REOPENED 2026-06-13) — Tempo "Snap" still broken: the option emits `value="snare"`, which matches no `buildTone` branch (index.html:2166). One-word fix.
+- See `MASTER_BACKLOG.md` BL-4.x for the NIGHT1–NIGHT3 remediation backlog (ship BL-4.00 static contract suite first).
 
 Recently completed (June 9–10 2026):
-BL-3.08, BL-3.09, BL-3.13, BL-3.14, BL-3.15, BL-3.16, BL-3.17, BL-3.05 data shape + DOM ID layers.
+BL-3.09, BL-3.13, BL-3.14, BL-3.15, BL-3.16, BL-3.17, BL-3.05 data shape + DOM ID layers. *(BL-3.08 removed from this list — reopened 2026-06-13, see above.)*
 
 ## Workflow: After Every Code Commit
 
@@ -67,6 +69,8 @@ After each successful code commit, make a second docs commit:
    *Completed: YYYY-MM-DD · commit XXXXXXX*
 4. Move the entire section to the relevant Completed section
 5. Commit: `docs: mark BL-X.XX complete (commit XXXXXXX)`
+
+**The Commit-Hash Mandate (2026-06-13):** a completion note (✅ / "Resolved" / "Fixed this session") is **invalid without its commit hash(es)**, and completion docs must land in the **same session** as the code commit they describe — never mark work done before it is committed. Rationale (PIR_LOG 2026-06-13): in the NIGHT2/NIGHT3 claims audit, every hash-less completion claim in the March–June docs failed verification (TEST-03, BL-3.08 HTML half, BL-3.10 artefact), while every claim citing a commit hash held at HEAD.
 
 Do NOT update PIR_LOG.md — handled in strategic review sessions.
 Do NOT modify any other documentation files.
