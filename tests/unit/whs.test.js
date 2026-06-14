@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getAdjustmentFactor, calculateIndex } from '../../src/whs.js';
+import { getAdjustmentFactor, calculateIndex, convertStablefordToAGS } from '../../src/whs.js';
 
 // Mock dependencies that rely on DOM or Firebase
 vi.mock('../../firebase-config.js', () => ({
@@ -72,5 +72,29 @@ describe('WHS calculateIndex', () => {
         ];
         const result = calculateIndex(rounds);
         expect(result.index).toBe("0.0");
+    });
+});
+
+// BL-4.01 / F1: par feeds adjustedGross (AGS = par + DH - (stableford - 36)).
+// The old save hardcoded par=72, so a 9-hole par-36 round's AGS was inflated by
+// 36 strokes, then poisoned the differential (113/slope)*(AGS - rating). These
+// lock in that the real par must flow into AGS.
+describe('convertStablefordToAGS par sensitivity', () => {
+    it('uses the supplied par, not a constant', () => {
+        // 36 stableford ("playing to handicap") => AGS == par + DH
+        expect(convertStablefordToAGS(36, 0, 72)).toBe(72);
+        expect(convertStablefordToAGS(36, 0, 36)).toBe(36);
+        expect(convertStablefordToAGS(36, 0, 71)).toBe(71);
+    });
+
+    it('the wrong (72) par inflates AGS for a 9-hole par-36 round', () => {
+        const stableford = 18, dh = 0;
+        const correct = convertStablefordToAGS(stableford, dh, 36);
+        const corrupted = convertStablefordToAGS(stableford, dh, 72);
+        expect(corrupted - correct).toBe(36); // exactly the par error propagates into AGS
+    });
+
+    it('folds in the daily handicap', () => {
+        expect(convertStablefordToAGS(30, 10, 72)).toBe(72 + 10 - (30 - 36));
     });
 });
