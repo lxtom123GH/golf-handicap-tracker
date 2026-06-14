@@ -6,7 +6,7 @@ import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc, getDocs, writeBatch, deleteDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
-import { COURSE_DATA, KEPERRA_GPS } from './course-data.js';
+import { COURSE_DATA, KEPERRA_GPS, isRatableTee } from './course-data.js';
 
 import { initNotifications } from './notifications.js';
 import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
@@ -1018,6 +1018,34 @@ export function jumpToHole(holeIndex) {
 
 
 /**
+ * Single source of a round's rating / slope / par. Read identically by the
+ * daily-handicap calc (bindStartRound) and the WHS save so one set of values
+ * flows DH -> AGS -> saved differential -> notCounting (BL-4.01).
+ *
+ * Ratable tee: trust the stored teeData. Unratable tee: read the manual
+ * #oc-manual-cr/sr/par inputs and validate them with the same predicate at
+ * both sites. `counting` is false unless the values are WHS-plausible.
+ *
+ * @param {string} courseName
+ * @param {string} teeName
+ * @returns {{rating:number, slope:number, par:number, ratable:boolean, counting:boolean}}
+ */
+export function resolveRoundRatings(courseName, teeName) {
+    const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+    if (isRatableTee(teeData)) {
+        return { rating: teeData.rating, slope: teeData.slope, par: teeData.par, ratable: true, counting: true };
+    }
+    const crEl = document.getElementById('oc-manual-cr');
+    const srEl = document.getElementById('oc-manual-sr');
+    const parEl = document.getElementById('oc-manual-par');
+    const rating = crEl ? parseFloat(crEl.value) : NaN;
+    const slope = srEl ? parseFloat(srEl.value) : NaN;
+    const par = parEl ? parseInt(parEl.value) : NaN;
+    const counting = par > 0 && slope >= 55 && slope <= 155 && rating >= 50 && rating <= 90;
+    return { rating, slope, par, ratable: false, counting };
+}
+
+/**
  * Compiles the final round data, calculates adjusted gross scores and differentials,
  * and persists the completed round to Firestore.
  * @returns {Promise<void>}
@@ -1025,16 +1053,11 @@ export function jumpToHole(holeIndex) {
 async function saveRoundToDatabase() {
     const holesPlayedEl = document.getElementById('oc-finish-holes');
     const holesPlayedStr = holesPlayedEl ? holesPlayedEl.value : "9";
-    const manualCR = document.getElementById('oc-manual-cr');
-    const manualSR = document.getElementById('oc-manual-sr');
-    const manualPar = document.getElementById('oc-manual-par');
-
-    const cr = manualCR ? parseFloat(manualCR.value) : 72;
-    const sr = manualSR ? parseFloat(manualSR.value) : 113;
-    const par = manualPar ? parseFloat(manualPar.value) : 72;
 
     const courseName = AppState.currentRoundCourseName;
     const teeName = UI.ocTeeSelect ? UI.ocTeeSelect.value : null;
+    // Single source of rating/slope/par — identical read+validation as bindStartRound (BL-4.01)
+    const { rating: cr, slope: sr, par, counting } = resolveRoundRatings(courseName, teeName);
     const teeData = COURSE_DATA[courseName]?.[teeName] || {};
 
     // Helper for defensive serialization: deep clone & strip non-serializable objects (DOM/Functions)
@@ -1091,7 +1114,9 @@ async function saveRoundToDatabase() {
                 courseName: AppState.currentRoundCourseName,
                 rating: cr,
                 slope: sr,
+                par: par,
                 adjustedGross: adjustedGross,
+                notCounting: !counting,
                 totalGross: totalGross,
                 totalScore: totalGross,
                 totalStableford: totalStableford,

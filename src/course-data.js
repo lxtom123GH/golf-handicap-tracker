@@ -108,3 +108,23 @@ export const COURSE_DATA = {
         "Custom Tee": { rating: 72, slope: 113, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
     }
 };
+
+/**
+ * True when a tee carries a complete, plausible WHS rating so its stored
+ * rating/slope/par can be trusted for handicap math. Tees that fail this
+ * (par 0, implausible/missing rating or slope, empty pars/strokeIndex) are
+ * "unratable" and require manual CR/SR/par entry to produce a counting round.
+ * @param {Object} tee - A tee object from COURSE_DATA[course][tee].
+ * @returns {boolean}
+ */
+export function isRatableTee(tee) {
+    if (!tee) return false;
+    const rating = Number(tee.rating);
+    const slope = Number(tee.slope);
+    const par = Number(tee.par);
+    return par > 0
+        && slope >= 55 && slope <= 155
+        && rating >= 50 && rating <= 90
+        && Array.isArray(tee.pars) && tee.pars.length > 0
+        && Array.isArray(tee.strokeIndex) && tee.strokeIndex.length > 0;
+}
