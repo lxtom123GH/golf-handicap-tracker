@@ -1079,7 +1079,9 @@ async function saveRoundToDatabase() {
                 for (const h in p.simpleStats) {
                     if (p.simpleStats[h].putts) sumPutts += p.simpleStats[h].putts;
                     if (p.simpleStats[h].gir) sumGIR += 1;
-                    if (p.simpleStats[h].fwy) sumFwy += 1;
+                    // Hole editor writes .fir, simple toggles write .fwy — count both (N17/BL-4.01),
+                    // matching the in-app aggregators at oncourse.js:386 and :487
+                    if (p.simpleStats[h].fir || p.simpleStats[h].fwy) sumFwy += 1;
                 }
             }
 
