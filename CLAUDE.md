@@ -44,7 +44,7 @@ Commit `a63e1f3` ("100% E2E pass") hollowed out real assertions in:
 - `tests/logic-boundaries.spec.js` (Time Travel test) → ends mid-comment, no `expect()`
 - `tests/quota-guards.spec.js` (Double-Tap test) → targets wrong button
 
-Green CI for these specs does not mean the features work. Do not rely on them as safety nets. Tracked as AUDIT-02.
+Green CI for these specs does not mean the features work. Do not rely on them as safety nets. Tracked as AUDIT-02. Authoritative file-by-file test status now lives in `docs/05_unit_test_audit.md` (NIGHT2): note the `vitest` config has no `include` key so some specs never execute, and no test reads back a Firestore doc the app wrote — the suite is schema-blind. Static contract suite `tests/unit/contracts.test.js` (BL-4.00) ships intentionally red until its mapped BL-4.x fixes land.
 
 ## Active Backlog Reference
 See `MASTER_BACKLOG.md` for the full prioritised technical debt ledger.
@@ -53,11 +53,11 @@ Remaining active tasks:
 - BL-3.05 (sole remaining sub-task) — personalisation inputs never sent to `generatePracticePlan`; every plan uses the generic fallback. `// TODO(BL-3.05)` marker in `ui.js`.
 - BL-3.06 (re-scoped 2026-06-13) — the `assignedDrills` rule **already exists** (firestore.rules:48-56); remaining work is the client read path (NIGHT1 N22) + rules-test coverage. NOT a missing-rule task.
 - BL-3.07 — Competition Invite Players wiring (dead UI, needs event handlers + Firestore writes)
-- BL-3.08 (REOPENED 2026-06-13) — Tempo "Snap" still broken: the option emits `value="snare"`, which matches no `buildTone` branch (index.html:2166). One-word fix.
+- BL-3.08 — CLOSED. Tempo "Snap" `value="snare"`→`"snap"` now matches `tempo.js:62` (index.html:2166). *Completed: 2026-06-13 · commit 42fb255*
 - See `MASTER_BACKLOG.md` BL-4.x for the NIGHT1–NIGHT3 remediation backlog (ship BL-4.00 static contract suite first).
 
 Recently completed (June 9–10 2026):
-BL-3.09, BL-3.13, BL-3.14, BL-3.15, BL-3.16, BL-3.17, BL-3.05 data shape + DOM ID layers. *(BL-3.08 removed from this list — reopened 2026-06-13, see above.)*
+BL-3.08, BL-3.09, BL-3.13, BL-3.14, BL-3.15, BL-3.16, BL-3.17, BL-3.05 data shape + DOM ID layers.
 
 ## Workflow: After Every Code Commit
 
@@ -77,15 +77,11 @@ Do NOT modify any other documentation files.
 
 ## Environment
 
-The Firebase emulator must be running before any Playwright test
-commands are executed. Start it in a separate terminal first:
-  firebase emulators:start
-Claude Code cannot reliably manage this as a background process —
-treat the emulator as always-on infrastructure, not a step in a prompt.
+Unit/contract tests (`test:unit`, incl. `tests/unit/contracts.test.js`) require NO emulator — pure jsdom/file-read. Only `test:rules` and `test:e2e` need it.
+The Playwright `webServer` auto-start command is broken on Windows (bash `&`); do not rely on it. Treat the emulator as manually-started, always-on infrastructure: start it in a separate terminal first with `firebase emulators:start` before running `test:rules` or `test:e2e`. Claude Code cannot reliably manage it as a background process.
 
 ## Model Selection
 Default: Opus for complex multi-file tasks and architectural work.
 Sonnet: Only for purely mechanical single-file tasks (docs-only commits, single import additions, one-line fixes where the change is fully pre-specified).
 Haiku: Not recommended for this codebase — architectural context is too dense.
-Note: Fable and Mythos (Mythos-class) were withdrawn 2026-06-12 by US government
-export-control directive; no restoration date. Opus is the standing default in their absence.
+Note: Fable and Mythos (Mythos-class) were withdrawn 2026-06-12 by US government export-control directive; no restoration date. Opus is the standing default in their absence — the prior "Fable default, Opus security fallback" convention is void.
