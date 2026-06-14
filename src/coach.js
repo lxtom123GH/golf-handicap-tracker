@@ -4,7 +4,7 @@
 // ==========================================
 
 import { db } from './firebase-config.js';
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, serverTimestamp, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, serverTimestamp, orderBy, limit, arrayUnion, arrayRemove } from "firebase/firestore";
 import { UI } from './ui.js';
 import { AppState } from './state.js';
 import { generateAIResponse } from './ai.js';
@@ -33,17 +33,24 @@ export function bindCoachTools() {
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const coachUid = document.getElementById('coach-uid-input').value.trim();
-            if (!coachUid || !AppState.currentUser) return;
+            const emailInput = document.getElementById('coach-email');
+            const email = emailInput?.value.trim();
+            if (!email || !AppState.currentUser) return;
             try {
-                const userRef = doc(db, "users", AppState.currentUser.uid);
-                const userDoc = await getDoc(userRef);
-                let currentCoaches = userDoc.exists() ? (userDoc.data().coaches || []) : [];
-                if (!currentCoaches.includes(coachUid)) {
-                    currentCoaches.push(coachUid);
-                    await updateDoc(userRef, { coaches: currentCoaches });
+                // coaches[] stores coach UIDs, so resolve the entered email to a uid first.
+                const coachSnap = await getDocs(query(collection(db, 'users'), where('email', '==', email)));
+                if (coachSnap.empty) {
+                    alert(`No registered user found with the email ${email}.`);
+                    return;
                 }
-                document.getElementById('coach-uid-input').value = '';
+                const coachUid = coachSnap.docs[0].id;
+                if (coachUid === AppState.currentUser.uid) {
+                    alert("You can't add yourself as a coach.");
+                    return;
+                }
+                const userRef = doc(db, "users", AppState.currentUser.uid);
+                await updateDoc(userRef, { coaches: arrayUnion(coachUid) });
+                emailInput.value = '';
                 loadMyCoaches();
             } catch (e) { console.error("Add coach error", e); }
         });
@@ -162,8 +169,8 @@ export function bindCoachDashboard() {
         if (!rosterEl) return;
         const myUid = AppState.currentUser.uid;
 
-        // Strictly fetch athletes linked by coachUid
-        const q = query(collection(db, 'users'), where('coachUid', '==', myUid));
+        // Fetch athletes who have linked this coach via their coaches[] array.
+        const q = query(collection(db, 'users'), where('coaches', 'array-contains', myUid));
         const snap = await getDocs(q);
         const athletes = [];
         snap.forEach(d => {
@@ -229,7 +236,7 @@ export function bindCoachDashboard() {
             if (releaseBtn) releaseBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 if (confirm(`Are you sure you want to release ${athlete.displayName || athlete.email}? They will be removed from your roster.`)) {
-                    await updateDoc(doc(db, 'users', athlete.uid), { coachUid: null });
+                    await updateDoc(doc(db, 'users', athlete.uid), { coaches: arrayRemove(myUid) });
                     loadCoachRoster(); // Refresh the UI
                 }
             });
