@@ -96,7 +96,19 @@ export const COURSE_DATA = {
 
     // Other courses
     "Ashgrove GC": {
-        "White (Men 1-9)": { rating: 33, slope: 115, par: 35, pars: [], strokeIndex: [], physicalHoles: [] }
+        // Operator-supplied from official Ashgrove scorecard (BL-4.01 Phase 3)
+        "Blue (Men)": {
+            rating: 67, slope: 124, par: 68,
+            pars: [4, 4, 3, 5, 4, 3, 4, 4, 3, 3, 4, 4, 3, 5, 4, 4, 3, 4],
+            strokeIndex: [1, 11, 7, 18, 14, 13, 17, 6, 15, 5, 9, 3, 2, 8, 10, 4, 12, 16],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        },
+        "White (Men)": {
+            rating: 65, slope: 115, par: 68,
+            pars: [4, 4, 3, 5, 4, 3, 4, 4, 3, 3, 5, 4, 4, 3, 4, 4, 3, 4],
+            strokeIndex: [1, 9, 12, 18, 11, 13, 17, 5, 15, 4, 7, 3, 6, 8, 10, 2, 14, 16],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        }
     },
     "McLeod GC": {
         "Blue (Men)": { rating: 69, slope: 126, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }

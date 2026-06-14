@@ -15,9 +15,9 @@ describe('isRatableTee', () => {
         expect(isRatableTee(COURSE_DATA['Custom Course']['Custom Tee'])).toBe(false);
     });
 
-    it('rejects an implausible/9-hole rating with empty hole data (Ashgrove)', () => {
-        // rating 33 (< 50) and empty pars/strokeIndex
-        expect(isRatableTee(COURSE_DATA['Ashgrove GC']['White (Men 1-9)'])).toBe(false);
+    it('accepts the corrected 18-hole Ashgrove tees (Phase 3 operator data)', () => {
+        expect(isRatableTee(COURSE_DATA['Ashgrove GC']['White (Men)'])).toBe(true);
+        expect(isRatableTee(COURSE_DATA['Ashgrove GC']['Blue (Men)'])).toBe(true);
     });
 
     it('rejects null/undefined and missing-field tees', () => {
