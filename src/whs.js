@@ -365,9 +365,10 @@ export function renderRoundsHistory(usedIds = []) {
  * @param {number} slope - Slope rating.
  * @param {number} adjustedGross - Final WHS Adjusted Gross Score.
  * @param {Object} [stats] - Optional performance statistics (putts, gir, etc).
+ * @param {boolean} [notCounting=false] - Whether the round is excluded from the handicap index.
  * @returns {Promise<boolean>} Success status.
  */
-export async function addRound(course, rating, slope, adjustedGross, stats = null) {
+export async function addRound(course, rating, slope, adjustedGross, stats = null, notCounting = false) {
     try {
         const roundData = {
             uid: AppState.currentUser.uid,
@@ -376,7 +377,7 @@ export async function addRound(course, rating, slope, adjustedGross, stats = nul
             slope: slope,
             adjustedGross: adjustedGross,
             date: serverTimestamp(),
-            notCounting: false
+            notCounting: notCounting
         };
         if (stats && (stats.putts || stats.fwy || stats.gir)) {
             roundData.stats = stats;
