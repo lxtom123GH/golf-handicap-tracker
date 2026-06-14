@@ -3,7 +3,7 @@
 // Practice Drills & Dashboard Logic
 // ==========================================
 import { db, auth } from './firebase-config.js';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, getDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { AppState, mutateList, normalizeRoundDoc } from './state.js';
 import { UI } from './ui.js';
 import { bindAiGenerator, generateAIResponse } from './ai.js';
@@ -477,6 +477,10 @@ async function initCoachSelection() {
     const saveBtn = document.getElementById('btn-save-coach');
     if (!coachSelect || !AppState.currentUser) return;
 
+    // The dropdown is single-select, but linkage is the multi-coach coaches[]
+    // array. Track the coach currently shown so "No Coach" can remove just it.
+    let shownCoachUid = '';
+
     // Populate all coaches
     try {
         const coachQuery = query(collection(db, 'users'), where('isCoach', '==', true));
@@ -498,9 +502,8 @@ async function initCoachSelection() {
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            if (userData.coachUid) {
-                coachSelect.value = userData.coachUid;
-            }
+            shownCoachUid = (userData.coaches || [])[0] || '';
+            coachSelect.value = shownCoachUid;
         }
     } catch (e) {
         console.error("Coach init error:", e);
@@ -510,9 +513,16 @@ async function initCoachSelection() {
         saveBtn.addEventListener('click', async () => {
             const selectedCoachId = coachSelect.value;
             try {
-                await updateDoc(doc(db, 'users', AppState.currentUser.uid), {
-                    coachUid: selectedCoachId || null
-                });
+                const userRef = doc(db, 'users', AppState.currentUser.uid);
+                if (selectedCoachId) {
+                    // Add the picked coach to the multi-coach array (idempotent).
+                    await updateDoc(userRef, { coaches: arrayUnion(selectedCoachId) });
+                    shownCoachUid = selectedCoachId;
+                } else if (shownCoachUid) {
+                    // "No Coach" selected — unlink only the coach this dropdown was showing.
+                    await updateDoc(userRef, { coaches: arrayRemove(shownCoachUid) });
+                    shownCoachUid = '';
+                }
                 alert("Coach updated successfully!");
             } catch (err) {
                 console.error("Save coach error:", err);
