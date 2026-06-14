@@ -214,7 +214,7 @@ function bindWHSForm() {
                 return;
             }
 
-            const hi = parseFloat(UI.handicapIndexEl.textContent);
+            const hi = parseFloat(UI.handicapIndexEl.value);
             const dailyHandicap = isNaN(hi) ? 0 : Math.round(hi * (sr / 113) + (parseFloat(crInput.value || 72) - par));
 
             let totalPts = 0;
@@ -334,7 +334,8 @@ function bindWHSForm() {
             }
 
             // Grab whatever index is displaying for the actively viewed player
-            const idxStr = UI.handicapIndexEl.textContent;
+            // handicap-index is an <input> (index.html:1149) — read .value, not .textContent (F2/BL-4.01)
+            const idxStr = UI.handicapIndexEl.value;
             const hi = parseFloat(idxStr);
 
             if (isNaN(hi)) {
