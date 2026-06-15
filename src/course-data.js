@@ -114,12 +114,36 @@ export const COURSE_DATA = {
         "Blue (Men)": { rating: 69, slope: 126, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
     },
     "Bulimba Course": {
-        "White (Men)": { rating: 49, slope: 65, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
+        // Operator-supplied from official Bulimba scorecard (BL-4.01 Phase 3) — par-3 course
+        "White (Men)": {
+            rating: 49, slope: 65, par: 54,
+            pars: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            strokeIndex: [10, 1, 8, 3, 14, 17, 16, 11, 6, 9, 2, 7, 4, 13, 18, 15, 12, 5],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        }
     },
     "Custom Course": {
         "Custom Tee": { rating: 72, slope: 113, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
     }
 };
+
+// WHS plausibility bounds, shared by auto-ratability (isRatableTee) and manual
+// CR/SR/par validation (resolveRoundRatings) so the two never diverge (BL-4.01).
+// Slope 55-155 is the WHS hard range; the rating floor is generous enough for
+// legitimate short par-3 courses (e.g. Bulimba scratch 49) while still rejecting
+// placeholder/garbage values.
+export const RATING_MIN = 45, RATING_MAX = 90, SLOPE_MIN = 55, SLOPE_MAX = 155;
+
+/**
+ * True when a (rating, slope, par) triple is WHS-plausible. Applied identically
+ * to stored tee data and to hand-entered values.
+ * @returns {boolean}
+ */
+export function isPlausibleRating(rating, slope, par) {
+    return Number(par) > 0
+        && Number(slope) >= SLOPE_MIN && Number(slope) <= SLOPE_MAX
+        && Number(rating) >= RATING_MIN && Number(rating) <= RATING_MAX;
+}
 
 /**
  * True when a tee carries a complete, plausible WHS rating so its stored
@@ -131,12 +155,7 @@ export const COURSE_DATA = {
  */
 export function isRatableTee(tee) {
     if (!tee) return false;
-    const rating = Number(tee.rating);
-    const slope = Number(tee.slope);
-    const par = Number(tee.par);
-    return par > 0
-        && slope >= 55 && slope <= 155
-        && rating >= 50 && rating <= 90
+    return isPlausibleRating(tee.rating, tee.slope, tee.par)
         && Array.isArray(tee.pars) && tee.pars.length > 0
         && Array.isArray(tee.strokeIndex) && tee.strokeIndex.length > 0;
 }

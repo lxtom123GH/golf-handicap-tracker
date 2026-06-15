@@ -9,15 +9,16 @@ describe('isRatableTee', () => {
         expect(isRatableTee(COURSE_DATA['Keperra - Old (1-18)']['Yellow (Men)'])).toBe(true);
     });
 
-    it('rejects par-0 tees (McLeod, Bulimba, Custom)', () => {
+    it('rejects par-0 tees (McLeod, Custom)', () => {
         expect(isRatableTee(COURSE_DATA['McLeod GC']['Blue (Men)'])).toBe(false);
-        expect(isRatableTee(COURSE_DATA['Bulimba Course']['White (Men)'])).toBe(false);
         expect(isRatableTee(COURSE_DATA['Custom Course']['Custom Tee'])).toBe(false);
     });
 
-    it('accepts the corrected 18-hole Ashgrove tees (Phase 3 operator data)', () => {
+    it('accepts operator-corrected tees incl. the short par-3 Bulimba (Phase 3)', () => {
         expect(isRatableTee(COURSE_DATA['Ashgrove GC']['White (Men)'])).toBe(true);
         expect(isRatableTee(COURSE_DATA['Ashgrove GC']['Blue (Men)'])).toBe(true);
+        // rating 49 / slope 65 — below the old floors but a legitimate par-3 course
+        expect(isRatableTee(COURSE_DATA['Bulimba Course']['White (Men)'])).toBe(true);
     });
 
     it('rejects null/undefined and missing-field tees', () => {
@@ -32,7 +33,7 @@ describe('isRatableTee', () => {
         expect(isRatableTee({ ...ok, par: 0 })).toBe(false);          // no par
         expect(isRatableTee({ ...ok, slope: 54 })).toBe(false);        // slope below WHS min
         expect(isRatableTee({ ...ok, slope: 156 })).toBe(false);       // slope above WHS max
-        expect(isRatableTee({ ...ok, rating: 49 })).toBe(false);       // implausible rating
+        expect(isRatableTee({ ...ok, rating: 44 })).toBe(false);       // rating below floor (45)
         expect(isRatableTee({ ...ok, rating: 91 })).toBe(false);       // implausible rating
         expect(isRatableTee({ ...ok, pars: [] })).toBe(false);         // no hole pars
         expect(isRatableTee({ ...ok, strokeIndex: [] })).toBe(false);  // no stroke index

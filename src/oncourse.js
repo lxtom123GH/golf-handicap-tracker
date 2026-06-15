@@ -6,7 +6,7 @@ import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, setDoc, doc, updateDoc, getDoc, getDocs, writeBatch, deleteDoc } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
-import { COURSE_DATA, KEPERRA_GPS, isRatableTee } from './course-data.js';
+import { COURSE_DATA, KEPERRA_GPS, isRatableTee, isPlausibleRating } from './course-data.js';
 
 import { initNotifications } from './notifications.js';
 import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS } from './whs.js';
@@ -1041,7 +1041,7 @@ export function resolveRoundRatings(courseName, teeName) {
     const rating = crEl ? parseFloat(crEl.value) : NaN;
     const slope = srEl ? parseFloat(srEl.value) : NaN;
     const par = parEl ? parseInt(parEl.value) : NaN;
-    const counting = par > 0 && slope >= 55 && slope <= 155 && rating >= 50 && rating <= 90;
+    const counting = isPlausibleRating(rating, slope, par);
     return { rating, slope, par, ratable: false, counting };
 }
 
