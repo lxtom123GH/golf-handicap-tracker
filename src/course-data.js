@@ -96,15 +96,72 @@ export const COURSE_DATA = {
 
     // Other courses
     "Ashgrove GC": {
-        "White (Men 1-9)": { rating: 33, slope: 115, par: 35, pars: [], strokeIndex: [], physicalHoles: [] }
+        // Operator-supplied from official Ashgrove scorecard (BL-4.01 Phase 3)
+        "Blue (Men)": {
+            rating: 67, slope: 124, par: 68,
+            pars: [4, 4, 3, 5, 4, 3, 4, 4, 3, 3, 4, 4, 3, 5, 4, 4, 3, 4],
+            strokeIndex: [1, 11, 7, 18, 14, 13, 17, 6, 15, 5, 9, 3, 2, 8, 10, 4, 12, 16],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        },
+        "White (Men)": {
+            rating: 65, slope: 115, par: 68,
+            pars: [4, 4, 3, 5, 4, 3, 4, 4, 3, 3, 5, 4, 4, 3, 4, 4, 3, 4],
+            strokeIndex: [1, 9, 12, 18, 11, 13, 17, 5, 15, 4, 7, 3, 6, 8, 10, 2, 14, 16],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        }
     },
     "McLeod GC": {
-        "Blue (Men)": { rating: 69, slope: 126, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
+        // Operator-supplied from official McLeod scorecard (BL-4.01 Phase 3) — "Blue25" layout
+        "Blue (Men)": {
+            rating: 69, slope: 128, par: 69,
+            pars: [4, 3, 5, 4, 4, 3, 4, 4, 5, 5, 4, 3, 4, 3, 4, 3, 4, 3],
+            strokeIndex: [2, 4, 18, 9, 11, 12, 16, 13, 1, 7, 17, 15, 6, 10, 8, 14, 3, 5],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        }
     },
     "Bulimba Course": {
-        "White (Men)": { rating: 49, slope: 65, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
+        // Operator-supplied from official Bulimba scorecard (BL-4.01 Phase 3) — par-3 course
+        "White (Men)": {
+            rating: 49, slope: 65, par: 54,
+            pars: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            strokeIndex: [10, 1, 8, 3, 14, 17, 16, 11, 6, 9, 2, 7, 4, 13, 18, 15, 12, 5],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        }
     },
     "Custom Course": {
         "Custom Tee": { rating: 72, slope: 113, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
     }
 };
+
+// WHS plausibility bounds, shared by auto-ratability (isRatableTee) and manual
+// CR/SR/par validation (resolveRoundRatings) so the two never diverge (BL-4.01).
+// Slope 55-155 is the WHS hard range; the rating floor is generous enough for
+// legitimate short par-3 courses (e.g. Bulimba scratch 49) while still rejecting
+// placeholder/garbage values.
+export const RATING_MIN = 45, RATING_MAX = 90, SLOPE_MIN = 55, SLOPE_MAX = 155;
+
+/**
+ * True when a (rating, slope, par) triple is WHS-plausible. Applied identically
+ * to stored tee data and to hand-entered values.
+ * @returns {boolean}
+ */
+export function isPlausibleRating(rating, slope, par) {
+    return Number(par) > 0
+        && Number(slope) >= SLOPE_MIN && Number(slope) <= SLOPE_MAX
+        && Number(rating) >= RATING_MIN && Number(rating) <= RATING_MAX;
+}
+
+/**
+ * True when a tee carries a complete, plausible WHS rating so its stored
+ * rating/slope/par can be trusted for handicap math. Tees that fail this
+ * (par 0, implausible/missing rating or slope, empty pars/strokeIndex) are
+ * "unratable" and require manual CR/SR/par entry to produce a counting round.
+ * @param {Object} tee - A tee object from COURSE_DATA[course][tee].
+ * @returns {boolean}
+ */
+export function isRatableTee(tee) {
+    if (!tee) return false;
+    return isPlausibleRating(tee.rating, tee.slope, tee.par)
+        && Array.isArray(tee.pars) && tee.pars.length > 0
+        && Array.isArray(tee.strokeIndex) && tee.strokeIndex.length > 0;
+}

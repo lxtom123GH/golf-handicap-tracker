@@ -214,7 +214,7 @@ function bindWHSForm() {
                 return;
             }
 
-            const hi = parseFloat(UI.handicapIndexEl.textContent);
+            const hi = parseFloat(UI.handicapIndexEl.value);
             const dailyHandicap = isNaN(hi) ? 0 : Math.round(hi * (sr / 113) + (parseFloat(crInput.value || 72) - par));
 
             let totalPts = 0;
@@ -278,14 +278,7 @@ function bindWHSForm() {
 
             const notCounting = !document.getElementById('is-counting').checked;
 
-            // Adjust the actual addRound command in whs.js to accept notCounting state if needed.
-            // Currently whs.js addRound has signature: function addRound(course, rating, slope, adjustedGross, stats)
-            // It hardcodes notCounting: false. Let's fix that if we can, or just let it be false by default.
-            // Actually, let's export it as a helper or modify addRound signature. Wait, the signature in whs.js didn't change.
-            // Let's pass notCounting as a generic property. Actually, currently addRound does not support notCounting parameter from UI.
-            // We won't break the existing signature, but we'll try to update later if needed.
-
-            const success = await addRound(course, rating, slope, score, stats);
+            const success = await addRound(course, rating, slope, score, stats, notCounting);
 
             if (!success) {
                 alert("Failed to log round. Ensure fields are filled.");
@@ -334,7 +327,8 @@ function bindWHSForm() {
             }
 
             // Grab whatever index is displaying for the actively viewed player
-            const idxStr = UI.handicapIndexEl.textContent;
+            // handicap-index is an <input> (index.html:1149) — read .value, not .textContent (F2/BL-4.01)
+            const idxStr = UI.handicapIndexEl.value;
             const hi = parseFloat(idxStr);
 
             if (isNaN(hi)) {

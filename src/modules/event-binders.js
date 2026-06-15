@@ -303,10 +303,21 @@ export function bindCourseSelect() {
                 const COURSE_DATA = module.COURSE_DATA;
                 if (COURSE_DATA[courseName] && COURSE_DATA[courseName][teeName]) {
                     const data = COURSE_DATA[courseName][teeName];
-                    const parText = data.par > 0 ? data.par : '<input type="number" id="oc-manual-par" style="width:50px; display:inline;" class="form-control form-control-sm" placeholder="Par">';
+                    const ratable = module.isRatableTee(data);
 
                     if (UI.ocCourseInfoLine) {
-                        UI.ocCourseInfoLine.innerHTML = `Par: ${parText} | CR: <input type="number" id="oc-manual-cr" value="${data.rating || 0}" style="width:60px; display:inline;"> | SR: <input type="number" id="oc-manual-sr" value="${data.slope || 0}" style="width:60px; display:inline;">`;
+                        if (ratable) {
+                            // Trusted rating — display only; the save sources these from teeData (BL-4.01)
+                            UI.ocCourseInfoLine.innerHTML = `Par: ${data.par} | CR: ${data.rating} | SR: ${data.slope}`;
+                        } else {
+                            // Unratable tee — manual CR/SR/par required for the round to count (BL-4.01)
+                            const v = (n) => (Number(n) > 0 ? n : '');
+                            UI.ocCourseInfoLine.innerHTML =
+                                `<span class="text-muted">No course rating on file — enter CR/SR/par to make this round count:</span><br>` +
+                                `Par: <input type="number" id="oc-manual-par" value="${v(data.par)}" placeholder="Par" style="width:50px; display:inline;"> ` +
+                                `| CR: <input type="number" step="0.1" id="oc-manual-cr" value="${v(data.rating)}" placeholder="CR" style="width:60px; display:inline;"> ` +
+                                `| SR: <input type="number" id="oc-manual-sr" value="${v(data.slope)}" placeholder="SR" style="width:60px; display:inline;">`;
+                        }
                     }
 
                     AppState.currentCoursePars = data.pars || [];
@@ -314,7 +325,7 @@ export function bindCourseSelect() {
                     if (AppState.currentUser) {
                         import('../oncourse.js').then(async m => {
                             const hi = await m.getPlayerHandicap(AppState.currentUser.uid);
-                            if (hi !== undefined && data.par > 0) {
+                            if (hi !== undefined && ratable) {
                                 const dh = Math.round(hi * ((data.slope || 113) / 113) + ((data.rating || 72) - (data.par || 72)));
                                 if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <strong><input type="number" id="oc-manual-dh" value="${dh}" style="width:60px; display:inline; font-weight:bold; color:var(--primary-color);"></strong>`;
                             } else {
@@ -340,14 +351,13 @@ export function bindStartRound() {
             }
 
             const courseName = UI.ocCourseSelect.value;
-            let manualParInput = document.getElementById('oc-manual-par');
+            const teeName = UI.ocTeeSelect.value;
 
-            // Need COURSE_DATA here
-            const module = await import('../course-data.js');
-            const COURSE_DATA = module.COURSE_DATA;
-            const totalPar = manualParInput ? parseInt(manualParInput.value) : (COURSE_DATA[courseName]?.[UI.ocTeeSelect.value]?.par || 0);
+            // Single source of rating/slope/par — identical read+validation as the save (BL-4.01)
+            const ocModule = await import('../oncourse.js');
+            const { rating, slope, par: totalPar } = ocModule.resolveRoundRatings(courseName, teeName);
 
-            if (!totalPar) {
+            if (!totalPar || totalPar <= 0) {
                 if (document.getElementById('tab-oncourse').classList.contains('active')) {
                     alert("Please specify a valid total Par for this course.");
                 }
@@ -372,13 +382,11 @@ export function bindStartRound() {
             AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
 
-            // Fetch Daily Handicaps for all players
-            const teeData = COURSE_DATA[courseName]?.[UI.ocTeeSelect.value] || {};
-            const ocModule = await import('../oncourse.js');
+            // Fetch Daily Handicaps for all players (uses the single resolved rating/slope)
             for (let p of AppState.liveRoundGroups) {
                 const hi = await ocModule.getPlayerHandicap(p.uid);
                 p.handicapIndex = hi;
-                p.dailyHandicap = Math.round(hi * ((teeData.slope || 113) / 113) + ((teeData.rating || 72) - totalPar));
+                p.dailyHandicap = Math.round(hi * ((slope || 113) / 113) + ((rating || 72) - totalPar));
             }
 
             document.body.classList.add('round-active');
