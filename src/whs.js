@@ -353,7 +353,17 @@ export function renderRoundsHistory(usedIds = []) {
             UI.historyTbody.appendChild(tr);
         });
 
-        // Add event listeners using Event Delegation on the root tbody
+        // Event delegation, bound once on the persistent tbody so re-renders don't
+        // stack handlers: wires the dead Exclude/Include + Delete buttons (F3/BL-4.01)
+        if (!UI.historyTbody.dataset.rowActionsBound) {
+            UI.historyTbody.dataset.rowActionsBound = '1';
+            UI.historyTbody.addEventListener('click', (e) => {
+                const toggleBtn = e.target.closest('.toggle-count-btn');
+                if (toggleBtn) return window.toggleCountingRules(toggleBtn.dataset.id);
+                const delBtn = e.target.closest('.del-round-btn');
+                if (delBtn) return window.deleteWhsRound(delBtn.dataset.id);
+            });
+        }
     }
 }
 
