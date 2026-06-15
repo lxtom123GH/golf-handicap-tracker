@@ -111,7 +111,13 @@ export const COURSE_DATA = {
         }
     },
     "McLeod GC": {
-        "Blue (Men)": { rating: 69, slope: 126, par: 0, pars: [], strokeIndex: [], physicalHoles: [] }
+        // Operator-supplied from official McLeod scorecard (BL-4.01 Phase 3) — "Blue25" layout
+        "Blue (Men)": {
+            rating: 69, slope: 128, par: 69,
+            pars: [4, 3, 5, 4, 4, 3, 4, 4, 5, 5, 4, 3, 4, 3, 4, 3, 4, 3],
+            strokeIndex: [2, 4, 18, 9, 11, 12, 16, 13, 1, 7, 17, 15, 6, 10, 8, 14, 3, 5],
+            physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        }
     },
     "Bulimba Course": {
         // Operator-supplied from official Bulimba scorecard (BL-4.01 Phase 3) — par-3 course

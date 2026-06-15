@@ -9,14 +9,14 @@ describe('isRatableTee', () => {
         expect(isRatableTee(COURSE_DATA['Keperra - Old (1-18)']['Yellow (Men)'])).toBe(true);
     });
 
-    it('rejects par-0 tees (McLeod, Custom)', () => {
-        expect(isRatableTee(COURSE_DATA['McLeod GC']['Blue (Men)'])).toBe(false);
+    it('rejects the by-design par-0 Custom tee (manual-entry trigger)', () => {
         expect(isRatableTee(COURSE_DATA['Custom Course']['Custom Tee'])).toBe(false);
     });
 
     it('accepts operator-corrected tees incl. the short par-3 Bulimba (Phase 3)', () => {
         expect(isRatableTee(COURSE_DATA['Ashgrove GC']['White (Men)'])).toBe(true);
         expect(isRatableTee(COURSE_DATA['Ashgrove GC']['Blue (Men)'])).toBe(true);
+        expect(isRatableTee(COURSE_DATA['McLeod GC']['Blue (Men)'])).toBe(true);
         // rating 49 / slope 65 — below the old floors but a legitimate par-3 course
         expect(isRatableTee(COURSE_DATA['Bulimba Course']['White (Men)'])).toBe(true);
     });
