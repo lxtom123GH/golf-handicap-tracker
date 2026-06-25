@@ -23,15 +23,15 @@ export async function aggregateShotPatterns(uid) {
             total: 0,
             direction: { Left: 0, Straight: 0, Right: 0 },
             trajectory: { Low: 0, Medium: 0, High: 0 },
-            curve: { Draw: 0, Straight: 0, Fade: 0 }
+            shape: { Hook: 0, Draw: 0, Straight: 0, Fade: 0, Slice: 0 }
         };
 
         snap.forEach(d => {
             const s = d.data();
             stats.total++;
-            if (s.line && stats.direction[s.line] !== undefined) stats.direction[s.line]++;
+            if (s.startLine && stats.direction[s.startLine] !== undefined) stats.direction[s.startLine]++;
             if (s.trajectory && stats.trajectory[s.trajectory] !== undefined) stats.trajectory[s.trajectory]++;
-            if (s.curve && stats.curve[s.curve] !== undefined) stats.curve[s.curve]++;
+            if (s.shape && stats.shape[s.shape] !== undefined) stats.shape[s.shape]++;
         });
 
         const getPct = (val, total) => total > 0 ? Math.round((val / total) * 100) : 0;
@@ -70,7 +70,7 @@ export async function aggregateShotPatterns(uid) {
             <div class="stat-group">
                 <h4 style="font-size:0.85rem; color:#64748b; margin-bottom:10px; text-transform:uppercase;">Shot Shape</h4>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    ${Object.entries(stats.curve).map(([k, v]) => `
+                    ${Object.entries(stats.shape).map(([k, v]) => `
                         <div style="font-size:0.9rem;">
                             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span>${k}</span><span>${getPct(v, stats.total)}%</span>

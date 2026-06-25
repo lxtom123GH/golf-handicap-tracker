@@ -166,6 +166,14 @@ export function bindShotWizard() {
         });
     }
 
+    const offGreenBtn = document.getElementById('wiz-toggle-offgreen');
+    if (offGreenBtn) {
+        offGreenBtn.addEventListener('click', () => {
+            AppState.currentShotData.isOffGreen = !AppState.currentShotData.isOffGreen;
+            offGreenBtn.classList.toggle('active', !!AppState.currentShotData.isOffGreen);
+        });
+    }
+
     // Intent Grid & Putting Delegation
     wizardDiv.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-grid-compact');

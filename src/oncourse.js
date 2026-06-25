@@ -1328,7 +1328,16 @@ async function runStatAnalysis() {
     let penaltyTotal = 0;
     let routinePassCount = 0;
     let routineTotal = 0;
+    const sq = query(collection(db, "shots"), where("roundId", "==", AppState.activeRoundId));
+    const snap = await getDocs(sq);
     const shapeCounts = {};
+    snap.forEach(d => {
+        const s = d.data();
+        if (s.uid === p.uid && s.shape) {
+            shapeCounts[s.shape] = (shapeCounts[s.shape] || 0) + 1;
+        }
+    });
+
     Object.keys(simpleStats).forEach(holeNum => {
         const hStats = simpleStats[holeNum];
         if (!hStats) return;
@@ -1336,9 +1345,6 @@ async function runStatAnalysis() {
         if (hStats.routines && hStats.routines.pre) {
             routineTotal++;
             if (hStats.routines.pre === 'Pass') routinePassCount++;
-        }
-        if (hStats.shape) {
-            shapeCounts[hStats.shape] = (shapeCounts[hStats.shape] || 0) + 1;
         }
     });
 
