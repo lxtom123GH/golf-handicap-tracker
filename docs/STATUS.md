@@ -2,7 +2,7 @@
 
 > Living index: where we are, what's next, and which doc is authoritative for what.
 > Update this when a backlog item ships or priorities change. Detail lives in
-> `MASTER_BACKLOG.md`; this is the one-page map. Last updated: 2026-06-25.
+> `MASTER_BACKLOG.md`; this is the one-page map. Last updated: 2026-06-26.
 
 ## Current state
 - **BL-4.x P1 remediation queue: shipped & merged** — BL-4.01 (WHS integrity),
@@ -52,8 +52,11 @@ just-in-time off fresh HEAD, not in advance). All bounded, low-decision:
    the in-place `simpleStats`/`compStats` + `loadHole()` pattern used by BL-4.04 F8 /
    BL-4.08 — reconcile the contract before changing it.
 
+**Deep-Dive remediation — BL-DD cluster (verified 2026-06-26)**
+New tracked cluster from the deep dive (MASTER_BACKLOG → "Deep Dive — Verified New Findings"; evidence in `docs/deep-dive/PHASE-3A`). **2 High** — BL-DD-01 (no AI-callable rate-limit → billing abuse), BL-DD-02 (`xlsx` CVE bundled) — + a medium security/correctness set BL-DD-03..11. **Recommended next: a remediation _plan_** (sequence the 16 clean fixes ahead of the ~14 needs-design items, security cluster designed deliberately), then loop-gated execution. Lower-sev verified hygiene folds into BL-4.13.
+
 **P3**
-9. **BL-4.13** — hygiene sweep (dead keys/CSS/`!important`×44/dup renders, etc.).
+9. **BL-4.13** — hygiene sweep (dead keys/CSS/`!important`×46/dup renders, etc.); now also absorbs the deep-dive low-sev hygiene (F11/F13/F14/F16/F20/F22/F24/F25/F26/F27/F28).
 
 **Also open (from CLAUDE.md active backlog, pre-4.x):**
 - **BL-3.06** `assignedDrills` client read path + rules test · **BL-3.07** competition
@@ -68,9 +71,11 @@ never audited; do before first real-user release).
 ## Doc map (what's authoritative)
 | Doc | Role |
 |---|---|
-| `CLAUDE.md` (root) | Agent operating contract — Sydney Protocol, model routing, FP-01..10, post-commit workflow |
-| `MASTER_BACKLOG.md` (root) | **Source of truth for tasks** — detailed debt ledger + completion notes/hashes |
+| `CLAUDE.md` (root) | Agent operating contract (the **what**) — Sydney Protocol, model routing, FP-01..11, post-commit workflow |
+| `docs/DECISIONS.md` | The **why** + a re-test per rule (D-01..D-10) — companion to CLAUDE.md; check before trusting a tagged rule |
+| `MASTER_BACKLOG.md` (root) | **Source of truth for tasks** — detailed debt ledger + completion notes/hashes; now incl. the BL-DD deep-dive cluster |
 | `docs/STATUS.md` (this) | Current state + next-up index |
+| `docs/deep-dive/PHASE-0..3A` + `docs/CONFIDENCE-AUDIT.md` | Dated audit trail (2026-06-25/26): constraint truth, source map, adversarial verification, FP re-validation. The *living* truth is MASTER_BACKLOG + DECISIONS; these are the evidence behind it |
 | `docs/01–07_*.md` | Audit corpus: feature map, debt catalogue, testing strategy, production-readiness, unit-test audit, residue audit, session report |
 | `PIR_LOG.md` (root) | Post-incident reviews — strategic sessions only; do not edit ad-hoc |
 | `docs/agent-briefs/HANDOFF-*` + `LESSONS.md` | Multi-agent offload process (reusable) |
