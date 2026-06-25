@@ -47,28 +47,28 @@ Commit `a63e1f3` ("100% E2E pass") hollowed out real assertions in:
 Green CI for these specs does not mean the features work. Do not rely on them as safety nets. Tracked as AUDIT-02. Authoritative file-by-file test status now lives in `docs/05_unit_test_audit.md` (NIGHT2): note the `vitest` config has no `include` key so some specs never execute, and no test reads back a Firestore doc the app wrote — the suite is schema-blind. Static contract suite `tests/unit/contracts.test.js` (BL-4.00) ships intentionally red until its mapped BL-4.x fixes land.
 
 ## Active Backlog Reference
-See `MASTER_BACKLOG.md` for the full prioritised technical debt ledger.
+**Current state, priorities, and "what's next" live in `docs/STATUS.md`** (the
+one-page living index). `MASTER_BACKLOG.md` is the detailed ledger with per-item
+completion notes + merge hashes.
 
-Remaining active tasks:
-- BL-3.05 (sole remaining sub-task) — personalisation inputs never sent to `generatePracticePlan`; every plan uses the generic fallback. `// TODO(BL-3.05)` marker in `ui.js`.
+Durable open items (also surfaced in STATUS):
+- BL-3.05 — personalisation inputs never sent to `generatePracticePlan`; every plan uses the generic fallback. `// TODO(BL-3.05)` marker in `ui.js`. (Relevant to the BL-4.03 Practice-tab merge — the AI Caddy depends on this.)
 - BL-3.06 (re-scoped 2026-06-13) — the `assignedDrills` rule **already exists** (firestore.rules:48-56); remaining work is the client read path (NIGHT1 N22) + rules-test coverage. NOT a missing-rule task.
-- BL-3.07 — Competition Invite Players wiring (dead UI, needs event handlers + Firestore writes)
-- BL-3.08 — CLOSED. Tempo "Snap" `value="snare"`→`"snap"` now matches `tempo.js:62` (index.html:2166). *Completed: 2026-06-13 · commit 42fb255*
-- See `MASTER_BACKLOG.md` BL-4.x for the NIGHT1–NIGHT3 remediation backlog (ship BL-4.00 static contract suite first).
+- BL-3.07 — Competition Invite Players wiring (dead UI, needs event handlers + Firestore writes).
 
-Recently completed (June 9–10 2026):
-BL-3.08, BL-3.09, BL-3.13, BL-3.14, BL-3.15, BL-3.16, BL-3.17, BL-3.05 data shape + DOM ID layers.
+The BL-4.x P1 remediation cluster (4.01/4.02/4.04/4.05/4.06/4.07/4.08/4.17) shipped
+2026-06-25 via the cross-family offload loop — see STATUS + MASTER_BACKLOG for hashes.
+BL-3.08 is CLOSED (`value="snare"`→`"snap"`, commit 42fb255).
 
 ## Workflow: After Every Code Commit
 
-After each successful code commit, make a second docs commit:
+After each successful code commit (or merged PR), make a second docs commit:
 1. Read MASTER_BACKLOG.md first to understand the current structure
-2. Find the completed BL-X.XX section in Active Tasks
-3. Add ✅ and completion note to the section header:
-   ### BL-3.XX ✅ [existing title]
-   *Completed: YYYY-MM-DD · commit XXXXXXX*
-4. Move the entire section to the relevant Completed section
-5. Commit: `docs: mark BL-X.XX complete (commit XXXXXXX)`
+2. Find the completed BL-X.XX **row in the entries table**
+3. Mark it ✅ inline and append a completion note to the Title cell:
+   `| **BL-X.XX ✅** | <sev> | <title>. *Completed: YYYY-MM-DD · PR #NN merge `hash`.* <one-para summary> | <tags> | <ships-with> |`
+4. Update `docs/STATUS.md` if the item changes "what's next"
+5. Commit: `docs: mark BL-X.XX complete (PR #NN <hash>)`
 
 **The Commit-Hash Mandate (2026-06-13):** a completion note (✅ / "Resolved" / "Fixed this session") is **invalid without its commit hash(es)**, and completion docs must land in the **same session** as the code commit they describe — never mark work done before it is committed. Rationale (PIR_LOG 2026-06-13): in the NIGHT2/NIGHT3 claims audit, every hash-less completion claim in the March–June docs failed verification (TEST-03, BL-3.08 HTML half, BL-3.10 artefact), while every claim citing a commit hash held at HEAD.
 
@@ -80,8 +80,68 @@ Do NOT modify any other documentation files.
 Unit/contract tests (`test:unit`, incl. `tests/unit/contracts.test.js`) require NO emulator — pure jsdom/file-read. Only `test:rules` and `test:e2e` need it.
 The Playwright `webServer` auto-start command is broken on Windows (bash `&`); do not rely on it. Treat the emulator as manually-started, always-on infrastructure: start it in a separate terminal first with `firebase emulators:start` before running `test:rules` or `test:e2e`. Claude Code cannot reliably manage it as a background process.
 
-## Model Selection
-Default: Opus for complex multi-file tasks and architectural work.
-Sonnet: Only for purely mechanical single-file tasks (docs-only commits, single import additions, one-line fixes where the change is fully pre-specified).
-Haiku: Not recommended for this codebase — architectural context is too dense.
-Note: Fable and Mythos (Mythos-class) were withdrawn 2026-06-12 by US government export-control directive; no restoration date. Opus is the standing default in their absence — the prior "Fable default, Opus security fallback" convention is void.
+## Model Selection & Effort
+
+**Routing is by reasoning-difficulty, not task size.** The question is never
+"how big is this change" but "how much of the thinking is already done."
+Replaces the prior Fable/Opus-4.7 convention, which is void (those models are
+not in the picker).
+
+### Which model
+- **Haiku** — zero-reasoning mechanical work, fully pre-specified:
+  - The post-commit docs commit (mark `BL-X.XX ✅`, add completion note +
+    commit hash, move section to Completed) per the Workflow section below.
+  - Single import additions; find-and-replace with an exact target.
+  - One-line fixes where both the line and the replacement are named.
+  - The Tempo-style value fix (`value="snare"`→`"snap"`) class of change.
+- **Sonnet** — bounded implementation against a complete brief:
+  - A single BL-X task whose approach is already decided and written down
+    (e.g. BL-3.07 Competition Invite wiring, once the event handlers and
+    Firestore writes are specified).
+  - Client read-path work like BL-3.06 NIGHT1 N22, given the rule already
+    exists and the query shape is named.
+  - Must respect the Sydney Protocol: no `!important`, no `.style.display`,
+    state-driven visibility only. If a brief seems to require breaking these,
+    STOP — see escalation.
+- **Opus** — genuine reasoning:
+  - Anything touching a contract: `AppState` Proxy semantics, `mutateList`,
+    the normaliser pattern, Firebase region pinning, offline/IndexedDB
+    re-hydration, Practice Session serializability.
+  - Writing the structured implementation brief that the offload implementer
+    (see "Cross-family offload loop" below) then executes — including the review gates.
+  - Debugging an unknown cause; multi-file changes; BL-4.x remediation design.
+  - The architectural recheck of lower-model or offload-implementer output, **but
+    only when the change touched a contract.** A clean docs commit needs no recheck.
+
+### Cross-family offload loop (replaces the prior "Jules" implementer)
+For BL-x implementation offloaded outside Claude: **Antigravity 2.0 / Gemini
+implements** against an Opus-written airtight brief; **Claude (a different model
+family) runs the adversarial check** before merge — never Gemini-checks-Gemini
+(a producer misses ~a third of its own drift). One chunk → one PR → cross-family
+check → merge. The standing process, PR format, and accumulated lessons live in
+`docs/agent-briefs/HANDOFF-antigravity-bl-4.x.md` + `LESSONS.md`. Opus still writes
+the brief and runs the check; the implementer never self-certifies or self-merges.
+
+### If running as a lower model and the task exceeds the tier
+STOP and hand back. Do not attempt contract-touching or architectural work at
+Haiku/Sonnet tier. Say: "This touches <contract, e.g. AppState Proxy / Firebase
+region / Sydney Protocol>; recommend escalating to Opus." Do not work around a
+Sydney Protocol constraint to make a lower-tier change fit.
+
+### Effort (Opus)
+- **High** — default for all Opus work here.
+- **Medium** — bounded analytical Opus work whose shape is already understood.
+- **Extra (xhigh)** — underspecified or high-stakes only: BL-4.x cross-cutting
+  remediation, a state/Proxy race-condition hunt, offline-recovery design.
+- **Max** — effectively never (slower, heavier on the rate limit, and can
+  over-think well-scoped coding work into a worse result).
+
+### Before raising any architectural finding
+Check the Known False Positives list (FP-01 … FP-10) first. If it matches, cite
+the FP-ID and stop. This applies at every model tier and is the cheapest token
+saver in this file — it stops re-investigation of ten settled dead ends.
+
+### Defining "the spec is airtight" (the offload-implementer gate)
+Execution-ready means it names: the file(s), the exact change, the acceptance
+criterion, and the contract(s) it must not violate (Sydney Protocol + relevant
+State Layer rules). Missing any of those → Opus writes the brief first.
