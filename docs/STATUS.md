@@ -17,10 +17,14 @@
   (a)(b) intentionally red pending their mapped fixes.
 
 ## Next up (priority order)
-**P1 (do first)**
-1. **BL-4.03** — duplicate `id="tab-practice"`: merge/retire the legacy Practice
-   Drills screen. *Needs a product decision first (which screen survives).* Only
-   remaining P1.
+**P1 — in flight**
+1. **BL-4.03** — duplicate `id="tab-practice"`. **Decision made: MERGE** both screens
+   (AI Caddy + manual Drills) into one; brief written
+   (`docs/agent-briefs/bl-4.03-practice-merge.md`), handed to Antigravity.
+   *Status: implementation in flight → awaiting PR → cross-family check.* Also fixes N18.
+2. **BL-3.05** (do right after 4.03) — send personalisation inputs to
+   `generatePracticePlan` so the merged Caddy generates real (not generic) plans.
+   `// TODO(BL-3.05)` in `ui.js`. Coupled to the merged Practice screen.
 
 **P2**
 2. **BL-4.11** — legacy `.active` remnants. ⚠️ **Partially done:** BL-4.02 fixed the
