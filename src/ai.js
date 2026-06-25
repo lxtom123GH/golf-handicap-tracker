@@ -207,7 +207,7 @@ export async function generateAIResponse(uid, role) {
         let misses = {};
         shotsSnap.forEach(d => {
             const s = d.data();
-            if (s.curve) { misses[s.curve] = (misses[s.curve] || 0) + 1; }
+            if (s.shape && s.shape !== 'Straight') { misses[s.shape] = (misses[s.shape] || 0) + 1; }
         });
         const topMiss = Object.entries(misses).sort((a, b) => b[1] - a[1])[0];
 

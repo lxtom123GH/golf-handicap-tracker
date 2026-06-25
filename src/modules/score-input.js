@@ -78,6 +78,9 @@ export function syncShotWizardUI() {
     const puttingSection = document.getElementById('section-putting-outcome');
     if (data.club === 'Putter') puttingSection.classList.remove('hidden');
     else puttingSection.classList.add('hidden');
+
+    const offGreenBtn = document.getElementById('wiz-toggle-offgreen');
+    if (offGreenBtn) offGreenBtn.classList.toggle('active', !!data.isOffGreen);
 }
 
 export function setWizardActive(isActive) {
@@ -108,7 +111,11 @@ export async function saveShotData() {
                 // TASK 1: Automated GIR Logic
                 const holeIdx = AppState.currentHole - 1;
                 const par = AppState.currentCoursePars[holeIdx] || 4;
-                if (payload.outcome === 'Green' && payload.shotNumber <= (par - 2)) {
+                const realPutts = AppState.currentHoleShots.filter(s =>
+                    s.hole === AppState.currentHole && s.club === 'Putter' && !s.isOffGreen
+                );
+                if (payload.club === 'Putter' && !payload.isOffGreen &&
+                    realPutts.length === 1 && payload.shotNumber <= (par - 1)) {
                     if (!p.simpleStats[AppState.currentHole]) p.simpleStats[AppState.currentHole] = {};
                     p.simpleStats[AppState.currentHole].gir = true;
                 }
