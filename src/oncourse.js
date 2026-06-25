@@ -1025,7 +1025,7 @@ export function jumpToHole(holeIndex) {
  * flows DH -> AGS -> saved differential -> notCounting (BL-4.01).
  *
  * Ratable tee: trust the stored teeData. Unratable tee: read the manual
- * #oc-manual-cr/sr/par inputs and validate them with the same predicate at
+ * #oc-stat-cr/sr/par inputs and validate them with the same predicate at
  * both sites. `counting` is false unless the values are WHS-plausible.
  *
  * @param {string} courseName
@@ -1037,9 +1037,9 @@ export function resolveRoundRatings(courseName, teeName) {
     if (isRatableTee(teeData)) {
         return { rating: teeData.rating, slope: teeData.slope, par: teeData.par, ratable: true, counting: true };
     }
-    const crEl = document.getElementById('oc-manual-cr');
-    const srEl = document.getElementById('oc-manual-sr');
-    const parEl = document.getElementById('oc-manual-par');
+    const crEl = document.getElementById('oc-stat-cr');
+    const srEl = document.getElementById('oc-stat-sr');
+    const parEl = document.getElementById('oc-stat-par');
     const rating = crEl ? parseFloat(crEl.value) : NaN;
     const slope = srEl ? parseFloat(srEl.value) : NaN;
     const par = parEl ? parseInt(parEl.value) : NaN;
@@ -1592,7 +1592,7 @@ function bindReviewModal() {
             const courseName = AppState.currentRoundCourseName;
             const teeName = UI.ocTeeSelect.value;
             const teeData = COURSE_DATA[courseName]?.[teeName] || {};
-            const manualPar = document.getElementById('oc-manual-par');
+            const manualPar = document.getElementById('oc-stat-par');
             const par = manualPar ? parseFloat(manualPar.value) : (teeData.par || 72);
 
             const shotsQuery = query(

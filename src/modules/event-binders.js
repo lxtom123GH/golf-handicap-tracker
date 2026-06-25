@@ -282,11 +282,81 @@ export function bindSetupToggles() {
     }
 }
 
+async function updateDhPreview() {
+    if (!AppState.currentUser) return;
+    const courseName = document.getElementById('oc-course-select')?.value;
+    const teeName = document.getElementById('oc-tee-select')?.value;
+    const ocModule = await import('../oncourse.js');
+    const hi = await ocModule.getPlayerHandicap(AppState.currentUser.uid);
+    const { rating, slope, par } = ocModule.resolveRoundRatings(courseName, teeName);
+    const dhValue = document.getElementById('oc-dh-value');
+    const dhOverride = document.getElementById('oc-dh-override');
+
+    if (hi !== undefined && par > 0) {
+        const dh = Math.round(hi * ((slope || 113) / 113) + ((rating || 72) - par));
+        if (dhValue) dhValue.textContent = dh;
+        if (dhOverride) dhOverride.value = dh;
+    } else {
+        if (dhValue) dhValue.textContent = '0';
+        if (dhOverride) dhOverride.value = '0';
+    }
+    ocModule.updateModeVisibility();
+}
+
+function renderSetupRatings(courseName, teeName) {
+    import('../course-data.js').then(module => {
+        const COURSE_DATA = module.COURSE_DATA;
+        const teeData = COURSE_DATA[courseName]?.[teeName] || {};
+        const ratable = module.isRatableTee(teeData);
+        
+        const statsPanel = document.getElementById('oc-course-stats');
+        if (statsPanel) statsPanel.classList.remove('hidden');
+
+        const parInput = document.getElementById('oc-stat-par');
+        const crInput = document.getElementById('oc-stat-cr');
+        const srInput = document.getElementById('oc-stat-sr');
+
+        if (parInput) { parInput.value = teeData.par ?? ''; parInput.readOnly = ratable; }
+        if (crInput) { crInput.value = teeData.rating ?? ''; crInput.readOnly = ratable; }
+        if (srInput) { srInput.value = teeData.slope ?? ''; srInput.readOnly = ratable; }
+
+        AppState.currentCoursePars = teeData.pars || [];
+
+        const dhDisplay = document.getElementById('oc-dh-display');
+        if (dhDisplay) dhDisplay.classList.remove('hidden');
+
+        updateDhPreview();
+
+        const triggerPreview = () => updateDhPreview();
+        if (parInput) parInput.oninput = triggerPreview;
+        if (crInput) crInput.oninput = triggerPreview;
+        if (srInput) srInput.oninput = triggerPreview;
+    });
+}
+
 export function bindCourseSelect() {
     if (UI.ocCourseSelect) {
         UI.ocCourseSelect.addEventListener('change', () => {
             const courseName = UI.ocCourseSelect.value;
-            AppState.currentRoundCourseName = courseName;
+            const customGroup = document.getElementById('oc-custom-course-group');
+            const customNameInput = document.getElementById('oc-custom-course-name');
+
+            if (courseName === 'Custom Course') {
+                if (customGroup) customGroup.classList.remove('hidden');
+                AppState.currentRoundCourseName = customNameInput ? customNameInput.value : 'Custom Course';
+                if (customNameInput) {
+                    customNameInput.oninput = (e) => AppState.currentRoundCourseName = e.target.value;
+                }
+                if (UI.ocTeeSelect) {
+                    UI.ocTeeSelect.innerHTML = '<option value="" disabled selected>Custom</option>';
+                    UI.ocTeeSelect.dispatchEvent(new Event('change'));
+                }
+                renderSetupRatings('Custom Course', '');
+                return;
+            } else {
+                if (customGroup) customGroup.classList.add('hidden');
+                AppState.currentRoundCourseName = courseName;
+            }
 
             import('../course-data.js').then(module => {
                 const COURSE_DATA = module.COURSE_DATA;
@@ -307,46 +377,9 @@ export function bindCourseSelect() {
     if (UI.ocTeeSelect) {
         UI.ocTeeSelect.addEventListener('change', async () => {
             const courseName = UI.ocCourseSelect.value;
+            if (courseName === 'Custom Course') return;
             const teeName = UI.ocTeeSelect.value;
-            import('../course-data.js').then(module => {
-                const COURSE_DATA = module.COURSE_DATA;
-                if (COURSE_DATA[courseName] && COURSE_DATA[courseName][teeName]) {
-                    const data = COURSE_DATA[courseName][teeName];
-                    const ratable = module.isRatableTee(data);
-
-                    if (UI.ocCourseInfoLine) {
-                        if (ratable) {
-                            // Trusted rating — display only; the save sources these from teeData (BL-4.01)
-                            UI.ocCourseInfoLine.innerHTML = `Par: ${data.par} | CR: ${data.rating} | SR: ${data.slope}`;
-                        } else {
-                            // Unratable tee — manual CR/SR/par required for the round to count (BL-4.01)
-                            const v = (n) => (Number(n) > 0 ? n : '');
-                            UI.ocCourseInfoLine.innerHTML =
-                                `<span class="text-muted">No course rating on file — enter CR/SR/par to make this round count:</span><br>` +
-                                `Par: <input type="number" id="oc-manual-par" value="${v(data.par)}" placeholder="Par" style="width:50px; display:inline;"> ` +
-                                `| CR: <input type="number" step="0.1" id="oc-manual-cr" value="${v(data.rating)}" placeholder="CR" style="width:60px; display:inline;"> ` +
-                                `| SR: <input type="number" id="oc-manual-sr" value="${v(data.slope)}" placeholder="SR" style="width:60px; display:inline;">`;
-                        }
-                    }
-
-                    AppState.currentCoursePars = data.pars || [];
-
-                    if (AppState.currentUser) {
-                        import('../oncourse.js').then(async m => {
-                            const hi = await m.getPlayerHandicap(AppState.currentUser.uid);
-                            if (hi !== undefined && ratable) {
-                                const dh = Math.round(hi * ((data.slope || 113) / 113) + ((data.rating || 72) - (data.par || 72)));
-                                if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <strong><input type="number" id="oc-manual-dh" value="${dh}" style="width:60px; display:inline; font-weight:bold; color:var(--primary-color);"></strong>`;
-                            } else {
-                                if (UI.ocDailyHandicapLine) UI.ocDailyHandicapLine.innerHTML = `Your Daily Handicap: <input type="number" id="oc-manual-dh" value="0" style="width:60px; display:inline; font-weight:bold;">`;
-                            }
-                        });
-                    }
-
-                    // Force UI isolation check on tee/mode change
-                    import('../oncourse.js').then(m => m.updateModeVisibility());
-                }
-            });
+            renderSetupRatings(courseName, teeName);
         });
     }
 }
@@ -367,7 +400,7 @@ export function bindStartRound() {
             const { rating, slope, par: totalPar } = ocModule.resolveRoundRatings(courseName, teeName);
 
             if (!totalPar || totalPar <= 0) {
-                if (document.getElementById('tab-oncourse').classList.contains('active')) {
+                if (document.body.dataset.activeTab === 'tab-oncourse') {
                     alert("Please specify a valid total Par for this course.");
                 }
                 return;
@@ -392,10 +425,17 @@ export function bindStartRound() {
             AppState.currentHoleShots = [];
 
             // Fetch Daily Handicaps for all players (uses the single resolved rating/slope)
+            const dhOverrideEl = document.getElementById('oc-dh-override');
             for (let p of AppState.liveRoundGroups) {
                 const hi = await ocModule.getPlayerHandicap(p.uid);
                 p.handicapIndex = hi;
                 p.dailyHandicap = Math.round(hi * ((slope || 113) / 113) + ((rating || 72) - totalPar));
+                if (p.uid === AppState.currentUser?.uid && dhOverrideEl) {
+                    const overrideVal = parseFloat(dhOverrideEl.value);
+                    if (Number.isFinite(overrideVal)) {
+                        p.dailyHandicap = overrideVal;
+                    }
+                }
             }
 
             document.body.classList.add('round-active');

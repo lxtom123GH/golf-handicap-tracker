@@ -96,8 +96,6 @@ export const UI = {
     btnRound18: document.getElementById('btn-round-18'),
     ocCourseSelect: document.getElementById('oc-course-select'),
     ocTeeSelect: document.getElementById('oc-tee-select'),
-    ocCourseInfoLine: document.getElementById('oc-course-info-line'),
-    ocDailyHandicapLine: document.getElementById('oc-daily-handicap-line'),
     ocPlayerSelect: document.getElementById('oc-player-select'),
     btnOcAddPlayer: document.getElementById('btn-oc-add-player'),
     ocAddedPlayersList: document.getElementById('oc-players-list'),
