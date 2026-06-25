@@ -1165,7 +1165,7 @@ async function saveRoundToDatabase() {
                     stablefordPoints: totalStableford,
                     netScore: totalGross,
                     rulePoints: totalRulePoints,
-                    totalCompScore: totalStableford + totalRulePoints,
+                    totalPoints: totalStableford + totalRulePoints,
                     ruleCounts: ruleCounts,
                     isLiveSynced: true
                 });
@@ -1173,8 +1173,7 @@ async function saveRoundToDatabase() {
                 compPayload.date = serverTimestamp();
 
                 try {
-                    await addDoc(collection(db, "competition_results"), compPayload);
-                    await addDoc(collection(db, "comp_rounds"), compPayload); // Backward compat
+                    await addDoc(collection(db, "comp_rounds"), compPayload);
                 } catch (cloudErr) {
                     console.error("Cloud Save Fail (Comp):", cloudErr);
                     anyCloudFail = true;
