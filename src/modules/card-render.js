@@ -4,6 +4,7 @@ import { COURSE_DATA } from '../course-data.js';
 import { calculateHoleStableford } from '../whs.js';
 import { openHoleEditor } from '../oncourse.js';
 import { jumpToHole } from '../oncourse.js';
+import { escapeHtml } from '../escape.js';
 
 /**
  * Task 3: Live Leaderboard Logic
@@ -42,7 +43,7 @@ export function updateLiveLeaderboard() {
         tr.style.borderBottom = '1px solid #f1f5f9';
         tr.innerHTML = `
             <td style="padding:12px 8px; font-weight:700; color:#64748b;">${i + 1}</td>
-            <td style="padding:12px 8px; font-weight:600;">${s.name}</td>
+            <td style="padding:12px 8px; font-weight:600;">${escapeHtml(s.name)}</td>
             <td style="padding:12px 8px; text-align:center; color:#64748b;">${s.thru}</td>
             <td style="padding:12px 8px; text-align:right; font-weight:800; color:var(--primary-color);">${s.points}</td>
         `;

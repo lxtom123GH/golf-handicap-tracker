@@ -13,6 +13,7 @@ import { calculateDailyHandicap, calculateHoleStableford, convertStablefordToAGS
 import { httpsCallable } from "firebase/functions";
 import { functions } from './firebase-config.js';
 import { AudioService } from './services/audioService.js';
+import { escapeHtml } from './escape.js';
 
 import { updateLiveLeaderboard, renderDetailedReview, renderBagButtons, renderHoleJumper } from './modules/card-render.js';
 import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast } from './modules/score-input.js';
@@ -209,7 +210,7 @@ export function loadHole() {
             const holeScore = p.scores[AppState.currentHole] || 0;
 
             nameRow.innerHTML = `
-            <span style="font-weight:700; font-size:0.95rem; color:#1e293b;">${p.name}</span>
+            <span style="font-weight:700; font-size:0.95rem; color:#1e293b;">${escapeHtml(p.name)}</span>
             <span style="font-size:0.85rem; color:#64748b; font-weight:600;">Total: <span style="color:var(--primary-color); font-size:1rem;">${totalSoFar + holeScore}</span></span>
         `;
             pDiv.appendChild(nameRow);
@@ -1640,7 +1641,7 @@ function bindReviewModal() {
 
                 playerCard.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <strong style="font-size:1.15rem; color:var(--primary-color);">${p.name}</strong>
+                        <strong style="font-size:1.15rem; color:var(--primary-color);">${escapeHtml(p.name)}</strong>
                         <span style="font-size:0.85rem; background:#f1f5f9; padding:2px 8px; border-radius:12px; color:#64748b;">DH: ${p.dailyHandicap}</span>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; text-align:center; background:#f8fafc; padding:10px; border-radius:8px;">

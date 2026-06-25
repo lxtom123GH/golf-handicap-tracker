@@ -6,6 +6,7 @@ import { db, auth } from './firebase-config.js';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, or } from "firebase/firestore";
 import { AppState } from './state.js';
 import { UI } from './ui.js';
+import { escapeHtml } from './escape.js';
 
 let unsubscribeComps = null;
 let unsubscribeCompRounds = null;
@@ -164,10 +165,10 @@ function generateDynamicLogInputs(rulesArray) {
         const div = document.createElement('div');
         div.className = 'form-group';
         div.innerHTML = `
-            <label>${rule.name}</label>
+            <label>${escapeHtml(rule.name)}</label>
             <div style="display:flex; align-items:center;">
                 <button type="button" class="btn btn-secondary stepper-minus" aria-label="Decrease" style="font-size:1.5rem; padding:0 15px; border-radius:12px 0 0 12px; height:50px;">-</button>
-                <input type="number" class="dynamic-rule-input" data-rulename="${rule.name}" data-rulepts="${rule.pts}" value="0" style="text-align:center; border-radius:0; height:50px; flex:1;" readonly>
+                <input type="number" class="dynamic-rule-input" data-rulename="${escapeHtml(rule.name)}" data-rulepts="${rule.pts}" value="0" style="text-align:center; border-radius:0; height:50px; flex:1;" readonly>
                 <button type="button" class="btn btn-secondary stepper-plus" aria-label="Increase" style="font-size:1.5rem; padding:0 15px; border-radius:0 12px 12px 0; height:50px;">+</button>
             </div>
         `;
@@ -223,7 +224,7 @@ function renderCompLeaderboard() {
 
     // Add columns for every rule
     AppState.currentCompData.rules.forEach(rule => {
-        trHead.innerHTML += `<th style="cursor:pointer" data-sort="${rule.name}">${rule.name} ↕</th>`;
+        trHead.innerHTML += `<th style="cursor:pointer" data-sort="${escapeHtml(rule.name)}">${escapeHtml(rule.name)} ↕</th>`;
     });
     UI.compLeaderboardHead.appendChild(trHead);
 
@@ -279,7 +280,7 @@ function renderCompLeaderboard() {
         // Base cols
         let html = `
             <td>${index + 1}</td>
-            <td>${p.name}</td>
+            <td>${escapeHtml(p.name)}</td>
             <td style="color:#16a34a; font-weight:bold;">${p.totalPoints}</td>
             <td>${p.rounds}</td>
         `;
@@ -312,12 +313,12 @@ function renderRecentCompRounds() {
             // Generate breakdown string
             let breakdown = '';
             if (round.ruleCounts) {
-                breakdown = Object.entries(round.ruleCounts).map(([k, v]) => `${k}:${v}`).join(', ');
+                breakdown = Object.entries(round.ruleCounts).map(([k, v]) => `${escapeHtml(k)}:${v}`).join(', ');
             }
 
             tr.innerHTML = `
                 <td>${dateStr}</td>
-                <td>${round.playerName}</td>
+                <td>${escapeHtml(round.playerName)}</td>
                 <td style="color:#16a34a; font-weight:bold;">${round.totalPoints}</td>
                 <td style="font-size: 0.8rem; color:#64748b;">${breakdown}</td>
                 <td>
@@ -410,7 +411,7 @@ function bindCompetitionCreation() {
         }
         rulesListEl.innerHTML = rules.map((r, i) => `
             <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0;">
-                <span><strong>${r.name}</strong>: ${r.pts} pts</span>
+                <span><strong>${escapeHtml(r.name)}</strong>: ${r.pts} pts</span>
                 <button type="button" class="btn-text del-rule" aria-label="Delete Rule" data-index="${i}" style="color:#ef4444; padding:0;">✕</button>
             </div>
         `).join('');
@@ -589,8 +590,8 @@ function populateRegularsPool() {
                 const label = document.createElement('label');
                 label.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;';
                 label.innerHTML = `
-                    <input type="checkbox" value="${d.id}" data-name="${data.displayName || data.email}">
-                    <span>${data.displayName || data.email}</span>
+                    <input type="checkbox" value="${escapeHtml(d.id)}" data-name="${escapeHtml(data.displayName || data.email)}">
+                    <span>${escapeHtml(data.displayName || data.email)}</span>
                 `;
                 UI.compRegularsList.appendChild(label);
             }

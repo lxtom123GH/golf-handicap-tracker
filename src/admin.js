@@ -8,6 +8,7 @@ import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc, serverT
 import { sendPasswordResetEmail } from "firebase/auth";
 import * as XLSX from 'xlsx';
 import { UI } from './ui.js';
+import { escapeHtml } from './escape.js';
 
 window.refreshAdminDashboard = async () => {
     if (!window.currentUserIsAdmin) return;
@@ -22,18 +23,18 @@ window.refreshAdminDashboard = async () => {
             const data = d.data();
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${data.displayName || 'N/A'}</td>
-                <td>${data.email}</td>
+                <td>${escapeHtml(data.displayName || 'N/A')}</td>
+                <td>${escapeHtml(data.email)}</td>
                 <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
                 <td>
                     <label class="toggle-switch">
-                        <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${d.id}', this.checked)">
+                        <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
                 <td>
                     <label class="toggle-switch">
-                        <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${d.id}', this.checked)">
+                        <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
@@ -153,9 +154,9 @@ async function loadPreapprovedEmails() {
         snap.forEach(d => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="padding: 10px;">${d.id}</td>
+                <td style="padding: 10px;">${escapeHtml(d.id)}</td>
                 <td style="padding: 10px; text-align: right;">
-                    <button class="btn btn-danger btn-sm" onclick="removePreapprovedEmail('${d.id}')">Remove</button>
+                    <button class="btn btn-danger btn-sm" onclick="removePreapprovedEmail('${escapeHtml(d.id)}')">Remove</button>
                 </td>
             `;
             emailsList.appendChild(tr);
