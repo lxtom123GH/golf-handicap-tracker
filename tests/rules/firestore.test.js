@@ -80,4 +80,22 @@ describe('Firebase Security Rules - WHS Rounds', () => {
             slope: 113
         }));
     });
+    it('Should allow admin to create rounds for other users', async () => {
+        // Setup admin user
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            const db = context.firestore();
+            await db.collection('users').doc('admin_user').set({ isApproved: true, isAdmin: true });
+        });
+
+        const adminDb = testEnv.authenticatedContext('admin_user').firestore();
+
+        // Write to other user succeeds
+        await assertSucceeds(adminDb.collection('whs_rounds').add({
+            uid: 'someOtherUser',
+            course: 'Augusta',
+            adjustedGross: 80,
+            rating: 72,
+            slope: 113
+        }));
+    });
 });
