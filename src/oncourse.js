@@ -295,6 +295,7 @@ export function loadHole() {
             }
         }
 
+        renderCompPanel();
         updateLiveLeaderboard();
     } catch (e) {
         console.error("UI Error Boundary caught generic hole load failure:", e);
@@ -1677,6 +1678,78 @@ function bindReviewModal() {
  * Bulletproof Visibility UI
  * Handles switching between Simple (Stats) and Detailed (Wizard) tracking
  */
+function renderCompPanel() {
+    const panel = document.getElementById('oc-comp-panel');
+    if (!panel) return;
+    const rules = AppState.currentLiveCompRules || [];
+    if (!AppState.currentLiveCompId || rules.length === 0) {
+        panel.classList.add('hidden');
+        return;
+    }
+    // SCOPE: current user only. To extend to all players later, loop
+    // AppState.liveRoundGroups and render one labelled block per player.
+    const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser?.uid);
+    if (!p) { panel.classList.add('hidden'); return; }
+    panel.classList.remove('hidden');
+
+    const holeLabel = document.getElementById('oc-comp-panel-hole');
+    if (holeLabel) holeLabel.textContent = `(Hole ${AppState.currentHole})`;
+
+    // Collapse toggle — assignment (.onclick), never addEventListener, so it
+    // cannot stack across re-renders. Header markup is static.
+    const header = document.getElementById('oc-comp-panel-header');
+    const caret  = document.getElementById('oc-comp-panel-caret');
+    if (header) header.onclick = () => {
+        const body = document.getElementById('oc-comp-panel-body');
+        if (!body) return;
+        const collapsed = body.classList.toggle('hidden');
+        if (caret) caret.textContent = collapsed ? '▶' : '▼';
+    };
+
+    const body = document.getElementById('oc-comp-panel-body');
+    if (!body) return;
+    body.innerHTML = '';
+    const holeStats = p.compStats[AppState.currentHole] || {};
+
+    rules.forEach(rule => {
+        const count = holeStats[rule.name] || 0;
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0;';
+        // Stepper controls are STATIC markup — safe to use innerHTML here.
+        row.innerHTML = `
+            <span class="comp-rule-label" style="font-size:0.9rem; font-weight:600; color:#475569;"></span>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="comp-rule-minus" style="width:40px; height:40px; border-radius:10px; border:2px solid #cbd5e1; background:white; font-size:1.3rem; font-weight:bold;">−</button>
+                <span class="comp-rule-count" style="min-width:24px; text-align:center; font-size:1.3rem; font-weight:800; color:#1e293b;">${count}</span>
+                <button class="comp-rule-plus" style="width:40px; height:40px; border-radius:10px; background:var(--primary-color); color:white; border:none; font-size:1.3rem; font-weight:bold;">+</button>
+            </div>
+        `;
+        // rule.name is COMP-CREATOR-CONTROLLED user input (stored XSS surface,
+        // BL-4.17). NEVER interpolate it into an innerHTML string. Set it via
+        // textContent and aria-labels via setAttribute (both are HTML-inert).
+        const label = row.querySelector('.comp-rule-label');
+        label.textContent = `${rule.name} (${rule.pts} pt${rule.pts === 1 ? '' : 's'})`;
+        const minus = row.querySelector('.comp-rule-minus');
+        const plus  = row.querySelector('.comp-rule-plus');
+        minus.setAttribute('aria-label', `Decrease ${rule.name}`);
+        plus.setAttribute('aria-label', `Increase ${rule.name}`);
+
+        plus.onclick = () => {
+            if (!p.compStats[AppState.currentHole]) p.compStats[AppState.currentHole] = {};
+            p.compStats[AppState.currentHole][rule.name] =
+                (p.compStats[AppState.currentHole][rule.name] || 0) + 1;
+            loadHole(); // REQUIRED — see persistence note; do not remove.
+        };
+        minus.onclick = () => {
+            if (!p.compStats[AppState.currentHole]) p.compStats[AppState.currentHole] = {};
+            const cur = p.compStats[AppState.currentHole][rule.name] || 0;
+            if (cur > 0) p.compStats[AppState.currentHole][rule.name] = cur - 1;
+            loadHole();
+        };
+        body.appendChild(row);
+    });
+}
+
 export function updateModeVisibility() {
     const btnTrack = document.getElementById('btn-oc-track-shot');
     const wizard = document.getElementById('oncourse-wizard');
