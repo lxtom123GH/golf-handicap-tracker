@@ -268,6 +268,130 @@
                 </div>
 
             </div>
+            <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 20px; align-items: start;">
+
+                <!-- Drill Selection & Form -->
+                <div class="card bg-white" style="grid-column: 1;">
+                    <h2 class="section-title">Log a Practice Session</h2>
+
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label>Select Drill Template</label>
+                            <select id="drill-select">
+
+                                <option value="inside_30">Inside 30</option>
+                                <option value="putting_9_holes">Putting (9 Holes)</option>
+                                <option value="up_down">Up/Down</option>
+                                <option value="strokes_gained_putting">Strokes Gained Putting</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Date</label>
+                            <input type="date" id="drill-date" required>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC DRILL CONTAINER -->
+                    <div id="practice-form-container" class="drill-template-container"
+                        style="margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <h3 id="pf-title"
+                            style="margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; color: var(--primary-color);">
+                            Select a Drill Above</h3>
+                        <button type="button" class="wakelock-toggle btn btn-secondary btn-sm"
+                            style="width: 100%; margin-bottom: 15px; background: #64748b; color: #fff;">🌙 Screen:
+                            Normal</button>
+                        <p id="pf-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
+                            Choose
+                            a practice routine to begin tracking your performance.</p>
+
+                        <form id="form-log-practice">
+                            <div id="practice-dynamic-inputs">
+                                <!-- Dynamically generated fields per drill -->
+                            </div>
+                            <div
+                                style="margin-top: 15px; padding: 10px; background: #e2e8f0; border-radius: 6px; text-align: center;">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Calculated
+                                    Total:
+                                </span>
+                                <span id="drill-live-total"
+                                    style="font-size: 1.25rem; font-weight: 800; color: var(--primary-color);">0</span>
+                            </div>
+                            <button type="submit" id="btn-save-practice" class="btn btn-primary"
+                                style="width: 100%; margin-top: 15px;">Save Practice Session</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Personal Analytics Dashboard -->
+                <div class="card bg-white" style="grid-column: 1; border-top: 4px solid var(--primary-color);">
+                    <div id="coach-selection-container"
+                        style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                        <label for="player-coach-select" style="font-weight: bold;">My Coach:</label>
+                        <select id="player-coach-select" class="form-control"
+                            style="display: inline-block; width: auto; margin-left: 10px;">
+                            <option value="">-- No Coach Selected --</option>
+                        </select>
+                        <button id="btn-save-coach" class="btn btn-primary btn-sm"
+                            style="margin-left: 10px; width: auto; display: inline-block; margin-top: 0;">Save
+                            Coach</button>
+                    </div>
+                    <h2 class="section-title">My Performance Metrics</h2>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <div
+                            style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div
+                                style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
+                                Best Score</div>
+                            <div id="practice-best-score"
+                                style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">-</div>
+                        </div>
+                        <div
+                            style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div
+                                style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
+                                Avg Score</div>
+                            <div id="practice-avg-score" style="font-size: 2rem; font-weight: 800; color: #475569;">
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button id="btn-email-coach" class="btn btn-secondary btn-sm" style="flex: 1;">Email
+                            Coach</button>
+                        <button id="btn-export-practice" class="btn btn-secondary btn-sm" style="flex: 1;">Export
+                            Drills</button>
+                    </div>
+                    <button id="btn-ask-ai" class="btn btn-primary btn-sm"
+                        style="width: 100%; margin-top: 0; background-color: #8b5cf6; border-color: #8b5cf6;">✨ Ask
+                        AI Coach</button>
+
+                    <h3
+                        style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">
+                        Past Sessions</h3>
+
+                    <div id="practice-empty-state" class="empty-state" style="padding: 15px;">
+                        No practice sessions recorded yet. Start grinding!
+                    </div>
+
+                    <div class="table-responsive" style="margin-top: 0; display: none;" id="practice-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Total Points</th>
+                                    <th style="width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="practice-history-tbody">
+                                <!-- JS injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
         <!-- PRACTICE DRILLS TAB END -->
 
@@ -1712,143 +1836,6 @@
             </div>
 
         </div> <!-- End Comp Tab -->
-
-        <!-- ========================================== -->
-        <!-- PRACTICE DRILLS TAB START                  -->
-        <!-- ========================================== -->
-        <div id="tab-practice" class="tab-content hidden">
-
-            <div class="header" style="margin-bottom: 20px;">
-                <h1>Practice Drills</h1>
-                <p>Track your private training sessions and monitor your progress over time.</p>
-            </div>
-
-            <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 20px; align-items: start;">
-
-                <!-- Drill Selection & Form -->
-                <div class="card bg-white" style="grid-column: 1;">
-                    <h2 class="section-title">Log a Practice Session</h2>
-
-                    <div class="form-row">
-                        <div class="form-group flex-2">
-                            <label>Select Drill Template</label>
-                            <select id="drill-select">
-
-                                <option value="inside_30">Inside 30</option>
-                                <option value="putting_9_holes">Putting (9 Holes)</option>
-                                <option value="up_down">Up/Down</option>
-                                <option value="strokes_gained_putting">Strokes Gained Putting</option>
-                            </select>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label>Date</label>
-                            <input type="date" id="drill-date" required>
-                        </div>
-                    </div>
-
-                    <!-- DYNAMIC DRILL CONTAINER -->
-                    <div id="practice-form-container" class="drill-template-container"
-                        style="margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px;">
-                        <h3 id="pf-title"
-                            style="margin-top: 0; margin-bottom: 10px; font-size: 1.05rem; color: var(--primary-color);">
-                            Select a Drill Above</h3>
-                        <button type="button" class="wakelock-toggle btn btn-secondary btn-sm"
-                            style="width: 100%; margin-bottom: 15px; background: #64748b; color: #fff;">🌙 Screen:
-                            Normal</button>
-                        <p id="pf-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
-                            Choose
-                            a practice routine to begin tracking your performance.</p>
-
-                        <form id="form-log-practice">
-                            <div id="practice-dynamic-inputs">
-                                <!-- Dynamically generated fields per drill -->
-                            </div>
-                            <div
-                                style="margin-top: 15px; padding: 10px; background: #e2e8f0; border-radius: 6px; text-align: center;">
-                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Calculated
-                                    Total:
-                                </span>
-                                <span id="drill-live-total"
-                                    style="font-size: 1.25rem; font-weight: 800; color: var(--primary-color);">0</span>
-                            </div>
-                            <button type="submit" id="btn-save-practice" class="btn btn-primary"
-                                style="width: 100%; margin-top: 15px;">Save Practice Session</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Personal Analytics Dashboard -->
-                <div class="card bg-white" style="grid-column: 1; border-top: 4px solid var(--primary-color);">
-                    <div id="coach-selection-container"
-                        style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
-                        <label for="player-coach-select" style="font-weight: bold;">My Coach:</label>
-                        <select id="player-coach-select" class="form-control"
-                            style="display: inline-block; width: auto; margin-left: 10px;">
-                            <option value="">-- No Coach Selected --</option>
-                        </select>
-                        <button id="btn-save-coach" class="btn btn-primary btn-sm"
-                            style="margin-left: 10px; width: auto; display: inline-block; margin-top: 0;">Save
-                            Coach</button>
-                    </div>
-                    <h2 class="section-title">My Performance Metrics</h2>
-
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div
-                            style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
-                            <div
-                                style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
-                                Best Score</div>
-                            <div id="practice-best-score"
-                                style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">-</div>
-                        </div>
-                        <div
-                            style="flex: 1; background: #f8f9fa; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center;">
-                            <div
-                                style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">
-                                Avg Score</div>
-                            <div id="practice-avg-score" style="font-size: 2rem; font-weight: 800; color: #475569;">
-                                -
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        <button id="btn-email-coach" class="btn btn-secondary btn-sm" style="flex: 1;">Email
-                            Coach</button>
-                        <button id="btn-export-practice" class="btn btn-secondary btn-sm" style="flex: 1;">Export
-                            Drills</button>
-                    </div>
-                    <button id="btn-ask-ai" class="btn btn-primary btn-sm"
-                        style="width: 100%; margin-top: 0; background-color: #8b5cf6; border-color: #8b5cf6;">✨ Ask
-                        AI Coach</button>
-
-                    <h3
-                        style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">
-                        Past Sessions</h3>
-
-                    <div id="practice-empty-state" class="empty-state" style="padding: 15px;">
-                        No practice sessions recorded yet. Start grinding!
-                    </div>
-
-                    <div class="table-responsive" style="margin-top: 0; display: none;" id="practice-table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Total Points</th>
-                                    <th style="width: 60px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="practice-history-tbody">
-                                <!-- JS injected -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        <!-- PRACTICE DRILLS TAB END -->
 
 
 
