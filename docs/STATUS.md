@@ -53,7 +53,11 @@ just-in-time off fresh HEAD, not in advance). All bounded, low-decision:
    BL-4.08 — reconcile the contract before changing it.
 
 **Deep-Dive remediation — BL-DD cluster (verified 2026-06-26)**
-New tracked cluster from the deep dive (MASTER_BACKLOG → "Deep Dive — Verified New Findings"; evidence in `docs/deep-dive/PHASE-3A`). **2 High** — BL-DD-01 (no AI-callable rate-limit → billing abuse), BL-DD-02 (`xlsx` CVE bundled) — + a medium security/correctness set BL-DD-03..11. **Recommended next: a remediation _plan_** (sequence the 16 clean fixes ahead of the ~14 needs-design items, security cluster designed deliberately), then loop-gated execution. Lower-sev verified hygiene folds into BL-4.13.
+New tracked cluster from the deep dive (MASTER_BACKLOG → "Deep Dive — Verified New Findings"; evidence in `docs/deep-dive/PHASE-3A`). **2 High** — BL-DD-01 (no AI-callable rate-limit → billing abuse), BL-DD-02 (`xlsx` CVE bundled) — + a medium security/correctness set BL-DD-03..11. Sequenced into tranches: clean fixes first, then needs-design.
+- **Tranche 1 ✅ MERGED (2026-06-26, PR #80 `bfeba85`)** — BL-DD-07 (admin `whs_rounds` create rule + test), BL-DD-03 (`askAiCoach` length cap + systemInstruction), BL-DD-10 (comp dynamic-inputs repoint). Cross-family SHIP.
+- **Tranche 2 (next, briefed):** the DECIDED cuts — BL-4.16 (surveyor honest-toast), BL-4.10 (notifications panel removal), BL-4.11/BL-DD-11 (telemetry delete) — + BL-DD-02 (`xlsx`→CSV). Brief: `docs/agent-briefs/bl-dd-tranche-2-decided-cuts.md`.
+- **Then (needs-design, surface choices first):** BL-DD-01 (AI rate-limit) + BL-DD-04/05/06 (Firestore read-scoping / field-minimize / audio ownership+cap).
+Lower-sev verified hygiene folds into BL-4.13.
 
 **P3**
 9. **BL-4.13** — hygiene sweep (dead keys/CSS/`!important`×46/dup renders, etc.); now also absorbs the deep-dive low-sev hygiene (F11/F13/F14/F16/F20/F22/F24/F25/F26/F27/F28).
