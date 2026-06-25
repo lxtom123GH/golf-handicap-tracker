@@ -22,9 +22,20 @@
    (AI Caddy + manual Drills) into one; brief written
    (`docs/agent-briefs/bl-4.03-practice-merge.md`), handed to Antigravity.
    *Status: implementation in flight → awaiting PR → cross-family check.* Also fixes N18.
-2. **BL-3.05** (do right after 4.03) — send personalisation inputs to
-   `generatePracticePlan` so the merged Caddy generates real (not generic) plans.
-   `// TODO(BL-3.05)` in `ui.js`. Coupled to the merged Practice screen.
+2. **BL-3.05 ✅ CLOSED (2026-06-25)** — was "send personalisation inputs so plans
+   aren't generic"; verified **inverted premise** (FP-11): `generatePracticePlan`
+   already personalises server-side from `whs_rounds` + `profiles.handicapIndex`
+   (`functions/index.js:257-290`). TODO corrected (commit `d2f2e23`). Genuine forward
+   work captured as Adaptive-Engine **F-A** (self-reported inputs) / **F-B**
+   (voice-diary→plan) in MASTER_BACKLOG — parked, not bugs.
+
+**Rough next-3 build queue** (one chunk → PR → cross-family check → next; brief each
+just-in-time off fresh HEAD, not in advance). All bounded, low-decision:
+1. **BL-3.06** — `assignedDrills` client read path + rules-test (rule already exists).
+2. **BL-3.07** — competition invite-players wiring (dead UI → handlers + Firestore writes).
+3. **BL-4.11** — last legacy `.active` remnant (telemetry active-tab check only; small).
+*Decision-gated, surface to user before briefing:* **BL-4.16** (surveyor: descope vs build),
+**BL-4.12** (comp archive/delete: implement vs strip).
 
 **P2**
 2. **BL-4.11** — legacy `.active` remnants. ⚠️ **Partially done:** BL-4.02 fixed the
@@ -42,8 +53,10 @@
 9. **BL-4.13** — hygiene sweep (dead keys/CSS/`!important`×44/dup renders, etc.).
 
 **Also open (from CLAUDE.md active backlog, pre-4.x):**
-- **BL-3.05** practice-plan personalisation inputs · **BL-3.06** `assignedDrills`
-  client read path + rules test · **BL-3.07** competition invite-players wiring.
+- **BL-3.06** `assignedDrills` client read path + rules test · **BL-3.07** competition
+  invite-players wiring. *(BL-3.05 closed — see above / FP-11.)*
+- **Practice Caddy Upgrades (Adaptive Engine)** incl. **F-A** self-reported inputs +
+  **F-B** voice-diary→plan (captured 2026-06-25; both reuse existing pipelines).
 
 **Deferred:** DATA-01 (firestore-paths), DATA-04 (followers index), ARCH-02 (ui.js
 split), ARCH-03 (FIRESTORE_SCHEMA), AUDIT-01 (`functions/` review — Cloud Functions

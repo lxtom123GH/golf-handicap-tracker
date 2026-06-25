@@ -875,8 +875,12 @@ export function bindPracticeCaddyUI() {
 
         try {
             const generatePlan = httpsCallable(functions, 'generatePracticePlan');
-            // TODO(BL-3.05): personalisation inputs are never sent to the
-            // function — every plan uses the generic fallback. Separate PR.
+            // The function derives personalisation server-side from the caller's
+            // whs_rounds + profiles.handicapIndex (functions/index.js:257-290), so
+            // {} is intentional — the generic fallback only fires for users with
+            // zero logged rounds. Adding *self-reported* inputs (focus/goal/time)
+            // is a future feature: see "Practice Caddy Upgrades (Adaptive Engine)"
+            // in MASTER_BACKLOG. (BL-3.05 closed as inverted premise — FP-11.)
             const result = await generatePlan({});
             _activeDrillData = normalizePracticePlan(result.data);
             showActiveDrill(_activeDrillData);
