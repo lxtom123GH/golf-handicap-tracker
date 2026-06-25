@@ -78,7 +78,7 @@ service cloud.firestore {
         isAdmin() ||
         (resource.data.visibility == "public") // Fallback for social if implemented
       );
-      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && (request.resource.data.uid == request.auth.uid || isAdmin());
       allow update, delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
     }
 
