@@ -37,13 +37,14 @@
 
 ## Active Tasks
 
-### BL-3.05 🔴 AI Practice Plan — Full Rebuild (HIGH PRIORITY)
+### BL-3.05 ✅ AI Practice Plan — Full Rebuild (RESOLVED)
+*Closed 2026-06-25 · final sub-task closed as inverted premise (FP-11); TODO correction commit `d2f2e23`.* The three rebuild layers shipped earlier (below); the last open sub-task — the "personalisation never sent → every plan generic" claim — was verified false against source. Genuine forward work (self-reported inputs; voice-diary→plan) is captured under **Practice Caddy Upgrades (Adaptive Engine)** as F-A/F-B.
 Three layers of breakage from rogue agent session (ARCH-01). All specific, all fixable:
 - **DATA-02 ✅** *(Completed: 2026-06-09 · commit d3befec)* 3 stale path references in `src/ui.js` — `bindPracticeCaddyUI()` repointed to `users/{uid}/practice_plans/active`. Also fixed the `completedSteps` boolean/index-array schema mismatch (commit 293ccc1) and removed the now-superseded BL-3.12 rules stopgap (commit 3658bf7).
 - **Data shape mismatch ✅** *(Completed: 2026-06-10 · commit 3367300)* Client-side adapter `normalizePracticePlan(raw)` added to `state.js` (alongside `normalizeRoundDoc`/`normalizeUserDoc`); Cloud Function output shape unchanged. Wired at both consumption points in `bindPracticeCaddyUI()`; `loadActivePlan` now merges `global_drills/{drillId}` with the personal `practice_plans/active` doc (which carries no drill content, so the page-reload render path was previously broken). Note: the `completedSteps` boolean/index claim in the original audit was stale — both sides already used index arrays (commit 293ccc1).
 - **DOM ID mismatch ✅** *(Completed: 2026-06-10 · commit 753b842)* `ui.js` aligned to the IDs `index.html` provides: `practice-generate-error`, `btn-reset-practice`, `practice-category-badge`, `practice-target-metric`. Orphaned `practice-rating-section` wired (star rating → `userRating` + `status: 'completed'`).
 - **Cross-ref BL-3.11:** Root-level `practice_plans` queries throw `FirebaseError: No matching allow statements` because the only security rule lives at the subcollection path. BL-3.11 adds a temporary rules stopgap; DATA-02 above is the permanent fix. Once DATA-02 lands the stopgap rule can be removed.
-- **Root defect confirmed (overnight review 2026-06-09) — SOLE REMAINING SUB-TASK:** client never populates the personalisation input block when calling the Cloud Function — every plan is the generic fallback. `// TODO(BL-3.05)` marker left at the `generatePlan({})` call site in `ui.js`. Separate future PR.
+- ~~**Root defect confirmed (overnight review 2026-06-09) — SOLE REMAINING SUB-TASK:** client never populates the personalisation input block when calling the Cloud Function — every plan is the generic fallback.~~ **❌ CLOSED — inverted premise (FP-11), 2026-06-25.** Source verification: `generatePracticePlan` (`functions/index.js:257-290`) derives personalisation **server-side** from the caller's last-5 `whs_rounds` + `profiles.handicapIndex` (by `auth.uid`) and **ignores `request.data`** entirely — so the client `{}` does not force the generic path. The generic fallback (`:287-290`) fires *only* when the user has zero logged rounds (correct behaviour). Round-write field names are consistent across `whs.js`/`oncourse.js`/`admin.js` and match what the function reads (no drift). The rounds/profile reads are *before* the try block, so any failure throws a *visible* error, not a silent generic plan. TODO at the `generatePlan({})` site corrected (commit `d2f2e23`).
 - **Tool:** Claude Code (complex, multi-file, needs emulator test loop)
 
 ### BL-3.06 🟡 Coach Assign Drill — Client Read Path + Rules-Test Coverage (RE-SCOPED)
@@ -179,6 +180,7 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 | FP-08 | "Event listener memory leaks in `card-render.js`/`coach.js`" | `innerHTML = ''` clears containers before re-binding. Detached nodes and their listeners are GC'd together. Zero `removeEventListener` calls is a deliberate repo-wide convention, not an active leak. |
 | FP-09 | "`wakelock.js:50/55`, `score-input.js:68-69`, `ai.js:70-75` circumvent `body[data-active-tab]`" | Location-accurate, mechanism-false. `wakelock.js` toggles a pressed-state skin; `score-input.js` highlights a selected pre-shot routine chip; `ai.js` performs role-based feature gating. None has any relationship to tab navigation. Canonical example of template-stamped analysis. |
 | FP-10 | "`score-input.js:166` `setTimeout` is a shared-element race condition" | The `toast` element is function-local, created via `document.body.appendChild(toast)`, and discarded after one use. It cannot be re-triggered against a stale handle and carries none of the shared-element race risk. Excluded from T3-setTimeout. |
+| FP-11 | "Practice-plan personalisation inputs are never sent → every plan uses the generic fallback (BL-3.05 sole remaining sub-task)" | Inverted by source. `generatePracticePlan` (`functions/index.js:257-290`) personalises **server-side** from the caller's last-5 `whs_rounds` + `profiles.handicapIndex` and ignores `request.data` — the client `{}` is irrelevant. The generic fallback (`:287-290`) fires *only* for users with zero logged rounds (correct). Round-write field names match across `whs.js`/`oncourse.js`/`admin.js`; the rounds/profile reads are pre-`try`, so failure surfaces as a *visible* error, never a silent generic plan. Verified + closed 2026-06-25 (TODO corrected, commit `d2f2e23`). Real forward work = self-reported inputs / voice-diary→plan, tracked as Adaptive-Engine F-A/F-B — not a bug. |
 
 ---
 *Last updated: 2026-06-09 — BL-3.14 complete (Phase 1: 20ea34c, Phase 2: a7b70b5); BL-3.15 complete (B2: 225b98c, B1: f535c6d); BL-3.16 complete (5476ac2)*
@@ -191,3 +193,30 @@ Three layers of breakage from rogue agent session (ARCH-01). All specific, all f
 - [ ] Phase 2: Contextual Scoring & "Drill Handicap" Normalization
   - [ ] Implement drill-specific scoring schemas (ratios, streaks, points).
   - [ ] Build math normalization layer to calculate a 0-100/Handicap baseline index per drill over time.
+
+### New caddy-input features (captured 2026-06-25 from the BL-3.05 close)
+The Caddy already personalises server-side (FP-11). These add *new* signal it can't
+derive on its own. Both touch the never-audited Cloud Function (AUDIT-01) + the
+`australia-southeast1` region pin — scope a focused review of the two practice/audio
+functions as part of whichever lands first. Parked, fully scoped, ready to pull forward.
+
+- [ ] **F-A · Self-reported practice inputs** (small, low-risk; overlaps Phase 1's
+  "Time Available & Focus Toggle"). Add focus-area / goal / time-available inputs to the
+  merged Practice screen → pass as `generatePlan({focus,goal,minutes})` (`ui.js:868-893`)
+  → `generatePracticePlan` reads + validates `request.data` and blends it into the prompt
+  (server still derives rounds + handicap). No audio. Escape/validate per LESSONS L2.
+- [ ] **F-B · Voice-diary → practice plans** (medium, but mostly *wiring* — no new audio/STT
+  infra). The capture→upload→`audioUrl` pipeline already exists (`oncourse.js:695-936` +
+  `services/audioService.js`), and `generateAudioBriefing` (`functions/index.js:131-218`)
+  already analyses the diary into a `writtenSummary` that names a drill/focus. Gap = the
+  insight is never persisted/reused: persist the latest `writtenSummary` where the plan
+  generator can read it, and have `generatePracticePlan` blend the most-recent diary
+  insight into its prompt.
+
+### Infra hygiene (captured 2026-06-25)
+- [ ] **`whs_rounds` composite index drift.** `generatePracticePlan` and `coach.js:191,256`
+  both run `where('uid','==',uid) + orderBy('date','desc')`, which needs a composite index
+  `whs_rounds (uid ASC, date DESC)` — **absent from `firestore.indexes.json`** (only
+  `competitions`/`feed` are tracked). Coach dashboard works, so it was almost certainly
+  created in-console (repo drift). Add it to `firestore.indexes.json` for reproducibility;
+  verify against the live project before relying on it.
