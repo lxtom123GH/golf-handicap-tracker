@@ -303,13 +303,10 @@ function generatePracticeForm() {
 
     dynamicBody.innerHTML = '';
 
-    const descP = document.createElement('p');
-    descP.style.fontSize = '0.95rem';
-    descP.style.color = '#475569';
-    descP.style.marginBottom = '18px';
-    descP.style.lineHeight = '1.5';
-    descP.textContent = currentDrillDefinition.desc;
-    dynamicBody.appendChild(descP);
+    const pfTitle = document.getElementById('pf-title');
+    const pfDesc = document.getElementById('pf-desc');
+    if (pfTitle) pfTitle.textContent = currentDrillDefinition.name;
+    if (pfDesc) pfDesc.textContent = currentDrillDefinition.desc;
 
     currentDrillDefinition.inputs.forEach(inputDef => {
         const div = document.createElement('div');
