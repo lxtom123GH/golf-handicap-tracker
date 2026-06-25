@@ -8,20 +8,23 @@
 - **BL-4.x P1 remediation queue: shipped & merged** — BL-4.01 (WHS integrity),
   BL-4.05 (coach linkage), BL-4.06 (askAiCoach region), BL-4.07 (auth bypass),
   **BL-4.17** (stored XSS), **BL-4.08** (shots schema), **BL-4.04** (comp logging +
-  R-LIVE-1 + F8 compStats), **BL-4.02** (on-course setup rewiring). BL-4.00 static
+  R-LIVE-1 + F8 compStats), **BL-4.02** (on-course setup rewiring),
+  **BL-4.03** (practice-tab merge + N18, PR #68 `35d2535`). BL-4.00 static
   contract suite in place.
 - Implemented via the offload loop (Antigravity 2.0/Gemini implements →
   Claude cross-family review → merge). Process docs: `docs/agent-briefs/HANDOFF-*`
   + `LESSONS.md`.
-- Build clean; `test:unit` baseline: whs 10/10; contract groups (c)(d)(e) green,
-  (a)(b) intentionally red pending their mapped fixes.
+- Build clean; `test:unit` baseline: whs 10/10; contract groups **(a) now green**
+  (BL-4.03 removed the last duplicate id), (c)(d)(e) green; **only (b)** ("JS-referenced
+  ids resolve") intentionally red — its offenders (`oncourse`/`ui`/`persistence` ids)
+  are mapped to the BL-4.13 hygiene sweep. *(HANDOFF Testing section still says "two
+  mapped contracts red" — stale, pending a one-line fix; see Loose ends.)*
 
 ## Next up (priority order)
-**P1 — in flight**
-1. **BL-4.03** — duplicate `id="tab-practice"`. **Decision made: MERGE** both screens
-   (AI Caddy + manual Drills) into one; brief written
-   (`docs/agent-briefs/bl-4.03-practice-merge.md`), handed to Antigravity.
-   *Status: implementation in flight → awaiting PR → cross-family check.* Also fixes N18.
+**P1**
+1. **BL-4.03 ✅ MERGED (2026-06-25, PR #68 `35d2535`)** — duplicate `id="tab-practice"`
+   resolved by MERGING both Practice screens into one + N18. Cross-family verified
+   (FIX-FIRST divider → SHIP). Flipped contract (a) green.
 2. **BL-3.05 ✅ CLOSED (2026-06-25)** — was "send personalisation inputs so plans
    aren't generic"; verified **inverted premise** (FP-11): `generatePracticePlan`
    already personalises server-side from `whs_rounds` + `profiles.handicapIndex`
