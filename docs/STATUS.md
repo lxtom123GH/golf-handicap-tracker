@@ -54,14 +54,16 @@ never audited; do before first real-user release).
 | `docs/01–07_*.md` | Audit corpus: feature map, debt catalogue, testing strategy, production-readiness, unit-test audit, residue audit, session report |
 | `PIR_LOG.md` (root) | Post-incident reviews — strategic sessions only; do not edit ad-hoc |
 | `docs/agent-briefs/HANDOFF-*` + `LESSONS.md` | Multi-agent offload process (reusable) |
-| `_ARCHIVE/` | Historical QA reports; `_ARCHIVE/bakeoff/` = superseded multi-model bake-off variants |
+| `_ARCHIVE/` | Historical QA reports; `_ARCHIVE/bakeoff/` = superseded multi-model variants; `_ARCHIVE/agent-briefs-shipped/` = shipped BL-4.x briefs; `_ARCHIVE/PIR_log_legacy_2026-03.md` = separate legacy PIR log |
 
 ## Loose ends to reconcile (housekeeping)
-- `docs/PIR_log.md` (34 lines) looks like a stale partial of root `PIR_LOG.md`
-  (135 lines) — confirm and remove if redundant.
-- Two brief dirs: `docs/briefs/` (single old BL-4.00 brief) vs `docs/agent-briefs/`
-  (current). Consider folding.
 - `CLAUDE.md` has an uncommitted "Model Selection" edit in the working tree — decide
-  to commit or discard so the instruction source isn't left dirty.
-- Spent agent-briefs (`docs/agent-briefs/bl-4.*.md`) are shipped — archivable once
-  you're done referencing them.
+  to commit or discard so the instruction source isn't left dirty. (Under review:
+  also refresh the stale offload-workflow refs — "Jules" → Antigravity/Gemini +
+  Claude cross-family — and point the Active Backlog Reference at this STATUS doc.)
+- `docs/agent-briefs/NEXT-SESSION-PROMPT.md` is a stale ephemeral handoff note —
+  archive or delete.
+
+*Resolved 2026-06-25: legacy `docs/PIR_log.md` archived (it was a separate log, not
+a partial of root); `docs/briefs/` folded into `docs/agent-briefs/`; shipped BL-4.x
+briefs archived to `_ARCHIVE/agent-briefs-shipped/`.*
