@@ -18,12 +18,30 @@ export function initCompetitions() {
     bindCompetitionCreation();
     bindCompetitionLogging();
     populateRegularsPool();
+    bindCompRoundDelete();
 
     if (UI.compSelect) {
         UI.compSelect.addEventListener('change', (e) => {
             setActiveCompetition(e.target.value);
         });
     }
+}
+
+function bindCompRoundDelete() {
+    if (!UI.compRecentRoundsTbody) return;
+    UI.compRecentRoundsTbody.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.del-comp-round');
+        if (!btn) return;
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+        if (!confirm('Delete this competition round?')) return;
+        try {
+            await deleteDoc(doc(db, 'comp_rounds', id));
+        } catch (err) {
+            console.error('Error deleting comp round:', err);
+            alert('Failed to delete round.');
+        }
+    });
 }
 
 function listenToCompetitions() {
@@ -139,6 +157,13 @@ export function setActiveCompetition(compId) {
             rulesSummaryEl.textContent = "No custom rules.";
         }
     }
+
+    const sp = startingPoints || {};
+    const parts = [];
+    if (sp.round?.enabled) parts.push(`+${sp.round.value||0}/round`);
+    if (sp.hole?.enabled)  parts.push(`+${sp.hole.value||0}/hole`);
+    const spEl = document.getElementById('active-comp-sp-summary');
+    if (spEl) spEl.textContent = parts.length ? `Starting points: ${parts.join(' · ')}` : '';
 
     if (activeCompView) activeCompView.classList.remove('hidden');
     if (noCompEmpty) noCompEmpty.classList.add('hidden');
@@ -300,8 +325,11 @@ function renderRecentCompRounds() {
     const uidMatches = AppState.currentUser;
 
     if (!AppState.currentCompRounds.length) {
-        // UI.compEmptyState ??
+        const emptyEl = document.getElementById('comp-empty-state');
+        if (emptyEl) emptyEl.classList.remove('hidden');
     } else {
+        const emptyEl = document.getElementById('comp-empty-state');
+        if (emptyEl) emptyEl.classList.add('hidden');
         AppState.currentCompRounds.forEach(round => {
             const tr = document.createElement('tr');
 
