@@ -75,6 +75,14 @@ After each successful code commit (or merged PR), make a second docs commit:
 Do NOT update PIR_LOG.md — handled in strategic review sessions.
 Do NOT modify any other documentation files.
 
+## Surfacing decisions to the user
+When you present a choice between options (AskUserQuestion or prose), you MUST:
+1. **Recommend one option with a one-line rationale** — never a bare options list (mark it "(Recommended)"). State the relevant caveat (e.g. "this is a product call — flip if X is on the roadmap").
+2. **Record the recommendation + why in the relevant doc** so the rationale survives and is re-testable later:
+   - architecture / contract / process calls → `docs/DECISIONS.md` (D-format, *with a Re-test*);
+   - backlog / feature / product calls → the `MASTER_BACKLOG.md` item row, as `**Rec (date): <option>** — <why>`.
+3. When the user decides, update that record with the chosen option + date (so a future audit sees both the call and its reasoning, and can ask "does the why still hold?").
+
 ## Environment
 
 Unit/contract tests (`test:unit`, incl. `tests/unit/contracts.test.js`) require NO emulator — pure jsdom/file-read. Only `test:rules` and `test:e2e` need it.
