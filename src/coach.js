@@ -9,6 +9,7 @@ import { UI } from './ui.js';
 import { AppState } from './state.js';
 import { generateAIResponse } from './ai.js';
 import { aggregateShotPatterns } from './analytics.js';
+import { escapeHtml } from './escape.js';
 
 let _coachViewUid = null;
 
@@ -74,7 +75,7 @@ async function loadMyCoaches() {
             const li = document.createElement('li');
             li.style.display = 'flex';
             li.style.justifyContent = 'space-between';
-            li.innerHTML = `<span>Coach UID: ${cid}</span> <button class="btn btn-danger btn-sm" onclick="removeCoach('${cid}')">Remove</button>`;
+            li.innerHTML = `<span>Coach UID: ${escapeHtml(cid)}</span> <button class="btn btn-danger btn-sm" onclick="removeCoach('${escapeHtml(cid)}')">Remove</button>`;
             list.appendChild(li);
         });
     } catch (e) { }
@@ -210,14 +211,14 @@ export function bindCoachDashboard() {
             card.className = 'coach-roster-card';
             card.innerHTML = `
                 <div class="athlete-info">
-                    <div class="avatar">${(athlete.displayName || athlete.email || '?')[0].toUpperCase()}</div>
+                    <div class="avatar">${escapeHtml((athlete.displayName || athlete.email || '?')[0].toUpperCase())}</div>
                     <div>
-                        <div class="name">${athlete.displayName || athlete.email}</div>
+                        <div class="name">${escapeHtml(athlete.displayName || athlete.email)}</div>
                         <div class="meta">${trendBadge}</div>
                     </div>
                 </div>
                 <div class="athlete-stat">
-                    <div class="value">${athlete.handicapIndex ?? '--'}</div>
+                    <div class="value">${escapeHtml(athlete.handicapIndex ?? '--')}</div>
                     <div class="label">HI</div>
                 </div>
                 <div style="display: flex; gap: 8px; margin-left: 15px;">
@@ -266,7 +267,7 @@ export function bindCoachDashboard() {
                 if (r.stats?.fwy) fwy.push(r.stats.fwy);
                 if (r.stats?.gir) gir.push(r.stats.gir);
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${date}</td><td>${r.course}</td><td>${r.adjustedGross}</td><td>${diff}</td><td>${r.stats?.putts ?? '--'}</td><td>${r.stats?.fwy ?? '--'}</td><td>${r.stats?.gir ?? '--'}</td>`;
+                tr.innerHTML = `<td>${date}</td><td>${escapeHtml(r.course)}</td><td>${r.adjustedGross}</td><td>${diff}</td><td>${r.stats?.putts ?? '--'}</td><td>${r.stats?.fwy ?? '--'}</td><td>${r.stats?.gir ?? '--'}</td>`;
                 tbodyWhs.appendChild(tr);
             });
             const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : '--';
@@ -284,7 +285,7 @@ export function bindCoachDashboard() {
                 const p = d.data();
                 const date = p.date?.toDate ? p.date.toDate().toLocaleDateString('en-AU') : '--';
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${date}</td><td>${p.drillName}</td><td>${p.score}</td>`;
+                tr.innerHTML = `<td>${date}</td><td>${escapeHtml(p.drillName)}</td><td>${escapeHtml(p.score)}</td>`;
                 tbodyPrac.appendChild(tr);
             });
         }
@@ -307,7 +308,7 @@ async function loadCoachNotes(athleteUid) {
         const date = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('en-AU') : 'Just now';
         const row = document.createElement('div');
         row.className = 'coach-note-row';
-        row.innerHTML = `<div class="date">${date}</div><div class="text">${n.text}</div>`;
+        row.innerHTML = `<div class="date">${date}</div><div class="text">${escapeHtml(n.text)}</div>`;
         notesEl.appendChild(row);
     });
 }

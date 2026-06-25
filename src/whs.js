@@ -7,6 +7,7 @@ import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp,
 import Chart from 'chart.js/auto';
 import { AppState, normalizeRoundDoc } from './state.js';
 import { UI } from './ui.js';
+import { escapeHtml } from './escape.js';
 
 let unsubscribeWHS = null;
 
@@ -339,9 +340,9 @@ export function renderRoundsHistory(usedIds = []) {
 
             tr.innerHTML = `
                 <td>${dateStr}</td>
-                <td>${round.course}</td>
-                <td>${round.rating} / ${round.slope}</td>
-                <td><strong>${round.adjustedGross}</strong></td>
+                <td>${escapeHtml(round.course)}</td>
+                <td>${escapeHtml(round.rating)} / ${escapeHtml(round.slope)}</td>
+                <td><strong>${escapeHtml(round.adjustedGross)}</strong></td>
                 <td>${diffSpan}</td>
                 <td>
                     <button class="btn btn-secondary btn-sm toggle-count-btn" data-id="${round.id}" title="Toggle Counting Rules">

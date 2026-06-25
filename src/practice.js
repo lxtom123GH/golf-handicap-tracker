@@ -8,6 +8,7 @@ import { AppState, mutateList, normalizeRoundDoc } from './state.js';
 import { UI } from './ui.js';
 import { bindAiGenerator, generateAIResponse } from './ai.js';
 import { bindPracticeCaddyUI } from './ui.js';
+import { escapeHtml } from './escape.js';
 
 let unsubscribePractice = null;
 let currentDrillDefinition = null;
@@ -462,8 +463,8 @@ function renderRecentPractice() {
 
         tr.innerHTML = `
             <td>${dateStr}</td>
-            <td><strong>${round.drillName}</strong></td>
-            <td style="color:var(--primary-color); font-weight:bold; font-size:1.2rem;">${round.score}</td>
+            <td><strong>${escapeHtml(round.drillName)}</strong></td>
+            <td style="color:var(--primary-color); font-weight:bold; font-size:1.2rem;">${escapeHtml(round.score)}</td>
             <td>
                 ${(uidMatches && AppState.currentUser.uid === round.uid) ? `<button class="btn btn-danger btn-sm del-prac-round" aria-label="Delete Practice Round" data-id="${round.id}">X</button>` : ''}
             </td>

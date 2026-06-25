@@ -3,6 +3,7 @@
 // ==========================================
 import { db } from './firebase-config.js';
 import { AppState, normalizeUserDoc } from './state.js';
+import { escapeHtml } from './escape.js';
 import {
     collection, doc, setDoc, deleteDoc, getDocs,
     query, where, orderBy, limit, getDoc, startAfter
@@ -43,8 +44,8 @@ export function initSocialFeed() {
                 const row = document.createElement('div');
                 row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;';
                 row.innerHTML = `
-                    <span style="font-weight:600;">${player.displayName || player.email}</span>
-                    <button data-uid="${player.uid}" class="btn btn-primary btn-sm follow-btn" style="width:auto;margin:0;">Follow</button>
+                    <span style="font-weight:600;">${escapeHtml(player.displayName || player.email)}</span>
+                    <button data-uid="${escapeHtml(player.uid)}" class="btn btn-primary btn-sm follow-btn" style="width:auto;margin:0;">Follow</button>
                 `;
                 row.querySelector('.follow-btn').addEventListener('click', async (e) => {
                     const uid = e.target.dataset.uid;
@@ -104,7 +105,7 @@ async function loadFollowing() {
             const name = userSnap.exists() ? (userSnap.data().displayName || uid) : uid;
             const li = document.createElement('li');
             li.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;';
-            li.innerHTML = `<span>${name}</span><button data-uid="${uid}" class="btn btn-secondary btn-sm unfollow-btn" style="width:auto;margin:0;font-size:0.78rem;">Unfollow</button>`;
+            li.innerHTML = `<span>${escapeHtml(name)}</span><button data-uid="${escapeHtml(uid)}" class="btn btn-secondary btn-sm unfollow-btn" style="width:auto;margin:0;font-size:0.78rem;">Unfollow</button>`;
             li.querySelector('.unfollow-btn').addEventListener('click', (e) => unfollowPlayer(e.target.dataset.uid));
             if (listEl) listEl.appendChild(li);
         }

@@ -5,6 +5,7 @@ import { db, auth } from './firebase-config.js';
 import { AppState } from './state.js';
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { escapeHtml } from './escape.js';
 
 const PREFS_DEFAULTS = {
     hiChange: true,
@@ -67,9 +68,9 @@ export async function initNotifications() {
     if (accountInfo && AppState.currentUser) {
         const u = AppState.currentUser;
         accountInfo.innerHTML = `
-            <p><strong>Name:</strong> ${u.displayName || 'Not set'}</p>
-            <p><strong>Email:</strong> ${u.email}</p>
-            <p><strong>UID:</strong> <span style="font-family:monospace;font-size:0.8rem;">${u.uid}</span></p>
+            <p><strong>Name:</strong> ${escapeHtml(u.displayName || 'Not set')}</p>
+            <p><strong>Email:</strong> ${escapeHtml(u.email)}</p>
+            <p><strong>UID:</strong> <span style="font-family:monospace;font-size:0.8rem;">${escapeHtml(u.uid)}</span></p>
         `;
     }
 

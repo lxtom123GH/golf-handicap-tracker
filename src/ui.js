@@ -6,6 +6,7 @@ import Chart from 'chart.js/auto';
 import { httpsCallable } from 'firebase/functions';
 import { doc, updateDoc, getDoc, setDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db, functions } from './firebase-config.js';
+import { escapeHtml } from './escape.js';
 
 const ALL_SCREENS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-oncourse', 'tab-tempo', 'tab-feed', 'tab-coach', 'tab-admin', 'tab-settings'];
 
@@ -269,11 +270,11 @@ window.refreshSettingsUI = () => {
 
     info.innerHTML = `
         <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <p><strong>Name:</strong> ${AppState.currentUser.displayName || 'Guest User'}</p>
-            <p><strong>Email:</strong> ${AppState.currentUser.email}</p>
+            <p><strong>Name:</strong> ${escapeHtml(AppState.currentUser.displayName || 'Guest User')}</p>
+            <p><strong>Email:</strong> ${escapeHtml(AppState.currentUser.email)}</p>
             <p><strong>Role:</strong> ${window.currentUserIsAdmin ? 'Master Admin' : (window.currentUserIsCoach ? 'Coach' : 'Standard Player')}</p>
             <p style="margin-top:10px; font-size: 0.75rem; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-                User ID: ${AppState.currentUser.uid}
+                User ID: ${escapeHtml(AppState.currentUser.uid)}
             </p>
         </div>
     `;
@@ -368,9 +369,9 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
 
             tr.innerHTML = `
                 <td>${dateStr}</td>
-                <td>${round.course}</td>
-                <td>${round.rating} / ${round.slope}</td>
-                <td><strong>${round.adjustedGross}</strong></td>
+                <td>${escapeHtml(round.course)}</td>
+                <td>${escapeHtml(round.rating)} / ${escapeHtml(round.slope)}</td>
+                <td><strong>${escapeHtml(round.adjustedGross)}</strong></td>
                 <td>${diffSpan}</td>
                 <td>
                     ${round.audioUrl ? `
@@ -488,7 +489,7 @@ export async function showAiBriefing(round, btn, roundRow) {
         const bulletHtml = (aiSummary.writtenSummary || '')
             .split('\n')
             .filter(line => line.trim().length > 0)
-            .map(line => `<li style="margin-bottom:6px;">${line.replace(/^[*\-•]\s+/, '')}</li>`)
+            .map(line => `<li style="margin-bottom:6px;">${escapeHtml(line.replace(/^[*\-•]\s+/, ''))}</li>`)
             .join('');
 
         const cachedBadge = isCached
@@ -610,10 +611,10 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
         `;
         li.innerHTML = `
             <div style="display:flex; flex-direction:column;">
-                <span style="font-weight:600; color:var(--text-dark);">${p.name}</span>
-                <span style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.uid.substring(0, 8)}...</span>
+                <span style="font-weight:600; color:var(--text-dark);">${escapeHtml(p.name)}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">ID: ${escapeHtml(p.uid.substring(0, 8))}...</span>
             </div>
-            <button class="btn btn-danger btn-sm remove-player-btn" data-uid="${p.uid}">Remove</button>
+            <button class="btn btn-danger btn-sm remove-player-btn" data-uid="${escapeHtml(p.uid)}">Remove</button>
         `;
         UI.ocAddedPlayersList.appendChild(li);
 
@@ -782,11 +783,11 @@ export function renderPracticeSteps(steps, completedSteps, drillId) {
         div.className = `practice-step ${isCompleted ? 'completed' : ''}`;
         div.innerHTML = `
             <div class="step-check">
-                <input type="checkbox" ${isCompleted ? 'checked' : ''} data-idx="${idx}" data-id="${drillId}">
+                <input type="checkbox" ${isCompleted ? 'checked' : ''} data-idx="${idx}" data-id="${escapeHtml(drillId)}">
             </div>
             <div class="step-body">
                 <h4>Step ${idx + 1}</h4>
-                <p>${step.description || ''}</p>
+                <p>${escapeHtml(step.description || '')}</p>
             </div>
         `;
         container.appendChild(div);
