@@ -173,7 +173,7 @@ export function setActiveCompetition(compId) {
         if (UI.logCompRoundForm) {
             UI.logCompRoundForm.reset();
             // Clear dynamic inputs specifically if needed
-            const dynamicBody = document.getElementById('log-comp-dynamic');
+            const dynamicBody = document.getElementById('comp-dynamic-inputs');
             if (dynamicBody) dynamicBody.innerHTML = '';
             generateDynamicLogInputs(rulesArray);
         }
@@ -184,7 +184,8 @@ export function setActiveCompetition(compId) {
 }
 
 function generateDynamicLogInputs(rulesArray) {
-    const dynamicBody = document.getElementById('log-comp-dynamic');
+    const dynamicBody = document.getElementById('comp-dynamic-inputs');
+    if (!dynamicBody) return;
     dynamicBody.innerHTML = '';
     rulesArray.forEach(rule => {
         const div = document.createElement('div');
