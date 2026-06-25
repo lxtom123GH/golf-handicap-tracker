@@ -8,3 +8,10 @@ firebase-debug.log
 .DS_Store
 playwright-report/
 test-results/
+
+# Build output — rebuilt in CI by .github/workflows/deploy-production.yml (npm run build)
+dist/
+
+# Local runtime / scratch artifacts
+logs/
+scratch/
