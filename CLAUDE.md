@@ -1,22 +1,22 @@
 # CLAUDE.md — Golf Handicap Tracker
 
 ## Architecture Contract (Sydney Protocol)
-These rules are non-negotiable. If any constraint cannot be met, STOP and ask before proceeding.
+These rules are the target contract. The **why** behind each — and a concrete **re-test** for "does this reason still hold?" — lives in `docs/DECISIONS.md` (`[D-xx]` tags below). Where the codebase currently violates a rule it is flagged inline and tracked as debt: read these as **"add no new violations"**, and STOP and ask before introducing one *or* before "fixing" a documented sanctioned exception.
 
 - Component visibility is state-driven via `body[data-active-tab]` and `AppState` proxies only
-- No `!important` tags in CSS
-- No direct DOM styling via `.style.display` assignments
+- No **new** `!important` in CSS — 46 existing in `src/style.css` are tracked debt (BL-4.13), not licence to add more `[D-02]`
+- No **new** `.style.display` for tab/screen visibility — use `body[data-active-tab]` + the `hidden` class. 20 `.style.display` sites remain in `src/` (some sanctioned per FP-09 role-gating; the rest tracked debt) `[D-02]`
 - All Firebase services and Cloud Functions pinned strictly to `australia-southeast1`
 - Each commit must represent one complete, independently-testable logical unit
 - Maximum ~150 lines changed per commit as a secondary guardrail
 
 ## State Layer Rules
-- `AppState` Proxy fires `stateChange` on reference change only — never mutate arrays or objects in place
+- `AppState` Proxy fires `stateChange` on **reference change only** — never mutate arrays/objects in place (use `mutateList`). **Documented sanctioned exception:** the live-round per-hole stat path (`liveRoundGroups`/`simpleStats`/`compStats`) mutates in place and relies on `loadHole()` reassigning the `currentHoleShots` PERSIST_FIELD to fire `stateChange` → autosave. This is intentional and verified — the BL-4.15/F1 "scores aren't persisted" claim was **refuted** (data does persist). Do not naively convert it to `mutateList` without preserving that save path. `[D-03]`
 - Use `mutateList(key, fn)` from `state.js` for all array/object mutations
 - Normaliser pattern: `normalizeRoundDoc`, `normalizeUserDoc`, `normalizePracticePlan` in `state.js` — all Firestore snapshot consumers must normalise before writing to `AppState`. Add new normalisers here when new document types are consumed.
 - `onStateChange(keys, handler)` filtered subscription wrapper is deferred (T3-onStateChange) — do not implement without explicit approval
-- Practice Session State: Must be fully serializable. `AppState.activePracticeSession` tracks active drill IDs, current step, configurations, and raw score inputs.
-- Offline Recovery: On application boot, check IndexedDB for uncommitted active practice sessions and re-hydrate State/UI seamlessly.
+- **Persistence (actual):** round state persists to **localStorage** via `PERSIST_FIELDS` + `GOLF_APP_STATE_KEY` (`persistence.js:11-25`); `loadRoundState()` re-hydrates on boot *before* Firestore listeners attach (`app-v4.js:47` before `:50`). There is **no IndexedDB** and **no `activePracticeSession`** in the codebase today.
+- **Planned — not built; do not assume it exists:** a serializable `activePracticeSession` + IndexedDB offline-recovery for practice sessions are a *future* Adaptive-Engine item (MASTER_BACKLOG → "Practice Caddy Upgrades"), not current architecture. *(These two lines were contract fictions until 2026-06-26 — zero source footprint.)* `[D-04]`
 
 ## Tooling
 - Runtime: Vanilla JS, Vite, Firebase (Auth, Firestore, Cloud Functions, Hosting)
@@ -44,7 +44,7 @@ Commit `a63e1f3` ("100% E2E pass") hollowed out real assertions in:
 - `tests/logic-boundaries.spec.js` (Time Travel test) → ends mid-comment, no `expect()`
 - `tests/quota-guards.spec.js` (Double-Tap test) → targets wrong button
 
-Green CI for these specs does not mean the features work. Do not rely on them as safety nets. Tracked as AUDIT-02. Authoritative file-by-file test status now lives in `docs/05_unit_test_audit.md` (NIGHT2): note the `vitest` config has no `include` key so some specs never execute, and no test reads back a Firestore doc the app wrote — the suite is schema-blind. Static contract suite `tests/unit/contracts.test.js` (BL-4.00) ships intentionally red until its mapped BL-4.x fixes land.
+Green CI for these specs does not mean the features work. Do not rely on them as safety nets. Tracked as AUDIT-02. **Correction (2026-06-26 deep-dive):** the earlier "`vitest` has no `include` key so some specs never execute" is misleading — `test:unit` runs `vitest run tests/unit`, whose path filter + default glob execute all **4 unit specs (24 tests)**; the missing-`include` is only a *latent* risk if specs are added outside `tests/unit`. Still true: no test reads back a Firestore doc the app wrote (the suite is schema-blind). Static contract suite `tests/unit/contracts.test.js` (BL-4.00): **only contract (b) "JS-referenced ids resolve" is red** now — (a) flipped green with BL-4.03; (c)/(d)/(e) green. `[D-05]`
 
 ## Active Backlog Reference
 **Current state, priorities, and "what's next" live in `docs/STATUS.md`** (the
@@ -78,7 +78,7 @@ Do NOT modify any other documentation files.
 ## Environment
 
 Unit/contract tests (`test:unit`, incl. `tests/unit/contracts.test.js`) require NO emulator — pure jsdom/file-read. Only `test:rules` and `test:e2e` need it.
-The Playwright `webServer` auto-start command is broken on Windows (bash `&`); do not rely on it. Treat the emulator as manually-started, always-on infrastructure: start it in a separate terminal first with `firebase emulators:start` before running `test:rules` or `test:e2e`. Claude Code cannot reliably manage it as a background process.
+**Correction (2026-06-26 deep-dive):** the emulator IS runnable in-session — firebase CLI + JDK + Playwright browsers are installed, `test:rules` self-manages via `firebase emulators:exec`, and the rules suite was run successfully against a live emulator. So `test:rules`/`test:e2e` ARE verifiable; the old "Claude Code cannot manage the emulator" claim was false. The Playwright `webServer` command does use a bash `&` that won't background on Windows, but `reuseExistingServer:true` (local) skips it when the dev server + emulator are already up — so for e2e, start `npm run dev` + the auth/functions emulators yourself (the app auto-routes to the emulator on `localhost`, `firebase-config.js:47-51` — no prod risk). A running emulator is still convenient as always-on infra, but is not a hard prerequisite Claude can't satisfy. `[D-06]`
 
 ## Model Selection & Effort
 
@@ -100,7 +100,7 @@ not in the picker).
     Firestore writes are specified).
   - Client read-path work like BL-3.06 NIGHT1 N22, given the rule already
     exists and the query shape is named.
-  - Must respect the Sydney Protocol: no `!important`, no `.style.display`,
+  - Must respect the Sydney Protocol: no **new** `!important`/`.style.display`,
     state-driven visibility only. If a brief seems to require breaking these,
     STOP — see escalation.
 - **Opus** — genuine reasoning:
