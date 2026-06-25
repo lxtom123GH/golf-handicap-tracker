@@ -26,9 +26,19 @@ You implement; you do not self-certify and you do not merge.
 6. Open a PR to `main`. In the description: (a) map each change to its tag (the brief
    says which); (b) list every file touched; (c) **paste the output of every
    grep/acceptance gate** — completeness must be *demonstrated*, not asserted (see
-   LESSONS L1); (d) a **"Brief feedback"** block: any ambiguity or wrong assumption
-   in the brief, anything you had to infer that wasn't specified, and the method you
-   used to verify coverage. **DO NOT MERGE.**
+   LESSONS L1); (d) the **structured "Brief feedback" block (mandatory — all four
+   fields, every PR)**:
+   - **Clarity gaps** — what in the brief was ambiguous, under-specified, or could be
+     read two ways. Write "none" only if there genuinely were none.
+   - **Rationale** — for any non-obvious choice, *why* you did it that way (so the
+     reviewer judges the decision, not just the diff).
+   - **Deviations** — anything you did differently from the brief, and why. A brief
+     step you skipped or altered goes here explicitly (an "e.g." snippet is still a
+     required element unless you say here why you dropped it — see L6).
+   - **Coverage method** — *how* you verified completeness (which greps/commands), not
+     just that you did. Paste-the-output (c) is the evidence; this is the method.
+
+   **DO NOT MERGE.**
 7. STOP. Wait for the cross-family review (the brief's "② Independent check
    prompt"). Apply any FIX-FIRST findings on the same branch, then it merges.
 8. Move to the next chunk.
@@ -96,14 +106,24 @@ The goal is that each chunk makes the next one smoother, instead of re-litigatin
 same misunderstandings. This is not optional and not per-chunk-asked — it is the loop.
 
 - **Implementer (Antigravity):** read `LESSONS.md` before starting; ask up-front on
-  any ambiguity (step 2); in the PR include the grep-gate output + the "Brief
-  feedback" block (step 6).
-- **Reviewer (Claude):** run the brief's ② check (PASS/FAIL + verdict), THEN add a
-  **"Doc/Process update"** note — if a finding reveals a brief defect or a recurring
-  failure mode, propose the concrete fix and update `LESSONS.md` (and the affected
-  brief/handoff) so the lesson is captured, not just mentioned.
-- **Both:** `LESSONS.md` is the shared ledger; read it before a chunk, append to it
-  after a finding.
+  any ambiguity (step 2); in the PR include the grep-gate output + the **structured
+  four-field "Brief feedback" block** (step 6d). The Clarity-gaps and Rationale fields
+  are the raw material the reviewer learns from — a thin "all good" block starves the
+  loop and is itself a process miss.
+- **Reviewer (Claude) — loop-back duty (not optional):** run the brief's ② check
+  (PASS/FAIL + verdict), THEN **read the implementer's four feedback fields** and act:
+  1. Each **Clarity gap** → either confirm the brief was clear (and note why the
+     reader still missed it) or accept it as a real brief defect.
+  2. A real brief defect **or** a failure mode you've now seen **twice** → append a
+     **tagged `LESSONS` entry** (`Lx — <lesson> (BL-x.xx; <which feedback field/check
+     item surfaced it>)`) **and** patch the source: the affected brief, the
+     `_TEMPLATE-brief.md`, and/or this HANDOFF — not just a mention in the PR comment.
+  3. State the loop-back outcome in the review as a **"Doc/Process update"** line
+     (what you changed, or "nothing new — no recurring pattern").
+- **Both:** `LESSONS.md` is the shared ledger; read it before a chunk, append after a
+  finding. The test of the loop: a misunderstanding should cost the fleet **once** —
+  if the same class of miss appears in two chunks, the loop failed to capture it the
+  first time, and that gap is the next lesson.
 
 ## Testing
 - `npm run test:unit` needs **no emulator** (pure jsdom/file-read). The baseline is:
