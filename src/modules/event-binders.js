@@ -1,5 +1,6 @@
 import { AppState } from '../state.js';
 import { UI } from '../ui.js';
+import { escapeHtml } from '../escape.js';
 
 export function bindAddPlayer() {
     if (UI.btnOcAddPlayer && UI.ocPlayerSelect) {
@@ -94,8 +95,8 @@ export function bindCompQuickAdd() {
                     regulars.forEach(p => {
                         html += `
                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" value="${p.uid}" data-name="${p.name}">
-                                <span>${p.name}</span>
+                                <input type="checkbox" value="${escapeHtml(p.uid)}" data-name="${escapeHtml(p.name)}">
+                                <span>${escapeHtml(p.name)}</span>
                             </label>
                         `;
                     });
