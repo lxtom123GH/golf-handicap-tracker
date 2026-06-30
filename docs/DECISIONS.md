@@ -84,6 +84,13 @@ assumption looks shaky, run the check and update the entry.
 - **Re-test:** before an audit, `git fetch && git log --oneline HEAD..origin/main` — if non-empty, work from a worktree off `origin/main`.
 - **Status:** active (process lesson; also logged in LESSONS.md).
 
+## D-11 · Merge gate is human-held for code, auto-allowed for docs-only PRs Claude authored
+- **What:** Claude may **merge docs-only PRs it authored** (only `*.md` / docs paths). For any PR touching `src/`, `functions/`, `firestore.rules`, `package*.json`, CI, or anything that can deploy, Claude **must get explicit user OK before merging** (the cross-family review gate on code PRs is unchanged).
+- **Why:** the prior blanket "never merge without my OK" came in defensively alongside the credential-extraction caution (memory `no-credential-extraction`), not from a bad merge. Re-examined 2026-06-30: the real risk of an autonomous merge lives only in code/rules/deploy PRs — (1) **self-certification** (author merging own work is the blind spot the offload loop exists for, see [[D-09]]), (2) merging to `main` can **trigger a Firebase deploy**, (3) timing/wrong-target errors, (4) **asymmetric cost** (a 5-second gate vs a revert + possibly a bad deploy). A docs-only PR has none of these — worst case is `git revert` of Markdown — so gating it was friction without payoff.
+- **Holds only if:** docs PRs stay genuinely docs-only (no stray code/config), and `main` merges remain the deploy trigger (so code merges stay human-gated).
+- **Re-test:** if an auto-merged docs PR ever needs a revert, or if a docs path starts affecting a build/deploy, tighten back toward confirm-on-everything. Spot-check: `git show --stat <claude-merged-docs-merge>` should list only docs/`*.md` files.
+- **Status:** active (set 2026-06-30 with user approval; supersedes the blanket no-merge rule for the docs-only case).
+
 ---
 *Created 2026-06-26 (Deep Dive Phase 4). Seeded from `docs/deep-dive/PHASE-0..3A` + the
 Confidence Audit. Add an entry whenever a non-obvious rule is set or a constraint is
