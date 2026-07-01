@@ -99,3 +99,33 @@ describe('Firebase Security Rules - WHS Rounds', () => {
         }));
     });
 });
+
+describe('Firebase Security Rules - AI quota counters (BL-DD-01)', () => {
+    // quotas/{uid}/daily/{day}: server (Admin SDK) writes only; a user may read
+    // their own counter but never write it, and never read anyone else's.
+    const dayDoc = (db, uid, day) => db.collection('quotas').doc(uid).collection('daily').doc(day);
+
+    it('lets a user read their OWN daily quota counter', async () => {
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            await dayDoc(context.firestore(), 'alice', '2026-07-02').set({ count: 3 });
+        });
+        const aliceDb = testEnv.authenticatedContext('alice').firestore();
+        await assertSucceeds(dayDoc(aliceDb, 'alice', '2026-07-02').get());
+    });
+
+    it("denies reading another user's quota counter", async () => {
+        const aliceDb = testEnv.authenticatedContext('alice').firestore();
+        await assertFails(dayDoc(aliceDb, 'bob', '2026-07-02').get());
+    });
+
+    it('denies a client writing (inflating/resetting) any quota counter', async () => {
+        const aliceDb = testEnv.authenticatedContext('alice').firestore();
+        await assertFails(dayDoc(aliceDb, 'alice', '2026-07-02').set({ count: 0 }));
+    });
+
+    it('denies an unauthenticated client from touching quota counters', async () => {
+        const anonDb = testEnv.unauthenticatedContext().firestore();
+        await assertFails(dayDoc(anonDb, 'alice', '2026-07-02').get());
+        await assertFails(dayDoc(anonDb, 'alice', '2026-07-02').set({ count: 0 }));
+    });
+});
