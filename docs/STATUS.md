@@ -56,7 +56,7 @@ just-in-time off fresh HEAD, not in advance). All bounded, low-decision:
 New tracked cluster from the deep dive (MASTER_BACKLOG → "Deep Dive — Verified New Findings"; evidence in `docs/deep-dive/PHASE-3A`). **2 High** — BL-DD-01 (no AI-callable rate-limit → billing abuse), BL-DD-02 (`xlsx` CVE bundled) — + a medium security/correctness set BL-DD-03..11. Sequenced into tranches: clean fixes first, then needs-design.
 - **Tranche 1 ✅ MERGED (2026-06-26, PR #80 `bfeba85`)** — BL-DD-07 (admin `whs_rounds` create rule + test), BL-DD-03 (`askAiCoach` length cap + systemInstruction), BL-DD-10 (comp dynamic-inputs repoint). Cross-family SHIP.
 - **Tranche 2 (next, briefed):** the DECIDED cuts — BL-4.16 (surveyor honest-toast), BL-4.10 (notifications panel removal), BL-4.11/BL-DD-11 (telemetry delete) — + BL-DD-02 (`xlsx`→CSV). Brief: `docs/agent-briefs/bl-dd-tranche-2-decided-cuts.md`.
-- **Then (needs-design, surface choices first):** BL-DD-01 (AI rate-limit) + BL-DD-04/05/06 (Firestore read-scoping / field-minimize / audio ownership+cap).
+- **Then (needs-design, surface choices first):** BL-DD-01 (AI rate-limit) — **chunk b ✅ shipped (2026-07-02, PR #83 `553907d`): durable per-user daily Firestore quota across all 5 Gemini callables; chunk a (App Check) still open, needs a provider + client wiring** — + BL-DD-04/05/06 (Firestore read-scoping / field-minimize / audio ownership+cap).
 Lower-sev verified hygiene folds into BL-4.13.
 
 **P3**

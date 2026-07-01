@@ -6,12 +6,18 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { GoogleGenAI } = require("@google/genai");
 const admin = require("firebase-admin");
+const { checkAndConsumeQuota } = require("./quota");
 
 admin.initializeApp();
 
 const REGION = "australia-southeast1";
 const MODEL_NAME = "gemini-2.5-flash";
 const STORAGE_URL_PREFIX = "https://firebasestorage.googleapis.com/v0/b/golf-handicap-tracker-b677c.firebasestorage.app/o/";
+
+// Shared per-user daily cap across ALL Gemini callables (BL-DD-01, chunk b).
+// Bounds worst-case billing from a single logged-in abuser; App Check (chunk a)
+// remains the paired follow-up for the outside-the-app threat.
+const AI_DAILY_LIMIT = 50;
 
 // ==========================================
 // Helper: Initialise AI client
@@ -20,6 +26,24 @@ function getAiClient() {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY secret not available.");
     return new GoogleGenAI({ apiKey });
+}
+
+// ==========================================
+// Helper: durable per-user daily AI quota
+// ==========================================
+// Consume one unit of the caller's daily allowance BEFORE the billable Gemini
+// call. Must be invoked OUTSIDE each callable's try/catch so the 'resource-
+// exhausted' HttpsError propagates as a real 429 rather than being reshaped into
+// a generic 'internal' error (or swallowed by a friendly-fallback catch).
+async function enforceAiQuota(uid) {
+    try {
+        await checkAndConsumeQuota(admin.firestore(), uid, admin.firestore.FieldValue, { limit: AI_DAILY_LIMIT });
+    } catch (e) {
+        if (e && e.code === "resource-exhausted") {
+            throw new HttpsError("resource-exhausted", "Daily AI limit reached — please try again tomorrow.");
+        }
+        throw e; // unexpected quota/transaction failure — don't mask it
+    }
 }
 
 // ==========================================
@@ -32,6 +56,7 @@ exports.askAiCoach = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, asy
     if (typeof prompt !== 'string' || prompt.length > 4000) {
         throw new HttpsError('invalid-argument', 'Prompt missing or too long.');
     }
+    await enforceAiQuota(request.auth.uid);
 
     try {
         const ai = getAiClient();
@@ -55,6 +80,7 @@ exports.processRulesQuery = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"]
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
     const query = request.data.query;
     if (!query) throw new HttpsError('invalid-argument', 'No query provided.');
+    await enforceAiQuota(request.auth.uid);
 
     try {
         const ai = getAiClient();
@@ -83,6 +109,7 @@ exports.analyzeRoundStats = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"]
     if (!stats || (!stats.par3Avg && !stats.par4Avg && !stats.par5Avg)) {
         throw new HttpsError('invalid-argument', 'No round stats provided.');
     }
+    await enforceAiQuota(request.auth.uid);
 
     try {
         const ai = getAiClient();
@@ -147,6 +174,7 @@ exports.generateAudioBriefing = onCall({ region: REGION, secrets: ["GEMINI_API_K
     if (parsedUrl.protocol !== 'https:' || !audioUrl.startsWith(STORAGE_URL_PREFIX)) {
         throw new HttpsError('permission-denied', 'audioUrl must be a project Storage URL.');
     }
+    await enforceAiQuota(request.auth.uid);
 
     try {
         const ai = getAiClient();
@@ -257,6 +285,10 @@ exports.generatePracticePlan = onCall({ region: REGION, secrets: ["GEMINI_API_KE
             completedSteps: existingData.completedSteps || [],
         };
     }
+
+    // Only a real generation (a Gemini call) costs money — consume quota after
+    // the cache guard so a returning-active-plan hit never counts against it.
+    await enforceAiQuota(uid);
 
     // --- GENERATION: Fetch the user's recent rounds and handicap index ---
     const roundsSnap = await db.collection('whs_rounds')

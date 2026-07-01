@@ -148,5 +148,14 @@ service cloud.firestore {
     match /users/{userId}/following/{followedId} {
       allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
+
+    // Per-user daily AI quota counters (functions/quota.js, BL-DD-01 chunk b).
+    // Written ONLY by the Admin SDK (rules bypassed) in the Gemini callables; a
+    // user may read their own to show "N left today", but no client may write —
+    // otherwise the billing cap could be reset/inflated from the browser.
+    match /quotas/{userId}/daily/{day} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if false;
+    }
   }
 }
