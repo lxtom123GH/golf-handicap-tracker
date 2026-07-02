@@ -49,7 +49,7 @@ async function enforceAiQuota(uid) {
 // ==========================================
 // askAiCoach
 // ==========================================
-exports.askAiCoach = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, async (request) => {
+exports.askAiCoach = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"], enforceAppCheck: true }, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
     const prompt = request.data.prompt;
     if (!prompt) throw new HttpsError('invalid-argument', 'No prompt provided.');
@@ -76,7 +76,7 @@ exports.askAiCoach = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, asy
 // ==========================================
 // processRulesQuery
 // ==========================================
-exports.processRulesQuery = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, async (request) => {
+exports.processRulesQuery = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"], enforceAppCheck: true }, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
     const query = request.data.query;
     if (!query) throw new HttpsError('invalid-argument', 'No query provided.');
@@ -102,7 +102,7 @@ exports.processRulesQuery = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"]
 // ==========================================
 // analyzeRoundStats
 // ==========================================
-exports.analyzeRoundStats = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, async (request) => {
+exports.analyzeRoundStats = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"], enforceAppCheck: true }, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
 
     const stats = request.data;
@@ -159,7 +159,7 @@ Warm, direct, and strategically sharp. Think: a caddie who also plays D&D. No co
  * Multi-modal Cloud Function that ingests a raw audio diary and returns a
  * structured summary using gemini-2.5-flash inlineData (Base64).
  */
-exports.generateAudioBriefing = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, async (request) => {
+exports.generateAudioBriefing = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"], enforceAppCheck: true }, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
 
     const { audioUrl } = request.data;
@@ -260,7 +260,7 @@ If the audio is silent, too short, or contains no golf-related content, return:
  *
  * Quota Guard: If an active drill already exists, returns it immediately — no Gemini call.
  */
-exports.generatePracticePlan = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"] }, async (request) => {
+exports.generatePracticePlan = onCall({ region: REGION, secrets: ["GEMINI_API_KEY"], enforceAppCheck: true }, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required.');
 
     const uid = request.auth.uid;
