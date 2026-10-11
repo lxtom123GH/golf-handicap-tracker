@@ -4,8 +4,7 @@
 // ==========================================================================
 //
 // `npm run test:e2e`. Boots the Firebase auth+firestore emulators and a
-// production `vite preview` build itself (reuseExistingServer: an already
-// running emulator suite / preview server is picked up, not fought).
+// production `vite preview` build itself. It does not adopt existing listeners.
 //
 // The app's environment sniffer (firebase-config.js) routes localhost to the
 // emulators, so specs register brand-new throwaway users through the real UI.
@@ -23,6 +22,16 @@
 // course.
 
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
+import { assertDemoHarnessEnvironment } from './src/ux-harness-safety.js';
+
+const projectId = assertDemoHarnessEnvironment(process.env);
+process.env.UX_HARNESS_PROJECT_ID = projectId;
+process.env.GCLOUD_PROJECT = projectId;
+process.env.GOOGLE_CLOUD_PROJECT = projectId;
+process.env.VITE_FIREBASE_PROJECT_ID = projectId;
+process.env.VITE_UX_HARNESS = 'true';
+const firebaseCli = fileURLToPath(new URL('./node_modules/firebase-tools/lib/bin/firebase.js', import.meta.url));
 
 // Keperra GC, Brisbane — near the clubhouse/1st tee.
 const KEPERRA_FIRST_TEE = { latitude: -27.4136, longitude: 152.9465 };
@@ -87,15 +96,15 @@ export default defineConfig({
             // S3c: EMU_CONFIG lets the runner point at firebase.ci.json (high
             // ports) so CI never collides with a dev's emulator; the ports are
             // echoed to the app build via VITE_EMU_* and to tests via EMU_*.
-            command: 'npx firebase emulators:start --only auth,firestore' + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
+            command: `"${process.execPath}" "${firebaseCli}" emulators:start --only auth,firestore --project ${projectId}` + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
             url: `http://127.0.0.1:${process.env.EMU_AUTH_PORT || 9099}`,
-            reuseExistingServer: true,
-            timeout: 120_000,
+            reuseExistingServer: false,
+            timeout: 300_000,
         },
         {
             command: `npm run build && npx vite preview --port ${process.env.VITE_PREVIEW_PORT || 4300} --strictPort`,
             url: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
-            reuseExistingServer: true,
+            reuseExistingServer: false,
             timeout: 180_000,
         },
     ],

@@ -10,6 +10,18 @@ import { initializeAuth, browserLocalPersistence, getAuth, connectAuthEmulator }
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { assertDemoHarnessTarget } from './ux-harness-safety.js';
+
+const isLocal = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "golf-handicap-tracker-b677c";
+if (import.meta.env.VITE_UX_HARNESS === 'true') {
+    assertDemoHarnessTarget({
+        projectId,
+        appHost: window.location.hostname,
+        authHost: `127.0.0.1:${import.meta.env.VITE_EMU_AUTH_PORT || 9099}`,
+        firestoreHost: `127.0.0.1:${import.meta.env.VITE_EMU_FS_PORT || 8080}`,
+    });
+}
 
 // P-247: authDomain is the site the Google sign-in popup/redirect bounces
 // through. The default (firebaseapp.com) is a different site from the app
@@ -25,7 +37,7 @@ const authDomain = import.meta.env.VITE_AUTH_DOMAIN || "golf-handicap-tracker-b6
 const firebaseConfig = {
     apiKey: "AIzaSyCxmEGkmrfRAmkxyHcni8MWitJSNYxAsEY",
     authDomain,
-    projectId: "golf-handicap-tracker-b677c",
+    projectId,
     storageBucket: "golf-handicap-tracker-b677c.firebasestorage.app",
     messagingSenderId: "846253855684",
     appId: "1:846253855684:web:c5a0bc51550086f54d4a91"
@@ -51,7 +63,6 @@ const app = initializeApp(firebaseConfig);
  * callable locally, temporarily set its enforceAppCheck to false, or set
  *   self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;   // prints a token to register
  */
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 if (!isLocal && recaptchaSiteKey) {
     initializeAppCheck(app, {
@@ -95,7 +106,7 @@ export const functions = getFunctions(app, 'australia-southeast1');
  * Environment Sniffer: Automatically routes traffic to Firebase Emulators
  * when running on localhost or 127.0.0.1.
  */
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+if (isLocal) {
     console.log('[Dev] Connecting to Firebase Local Emulators...');
     // S3c: emulator ports are overridable at build time so CI runs on the
     // self-hosted runner can use their own high ports (firebase.ci.json) and

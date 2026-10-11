@@ -12,6 +12,7 @@
     "test:offline": "node scripts/run-emulator-tests.mjs --only firestore --project demo-golf-tracker -- \"npx vitest run tests/offline --environment node\"",
     "test:auth": "node scripts/run-emulator-tests.mjs --only auth --project demo-golf-tracker -- \"npx vitest run tests/auth --no-file-parallelism\"",
     "test:e2e": "playwright test",
+    "ux:harness": "node scripts/run-e2e-isolated.mjs --project=phone --project=iphone-se --workers=2 --retries=1 --reporter=line tests/e2e/ux-harness.spec.js",
     "test": "vitest run tests/unit tests/oncourse.test.js"
   },
   "keywords": [],

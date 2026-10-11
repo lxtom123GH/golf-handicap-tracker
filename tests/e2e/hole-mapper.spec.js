@@ -8,10 +8,10 @@
 // too, plus the screenshot for the human check.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { FIRESTORE_PORT, PROJECT_ID, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
-const PROJECT = 'golf-handicap-tracker-b677c';
+const PROJECT = PROJECT_ID;
 const DOCS = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/${PROJECT}/databases/(default)/documents`;
 const AUTH = { headers: { Authorization: 'Bearer owner' } };
 

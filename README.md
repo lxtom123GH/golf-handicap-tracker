@@ -37,6 +37,25 @@ Stores granular tracking data for live rounds.
 - `outcome`: The result of the shot (e.g., Fairway, Green, Miss-Left).
 - `coordX / coordY`: Visual coordinates for shot plotting.
 
+## Local UX harness
+
+Run the demo-only UX views from Git Bash:
+
+```sh
+mkdir -p "$HOME/golf-harness-tmp"
+export TMP="$HOME/golf-harness-tmp"
+export TEMP="$TMP"
+npm run ux:harness
+```
+
+The command starts isolated Auth and Firestore emulators on private ports,
+builds the app for `demo-golf-tracker`, and seeds synthetic player, pending,
+coach, and admin accounts. It checks the signed-out view too. Playwright runs
+both phone and iPhone SE layouts, writes synthetic screenshots to
+`docs/ux-harness-screenshots/`, and stubs the Functions emulator so the demo cannot
+call paid AI. The harness refuses a production project ID or a non-local
+emulator host.
+
 ---
 
 ## 🧭 Navigation Lifecycle (v6.7.5)

@@ -16,15 +16,60 @@
 // The Firestore emulator's REST API accepts `Authorization: Bearer owner` and
 // bypasses security rules, which is what an admin write is. Nothing here can
 // reach production: the host is pinned to 127.0.0.1.
+import { assertDemoHarnessEnvironment } from '../../../src/ux-harness-safety.js';
 
-const PROJECT_ID = 'golf-handicap-tracker-b677c'; // .firebaserc / firebase-config.js
+export const PROJECT_ID = assertDemoHarnessEnvironment(process.env);
 export function firestorePort(env = process.env) {
     return Number(env.EMU_FIRESTORE_PORT || env.EMU_FS_PORT || 8080);
 }
 
 export const FIRESTORE_PORT = firestorePort();
+export function authPort(env = process.env) {
+    return Number(env.EMU_AUTH_PORT || 9099);
+}
+
+export const AUTH_PORT = authPort();
 const FIRESTORE_HOST = `127.0.0.1:${FIRESTORE_PORT}`; // allocated or CI runner port, else firebase.json
 const DOCS = `http://${FIRESTORE_HOST}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+
+export const UX_HARNESS_PASSWORD = 'demo-only-password';
+export const UX_HARNESS_PERSONAS = {
+    player: { email: 'player@ux-harness.example.test', name: 'Taylor Fairway', approved: true },
+    pending: { email: 'pending@ux-harness.example.test', name: 'Jordan Awaiting', approved: false },
+    coach: { email: 'coach@ux-harness.example.test', name: 'Casey Coach', approved: true, isCoach: true },
+    admin: { email: 'admin@ux-harness.example.test', name: 'Riley Admin', approved: true, isAdmin: true },
+};
+
+/** Create deterministic synthetic identities and roles in the local emulators. */
+export async function seedUxHarnessFixtures() {
+    const authBase = `http://127.0.0.1:${AUTH_PORT}/identitytoolkit.googleapis.com/v1`;
+    for (const persona of Object.values(UX_HARNESS_PERSONAS)) {
+        const payload = { email: persona.email, password: UX_HARNESS_PASSWORD, returnSecureToken: true };
+        let response = await fetch(`${authBase}/accounts:signUp?key=fake-api-key`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        });
+        let result = await response.json();
+        if (!response.ok && result.error?.message === 'EMAIL_EXISTS') {
+            response = await fetch(`${authBase}/accounts:signInWithPassword?key=fake-api-key`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+            });
+            result = await response.json();
+        }
+        if (!response.ok) throw new Error(`Failed to seed demo auth account ${persona.email}: ${JSON.stringify(result)}`);
+
+        if (persona.approved) await writeDocFields(`preapproved_emails/${encodeURIComponent(persona.email)}`, { addedAt: new Date() });
+        await writeDocFields(`users/${result.localId}`, {
+            uid: result.localId,
+            email: persona.email,
+            displayName: persona.name,
+            isApproved: persona.approved,
+            isAdmin: !!persona.isAdmin,
+            isCoach: !!persona.isCoach,
+            coaches: [],
+            authProvider: 'password',
+        });
+    }
+}
 
 /**
  * Put `email` on the invite list, exactly as admin.js does (lowercased doc id).
