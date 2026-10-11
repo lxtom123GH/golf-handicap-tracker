@@ -268,6 +268,20 @@ function bindAnnotations(row, player, v) {
     });
 }
 
+function analysisErrorCopy(error) {
+    // Codes only: callable messages can contain arbitrary service diagnostics.
+    const messages = {
+        'functions/unauthenticated': 'Sign in again, then reopen this video to request analysis.',
+        'functions/permission-denied': 'Your account cannot analyse this video. Ask its owner or an admin to check your access.',
+        'functions/not-found': 'This video could not be found. Refresh the video library and check whether it is still there.',
+        'functions/resource-exhausted': 'An AI service limit was reached. Check your AI allowance before requesting another analysis.',
+        'functions/failed-precondition': 'This video does not meet the analysis requirements. Check its size (about 19 MB maximum); if it is already smaller, ask an admin to check the video record.',
+        'functions/invalid-argument': 'The analysis request was not accepted. Refresh the video library and reopen the video.'
+    };
+    return Object.hasOwn(messages, error?.code) ? messages[error.code]
+        : 'Analysis could not be confirmed. Refresh the video library and check for a saved result before requesting another analysis.';
+}
+
 /**
  * BL-VID-03: Gemini swing analysis. The callable checks owner/coach/admin
  * server-side, spends one unit of the shared daily AI quota, grounds the
@@ -295,7 +309,7 @@ function bindAiAnalysis(row, v) {
             render(res.data || {});
         } catch (e) {
             console.error('[Videos] AI analysis failed:', e);
-            out.textContent = e.message || 'Analysis failed. Slow-mo clips under ~19 MB work best.';
+            out.textContent = analysisErrorCopy(e);
         } finally {
             btn.disabled = false;
         }
