@@ -835,6 +835,35 @@ window.addEventListener('stateChange', (e) => {
 
 let _activeDrillData = null; // cache the active drill in memory
 
+const PRACTICE_INPUT_ERRORS = new Set([
+    'practice inputs must be an object',
+    'focus must be a listed area',
+    'goal must be text',
+    'goal must not contain invisible or bidirectional control characters',
+    'goal must be a single line',
+    'goal must be at most 120 characters',
+    'minutes must be 15, 30, 45 or 60',
+]);
+
+function practiceGenerationErrorMessage(error) {
+    const code = error?.code;
+    const message = typeof error?.message === 'string' ? error.message : '';
+
+    // These are the exact validation messages produced by our input normaliser.
+    // Never echo a different invalid-argument or arbitrary service message.
+    if (code === 'functions/invalid-argument' && PRACTICE_INPUT_ERRORS.has(message)) return message;
+    if (code === 'functions/permission-denied') {
+        return 'Your account is awaiting approval. Ask an admin to approve it before using AI features.';
+    }
+    if (code === 'functions/resource-exhausted') {
+        return "You've reached today's AI practice plan limit. Try again tomorrow.";
+    }
+    if (code === 'functions/unauthenticated') {
+        return 'Your session has ended. Sign in again to generate a practice plan.';
+    }
+    return "We couldn't confirm whether your plan was created. Reload this page to check for an active plan before generating again.";
+}
+
 /**
  * Toggles the visibility of practice module state containers.
  * @param {string} state - The state to show ('empty', 'active', 'loading').
@@ -1026,7 +1055,7 @@ export function bindPracticeCaddyUI() {
             console.error('[Practice Caddy] Generation error:', err);
             setPracticeState('empty');
             if (errorEl) {
-                errorEl.textContent = `Error: ${err.message}`;
+                errorEl.textContent = practiceGenerationErrorMessage(err);
                 errorEl.classList.remove('hidden');
             }
         } finally {
