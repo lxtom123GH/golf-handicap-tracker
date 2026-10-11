@@ -1,0 +1,82 @@
+name: Deploy to Production
+
+on:
+  # Merges to main ship automatically, but only after "Golf Tracker CI"
+  # (test.yml) passes on that push, and at exactly the commit it tested
+  # (workflow_run.head_sha), so a red main never deploys. Not `on: push`:
+  # that would deploy in parallel with the tests. Manual dispatch deploys the
+  # ref picked in the dispatch form (main by default).
+  workflow_run:
+    workflows: ["Golf Tracker CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: # Manual trigger still available (Computer or Phone)
+
+permissions:
+  checks: write
+  contents: read
+
+# One production deploy at a time, in order; never cancel one mid-flight.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build_and_deploy:
+    # Only a green push-to-main CI run (or a manual dispatch) ships.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The commit the tests passed on, not whatever main is now.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+        env:
+          # Vite inlines VITE_* at build time. Without this, the CI-built client
+          # ships WITHOUT App Check → the enforced AI callables reject it (403).
+          # The reCAPTCHA v3 *site* key is public (safe as a repo variable).
+          VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GOLF_HANDICAP_TRACKER_B677C }}
+          projectId: golf-handicap-tracker-b677c
+          channelId: live
+
+  # The hosting action above ships the client only; rules and indexes must
+  # deploy too, or new client features hit "insufficient permissions". A
+  # separate job, so a rules failure shows on its own and never blocks the
+  # hosting deploy. A 403 here means the service account needs the "Firebase
+  # Rules Admin" role (and "Cloud Datastore Index Admin" for indexes) in IAM.
+  # storage.rules deploys here too (approval, size and type limits on audio
+  # and video uploads); "Firebase Rules Admin" covers Storage rules as well.
+  deploy_rules:
+    runs-on: ubuntu-latest
+    needs: build_and_deploy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      - name: Deploy Firestore rules, indexes and Storage rules
+        env:
+          FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GOLF_HANDICAP_TRACKER_B677C }}
+        run: |
+          printf '%s' "$FIREBASE_SA_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          npx firebase deploy --only firestore:rules,firestore:indexes,storage --project golf-handicap-tracker-b677c --non-interactive --force
+          rm -f "$RUNNER_TEMP/firebase-sa.json"

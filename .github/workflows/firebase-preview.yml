@@ -1,0 +1,48 @@
+name: Firebase Preview Channel
+
+# The one PR preview workflow: it builds (`npm run build`) before deploying,
+# since the hosting action needs dist/. No branch filter, so stacked PRs
+# (base ≠ main) get a preview and a green check too.
+on: pull_request
+
+# No paths filter: the preview is a gate on every same-repo PR (fork PRs get
+# no preview; see the job's `if`).
+concurrency:
+  # One group per PR ref, so a newer push to the same PR supersedes its run
+  # without evicting other PRs' pending runs. (The 'push' lane is unused
+  # while this workflow triggers on pull_request only.)
+  group: ${{ github.event_name == 'push' && 'golf-preview-push' || format('golf-preview-pr-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  build_and_preview:
+    if: '${{ github.event.pull_request.head.repo.full_name == github.repository }}'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          # Cache npm packages on Linux runners.
+          cache: ${{ runner.os == 'Linux' && 'npm' || '' }}
+      - run: npm ci
+      - run: npm run build
+        env:
+          # Mirror the production build (deploy-production.yml): Vite inlines
+          # VITE_* at build time; without it, previews ship without App Check
+          # and the enforced AI callables reject them.
+          VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GOLF_HANDICAP_TRACKER_B677C }}'
+          projectId: golf-handicap-tracker-b677c
+          # The project allows 50 channels: firebase-preview-cleanup.yml deletes
+          # a PR's channel when it closes; 3d (default 7d) is the backstop.
+          expires: 3d

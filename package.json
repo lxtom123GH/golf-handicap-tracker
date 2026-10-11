@@ -1,0 +1,35 @@
+{
+  "name": "golf_handicap_tracker",
+  "version": "7.0.0",
+  "description": "Golf Handicap Tracker with Sequential Shot Tracking",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:unit": "vitest run tests/unit tests/oncourse.test.js",
+    "test:rules": "node scripts/run-emulator-tests.mjs --only firestore,storage --project demo-golf-tracker -- \"npx vitest run tests/rules --no-file-parallelism\"",
+    "test:offline": "node scripts/run-emulator-tests.mjs --only firestore --project demo-golf-tracker -- \"npx vitest run tests/offline --environment node\"",
+    "test:auth": "node scripts/run-emulator-tests.mjs --only auth --project demo-golf-tracker -- \"npx vitest run tests/auth --no-file-parallelism\"",
+    "test:e2e": "playwright test",
+    "test": "vitest run tests/unit tests/oncourse.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "@playwright/test": "^1.61.1",
+    "firebase-tools": "^15.8.0",
+    "jsdom": "^28.1.0",
+    "playwright": "^1.58.2",
+    "vite": "^7.3.1",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "decimal.js": "10.6.0",
+    "firebase": "^12.10.0"
+  },
+  "private": true
+}

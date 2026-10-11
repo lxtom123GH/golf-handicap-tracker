@@ -1,0 +1,32 @@
+node_modules/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+firestore-debug.log
+ui-debug.log
+firebase-debug.log
+.env
+.DS_Store
+playwright-report/
+test-results/
+
+# @playwright/mcp interactive-driving output (traces/screenshots); the
+# .playwright-mcp.json config file is NOT ignored (trailing slash = dir only)
+.playwright-mcp/
+
+# Build output — rebuilt in CI by .github/workflows/deploy-production.yml (npm run build)
+dist/
+
+# Local runtime / scratch artifacts
+logs/
+scratch/
+
+# P030 per-run generated emulator config (auto-deleted by the runner)
+.firebase.emu-run.json
+# scripts/run-e2e-isolated.mjs per-run emulator config
+firebase.e2e-isolated.local.json
+
+# Playwright churns this every run; its content is never meaningful (Claude, #178 aside)
+test-results/.last-run.json
+
+# Private agent context, copied in by a local hook
+CLAUDE.local.md

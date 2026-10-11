@@ -1,0 +1,523 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Keep synthetic identities distinguishable and require provenance for other
+    // email values stored in collections that use this gate.
+
+    function isReservedIdentity(email) {
+      return email.matches('(?i).*@example\\.(com|org|net)$')
+          || email.matches('(?i).*@[^@]*\\.(test|invalid|example)$');
+    }
+
+    function isOwnerIdentity(email) {
+      return email.matches('(?i)^lxtom123(\\+[^@]*)?@gmail\\.com$');
+    }
+
+    // Reserved and owner identities are treated as synthetic by this gate.
+    function isSyntheticIdentity(email) {
+      return isReservedIdentity(email) || isOwnerIdentity(email);
+    }
+
+    // The gate itself. Apply to any collection keyed by, or storing, an email.
+    //   allow create, update: if isAdmin() && identityIsAccountedFor(email, request);
+    function identityIsAccountedFor(email, req) {
+      return isSyntheticIdentity(email) || req.resource.data.provenance is string;
+    }
+
+    // =========================================================================
+    // 🔒 HELPER FUNCTIONS
+    // =========================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Tie guest rounds to both the caller and an existing guest record they own.
+    function isOwnGuestRound() {
+      return request.resource.data.guestOwnerUid == request.auth.uid
+        && request.resource.data.uid is string
+        && request.resource.data.uid.matches('^guest_.+')
+        && exists(/databases/$(database)/documents/guests/$(request.resource.data.uid))
+        && get(/databases/$(database)/documents/guests/$(request.resource.data.uid)).data.ownerUid == request.auth.uid;
+    }
+
+    // Include both current and legacy coach assignments.
+    function isCoachOf(studentUid) {
+      let studentData = get(/databases/$(database)/documents/users/$(studentUid)).data;
+      return isAuthenticated() && (
+        studentData.coachUid == request.auth.uid ||
+        (studentData.coaches != null && request.auth.uid in studentData.coaches) // Backward compatibility
+      );
+    }
+
+    // Automatic approval requires a verified email that appears on the invite list.
+    // Lowercase comparison matches the normalized invite document IDs.
+    function isPreapprovedIdentity() {
+      return request.auth.token.email_verified == true &&
+        request.auth.token.email != null &&
+        exists(/databases/$(database)/documents/preapproved_emails/$(request.auth.token.email.lower()));
+    }
+
+    // Check whether a player is entitled to participate in this competition.
+    function isCompParticipant(compId, uid) {
+      let comp = get(/databases/$(database)/documents/competitions/$(compId)).data;
+      return comp.ownerId == uid || (comp.invitedUIDs != null && uid in comp.invitedUIDs);
+    }
+
+    // Match competition round visibility to the parent competition.
+    function canReadCompetition(compId) {
+      let comp = get(/databases/$(database)/documents/competitions/$(compId)).data;
+      return isAuthenticated() && (
+        comp.visibility == "public" ||
+        comp.ownerId == request.auth.uid ||
+        (comp.invitedUIDs != null && request.auth.uid in comp.invitedUIDs) ||
+        isAdmin()
+      );
+    }
+
+    // =========================================================================
+    // 👤 USERS & PROFILES
+    // =========================================================================
+    
+    match /users/{userId} {
+      // Keep each trace bounded here and validate coordinate geometry in the mapper/export path.
+      match /holeTraces/{traceId} {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+        allow create, update: if isAuthenticated()
+          && request.auth.uid == userId
+          && request.resource.data.features is map
+          && request.resource.data.features.features is list
+          && request.resource.data.features.features.size() > 0
+          && request.resource.data.features.features.size() <= 12
+          && request.resource.data.authorUid == request.auth.uid;
+        allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
+
+      // Keep intended hole plans available to the player and assigned coach.
+      match /holePlans/{planId} {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
+        allow create, update: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId))
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.line is list
+          && request.resource.data.line.size() >= 2
+          && request.resource.data.line.size() <= 48
+          && request.resource.data.note is string
+          && request.resource.data.note.size() <= 200;
+        allow delete: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId));
+      }
+
+      // Keep private user fields available only to the owner, assigned coaches, and admins.
+      // Public directory fields are exposed separately through profiles/{uid}.
+      // Check list-safe predicates before the document lookup used for individual reads.
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        request.auth.uid == userId ||
+        (resource.data.coaches != null && request.auth.uid in resource.data.coaches) ||
+        isCoachOf(userId)
+      );
+      // Only admins may change role and approval fields. Self-created profiles start
+      // without elevated privileges; automatic approval requires an invited identity.
+      // Email writes must match the caller's auth identity or pass the provenance gate.
+      // Storage quotas are admin-managed, while users may update their own usage total.
+      allow create: if isAuthenticated() && (
+        (request.auth.uid == userId && request.resource.data.get('isAdmin', false) != true
+          && request.resource.data.get('isCoach', false) != true
+          // isApproved must be present: a missing field is pending everywhere
+          // (src/approval.js), and must not be a way to skip that decision.
+          && request.resource.data.isApproved is bool
+          && (request.resource.data.isApproved != true || isPreapprovedIdentity())
+          && !('videoQuotaBytes' in request.resource.data)
+          && (!('email' in request.resource.data)
+              || request.resource.data.email == request.auth.token.email)) ||
+        (isAdmin() && (!('email' in request.resource.data)
+          || identityIsAccountedFor(request.resource.data.email, request)))
+      );
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isCoach', 'isApproved', 'videoQuotaBytes']) &&
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['email'])
+            || request.resource.data.email == request.auth.token.email)) ||
+        (request.auth.uid == userId && resource.data.isApproved == false
+          && request.resource.data.isApproved == true && isPreapprovedIdentity()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isApproved'])) ||
+        (isAdmin() &&
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['email'])
+            || identityIsAccountedFor(request.resource.data.email, request))) ||
+        // A coach may remove only their own link from a student's coach list.
+        // Restrict this branch to that list change so no other profile data can be altered.
+        (isCoachOf(userId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['coaches']) &&
+          !(request.auth.uid in request.resource.data.coaches) &&
+          resource.data.get('coaches', []).removeAll([request.auth.uid]) == request.resource.data.coaches)
+      );
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+
+      match /coachNotes/{noteId} {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
+        allow write: if isAuthenticated() && (isCoachOf(userId) || isAdmin());
+      }
+
+      match /prefs/{prefId} {
+        allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
+
+      // The player's Handicap Index history: up to 50 dated published
+      // indexes (whs.js updateUserHandicapIndexArray writes it; Low HI, the
+      // caps and backdated cards read it). Private to the player, their
+      // coach(es) and admin. The current index stays public on profiles/{uid}.
+      match /private/handicap {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
+        allow create, update: if isAuthenticated() && (request.auth.uid == userId || isAdmin())
+          && request.resource.data.keys().hasOnly(['indexHistory', 'updatedAt'])
+          && request.resource.data.indexHistory is list
+          && request.resource.data.indexHistory.size() <= 50;
+        allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
+
+      match /practice_plans/{planId} {
+        allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
+
+      match /assignedDrills/{drillId} {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId) || isAdmin());
+        // The student may only flip completion state; completedAt travels with
+        // it (powers the coach's before/after drill-impact view).
+        allow update: if isAuthenticated() && (
+          (request.auth.uid == userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['completed', 'completedAt'])) ||
+          isCoachOf(userId) ||
+          isAdmin()
+        );
+        allow create, delete: if isAuthenticated() && (isCoachOf(userId) || isAdmin());
+      }
+    }
+
+    match /global_drills/{drillId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /profiles/{userId} {
+      // The coach roster and approved-player directory is available only after
+      // approval. Approved app flows use this projection for display names and
+      // current handicaps; pending accounts stay on the pending screen.
+      allow read: if isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true ||
+        isAdmin()
+      );
+      // Profiles power the public directory, so client writes cannot set role or approval flags.
+      // Separate create rules are needed because a new profile has no prior resource to diff.
+      // The client may seed its handicap index; the server mirrors trusted profile fields.
+      // CREATE: owner only; the trust flags may not arrive set to a privileged
+      // value (isCoach:true / isApproved:true are admin-grants). Omitted or
+      // false is fine — the mirror will overwrite them from users anyway.
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.get('isCoach', false) != true
+        && request.resource.data.get('isApproved', false) != true
+        && !('indexHistory' in request.resource.data);
+      // UPDATE: owner may edit display fields but never flip the trust flags;
+      // admin may do anything else. Nobody may add or change indexHistory.
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isCoach', 'isApproved']))
+      ) && (
+        // Legacy indexHistory: untouched, or deleted (never added or changed).
+        !('indexHistory' in request.resource.data) ||
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['indexHistory'])
+      );
+      // DELETE: cleanup of one's own projection, or admin.
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // =========================================================================
+    // ⛳ ROUNDS, SHOTS & PRACTICE (MAINTENANCE UPDATES)
+    // =========================================================================
+    
+    // GUEST GOLFERS. A guest is somebody who plays with you and does not have a
+    // club membership or an account of their own - the family game, the mate who
+    // turns up twice a year. The host owns the guest record, logs their card, and
+    // the guest accumulates a handicap from it.
+    //
+    // WHY GUESTS EXIST INSTEAD OF WIDENING whs_rounds. The obvious way to let a
+    // marker log a partner's card is to allow writing a round whose uid is not
+    // yours. That hands every authenticated user the ability to write into any
+    // other user's handicap record, which is the one thing a handicap system
+    // cannot allow - the record is the product. A guest is a separate identity
+    // that you own, so "write a round for someone else" becomes "write a round
+    // for a player who belongs to me", which is checkable.
+    //
+    // THE ATTACK THIS PREFIX PREVENTS. Without it, anyone could create
+    // guests/<victim-uid> naming themselves as owner, and then write rounds
+    // under the victim's uid - polluting a real golfer's index. Requiring the
+    // document id to start with "guest_" closes it: Firebase Auth uids are
+    // 28-character alphanumerics and never contain an underscore, so a guest id
+    // can never collide with a real account.
+    match /guests/{guestId} {
+      allow read: if isAuthenticated() && (
+        resource.data.ownerUid == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated()
+        && guestId.matches('^guest_.+')
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 60;
+      allow update: if isAuthenticated()
+        && resource.data.ownerUid == request.auth.uid
+        // Ownership is not transferable by the client: handing your guest to
+        // someone else would move a handicap record out from under the person
+        // who built it, and there is no product reason to allow it.
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // MARKER-ATTESTED CARDS. In golf one player marks the card and the player
+    // signs it, and that is exactly the flow here: you keep score for the
+    // fourball, each registered partner gets a pre-filled card, and it reaches
+    // their handicap record only when THEY approve it.
+    //
+    // WHY THIS NEEDS NO WIDENING OF whs_rounds AT ALL. Approving writes the
+    // round under the approver's OWN credentials, so the self-only create rule
+    // below is untouched. A pending card is a proposal, not a record - it holds
+    // no handicap weight until its owner accepts it, and nobody but its owner
+    // can accept it. That is the whole security argument, and it is why this is
+    // better than letting a marker write somebody else's record directly.
+    match /pending_rounds/{pendingId} {
+      // The player it is for, and the marker who filled it in, can both see it:
+      // the marker needs to know whether it was accepted.
+      allow read: if isAuthenticated() && (
+        resource.data.playerUid == request.auth.uid ||
+        resource.data.markerUid == request.auth.uid ||
+        isAdmin()
+      );
+      // Anyone may PROPOSE a card to anyone - that is what marking a card is -
+      // but only as themselves, and only a plausible one. The proposal carries
+      // no weight until accepted, so the blast radius of a spammed card is a
+      // row the recipient declines.
+      allow create: if isAuthenticated()
+        && request.resource.data.markerUid == request.auth.uid
+        && request.resource.data.playerUid is string
+        && request.resource.data.playerUid != request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.adjustedGross is number
+        && request.resource.data.adjustedGross > 0
+        && request.resource.data.adjustedGross <= 200;
+      // Only the PLAYER decides. A marker cannot approve their own proposal,
+      // which is the entire point of an attestation.
+      allow update: if isAuthenticated()
+        && resource.data.playerUid == request.auth.uid
+        && request.resource.data.playerUid == resource.data.playerUid
+        && request.resource.data.markerUid == resource.data.markerUid
+        && request.resource.data.status in ['approved', 'declined'];
+      // Either party may clear it away once it is settled.
+      allow delete: if isAuthenticated() && (
+        resource.data.playerUid == request.auth.uid ||
+        resource.data.markerUid == request.auth.uid
+      );
+    }
+
+    match /whs_rounds/{roundId} {
+      // Limit shot access to the owner, permitted viewers, and admins.
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || 
+        isCoachOf(resource.data.uid) || 
+        isAdmin() ||
+        // A guest's rounds are readable by the host who owns the guest -
+        // otherwise you could log your brother's card and never see it again.
+        resource.data.guestOwnerUid == request.auth.uid ||
+        (resource.data.visibility == "public") // Fallback for social if implemented
+      );
+      // Plausibility guard (re-tested by tests/rules): every client write path
+      // (oncourse save, manual addRound, admin CSV import) sends a numeric
+      // adjustedGross; 200 caps an 18-hole AGS.
+      allow create: if isAuthenticated()
+        && (request.resource.data.uid == request.auth.uid || isAdmin() || isOwnGuestRound())
+        && request.resource.data.adjustedGross is number
+        && request.resource.data.adjustedGross > 0
+        && request.resource.data.adjustedGross <= 200;
+      allow update: if isAuthenticated()
+        && request.resource.data.uid == resource.data.uid
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['adjustedGross'])
+          || (request.resource.data.adjustedGross is number
+              && request.resource.data.adjustedGross > 0
+              && request.resource.data.adjustedGross <= 200))
+        && (
+        resource.data.uid == request.auth.uid || isAdmin()
+        || resource.data.guestOwnerUid == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+        || resource.data.guestOwnerUid == request.auth.uid
+      );
+    }
+
+    // Keep video metadata aligned with the Storage path and per-file size limits.
+    match /videos/{videoId} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        isCoachOf(resource.data.uid) ||
+        isAdmin()
+      );
+      // Bind metadata to the owner's Storage prefix before server-side video analysis.
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.bytes is number
+        && request.resource.data.bytes > 0
+        && request.resource.data.bytes < 100 * 1024 * 1024
+        && request.resource.data.path is string
+        && request.resource.data.path.matches('videos/' + request.resource.data.uid + '/[^/]+');
+      // Owners and their coaches may edit annotations while file metadata stays fixed.
+      allow update: if isAuthenticated()
+        && (resource.data.uid == request.auth.uid || isCoachOf(resource.data.uid) || isAdmin())
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['annotations']);
+      allow delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /shots/{shotId} {
+      // Limit shot access to the owner, permitted viewers, and admins.
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        isCoachOf(resource.data.uid) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated()
+        && request.resource.data.uid == resource.data.uid
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /practice_rounds/{roundId} {
+      // Private practice data: Only the user, their coach, or an Admin
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        isCoachOf(resource.data.uid) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated()
+        && request.resource.data.uid == resource.data.uid
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // =========================================================================
+    // 🏆 COMPETITIONS
+    // =========================================================================
+    
+    match /competitions/{compId} {
+      allow read: if isAuthenticated() && (
+        resource.data.visibility == "public" || 
+        resource.data.ownerId == request.auth.uid || 
+        request.auth.uid in resource.data.invitedUIDs || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+
+    match /comp_rounds/{compRoundId} {
+      // Scope round reads to the author, admins, or users who can read the parent competition.
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        isAdmin() ||
+        (resource.data.compId != null && canReadCompetition(resource.data.compId))
+      );
+      // Every row belongs to a readable competition. Owners and admins may record
+      // participant scores; participants may record their own or another participant's row.
+      allow create: if isAuthenticated()
+        && request.resource.data.compId != null
+        && canReadCompetition(request.resource.data.compId)
+        && (
+          request.resource.data.uid == request.auth.uid ||
+          isAdmin() ||
+          get(/databases/$(database)/documents/competitions/$(request.resource.data.compId)).data.ownerId == request.auth.uid ||
+          (isCompParticipant(request.resource.data.compId, request.auth.uid) &&
+           isCompParticipant(request.resource.data.compId, request.resource.data.uid))
+        );
+      // Competition owners can remove all result rows when deleting their competition.
+      allow update: if isAuthenticated()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.compId == resource.data.compId
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        isAdmin() ||
+        (resource.data.compId != null &&
+          get(/databases/$(database)/documents/competitions/$(resource.data.compId)).data.ownerId == request.auth.uid)
+      );
+    }
+
+    // =========================================================================
+    // 🔑 ADMIN & SYSTEM
+    // =========================================================================
+    
+    match /preapproved_emails/{email} {
+      // Signup can check only its own email; admins maintain and enumerate invites.
+      // Compare case-insensitively to match normalized document IDs.
+      allow get: if isAuthenticated()
+        && request.auth.token.email_verified == true
+        && email.lower() == request.auth.token.email.lower();
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // No client rule grants access to the tempo collection; default deny applies.
+
+    match /feed/{feedId} {
+      // Feed entries may contain private round details, so readers must be the actor,
+      // an admin, or an accepted follower. Only server functions may write feed entries.
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.actorUid
+        || isAdmin()
+        || exists(/databases/$(database)/documents/users/$(resource.data.actorUid)/followers/$(request.auth.uid))
+      );
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // A following edge requires the followed player's recorded consent.
+    match /users/{userId}/following/{followedId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.followedUid == followedId
+        && exists(/databases/$(database)/documents/users/$(followedId)/followers/$(request.auth.uid));
+      allow update: if false;
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Follow requests let a player ask for consent; they do not grant data access.
+    match /users/{followedId}/followRequests/{requesterId} {
+      allow read: if isAuthenticated() && (request.auth.uid == followedId || request.auth.uid == requesterId || isAdmin());
+      // Ask on your own behalf only, and not of yourself.
+      allow create: if isAuthenticated() && request.auth.uid == requesterId
+        && requesterId != followedId
+        && request.resource.data.requesterUid == requesterId;
+      allow update: if false; // withdraw and re-ask; there is nothing to edit
+      // Either side may clear it: the target on accept/decline, the requester
+      // to withdraw.
+      allow delete: if isAuthenticated() && (request.auth.uid == followedId || request.auth.uid == requesterId || isAdmin());
+    }
+
+    // Only the followed player may accept a follower. Either side may revoke the
+    // relationship, and a server trigger mirrors accepted edges for feed delivery.
+    match /users/{followedId}/followers/{followerId} {
+      allow read: if isAuthenticated() && (request.auth.uid == followedId || request.auth.uid == followerId || isAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid == followedId || isAdmin());
+      allow update: if false; // acceptance is a fact, not a mutable record
+      allow delete: if isAuthenticated() && (request.auth.uid == followedId || request.auth.uid == followerId || isAdmin());
+    }
+
+    // Callables write quota counters through the Admin SDK; users may read only their own.
+    match /quotas/{userId}/daily/{day} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}

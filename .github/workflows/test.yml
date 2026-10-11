@@ -1,0 +1,131 @@
+name: Golf Tracker CI
+
+permissions:
+  contents: read
+
+# The automatic test gate: runs on every PR and every push to main. Unit + e2e
+# run in the `test` job; the rules suite is its own `rules-emulator` job
+# because GitHub's check rollup reports jobs, not steps, and a merge gate can
+# only require a check it can see by name.
+#
+# No deploy job here: deploy-production.yml deploys after this workflow
+# passes, and it builds with VITE_RECAPTCHA_SITE_KEY (a build here without it
+# would ship a bundle with no App Check).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # manual trigger still available
+
+concurrency:
+  # Keep pull request runs isolated by ref and serialize pushes.
+  group: ${{ github.event_name == 'push' && 'golf-runner-push' || format('golf-pr-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Use dedicated high ports for the emulator and preview services in CI.
+    env:
+      EMU_CONFIG: firebase.ci.json
+      EMU_FS_PORT: '18080'
+      EMU_AUTH_PORT: '19099'
+      VITE_EMU_FS_PORT: '18080'
+      VITE_EMU_AUTH_PORT: '19099'
+      VITE_PREVIEW_PORT: '14300'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        # One Node version everywhere: the deploy, the preview build and
+        # Cloud Functions run 24 too.
+        node-version: '24'
+        # Cache npm packages on Linux runners.
+        cache: ${{ runner.os == 'Linux' && 'npm' || '' }}
+
+    # The e2e suite's Playwright webServer boots the auth+firestore emulators
+    # (playwright.config.js), so this job still needs a JDK even though the
+    # rules suite has moved to its own job below.
+    - name: Use JDK 21 (For Firebase Emulators)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Run Unit Tests (tests/unit + oncourse)
+      run: npx vitest run tests/unit tests/oncourse.test.js
+
+    - name: Cache Firebase Emulators
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/firebase/emulators
+        key: firebase-emulators-${{ runner.os }}-v1
+
+    # Covers the forgot-password flow: drives the same function the login
+    # screen calls, against the Auth emulator.
+    - name: Run Auth Tests (Auth emulator)
+      run: npm run test:auth
+
+    - name: Ensure Playwright browsers (Linux)
+      if: runner.os == 'Linux'
+      run: DEBIAN_FRONTEND=noninteractive npx playwright install --with-deps chromium
+
+    - name: Ensure Playwright browsers (Windows runner)
+      if: runner.os == 'Windows'
+      run: npx playwright install chromium
+
+    - name: Run E2E Tests
+      # A normal run is 12-35 min; fail loudly on a hung suite instead of
+      # holding the runner forever.
+      timeout-minutes: 60
+      run: |
+        npx playwright test
+
+  # The rules suite is the app's authorization contract; it gates every PR
+  # to main.
+  #
+  # Its own job, not a step of `test`, so the check list on a PR carries the
+  # name `rules-emulator` — the gate matches on that name.
+  rules-emulator:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        # One Node version everywhere: the deploy, the preview build and
+        # Cloud Functions run 24 too.
+        node-version: '24'
+        # Cache npm packages on Linux runners.
+        cache: ${{ runner.os == 'Linux' && 'npm' || '' }}
+
+    # The Firestore emulator is a Java process; without a JDK it fails at
+    # startup with an error that looks nothing like a rules failure.
+    - name: Use JDK 21 (for Firebase emulators)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Cache Firebase Emulators
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/firebase/emulators
+        key: firebase-emulators-${{ runner.os }}-v1
+
+    - name: Run Firestore rules suite
+      run: npm run test:rules
