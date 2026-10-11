@@ -18,6 +18,9 @@ export const GPS_POLICY = {
     maxFixAgeMs: 2000,    // a fix older than this is stale
     maxSpeedMps: 0.7,     // moving = not at the ball
     preciseOffM: 1000,    // accuracy above this = iOS Precise Location off
+    agreementFloorM: 3,   // minimum radius for fixes to agree with the best fix
+    combinedAccuracyFloorM: 2, // never report a combined accuracy finer than this
+    earthRadiusM: 6371000,
 };
 
 /**
@@ -42,11 +45,59 @@ export function createCapture(now = Date.now, policy = GPS_POLICY) {
         return best;
     };
 
+    const distanceM = (a, b) => {
+        const toRad = Math.PI / 180;
+        const lat1 = a.lat * toRad;
+        const lat2 = b.lat * toRad;
+        const dLat = (b.lat - a.lat) * toRad;
+        const dLon = (b.lon - a.lon) * toRad;
+        const h = Math.sin(dLat / 2) ** 2
+            + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+        return 2 * policy.earthRadiusM * Math.asin(Math.sqrt(Math.min(1, h)));
+    };
+
+    const averageAgreeingFixes = (best) => {
+        if (!best || !Number.isFinite(best.lat) || !Number.isFinite(best.lon)) return best;
+
+        const agreementRadiusM = Math.max(best.accuracyM, policy.agreementFloorM);
+        const agreeing = usable.filter((f) => Number.isFinite(f.lat)
+            && Number.isFinite(f.lon)
+            && Number.isFinite(f.accuracyM)
+            && f.accuracyM > 0
+            && distanceM(best, f) <= agreementRadiusM);
+        if (agreeing.length < 2) return best;
+
+        // Average unit-sphere coordinates so fixes near the date line combine correctly.
+        let x = 0;
+        let y = 0;
+        let z = 0;
+        let totalWeight = 0;
+        for (const f of agreeing) {
+            const weight = 1 / (f.accuracyM ** 2);
+            const lat = f.lat * Math.PI / 180;
+            const lon = f.lon * Math.PI / 180;
+            x += Math.cos(lat) * Math.cos(lon) * weight;
+            y += Math.cos(lat) * Math.sin(lon) * weight;
+            z += Math.sin(lat) * weight;
+            totalWeight += weight;
+        }
+
+        const lon = Math.atan2(y, x) * 180 / Math.PI;
+        const lat = Math.atan2(z, Math.hypot(x, y)) * 180 / Math.PI;
+        const accuracyM = Math.max(
+            policy.combinedAccuracyFloorM,
+            best.accuracyM / Math.sqrt(agreeing.length),
+            Math.sqrt(1 / totalWeight),
+        );
+        return { ...best, lat, lon, accuracyM };
+    };
+
     const finish = (st, fix, reason) => {
         state = st;
+        const resultFix = st === 'accepted' ? averageAgreeingFixes(bestFix() || fix) : fix;
         decided = {
             state: st,
-            fix: fix || null,
+            fix: resultFix || null,
             fixCount: { usable: usable.length, ignored },
             elapsedMs: now() - t0,
             reason: reason || '',

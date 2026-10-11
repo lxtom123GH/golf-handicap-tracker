@@ -15,11 +15,19 @@ const fix = (accuracyM, { at, speedMps = null } = {}) => ({
     at: at ?? 'use-clocks',
 });
 
+const offsetLat = (metres) => -27.4 + metres / 111_320;
+const distanceM = (a, b) => {
+    const latScale = 111_320;
+    const lonScale = latScale * Math.cos((a.lat + b.lat) / 2 * Math.PI / 180);
+    return Math.hypot((a.lat - b.lat) * latScale, (a.lon - b.lon) * lonScale);
+};
+
 describe('GPS_POLICY numbers (tests cite the object, not literals)', () => {
     it('exposes the spec-fixed values', () => {
         expect(GPS_POLICY).toMatchObject({
             acceptNowM: 8, acceptWindowM: 12, lowConfidenceM: 30,
             windowMs: 4000, maxFixAgeMs: 2000, maxSpeedMps: 0.7, preciseOffM: 1000,
+            agreementFloorM: 3, combinedAccuracyFloorM: 2,
         });
     });
 });
@@ -32,7 +40,7 @@ describe('createCapture — acceptance paths', () => {
         c.advance(500);
         const d = cap.push(fix(6, { at: c.now() }));
         expect(d.state).toBe('accepted');
-        expect(d.fix.accuracyM).toBe(6);
+        expect(d.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 9 ** 2 + 1 / 6 ** 2)));
     });
 
     it('a lone 6 m fix waits — one good fix is not convergence', () => {
@@ -51,7 +59,7 @@ describe('createCapture — acceptance paths', () => {
         c.advance(1100);
         const d = cap.decide({ final: true });
         expect(d.state).toBe('accepted');
-        expect(d.fix.accuracyM).toBe(11);
+        expect(d.fix.accuracyM).toBeLessThan(11);
         expect(d.elapsedMs).toBeGreaterThanOrEqual(GPS_POLICY.windowMs - 100);
     });
 
@@ -141,7 +149,7 @@ describe('createCapture — preciseOff and ignored fixes', () => {
         expect(d1.state).toBe('accepted');
         const d2 = cap.push(fix(50, { at: c.now() }));
         expect(d2).toBe(d1);
-        expect(d2.fix.accuracyM).toBe(6);
+        expect(d2.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 9 ** 2 + 1 / 6 ** 2)));
     });
 });
 
@@ -216,10 +224,76 @@ describe('createCapture — boundaries ±0.1 at each threshold', () => {
         const c = fakeClock();
         const cap = createCapture(c.now);
         cap.push(fix(12, { at: c.now() }));
+        c.advance(1);
         cap.push(fix(10, { at: c.now() }));
+        c.advance(1);
         cap.push(fix(10, { at: c.now() }));
         const d = cap.decide({ final: true });
-        expect(d.fix.accuracyM).toBe(10);
-        expect(d.fix.at).toBe(100000); // advanced never in this test → all same; newest = last pushed
+        expect(d.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 12 ** 2 + 2 / 10 ** 2)));
+        expect(d.fix.at).toBe(100002); // tie metadata comes from the newest best fix
+    });
+});
+
+describe('createCapture — agreeing-fix average', () => {
+    it('averages symmetric noise closer to the truth and reports combined accuracy', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now);
+        const truth = { lat: -27.4, lon: 152.9 };
+        cap.push({ ...fix(12, { at: c.now() }), lat: offsetLat(6) });
+        cap.push({ ...fix(12, { at: c.now() }), lat: truth.lat });
+        cap.push({ ...fix(12, { at: c.now() }), lat: offsetLat(-6) });
+
+        const d = cap.decide({ final: true });
+        expect(d.state).toBe('accepted');
+        expect(distanceM(d.fix, truth)).toBeLessThan(distanceM({ lat: offsetLat(-6), lon: truth.lon }, truth));
+        expect(d.fix.lat).toBeCloseTo(truth.lat, 7);
+        expect(d.fix.accuracyM).toBeCloseTo(12 / Math.sqrt(3));
+    });
+
+    it('excludes a distant outlier from the averaged position', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now);
+        const truth = { lat: -27.4, lon: 152.9 };
+        cap.push({ ...fix(11, { at: c.now() }), lat: truth.lat });
+        cap.push({ ...fix(12, { at: c.now() }), lat: offsetLat(2) });
+        cap.push({ ...fix(13, { at: c.now() }), lat: offsetLat(40) });
+
+        const d = cap.decide({ final: true });
+        expect(d.state).toBe('accepted');
+        expect(distanceM(d.fix, truth)).toBeLessThan(2);
+        expect(d.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 11 ** 2 + 1 / 12 ** 2)));
+    });
+
+    it('weights each agreeing fix by inverse accuracy squared', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now);
+        const truth = { lat: -27.4, lon: 152.9 };
+        const distantOffsetM = 6;
+        cap.push({ ...fix(11, { at: c.now() }), lat: truth.lat });
+        cap.push({ ...fix(12, { at: c.now() }), lat: offsetLat(distantOffsetM) });
+
+        const d = cap.decide({ final: true });
+        const expectedOffsetM = distantOffsetM * (1 / 12 ** 2) / (1 / 11 ** 2 + 1 / 12 ** 2);
+        expect(d.state).toBe('accepted');
+        expect(distanceM(d.fix, truth)).toBeCloseTo(expectedOffsetM, 2);
+    });
+
+    it('returns a single accepted fix exactly as before', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now);
+        const single = fix(6, { at: c.now() });
+        cap.push(single);
+
+        const d = cap.decide({ final: true });
+        expect(d.state).toBe('accepted');
+        expect(d.fix).toEqual(single);
+    });
+
+    it('applies the minimum reported accuracy floor', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now, { ...GPS_POLICY, acceptPrevM: 0 });
+        for (let i = 0; i < 100; i++) cap.push(fix(4, { at: c.now() }));
+
+        expect(cap.decide({ final: true }).fix.accuracyM).toBe(GPS_POLICY.combinedAccuracyFloorM);
     });
 });

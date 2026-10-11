@@ -147,7 +147,9 @@ describe('S10 GPS capture chain (startNewShotInput)', () => {
         pushFix(10);            // seed-class fix lands (usable, waits)
         pushFix(6);             // second good fix → convergence → accepted
         const d = AppState.currentShotData;
-        expect(d.startPos).toMatchObject({ lat: -27.4140, lon: 152.9470, accuracyM: 6 });
+        expect(d.startPos.lat).toBeCloseTo(-27.4140, 8);
+        expect(d.startPos.lon).toBeCloseTo(152.9470, 8);
+        expect(d.startPos.accuracyM).toBe(5); // rounded combined accuracy
         // Previous shot patched locally through mutateList (D-03).
         expect(AppState.currentHoleShots[0].finishPos).toEqual(d.startPos);
         // Firestore update called once with finishPos, fire-and-forget.
@@ -231,7 +233,7 @@ describe('S10 GPS capture chain (startNewShotInput)', () => {
         const { setDoc } = await import('firebase/firestore');
         const payloadCall = setDoc.mock.calls.find(c => c[1]?.startPos);
         expect(payloadCall).toBeTruthy();
-        expect(payloadCall[1].startPos.accuracyM).toBe(6);
+        expect(payloadCall[1].startPos.accuracyM).toBe(5); // rounded combined accuracy
         expect(payloadCall[1].gpsCapture.state).toBe('accepted');
         expect(payloadCall[1].startLineManual).toBeUndefined();
         // No overlay mounted in jsdom → no startXY, and that is allowed.
