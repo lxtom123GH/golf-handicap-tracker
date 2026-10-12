@@ -11,6 +11,7 @@ import { courseSlugFor, loadCourseOverlay } from '../hole-overlay.js';
 import { isGuestId } from '../guests.js';
 import { recordSetup } from '../last-setup.js';
 import { applyRememberedWakeLock } from '../wakelock.js';
+import { createRoundId } from '../round-id.js';
 
 /**
  * "Add guest" — a golfer with no account, whose card still builds a handicap.
@@ -773,7 +774,7 @@ export function bindStartRound() {
             AppState.currentRoundDate = (dateInput && dateInput.value) ? dateInput.value : localToday();
 
             AppState.currentHole = 1;
-            AppState.activeRoundId = `round_${Date.now()}`;
+            AppState.activeRoundId = createRoundId();
             AppState.currentHoleShots = [];
 
             // F-2: the holes the Daily Handicap is computed for ARE the round's

@@ -5,7 +5,7 @@
 // the toast every Detailed golfer sees on every shot: "Shot N logged".
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -17,8 +17,7 @@ test('the shot-logged toast does not swallow taps', async ({ page }) => {
     await page.locator('#auth-name').fill('Toast Tester');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();
