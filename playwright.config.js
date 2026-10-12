@@ -24,7 +24,7 @@
 // course.
 
 import { defineConfig, devices } from '@playwright/test';
-import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmulatorEnvIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
+import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmulatorEnvIsLoopback, assertEmulatorConfigIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
 
 // Demo-only harness (fleet/e2e-demo-only): the emulators run the OFFLINE
 // demo- project the app uses on localhost (src/emulator-project.js), every
@@ -33,6 +33,7 @@ import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmu
 // Chromium resolves no external hostname. Pinned by
 // tests/unit/e2e-demo-safety.test.js.
 assertEmulatorEnvIsLoopback();
+assertEmulatorConfigIsLoopback(process.env.EMU_CONFIG || 'firebase.json');
 const DENY_EXTERNAL = { launchOptions: { args: [DENY_EXTERNAL_HOSTS_ARG] } };
 
 // Keperra GC, Brisbane — near the clubhouse/1st tee.

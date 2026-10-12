@@ -8,6 +8,7 @@
 // here, and refuse non-loopback hosts. Pinned by
 // tests/unit/e2e-demo-safety.test.js.
 
+import { readFileSync } from 'node:fs';
 import { EMULATOR_PROJECT_ID } from '../../../src/emulator-project.js';
 
 /** @param {string} id */
@@ -40,6 +41,22 @@ export function assertLoopbackHost(hostOrHostPort) {
 export function assertEmulatorEnvIsLoopback(env = process.env) {
     for (const key of ['FIRESTORE_EMULATOR_HOST', 'FIREBASE_AUTH_EMULATOR_HOST', 'FIREBASE_STORAGE_EMULATOR_HOST', 'FUNCTIONS_EMULATOR_HOST']) {
         if (env[key]) assertLoopbackHost(env[key]);
+    }
+}
+
+/**
+ * Throw if the emulator config the webServer will start (EMU_CONFIG, else
+ * firebase.json) binds any emulator to a non-loopback host (e.g. 0.0.0.0).
+ * @param {string} path
+ */
+export function assertEmulatorConfigIsLoopback(path) {
+    const emulators = JSON.parse(readFileSync(path, 'utf8')).emulators || {};
+    for (const [name, svc] of Object.entries(emulators)) {
+        if (svc && typeof svc === 'object' && 'host' in svc) {
+            try { assertLoopbackHost(svc.host); } catch {
+                throw new Error(`e2e safety: ${path} binds the ${name} emulator to "${svc.host}"; only loopback is allowed`);
+            }
+        }
     }
 }
 

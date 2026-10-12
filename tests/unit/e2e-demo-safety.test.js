@@ -5,7 +5,8 @@
 // can't land in the production project. These tests pin that contract for
 // the launcher (playwright.config.js webServer), the browser
 // (src/firebase-config.js on localhost) and the Node seed helpers.
-import { readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -73,6 +74,18 @@ describe('playwright.config.js', () => {
     it('refuses to load when an emulator host env var points off-box', async () => {
         vi.stubEnv('FIRESTORE_EMULATOR_HOST', 'firestore.example.com:8080');
         await expect(load()).rejects.toThrow(/loopback/);
+    });
+
+    it('refuses an emulator config that binds off loopback', async () => {
+        const cfgPath = join(mkdtempSync(join(tmpdir(), 'e2e-safety-')), 'firebase.bad.json');
+        writeFileSync(cfgPath, JSON.stringify({ emulators: { auth: { port: 1 }, firestore: { host: '0.0.0.0', port: 2 } } }));
+        vi.stubEnv('EMU_CONFIG', cfgPath);
+        await expect(load()).rejects.toThrow(/firestore emulator to "0\.0\.0\.0"/);
+    });
+
+    it('accepts the tracked emulator configs (all loopback)', async () => {
+        const { assertEmulatorConfigIsLoopback } = await import('../e2e/helpers/e2e-safety.js');
+        for (const f of ['firebase.json', 'firebase.ci.json']) expect(() => assertEmulatorConfigIsLoopback(join(ROOT, f)), f).not.toThrow();
     });
 
     it('sends every browser type\'s off-box traffic to a dead loopback proxy', async () => {
