@@ -179,7 +179,8 @@ test('new user waits for an admin to approve the account, then enters the app', 
         await expect.poll(async () => (await readDoc(`users/${pending._id}`))?.isApproved, { timeout: 15_000 }).toBe(true);
 
         // The pending page checks admission at sign-in; reload exercises that
-        // same gate after the administrator grants access.
+        // same gate after the administrator grants access and the address is verified.
+        await verifyEmulatorEmail(pendingEmail);
         await page.reload();
         await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
         await expect(page.locator('#auth-pending')).toBeHidden();
