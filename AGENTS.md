@@ -42,9 +42,13 @@ documented sanctioned exception.
   incl. `contracts.test.js`); jsdom only, no emulator needed.
 - `npm run test:rules`, `test:auth`, `test:offline` — start their own Firebase
   emulator via `scripts/run-emulator-tests.mjs`.
-- `npm run test:e2e` — Playwright against the Firebase Local Emulator. Start
-  `npm run dev` and the emulators first; the app routes to the emulator on
-  `localhost` (`firebase-config.js`), so there is no production risk.
+- `npm run test:e2e` — Playwright against the Firebase Local Emulator. Its
+  webServer starts the auth+firestore emulators under the offline
+  `demo-golf-tracker` project and a `vite preview` build itself, and refuses
+  to reuse anything already on those ports; use
+  `node scripts/run-e2e-isolated.mjs` for private ports. On `localhost` the app
+  uses that demo project and the emulators (`src/emulator-project.js`,
+  `firebase-config.js`); `tests/unit/e2e-demo-safety.test.js` pins this.
 - No test reads back a Firestore document the app wrote, so a green suite does
   not prove the stored schema. Check writes by hand when you change them.
 - Never truncate code output.

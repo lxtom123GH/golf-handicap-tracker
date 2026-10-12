@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { wizardStepText, shotButtons, modeCaption, trackButtonLabel, loggedToast } from '../../src/wizard-flow.js';
-import { computeShotView, anchorCurve } from '../../src/hole-overlay.js';
+import { computeShotView, anchorCurve, reanchorCurves } from '../../src/hole-overlay.js';
 
 describe('S12 A2: anchorCurve — one start point per shot', () => {
     it('replaces the first point with the anchor and leaves the rest', () => {
@@ -22,6 +22,21 @@ describe('S12 A2: anchorCurve — one start point per shot', () => {
         const pts = [[5, 5], [12, 30]];
         anchorCurve(pts, [0, 0]);
         expect(pts).toEqual([[5, 5], [12, 30]]);
+    });
+    it('moves both stored starts when a later GPS fix changes the anchor', () => {
+        const curves = {
+            intended: [[0, 0], [12, 30], [3, 61]],
+            actual: [[0, 0], [8, 24], [5, 45]],
+            deflectAt: 1,
+        };
+
+        expect(reanchorCurves(curves, [2, 3])).toEqual({
+            intended: [[2, 3], [12, 30], [3, 61]],
+            actual: [[2, 3], [8, 24], [5, 45]],
+            deflectAt: 1,
+        });
+        expect(curves.intended[0]).toEqual([0, 0]);
+        expect(curves.actual[0]).toEqual([0, 0]);
     });
 });
 

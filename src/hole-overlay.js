@@ -90,6 +90,21 @@ export function anchorCurve(points, anchor) {
     return [[anchor[0], anchor[1]], ...(points || []).slice(1)];
 }
 
+/** Move each stored curve's first point with a later GPS or marker anchor. */
+export function reanchorCurves(curves, anchor) {
+    if (!curves || !anchor) return curves;
+    let changed = false;
+    const next = { ...curves };
+    for (const mode of ['intended', 'actual']) {
+        const points = curves[mode];
+        if (!Array.isArray(points) || points.length < 2) continue;
+        if (points[0][0] === anchor[0] && points[0][1] === anchor[1]) continue;
+        next[mode] = anchorCurve(points, anchor);
+        changed = true;
+    }
+    return changed ? next : curves;
+}
+
 /**
  * S11: the part of the hole that matters for the shot being logged, as a
  * hole-frame extent (metres). Three bands by distance from the start point
@@ -824,6 +839,12 @@ export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended',
     // golfer moved it, else the passed startXY (metres), else none (the
     // curves then render as stored, e.g. old shots).
     const anchorXY = () => (startMark.xy ? [...startMark.xy] : (startXY ? [startXY[0], startXY[1]] : null));
+    const reanchorStoredCurves = (anchor) => {
+        const next = reanchorCurves(state.curves, anchor);
+        if (next === state.curves) return;
+        state.curves = next;
+        onChange?.({ mode: state.mode, points: state.curves[state.mode], frame, curves: { ...state.curves }, anchorChanged: true });
+    };
     canvas.dataset.start = anchorXY() ? anchorXY().map(v => Math.round(v * 10) / 10).join(',') : '';
 
     // Pointer capture: one finger draws; two fingers pinch/pan/rotate the
@@ -1035,6 +1056,7 @@ export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended',
             state.dragging = false;
             const xy = startMark.xy ? [...startMark.xy] : null;
             // S12 A2: the anchor follows the dragged marker.
+            if (xy) reanchorStoredCurves(xy);
             canvas.dataset.start = anchorXY() ? anchorXY().map(v => Math.round(v * 10) / 10).join(',') : '';
             writeMeasureAttr(); // a pinned target's ball distance follows the marker
             redraw();
@@ -1161,6 +1183,7 @@ export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended',
             if (typeof next?.lat === 'number') {
                 startMark.xy = toFrame(frame, [next.lat, next.lon]);
                 startIsMeasured = true; // review P3: a GPS start is a measured one (green dot)
+                reanchorStoredCurves(startMark.xy);
             }
             if ('quality' in next) startMark.quality = next.quality;
             if ('draggable' in next) startMark.draggable = next.draggable;
