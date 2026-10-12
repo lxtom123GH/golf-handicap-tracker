@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-    QUICK_GPS, QUICK_ADJUST_MS, quickLogWanted, likelyClubIndex, oneTapActual,
+    QUICK_GPS, QUICK_ADJUST_MS, QUICK_MIN_DRAW_M, quickDrawUsable, quickLogWanted, likelyClubIndex, oneTapActual,
     quickInitial, quickReduce,
 } from '../../src/quick-log.js';
 import { clubLadder } from '../../src/play-mode.js';
@@ -31,6 +31,18 @@ describe('quickLogWanted: Map first + Play mode + Detailed + a mapped course', (
     });
     it('an unknown play-mode value is the default (on)', () => {
         expect(quickLogWanted({ ...on, playMode: undefined })).toBe(true);
+    });
+});
+
+describe('quickDrawUsable: short strokes are still loggable', () => {
+    it('accepts a short putt above the accidental tap threshold', () => {
+        expect(QUICK_MIN_DRAW_M).toBe(0.5);
+        expect(quickDrawUsable([[0, 0], [0, 1.2]])).toBe(true);
+    });
+    it('rejects accidental taps and invalid point lists', () => {
+        expect(quickDrawUsable([[0, 0], [0, 0.4]])).toBe(false);
+        expect(quickDrawUsable([[0, 0]])).toBe(false);
+        expect(quickDrawUsable([[0, 0], [NaN, 1]])).toBe(false);
     });
 });
 

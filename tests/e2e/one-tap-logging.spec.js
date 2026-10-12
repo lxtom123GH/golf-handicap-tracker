@@ -7,7 +7,7 @@
 // ==========================================================================
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, findDocs, verifyEmulatorEmail } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 // Physical hole 10: tee and green centre (public/courses/keperra.json).
@@ -36,6 +36,9 @@ async function startQuickRound(page, prefix, gps, mockWakeLock = false, lookupUi
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();
@@ -201,8 +204,20 @@ test('On-course settings: the map gear opens live settings without leaving the r
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(vp.height);
     expect(box.x + box.width).toBeLessThanOrEqual(vp.width);
+    const stripBox = await page.locator('#oc-exit-bar').boundingBox();
+    expect(box.x - (stripBox.x + stripBox.width)).toBeGreaterThanOrEqual(12);
     await gear.click();
     const sheet = page.locator('#play-settings-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(page.locator('#play-shot-entry')).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.locator('#play-settings-close')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#play-shot-entry')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(sheet).toBeHidden();
+    await expect(gear).toBeFocused();
+    await gear.click();
     await expect(sheet).toBeVisible();
     await expect(sheet).toContainText('Shot entry');
     await expect(sheet).toContainText('GPS');

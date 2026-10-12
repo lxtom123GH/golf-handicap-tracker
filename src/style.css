@@ -1719,7 +1719,7 @@ body.play-mode.round-active .oc-strip {
     padding: 0 2px 0 4px;
     gap: 0;
     border-radius: 22px;
-    max-width: calc(100vw - 136px);
+    max-width: calc(100vw - 164px);
 }
 
 body.play-mode.round-active .oc-strip-hole {

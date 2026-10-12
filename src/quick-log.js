@@ -36,6 +36,16 @@ export const QUICK_GPS = {
 /** How long a drag nudges a one-tap Actual line (the mock's ~6 s). */
 export const QUICK_ADJUST_MS = 6000;
 
+/** Reject accidental taps while preserving short putts and chip shots. */
+export const QUICK_MIN_DRAW_M = 0.5;
+
+export function quickDrawUsable(points) {
+    if (!Array.isArray(points) || points.length < 2) return false;
+    const [start, end] = [points[0], points[points.length - 1]];
+    if (![start?.[0], start?.[1], end?.[0], end?.[1]].every(Number.isFinite)) return false;
+    return Math.hypot(end[0] - start[0], end[1] - start[1]) >= QUICK_MIN_DRAW_M;
+}
+
 /** On the green (or nearly): the putter is the likely club. */
 export const PUTT_M = 20;
 

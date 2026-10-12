@@ -33,7 +33,7 @@ import { courseSlugFor, loadCourseOverlay, mountHoleOverlay } from '../hole-over
 import { toFrame, distanceM } from '../geo.js';
 import { normaliseShotEntry } from '../shot-entry.js';
 import {
-    quickLogWanted, likelyClubIndex, oneTapActual, quickInitial, quickReduce, QUICK_ADJUST_MS,
+    quickLogWanted, likelyClubIndex, oneTapActual, quickInitial, quickReduce, QUICK_ADJUST_MS, quickDrawUsable,
 } from '../quick-log.js';
 import { currentBag, flattenClubs, orderClubsFor, shortClubLabel } from './card-render.js';
 import {
@@ -149,6 +149,11 @@ function closePlaySettings(restoreFocus = true) {
     if (restoreFocus) el('btn-play-settings')?.focus();
 }
 
+function playSettingsFocusables(sheet) {
+    return [...sheet.querySelectorAll('button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter(node => !node.closest('[hidden], .hidden') && node.getAttribute('aria-hidden') !== 'true');
+}
+
 function bindPlaySettings() {
     const gear = el('btn-play-settings');
     const sheet = el('play-settings-sheet');
@@ -163,7 +168,25 @@ function bindPlaySettings() {
     el('play-settings-close')?.addEventListener('click', () => closePlaySettings());
     el('play-settings-scrim')?.addEventListener('click', () => closePlaySettings());
     sheet.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !sheet.classList.contains('hidden')) closePlaySettings();
+        if (sheet.classList.contains('hidden')) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closePlaySettings();
+            return;
+        }
+        if (event.key !== 'Tab') return;
+        const focusables = playSettingsFocusables(sheet);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (event.shiftKey && (active === first || !sheet.contains(active))) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (active === last || !sheet.contains(active))) {
+            event.preventDefault();
+            first.focus();
+        }
     });
 
     el('play-shot-entry')?.addEventListener('change', (event) => {
@@ -698,8 +721,7 @@ async function logQuickShot(effect) {
 /** A line finished on the play map (only while a chip is armed). */
 function onQuickDrawn({ points }) {
     const pts = Array.isArray(points) ? points.map(p => [p[0], p[1]]) : null;
-    // A flick shorter than a few metres is a stray touch, not a shot.
-    if (!pts || lineLen(pts) < 5) { applyQuick(); return; }
+    if (!quickDrawUsable(pts)) { applyQuick(); return; }
     dispatchQuick({ type: 'drawn', pts });
 }
 
