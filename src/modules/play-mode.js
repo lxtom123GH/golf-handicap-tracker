@@ -19,11 +19,22 @@
 // press measures. It opens on the SHOT view — your ball out to your reach
 // (Settings, 230 m default) or to the green when that is closer — and 🎯
 // flips to the whole hole. Lines are drawn in the shot wizard, as before.
+//
+// One-tap logging: with Map first
+// shot entry in a Detailed round (body.play-quick) the map also logs the
+// shot. Right rail: Plan / Actual / Undo; the club strip shows one club,
+// the likely one. Arming Plan or Actual lets one finger draw (otherwise it
+// pans, so a stray touch never draws); Actual with good GPS is one tap.
+// The pure rules are src/quick-log.js; the save is score-input.js's.
 
 import { AppState, mutateList } from '../state.js';
 import { COURSE_DATA } from '../course-data.js';
 import { courseSlugFor, loadCourseOverlay, mountHoleOverlay } from '../hole-overlay.js';
 import { toFrame, distanceM } from '../geo.js';
+import { normaliseShotEntry } from '../shot-entry.js';
+import {
+    quickLogWanted, likelyClubIndex, oneTapActual, quickInitial, quickReduce, QUICK_ADJUST_MS,
+} from '../quick-log.js';
 import { currentBag, flattenClubs, orderClubsFor, shortClubLabel } from './card-render.js';
 import {
     readPlayMode, writePlayMode, playModeWanted, physicalHoleFor, sheetHandleLabel,
@@ -48,6 +59,16 @@ let _clubs = { key: null, ladder: [], sel: 0, sug: -1 };
 let _routineShot = { key: null, val: undefined }; // Detailed: per shot
 let _course = { slug: null, data: null };       // this round's overlay file, once loaded
 const _homes = new Map();  // moved chip id → { parent, next } to put it back
+// One-tap logging. _quickOn: this round logs on the map (decided per sync).
+let _quickOn = false;
+let _quick = quickInitial();       // the chip state machine (src/quick-log.js)
+let _quickHole = null;             // round|hole the Undo stack belongs to
+let _quickPlanShot = null;         // the shot a drawn Plan is for
+let _quickBusy = false;            // a log in flight: no second one
+let _quickGps = null;              // { fix, fixXY } behind a one-tap Actual
+let _adjustTimer = null;
+let _holdStart = null;             // the nudge window keeps the logged shot in view
+let _mounted = { slug: null, physical: null };
 
 const el = (id) => document.getElementById(id);
 const storage = () => { try { return window.localStorage; } catch { return null; } };
@@ -58,6 +79,12 @@ const holeShots = () => (AppState.currentHoleShots || []).filter(s => s.hole ===
 const nextShotNumber = () => holeShots().length + 1;
 const shotKey = () => `${AppState.activeRoundId}|${AppState.currentHole}|${nextShotNumber()}`;
 const gpsLive = () => !!(_gpsMod && _gpsMod.isGpsWatchActive());
+const quickWanted = () => quickLogWanted({
+    shotEntry: normaliseShotEntry(AppState.shotEntry),
+    playMode: readPlayMode(storage()),
+    trackingMode: AppState.currentTrackingMode,
+    courseSlug: courseSlugFor(AppState.currentRoundCourseName),
+});
 function selfIndex(list) {
     const uid = AppState.currentUser?.uid;
     const i = uid ? list.findIndex(p => p.uid === uid) : -1;
@@ -96,13 +123,95 @@ function undockChips() {
     _homes.clear();
 }
 
+function gpsSettingOn() {
+    return _gpsMod ? gpsLive() : storage()?.getItem('golf.gpsOn') === '1';
+}
+
+function syncPlaySettings() {
+    const entry = el('play-shot-entry');
+    if (entry) entry.value = normaliseShotEntry(el('shot-entry-select')?.value || AppState.shotEntry);
+    const setSwitch = (id, on) => {
+        const button = el(id);
+        if (!button) return;
+        button.setAttribute('aria-checked', String(on));
+        const state = button.querySelector('strong');
+        if (state) state.textContent = on ? 'On' : 'Off';
+    };
+    setSwitch('play-setting-gps', gpsSettingOn());
+    setSwitch('play-setting-awake', !!document.querySelector('.wakelock-toggle.active'));
+    setSwitch('play-setting-rotate', el('rotate-map-toggle')?.checked ?? AppState.rotateMap === true);
+}
+
+function closePlaySettings(restoreFocus = true) {
+    el('play-settings-sheet')?.classList.add('hidden');
+    el('play-settings-scrim')?.classList.add('hidden');
+    el('btn-play-settings')?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) el('btn-play-settings')?.focus();
+}
+
+function bindPlaySettings() {
+    const gear = el('btn-play-settings');
+    const sheet = el('play-settings-sheet');
+    if (!gear || !sheet) return;
+    gear.addEventListener('click', () => {
+        syncPlaySettings();
+        el('play-settings-scrim')?.classList.remove('hidden');
+        sheet.classList.remove('hidden');
+        gear.setAttribute('aria-expanded', 'true');
+        el('play-shot-entry')?.focus();
+    });
+    el('play-settings-close')?.addEventListener('click', () => closePlaySettings());
+    el('play-settings-scrim')?.addEventListener('click', () => closePlaySettings());
+    sheet.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !sheet.classList.contains('hidden')) closePlaySettings();
+    });
+
+    el('play-shot-entry')?.addEventListener('change', (event) => {
+        const source = el('shot-entry-select');
+        if (!source) return;
+        source.value = normaliseShotEntry(event.currentTarget.value);
+        source.dispatchEvent(new Event('change', { bubbles: true }));
+        syncPlaySettings();
+        // The existing shot-entry handler writes the preference and reapplies
+        // wizard visibility. Re-sync the map rail too, so Map-first quick
+        // logging follows the new choice without waiting for another hole.
+        syncPlayMode();
+    });
+    el('play-setting-gps')?.addEventListener('click', () => {
+        const wantOn = el('play-setting-gps')?.getAttribute('aria-checked') !== 'true';
+        if (gpsSettingOn() !== wantOn) el('btn-toggle-gps')?.click();
+        syncPlaySettings();
+    });
+    el('play-setting-awake')?.addEventListener('click', () => {
+        const wantOn = el('play-setting-awake')?.getAttribute('aria-checked') !== 'true';
+        const source = document.querySelector('.wakelock-toggle');
+        if (source?.classList.contains('active') !== wantOn) source?.click();
+        window.setTimeout(syncPlaySettings, 0);
+    });
+    el('play-setting-rotate')?.addEventListener('click', () => {
+        const wantOn = el('play-setting-rotate')?.getAttribute('aria-checked') !== 'true';
+        const source = el('rotate-map-toggle');
+        if (source && source.checked !== wantOn) {
+            source.checked = wantOn;
+            source.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        syncPlaySettings();
+    });
+}
+
 function teardown() {
     _run++;
     if (_ctl) { try { _ctl.destroy(); } catch { /* already gone */ } _ctl = null; }
     _mountKey = null;
     _lastFix = null; // Codex P2: never carry a position into the next round
     _frame = { key: null, frame: null };
-    document.body.classList.remove('play-mode', 'play-sheet-open', 'play-detailed', 'play-simple', 'play-par3');
+    document.body.classList.remove('play-mode', 'play-sheet-open', 'play-detailed', 'play-simple', 'play-par3', 'play-quick');
+    _quickOn = false;
+    _holdStart = null;
+    clearTimeout(_adjustTimer);
+    _quick = quickInitial();
+    _quickHole = null;
+    closePlaySettings(false);
     el('oc-play-map')?.classList.add('hidden');
     undockChips();
     syncHandle();
@@ -134,9 +243,20 @@ function markerFrom(fix) {
         : null;
 }
 
+/** One-tap logging: where the next shot starts — the last shot's finish
+ * (measured or drawn), else the tee. Never the GPS. */
+function chainStart() {
+    const shots = holeShots();
+    return ballStartXY({ fixXY: null, lastShot: shots[shots.length - 1] || null });
+}
+
 /** Where the ball is, in this hole's frame (GPS first; see ballStartXY). */
 function ballFor(frame) {
-    const fresh = gpsLive() ? _lastFix : null;
+    // One-tap logging: the shot starts at the tee / last finish; the GPS is
+    // where you are — the GPS marks the finish position.
+    const fresh = gpsLive() && !_quickOn ? _lastFix : null;
+    // While a one-tap line can still be nudged, the view stays on that shot.
+    if (_quickOn && _holdStart) return [..._holdStart];
     const fixXY = fresh && frame && Number.isFinite(fresh.lat) ? toFrame(frame, [fresh.lat, fresh.lon]) : null;
     const shots = holeShots();
     return ballStartXY({ fixXY, lastShot: shots[shots.length - 1] || null });
@@ -173,6 +293,9 @@ export async function syncPlayMode() {
     b.toggle('play-detailed', detailed());
     b.toggle('play-simple', !detailed());
     b.toggle('play-par3', holePar() <= 3);
+    _quickOn = detailed() && quickWanted();
+    b.toggle('play-quick', _quickOn);
+    syncQuickHole();
     map.classList.remove('hidden');
     dockChips();
     syncHandle();
@@ -197,8 +320,8 @@ export async function syncPlayMode() {
     const ball = ballFor(known);
     const key = [AppState.activeRoundId, slug, physical, `${window.innerWidth}x${window.innerHeight}`,
         Math.round(fit.top), Math.round(fit.bottom), _view, reach,
-        Math.round(ball[0] / 10), Math.round(ball[1] / 10)].join('|');
-    if (key === _mountKey && _ctl) { syncClubs(); return; }
+        Math.round(ball[0] / 10), Math.round(ball[1] / 10), _quickOn ? `q${ball.map(Math.round).join(',')}` : ''].join('|');
+    if (key === _mountKey && _ctl) { syncClubs(); applyQuick(); return; }
     if (_ctl) { try { _ctl.destroy(); } catch { /* gone */ } _ctl = null; }
     _mountKey = key;
     _ballXY = ball;
@@ -214,7 +337,11 @@ export async function syncPlayMode() {
         contextImagery: course.contextImagery?.url && course.contextImagery?.extent3857
             ? { url: course.contextImagery.url, extent3857: course.contextImagery.extent3857, px: course.contextImagery.px } : null,
         startMarker: markerFrom(_lastFix),
+        // One-tap logging: the start dot new lines are anchored to; the map
+        // stays read-only (pans) until Plan or Actual is armed.
+        ...(_quickOn ? { startXY: ball, anchorFirst: true, onChange: onQuickDrawn } : {}),
     });
+    _mounted = { slug, physical };
     canvas.dataset.hole = String(physical);
     canvas.dataset.reach = String(reach);
     // First mount on this hole: now the frame is known, a GPS spot may move
@@ -228,6 +355,7 @@ export async function syncPlayMode() {
     _distToGreen = Array.isArray(g) ? Math.hypot(g[0] - ball[0], g[1] - ball[1]) : null;
     syncViewChip();
     syncClubs();
+    applyQuick();
 }
 
 // ---- 🎯 Shot | 🗺 Hole ---------------------------------------------------
@@ -294,7 +422,12 @@ function syncClubs(distOverride) {
         // The app's existing distance ranking (the wizard's) picks; the
         // strip only shows it, with one longer above and one shorter below.
         const best = flattenClubs(bag, orderClubsFor(bag, d, n, par))[0]?.val;
-        const sug = Math.max(0, ladder.findIndex(c => c.val === best));
+        // One-tap logging: the club the distance from the START to the pin
+        // calls for (the GPS is where the last shot finished, not this one).
+        const g = _ctl?.greenXY;
+        const fromStart = Array.isArray(g) ? Math.hypot(g[0] - chainStart()[0], g[1] - chainStart()[1]) : d;
+        const sug = _quickOn ? Math.max(0, likelyClubIndex(ladder, Number.isFinite(distOverride) ? distOverride : fromStart))
+            : Math.max(0, ladder.findIndex(c => c.val === best));
         _clubs = { key: k, ladder, sel: sug, sug };
     }
     renderClubs();
@@ -318,7 +451,17 @@ function renderClubs() {
     if (up) up.disabled = sel <= 0;
     if (down) down.disabled = sel >= ladder.length - 1;
     const s = el('pc-sug');
-    if (s) s.textContent = sel === sug ? 'SUGGESTED' : (ladder[sug] ? `SUGG. ${shortClubLabel(ladder[sug].val)}` : '');
+    if (_quickOn) {
+        // Mock A: one club, a 'likely' badge (or ↺ the likely one), and the
+        // next club up / down named on ▲ / ▼.
+        if (s) s.textContent = sel === sug ? 'likely' : (ladder[sug] ? `↺ ${shortClubLabel(ladder[sug].val)}` : '');
+        if (up) up.innerHTML = `▲<small>${ladder[sel - 1] ? shortClubLabel(ladder[sel - 1].val) : ''}</small>`;
+        if (down) down.innerHTML = `<small>${ladder[sel + 1] ? shortClubLabel(ladder[sel + 1].val) : ''}</small>▼`;
+    } else {
+        if (s) s.textContent = sel === sug ? 'SUGGESTED' : (ladder[sug] ? `SUGG. ${shortClubLabel(ladder[sug].val)}` : '');
+        if (up && up.textContent !== '▲') up.textContent = '▲';
+        if (down && down.textContent !== '▼') down.textContent = '▼';
+    }
     writeNextShot();
 }
 
@@ -339,7 +482,223 @@ function writeNextShot() {
         shotNumber: nextShotNumber(),
         club,
         routinePre: _routineShot.val === 'ok' ? 'Pass' : (_routineShot.val === 'no' ? 'Fail' : null),
+        // One-tap logging: a Plan drawn on the map goes into the wizard too.
+        plan: quickPlanForWizard(),
     };
+}
+
+// ---- One-tap logging: Plan / Actual / Undo on the map -------------------
+
+const toObjs = (pts) => pts.map(([x, y]) => ({ x, y }));
+const toPairs = (objs) => (Array.isArray(objs) ? objs.map(o => [o.x, o.y]) : null);
+const lineLen = (pts) => (pts && pts.length >= 2
+    ? Math.hypot(pts[pts.length - 1][0] - pts[0][0], pts[pts.length - 1][1] - pts[0][1]) : 0);
+
+/** The Undo stack belongs to one hole; a plan to one shot. */
+function syncQuickHole() {
+    const hk = `${AppState.activeRoundId}|${AppState.currentHole}`;
+    if (hk !== _quickHole) {
+        _quickHole = hk;
+        _holdStart = null;
+        clearTimeout(_adjustTimer);
+        _quick = quickReduce(_quick, { type: 'reset' }).state;
+    }
+    // A plan whose shot was logged some other way (the wizard) is spent.
+    if (_quick.plan && _quickPlanShot !== shotKey()) _quick = { ..._quick, plan: null };
+}
+
+function quickPlanForWizard() {
+    const f = _ctl?.frame;
+    if (!_quickOn || !_quick.plan || !f || _quickPlanShot !== shotKey()) return null;
+    return {
+        lineIntended: toObjs(_quick.plan),
+        lineFrame: { origin: { lat: f.origin[0], lon: f.origin[1] }, bearing: f.bearing, courseSlug: _mounted.slug, physicalHole: _mounted.physical },
+    };
+}
+
+/** The shot the nudge window is on (the newest logged one on the stack). */
+function adjustShot() {
+    const e = [..._quick.undo].reverse().find(x => x.kind === 'shot');
+    return e ? (AppState.currentHoleShots || []).find(s => s.id === e.shotId) || null : null;
+}
+
+/** What the map shows: the line being made, else the last shot's lines. */
+function quickCurves() {
+    if (_quick.armed === 'adjust') {
+        const s = adjustShot();
+        return { intended: toPairs(s?.lineIntended), actual: toPairs(s?.lineActual) };
+    }
+    const pending = (AppState.currentHoleShots || []).find(s => s.planned === true && s.hole === AppState.currentHole);
+    const plan = _quick.plan || toPairs(pending?.lineIntended) || null;
+    if (plan || _quick.armed) return { intended: plan, actual: null };
+    const last = holeShots().slice(-1)[0];
+    return { intended: toPairs(last?.lineIntended), actual: toPairs(last?.lineActual) };
+}
+
+/** Can Actual be one tap right now (src/quick-log.js oneTapActual)? */
+function quickGps() {
+    const fix = gpsLive() ? _lastFix : null;
+    const frame = _ctl?.frame || null;
+    const fixXY = fix && frame && Number.isFinite(fix.lat) ? toFrame(frame, [fix.lat, fix.lon]) : null;
+    return { ...oneTapActual({ fix, fixXY, startXY: chainStart(), greenXY: _ctl?.greenXY || null, gpsLive: gpsLive() }), fix, fixXY };
+}
+
+/** The overlay, chips and hint follow the state machine. */
+function applyQuick() {
+    syncQuickChips();
+    const canvas = el('oc-play-map')?.querySelector('canvas');
+    if (!_quickOn || !_ctl) return;
+    const draw = !!_quick.armed;
+    _ctl.setReadOnly?.(!draw);
+    if (draw) _ctl.setMode(_quick.armed === 'plan' ? 'intended' : 'actual');
+    const s = _quick.armed === 'adjust' ? adjustShot() : null;
+    _ctl.setAnchor?.(s?.startXY ? [s.startXY.x, s.startXY.y] : (toPairs(s?.lineActual)?.[0] || chainStart()));
+    const c = quickCurves();
+    _ctl.setCurves({ intended: c.intended, actual: c.actual });
+    if (canvas) {
+        canvas.dataset.quick = _quick.armed || 'idle';
+        canvas.dataset.plan = String(_quick.plan?.length || 0);
+    }
+}
+
+function syncQuickChips() {
+    const plan = el('btn-quick-plan'), actual = el('btn-quick-actual'), undo = el('btn-quick-undo');
+    if (!plan || !actual || !undo || !_quickOn) return;
+    const g = quickGps();
+    plan.classList.toggle('on', _quick.armed === 'plan');
+    plan.setAttribute('aria-pressed', String(_quick.armed === 'plan'));
+    const aOn = _quick.armed === 'actual' || _quick.armed === 'adjust';
+    actual.classList.toggle('on', aOn);
+    actual.setAttribute('aria-pressed', String(aOn));
+    actual.dataset.oneTap = String(g.ok);
+    const sub = actual.querySelector('.pq-sub');
+    const acc = g.fix && Number.isFinite(g.fix.accuracyM) ? Math.round(g.fix.accuracyM) : null;
+    if (sub) sub.textContent = g.ok ? `📍 here · ±${acc} m` : (g.reason === 'weak' ? `GPS ±${acc ?? '?'} m · draw` : 'draw it');
+    actual.setAttribute('aria-label', g.ok ? 'Actual: log this shot as finishing where you stand' : 'Actual: then drag where the shot finished');
+    undo.disabled = !_quick.undo.length;
+    // The hint, as in the mock: where this shot starts, then what to do.
+    const n = nextShotNumber();
+    const l1 = el('play-quick-hint')?.querySelector('.pq-l1');
+    const l2 = el('play-quick-hint')?.querySelector('.pq-l2');
+    if (l1) l1.textContent = `Shot ${n} · Start: ${holeShots().length ? 'last finish' : 'tee'}${gpsLive() ? ' · GPS = where it finished' : ''}`;
+    if (l2) {
+        const why = { weak: `GPS ±${acc ?? '?'} m is weak — `, 'no-gps': 'GPS off — ', stale: 'GPS lost — ', 'off-hole': 'GPS is off this hole — ', 'at-start': 'You are at the start — ', 'no-frame': '' }[g.reason] || '';
+        l2.textContent = _quick.armed === 'plan' ? 'Drag on the map — the plan runs from the start dot'
+            : _quick.armed === 'actual' ? `${why}drag to where it finished`
+                : _quick.armed === 'adjust' ? 'Logged at your GPS spot — drag to nudge it, or carry on'
+                    : g.ok ? 'At your ball? Tap Actual (1 tap). Plan first if you like.'
+                        : 'Tap Plan or Actual, then drag on the map';
+    }
+}
+
+function dispatchQuick(action) {
+    const { state, effect } = quickReduce(_quick, action);
+    _quick = state;
+    if (effect) runQuickEffect(effect);
+    // The nudge window is over: the view moves on to the next shot's start.
+    if (_holdStart && _quick.armed !== 'adjust' && !_quickBusy) {
+        _holdStart = null;
+        syncPlayMode();
+    }
+    applyQuick();
+    if (detailed() && AppState.activeRoundId) writeNextShot();
+}
+
+function startAdjustWindow() {
+    clearTimeout(_adjustTimer);
+    _adjustTimer = setTimeout(() => dispatchQuick({ type: 'adjust-end' }), QUICK_ADJUST_MS);
+}
+
+function quickToast(msg) {
+    import('./score-input.js').then(m => m.showToast(msg)).catch(() => { /* no toast */ });
+}
+
+function runQuickEffect(effect) {
+    if (effect.kind === 'plan') {
+        _quickPlanShot = shotKey();
+        const club = _clubs.ladder[_clubs.sel];
+        quickToast(`Plan ${Math.round(lineLen(_quick.plan))} m${club ? ` · ${shortClubLabel(club.val)}` : ''}`);
+    } else if (effect.kind === 'log') {
+        logQuickShot(effect);
+    } else if (effect.kind === 'nudge') {
+        const frame = _ctl?.frame;
+        import('./score-input.js').then(m => {
+            const prev = m.quickNudgeShot(effect.shotId, effect.actual, frame);
+            if (prev) { dispatchQuick({ type: 'nudged', shotId: effect.shotId, prev }); startAdjustWindow(); m.showToast(`Nudged · ${Math.round(lineLen(effect.actual))} m`); }
+        }).catch(e => console.warn('[PlayMode] nudge not saved:', e));
+    } else if (effect.kind === 'undo') {
+        const entry = effect.entry;
+        clearTimeout(_adjustTimer);
+        if (entry.kind === 'plan') { _quickPlanShot = shotKey(); quickToast('↶ Plan undone'); return; }
+        import('./score-input.js').then(m => {
+            m.quickUndo({ ...entry, shotNumber: entry.undo?.shotNumber });
+            if (entry.kind === 'nudge') m.showToast('↶ Nudge undone');
+            _quickPlanShot = shotKey(); // the shot it took is back to log again
+            applyQuick();
+        }).catch(e => console.warn('[PlayMode] undo failed:', e));
+    } else if (effect.kind === 'nothing') {
+        quickToast('Nothing to undo');
+    }
+}
+
+/** Save the shot through the wizard's own save path (score-input.js). */
+async function logQuickShot(effect) {
+    if (_quickBusy || !_ctl?.frame) return;
+    const frame = _ctl.frame;
+    const start = chainStart(); // not the view's ball: the nudge window may still hold the last shot
+    let actual = effect.actual;
+    let finishFix = null;
+    if (effect.source === 'gps') {
+        if (!_quickGps) return;
+        actual = [start, _quickGps.fixXY];
+        finishFix = _quickGps.fix;
+    }
+    // A plan saved from the wizard is logged too; Undo gives its line back.
+    const pending = (AppState.currentHoleShots || []).find(s => s.planned === true && s.hole === AppState.currentHole);
+    const intendedUsed = effect.intended || toPairs(pending?.lineIntended) || null;
+    _quickBusy = true;
+    // One tap: keep the view on this shot while it can be nudged.
+    if (effect.source === 'gps') _holdStart = start;
+    try {
+        const m = await import('./score-input.js');
+        const club = _clubs.key === shotKey() ? _clubs.ladder[_clubs.sel]?.val || null : null;
+        const res = await m.quickLogShot({
+            actual, intended: effect.intended, frame, slug: _mounted.slug, physical: _mounted.physical,
+            club, startXY: start, greenXY: _ctl?.greenXY || null, finishFix,
+        });
+        if (!res?.shotId) { _holdStart = null; quickToast('Shot not logged — try again'); return; }
+        const clubLbl = club ? ` · ${shortClubLabel(club)}` : '';
+        quickToast(`✓ Shot ${res.shotNumber} logged${clubLbl} · ${Math.round(lineLen(actual))} m`);
+        dispatchQuick({
+            type: 'logged', shotId: res.shotId, intended: intendedUsed,
+            // A logged wizard plan has no exact record (null): its Undo
+            // takes the stored shot off instead (score-input quickUndo).
+            undo: res.undo ? { ...res.undo, shotNumber: res.shotNumber } : null,
+            adjust: effect.source === 'gps',
+        });
+        if (effect.source === 'gps') startAdjustWindow();
+    } catch (e) {
+        _holdStart = null;
+        console.warn('[PlayMode] one-tap log failed:', e);
+    } finally {
+        _quickBusy = false;
+        _quickGps = null;
+    }
+}
+
+/** A line finished on the play map (only while a chip is armed). */
+function onQuickDrawn({ points }) {
+    const pts = Array.isArray(points) ? points.map(p => [p[0], p[1]]) : null;
+    // A flick shorter than a few metres is a stray touch, not a shot.
+    if (!pts || lineLen(pts) < 5) { applyQuick(); return; }
+    dispatchQuick({ type: 'drawn', pts });
+}
+
+function tapQuickActual() {
+    if (_quickBusy) return;
+    const g = quickGps();
+    _quickGps = g.ok ? { fix: g.fix, fixXY: g.fixXY } : null;
+    dispatchQuick({ type: 'tap-actual', gpsOk: g.ok });
 }
 
 // ---- Track: a short label on the rail ----------------------------------
@@ -381,6 +740,7 @@ function cycleRoutine() {
 
 function onFix(fix) {
     _lastFix = fix;
+    if (_quickOn) syncQuickChips(); // one tap or draw follows the GPS
     const m = markerFrom(fix);
     if (_ctl && m) _ctl.setStartMarker(m);
     // Walked up to the ball: the shot view (and the suggestion) follow.
@@ -396,6 +756,8 @@ function onFix(fix) {
 export function initPlayMode() {
     if (_bound) return;
     _bound = true;
+
+    bindPlaySettings();
 
     // Settings: the switch (on by default) and your reach.
     const toggle = el('play-mode-toggle');
@@ -442,8 +804,17 @@ export function initPlayMode() {
     el('btn-pc-down')?.addEventListener('click', () => pickClub(_clubs.sel + 1));
     el('play-clubs')?.addEventListener('click', (e) => {
         const c = e.target.closest?.('.pc-club');
-        if (c && c.dataset.idx) pickClub(Number(c.dataset.idx));
+        if (!c || !c.dataset.idx) return;
+        // One-tap logging shows only the pick: tapping it goes back to the
+        // likely club (mock A).
+        if (_quickOn && Number(c.dataset.idx) === _clubs.sel) { pickClub(_clubs.sug); return; }
+        pickClub(Number(c.dataset.idx));
     });
+
+    // One-tap logging: Plan / Actual / Undo on the right rail.
+    el('btn-quick-plan')?.addEventListener('click', () => { if (!_quickBusy) dispatchQuick({ type: 'tap-plan' }); });
+    el('btn-quick-actual')?.addEventListener('click', tapQuickActual);
+    el('btn-quick-undo')?.addEventListener('click', () => { if (!_quickBusy) dispatchQuick({ type: 'undo' }); });
 
     el('btn-play-routine')?.addEventListener('click', cycleRoutine);
 

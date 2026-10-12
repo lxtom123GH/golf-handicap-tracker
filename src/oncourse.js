@@ -26,7 +26,7 @@ import { greenTargetsFromPlayer } from './green-targets.js';
 import { initBigNumbersView, updateBigNumbersView, closeBigNumbersView } from './big-numbers.js';
 
 import { updateLiveLeaderboard, renderDetailedReview, renderBagButtons, renderHoleJumper } from './modules/card-render.js';
-import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast, refreshTrackButtonLabel } from './modules/score-input.js';
+import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast, refreshTrackButtonLabel, quickLogWanted } from './modules/score-input.js';
 import { bindAddPlayer, bindCompQuickAdd, bindSetupToggles, bindCourseSelect, bindStartRound, bindGlobalRoundActions, bindOcSubNav, bindShotWizard, discardRound } from './modules/event-binders.js';
 import { writeRoundBackup, markRoundBackupUnsynced, hasRoundBackup, markRoundSaved } from './persistence.js';
 import { isGuestId } from './guests.js';
@@ -1664,7 +1664,9 @@ export function bindHoleNav() {
                 // Owner feedback 2026-07-05: in a Detailed round, arriving on a
                 // fresh hole means the next tap is always "track my shot" — do
                 // it for them. Revisiting a hole with shots stays quiet.
-                if (AppState.currentTrackingMode === 'detailed'
+                // One-tap logging (Map first on the play map): the map IS the
+                // shot screen, so no wizard pops up over it.
+                if (AppState.currentTrackingMode === 'detailed' && !quickLogWanted()
                     && !(AppState.currentHoleShots && AppState.currentHoleShots.length)) {
                     startNewShotInput();
                 }

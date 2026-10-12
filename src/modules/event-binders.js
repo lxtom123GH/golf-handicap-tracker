@@ -839,8 +839,10 @@ export function bindStartRound() {
             // Owner feedback 2026-07-05: a Detailed round exists to track
             // shots — open the wizard for the first shot automatically
             // instead of demanding a "Track my shot" tap.
+            // One-tap logging (Map first on the play map) logs on the map
+            // itself: no wizard over it.
             if (AppState.currentTrackingMode === 'detailed') {
-                import('./score-input.js').then(m => m.startNewShotInput());
+                import('./score-input.js').then(m => { if (!m.quickLogWanted()) m.startNewShotInput(); });
             }
         };
 

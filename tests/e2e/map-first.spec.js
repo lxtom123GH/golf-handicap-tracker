@@ -31,6 +31,10 @@ test('Map first: the shot opens full-screen; draw, club, Log all on the map', as
     await page.locator('#btn-round-18').click();
     await page.locator('#oc-course-select').selectOption({ label: 'Ashgrove GC' });
     await page.locator('#btn-oc-start').click();
+    // One-tap logging: a Map first round on a mapped course logs
+    // shots on the play map, so the wizard now opens from Track, not by itself.
+    await expect(page.locator('body')).toHaveClass(/play-quick/, { timeout: 15_000 });
+    await page.locator('#btn-oc-track-shot').click();
     const wizard = page.locator('#oncourse-wizard');
     await expect(wizard).toBeVisible({ timeout: 15_000 });
     await page.evaluate(() => document.querySelector('.firebase-emulator-warning')?.remove());
