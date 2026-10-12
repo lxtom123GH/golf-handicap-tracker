@@ -61,7 +61,7 @@ describe('Practice drill log', () => {
         document.getElementById('form-log-practice').dispatchEvent(new Event('submit', { cancelable: true }));
         expect(h.setDoc).toHaveBeenCalledTimes(1);
         expect(h.showToast).toHaveBeenCalledTimes(1);
-        expect(h.showToast.mock.calls[0][0]).toMatch(/saved/i);
+        expect(h.showToast.mock.calls[0][0]).toMatch(/save requested.*sync not confirmed/i);
         expect(alertSpy).not.toHaveBeenCalled();
         expect(h.onSnapshot.mock.calls.length).toBe(subscribes);
         alertSpy.mockRestore();

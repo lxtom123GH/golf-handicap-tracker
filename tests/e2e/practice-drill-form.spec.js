@@ -26,6 +26,7 @@ test('drill counts start at 0; Save shows a toast and no dialog', async ({ page 
     const dialogs = [];
     page.on('dialog', d => { dialogs.push(d.message()); d.accept(); });
     await page.locator('#btn-save-practice').click();
-    await expect(page.getByRole('status').filter({ hasText: 'Practice session saved' })).toBeVisible({ timeout: 10_000 });
+    // Require server acknowledgement, not merely the pending-request toast.
+    await expect(page.getByRole('status').filter({ hasText: 'Practice session synced' })).toBeVisible({ timeout: 10_000 });
     expect(dialogs).toEqual([]);
 });
