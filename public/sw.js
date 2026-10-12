@@ -17,12 +17,27 @@
 const CACHE_NAME = 'golf-app-v7.1.0-shell';
 const PRECACHE = ['/', '/manifest.json', '/favicon.ico'];
 
+// The first page loads its JS/CSS before this worker controls it. Waiting for
+// later fetch events leaves those boot assets uncached until an online reload.
+// Vite emits the exact hashed build list. Install it atomically with the shell:
+// a missing asset must not replace a previously working offline shell.
+async function prepareOfflineShell() {
+    const response = await fetch('/offline-shell.json', { cache: 'no-store', redirect: 'error' });
+    if (!response.ok || response.type !== 'basic') throw new Error('Offline build manifest unavailable');
+    const assets = await response.json();
+    if (!Array.isArray(assets) || assets.length === 0 ||
+        !assets.every(path => typeof path === 'string' && /^\/assets\/[\w.-]+\.(?:js|css)$/.test(path))) {
+        throw new Error('Invalid offline build manifest');
+    }
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(['/', ...new Set(assets)]);
+    // Optional icons must not stop a complete app shell from activating.
+    await Promise.allSettled(PRECACHE.filter(path => path !== '/').map(path => cache.add(path)));
+}
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            // addAll is atomic — one 404 fails install — so add individually
-            // and tolerate misses (favicon may not exist in dev).
-            .then(cache => Promise.allSettled(PRECACHE.map(u => cache.add(u))))
+        prepareOfflineShell()
             .then(() => self.skipWaiting())
     );
 });
@@ -92,8 +107,13 @@ self.addEventListener('fetch', (event) => {
         || url.pathname === '/manifest.json'
         || url.pathname === '/favicon.ico';
     if (isImmutable) {
+        // A module/link request sends Origin even on the same origin; an
+        // install-time fetch does not. Preview/hosting can return Vary: Origin.
+        // These generated public JS/CSS files are identical for every user.
+        // Keep normal Vary matching for icons and every other resource.
+        const publicBuildAsset = /^\/assets\/[\w.-]+\.(?:js|css)$/.test(url.pathname);
         event.respondWith(
-            caches.match(req).then(hit => hit || fetch(req).then(res => {
+            caches.match(req, { ignoreVary: publicBuildAsset }).then(hit => hit || fetch(req).then(res => {
                 if (res.ok) {
                     const copy = res.clone();
                     caches.open(CACHE_NAME).then(c => c.put(req, copy));
