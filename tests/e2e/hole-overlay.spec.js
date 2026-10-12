@@ -9,7 +9,13 @@
 // section must stay hidden there — that is pinned too.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, PROJECT_ID, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import {
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    seedPreapprovedEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -21,8 +27,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('E2E Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 
@@ -225,6 +230,7 @@ test('S11: Save plan keeps no stroke, the hub names the pending shot, Log shot c
     await expect(canvas).toBeVisible({ timeout: 10_000 });
     // The overlay mounts async and resizes the canvas; swipe only once it has.
     await expect(canvas).toHaveAttribute('data-view-mode', 'shot');
+    await expect(canvas).toHaveAttribute('data-start', /.+/, { timeout: 15_000 });
 
     // Step 1 → draw the plan → step 2 → Save plan (no stroke).
     await swipe(page, canvas, [0.5, 0.92], [0.5, 0.35], -0.05);
