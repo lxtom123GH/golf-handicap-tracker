@@ -10,6 +10,7 @@ import { initializeAuth, browserLocalPersistence, getAuth, connectAuthEmulator }
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { EMULATOR_PROJECT_ID } from "./emulator-project.js";
 
 // P-247: authDomain is the site the Google sign-in popup/redirect bounces
 // through. The default (firebaseapp.com) is a different site from the app
@@ -21,11 +22,17 @@ import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 // variable VITE_AUTH_DOMAIN. Unset = today's behaviour, unchanged.
 const authDomain = import.meta.env.VITE_AUTH_DOMAIN || "golf-handicap-tracker-b677c.firebaseapp.com";
 
+// On localhost/127.0.0.1 the app only talks to the emulator suite (see the
+// sniffer at the bottom), and it does so under the offline demo- project
+// (src/emulator-project.js): start local emulators with
+// `--project demo-golf-tracker`. Production hostnames are unchanged.
+const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCxmEGkmrfRAmkxyHcni8MWitJSNYxAsEY",
     authDomain,
-    projectId: "golf-handicap-tracker-b677c",
+    projectId: isLocalHost ? EMULATOR_PROJECT_ID : "golf-handicap-tracker-b677c",
     storageBucket: "golf-handicap-tracker-b677c.firebasestorage.app",
     messagingSenderId: "846253855684",
     appId: "1:846253855684:web:c5a0bc51550086f54d4a91"

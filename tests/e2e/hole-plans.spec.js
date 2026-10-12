@@ -12,12 +12,18 @@
 // self-hosted runner's high ports and on a developer's default-port stack.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import {
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    seedPreapprovedEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const PREVIEW = `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`;
 const FS_PORT = FIRESTORE_PORT;
-const DOCS = `http://127.0.0.1:${FS_PORT}/v1/projects/golf-handicap-tracker-b677c/databases/(default)/documents`;
+const DOCS = `http://127.0.0.1:${FS_PORT}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
 async function registerFreshUser(page) {
     const email = throwawayEmail('plan');
@@ -27,8 +33,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('Plan E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 
