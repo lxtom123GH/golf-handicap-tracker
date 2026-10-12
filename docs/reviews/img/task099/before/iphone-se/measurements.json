@@ -1,0 +1,57 @@
+{
+  "bounds": {
+    "left": 443.859375,
+    "right": 456.859375,
+    "viewport": 375,
+    "scrollX": 0
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "label",
+        "nodes": [
+          {
+            "target": [
+              "tr:nth-child(1) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(1) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(2) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(2) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(3) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(3) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(4) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          },
+          {
+            "target": [
+              "tr:nth-child(4) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
