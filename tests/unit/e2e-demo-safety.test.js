@@ -51,7 +51,10 @@ describe('playwright.config.js', () => {
     it('starts the emulators for the demo project only, with no Functions', async () => {
         const cfg = await load();
         const emu = cfg.webServer.find((s) => s.command.includes('emulators:start'));
+        const { EMULATOR_PROJECT_ID } = await import('../../src/emulator-project.js');
         expect(emu.command).toMatch(/--project demo-[a-z0-9-]+(\s|$)/);
+        // the SAME demo id the browser and the seed helpers use, not just any demo-
+        expect(emu.command).toContain(`--project ${EMULATOR_PROJECT_ID}`);
         expect(emu.command).toContain('--only auth,firestore');
         expect(emu.command).not.toMatch(/functions/);
     });
@@ -70,6 +73,16 @@ describe('playwright.config.js', () => {
     it('refuses to load when an emulator host env var points off-box', async () => {
         vi.stubEnv('FIRESTORE_EMULATOR_HOST', 'firestore.example.com:8080');
         await expect(load()).rejects.toThrow(/loopback/);
+    });
+
+    it('sends every browser type\'s off-box traffic to a dead loopback proxy', async () => {
+        const cfg = await load();
+        for (const p of cfg.projects) {
+            const proxy = p.use.proxy || cfg.use.proxy;
+            expect(proxy, p.name).toBeTruthy();
+            expect(new URL(proxy.server).hostname, p.name).toBe('127.0.0.1');
+            expect(proxy.bypass.split(',').map(s => s.trim()).sort(), p.name).toEqual(['127.0.0.1', '[::1]', 'localhost']);
+        }
     });
 
     it('denies external hosts in the Chromium projects', async () => {

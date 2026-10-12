@@ -24,7 +24,7 @@
 // course.
 
 import { defineConfig, devices } from '@playwright/test';
-import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, assertEmulatorEnvIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
+import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmulatorEnvIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
 
 // Demo-only harness (fleet/e2e-demo-only): the emulators run the OFFLINE
 // demo- project the app uses on localhost (src/emulator-project.js), every
@@ -53,6 +53,8 @@ export default defineConfig({
         // runner, 4300 unchanged for local dev).
         baseURL: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
         trace: 'retain-on-failure',
+        // All browser types, WebKit included: off-box requests hit a dead proxy.
+        proxy: DENY_EXTERNAL_PROXY,
         screenshot: 'only-on-failure',
     },
     projects: [

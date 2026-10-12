@@ -51,3 +51,10 @@ export const E2E_PROJECT_ID = assertDemoProjectId(EMULATOR_PROJECT_ID);
  */
 export const DENY_EXTERNAL_HOSTS_ARG =
     '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1';
+
+/**
+ * Every browser type (WebKit too, which has no resolver flag): send all
+ * non-loopback traffic to a dead loopback proxy (port 9, discard), so it
+ * fails instead of leaving the machine. Loopback bypasses it.
+ */
+export const DENY_EXTERNAL_PROXY = { server: 'http://127.0.0.1:9', bypass: 'localhost,127.0.0.1,[::1]' };
