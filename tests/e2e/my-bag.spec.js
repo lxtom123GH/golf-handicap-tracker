@@ -1,7 +1,7 @@
 // my-bag.spec.js — My Bag sits first in Settings and saves on every tick
 // (simplify 2026-10-07, E35).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 test('My Bag: first in Settings, one tick saves, survives a reload', async ({ page }, testInfo) => {
     const email = throwawayEmail('bag');
@@ -11,8 +11,7 @@ test('My Bag: first in Settings, one tick saves, survives a reload', async ({ pa
     await page.locator('#auth-name').fill('Bag E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     await page.locator('#tab-btn-settings').click();
     const card = page.locator('#my-bag-card');

@@ -9,7 +9,7 @@
 // rounds are on the North nine: round hole 1 = physical 10.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -21,8 +21,7 @@ async function registerFreshUser(page, prefix) {
     await page.locator('#auth-name').fill('Play Mode');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 }
 
 /** Every control's box inside the viewport, at least 44 px, and on top. */

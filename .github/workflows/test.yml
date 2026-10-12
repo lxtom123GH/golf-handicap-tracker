@@ -87,8 +87,7 @@ jobs:
       # A normal run is 12-35 min; fail loudly on a hung suite instead of
       # holding the runner forever.
       timeout-minutes: 60
-      run: |
-        npx playwright test
+      run: npm run test:e2e
 
   # The rules suite is the app's authorization contract; it gates every PR
   # to main.
