@@ -3,7 +3,7 @@ import { UI } from './ui.js';
 let isPlaying = false;
 let swingCount = 0;
 let animationFrameId = null;
-let ringAnimation = null;
+let ringFrameId = null;
 let lastVisualState = 'READY';
 let currentObjectUrl = null;
 
@@ -139,12 +139,15 @@ function syncVisuals() {
     }
 
     if (lastVisualState !== 'IMPACT' && newState === 'IMPACT') {
-        ringAnimation?.cancel();
-        UI.tempoRing.classList.remove('hidden');
-        ringAnimation = UI.tempoRing.animate([
-            { transform: 'scale(1)', opacity: 0.8 },
-            { transform: 'scale(3)', opacity: 0 },
-        ], { duration: 500, easing: 'ease-out', fill: 'forwards' });
+        UI.tempoRing.classList.remove('hidden'); UI.tempoRing.style.animation = "none";
+        cancelAnimationFrame(ringFrameId);
+        // Let the cleared animation paint before restarting, without forcing layout.
+        ringFrameId = requestAnimationFrame(() => {
+            ringFrameId = requestAnimationFrame(() => {
+                ringFrameId = null;
+                UI.tempoRing.style.animation = "tempoExpand 0.5s ease-out forwards";
+            });
+        });
         swingCount++; UI.tempoSwingCounter.textContent = swingCount;
     }
     lastVisualState = newState;
@@ -154,10 +157,10 @@ function syncVisuals() {
 async function togglePlay() {
     if (isPlaying) {
         UI.nativeAudioPlayer.pause(); isPlaying = false; cancelAnimationFrame(animationFrameId);
-        ringAnimation?.cancel(); ringAnimation = null;
+        cancelAnimationFrame(ringFrameId); ringFrameId = null;
         UI.tempoPlayBtn.textContent = "START"; UI.tempoPlayBtn.style.background = 'var(--primary-color)';
         UI.tempoSwingState.textContent = "READY"; UI.tempoCoreCircle.style.background = '#3b82f6';
-        UI.tempoCoreCircle.style.transform = "scale(1)"; UI.tempoRing.classList.add('hidden');
+        UI.tempoCoreCircle.style.transform = "scale(1)"; UI.tempoRing.classList.add('hidden'); UI.tempoRing.style.animation = "";
         lastVisualState = 'READY';
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     } else {

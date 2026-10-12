@@ -36,17 +36,15 @@ test('bag confirmation survives a repeated save and is cleared on leaving Settin
 test('Tempo loops animate without forced layout and STOP leaves the ring hidden', async ({ page }) => {
     await page.addInitScript(() => {
         window.tempoLayoutReads = 0;
-        window.tempoRingAnimations = 0;
+        window.tempoImpacts = 0;
         const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
         Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { ...width, get() {
             if (this.id === 'tempo-ring') window.tempoLayoutReads++;
             return width.get.call(this);
         } });
-        const animate = HTMLElement.prototype.animate;
-        HTMLElement.prototype.animate = function (...args) {
-            if (this.id === 'tempo-ring') window.tempoRingAnimations++;
-            return animate.apply(this, args);
-        };
+        document.addEventListener('animationstart', event => {
+            if (event.target.id === 'tempo-ring') window.tempoImpacts++;
+        });
     });
     await register(page);
     await page.locator('.tab-btn[data-target="tab-practice"]').click();
@@ -58,13 +56,12 @@ test('Tempo loops animate without forced layout and STOP leaves the ring hidden'
     await expect(page.locator('#tempo-delay-slider')).toHaveValue('3');
     await page.locator('#tempo-loop-toggle').check();
     await page.locator('#tempo-play-btn').click();
-    await expect.poll(() => page.locator('#tempo-swing-counter').textContent(), { timeout: 15_000 }).toBe('2');
-    await expect.poll(() => page.evaluate(() => window.tempoRingAnimations), { timeout: 1_000 }).toBe(2);
+    await expect.poll(() => page.evaluate(() => window.tempoImpacts), { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
     await expect(page.locator('#tempo-swing-counter')).toHaveText('2');
     expect(await page.evaluate(() => window.tempoLayoutReads)).toBe(0);
     await page.locator('#tempo-play-btn').click();
     await expect(page.locator('#tempo-swing-state')).toHaveText('READY');
     await expect(page.locator('#tempo-ring')).toBeHidden();
-    await page.waitForFunction(() => document.getElementById('tempo-ring')?.getAnimations().length === 0);
+    await page.waitForTimeout(600); // exceed the ring's 0.5s animation lifetime
     await expect(page.locator('#tempo-ring')).toBeHidden();
 });

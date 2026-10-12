@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 vi.mock('../../src/ui.js', () => ({ UI: {} }));
-let UI, frames, layoutReads, ringAnimations;
+let UI, frames, layoutReads;
 beforeEach(async () => {
     vi.resetModules();
     ({ UI } = await import('../../src/ui.js'));
@@ -22,12 +22,6 @@ beforeEach(async () => {
     UI.nativeAudioPlayer = document.createElement('audio');
     UI.nativeAudioPlayer.play = vi.fn(() => Promise.resolve());
     UI.nativeAudioPlayer.pause = vi.fn();
-    ringAnimations = [];
-    UI.tempoRing.animate = vi.fn((keyframes, options) => {
-        const animation = { keyframes, options, cancel: vi.fn() };
-        ringAnimations.push(animation);
-        return animation;
-    });
     layoutReads = vi.fn(() => 100);
     Object.defineProperty(UI.tempoRing, 'offsetWidth', { get: layoutReads });
     frames = new Map();
@@ -65,17 +59,16 @@ describe('T3-tempo impact animation', () => {
         expect(UI.tempoRing.style.display).toBe('');
     });
 
-    it('starts a ring animation on impact without a synchronous layout read', () => {
+    it('restarts the ring after paint without a synchronous layout read', () => {
         paint(2);
         expect(UI.tempoRing.classList.contains('hidden')).toBe(false);
         expect(UI.tempoRing.style.display).toBe('');
         expect(layoutReads).not.toHaveBeenCalled();
         expect(UI.tempoSwingCounter.textContent).toBe('1');
-        expect(UI.tempoRing.animate).toHaveBeenCalledTimes(1);
-        expect(ringAnimations[0].options).toEqual({ duration: 500, easing: 'ease-out', fill: 'forwards' });
+        expect(UI.tempoRing.style.animation).toBe('none');
         paint(2.1);
         paint(2.2);
-        expect(UI.tempoRing.animate).toHaveBeenCalledTimes(1);
+        expect(UI.tempoRing.style.animation).toContain('tempoExpand');
     });
 
     it.each([1, 2])('does not revive the impact ring when STOP cancels frame %s', pendingFrame => {
@@ -84,7 +77,7 @@ describe('T3-tempo impact animation', () => {
         UI.tempoPlayBtn.click();
         expect(frames.size).toBe(0);
         paint(2.2);
-        expect(ringAnimations[0].cancel).toHaveBeenCalledTimes(1);
+        expect(UI.tempoRing.style.animation).toBe('');
         expect(UI.tempoRing.classList.contains('hidden')).toBe(true);
         expect(UI.tempoRing.style.display).toBe('');
         expect(UI.tempoSwingState.textContent).toBe('READY');
@@ -93,9 +86,9 @@ describe('T3-tempo impact animation', () => {
     it('animates and counts each loop impact once', () => {
         paint(2); paint(2.1); paint(2.2);
         paint(0); paint(2);
-        expect(UI.tempoRing.animate).toHaveBeenCalledTimes(2);
-        expect(ringAnimations[0].cancel).toHaveBeenCalledTimes(1);
+        expect(UI.tempoRing.style.animation).toBe('none');
         paint(2.1); paint(2.2); paint(2.3);
+        expect(UI.tempoRing.style.animation).toContain('tempoExpand');
         expect(UI.tempoSwingCounter.textContent).toBe('2');
         expect(layoutReads).not.toHaveBeenCalled();
     });
