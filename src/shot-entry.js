@@ -2,7 +2,8 @@
 // shot-entry.js — S12 Part E: how the golfer logs each shot (pure).
 // ==========================================================================
 //
-// 'both' (default)  — the map and the button grids, exactly as shipped.
+// 'both' uses the map and button grids.
+//                     2026-10-11).
 // 'draw'            — the map stays; the intent/result button grids collapse
 //                     into Details disclosures (still there, closed).
 // 'buttons'         — the button grids stay; #section-line and the draw
@@ -11,14 +12,17 @@
 //                     new shot opens on the full-screen map (draw mode) with
 //                     the club row + Log docked under it; Done shows the rest
 //                     of the wizard. Grids stay open behind it, as in 'both'.
+// Map first is the default.
+// Saved device choices are kept.
 //
 // Pure only: the visibility decision is a function of the preference
 // (S12 E unit gate). AppState/storage wiring lives in event-binders.js.
 
 export const SHOT_ENTRY_PREFS = ['draw', 'buttons', 'both', 'map'];
+export const DEFAULT_SHOT_ENTRY = 'map';
 
 export function normaliseShotEntry(pref) {
-    return SHOT_ENTRY_PREFS.includes(pref) ? pref : 'both';
+    return SHOT_ENTRY_PREFS.includes(pref) ? pref : DEFAULT_SHOT_ENTRY;
 }
 
 export function shotEntryVisibility(pref) {

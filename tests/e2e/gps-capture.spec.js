@@ -14,6 +14,13 @@ import { test, expect } from '@playwright/test';
 import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
 import { GPS_POLICY } from '../../src/gps-capture.js';
 
+// Keep this spec pinned to the map-and-grids layout it exercises.
+// map-and-grids 'both' layout it was written for, so it pins that preference;
+// Map first's own coverage lives in map-first*.spec.js and map-follow.spec.js.
+test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
+});
+
 const PASSWORD = 'e2e-password-1';
 const KEPERRA_TEE = { latitude: -27.4136, longitude: 152.9465 };
 // Ashgrove hole 1 tee (public/courses/ashgrove.json) — the drag test needs the

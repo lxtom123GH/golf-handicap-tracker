@@ -67,7 +67,16 @@ test('S12 E: Tap buttons mode hides the map, keeps the grids (Ashgrove)', async 
     await expect(page.locator('#section-miss-pattern')).toBeVisible();
 });
 
-test('S12 E: default Both is the shipped layout (Ashgrove)', async ({ page }) => {
+test('with no saved choice, a shot opens on Map first by default', async ({ page }) => {
+    await registerFreshUser(page);
+    await startAshgroveRound(page);
+    expect(await page.evaluate(() => localStorage.getItem('golf.shotEntry'))).toBeNull();
+    await expect(page.locator('#oncourse-wizard')).toHaveClass(/map-first/);
+    await expect(page.locator('#shot-entry-select')).toHaveValue('map');
+});
+
+test('S12 E: Both is the map-and-grids layout (Ashgrove)', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
     await registerFreshUser(page);
     await startAshgroveRound(page);
     await expect(page.locator('#section-line')).toBeVisible();
