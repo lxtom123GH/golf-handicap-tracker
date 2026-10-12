@@ -1,7 +1,7 @@
 // settings-account.spec.js — Settings > Account shows who you are and its
 // password reset button works (simplify 2026-10-07, E34).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 test('Settings › Account shows name + email (no uid) and sends a reset', async ({ page }) => {
     const email = throwawayEmail('acct');
@@ -11,8 +11,7 @@ test('Settings › Account shows name + email (no uid) and sends a reset', async
     await page.locator('#auth-name').fill('Account E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     await page.locator('#tab-btn-settings').click();
     const info = page.locator('#settings-account-info');
@@ -38,8 +37,7 @@ test('Settings › Account shows name + email (no uid) and sends a reset', async
     await page.locator('#auth-name').fill('Second Golfer');
     await page.locator('#auth-email').fill(second);
     await page.locator('#auth-password').fill('e2e-password-2');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, second);
     await page.locator('#tab-btn-settings').click();
     await expect(info).toContainText(second, { timeout: 10_000 });
     await expect(info).not.toContainText(email);

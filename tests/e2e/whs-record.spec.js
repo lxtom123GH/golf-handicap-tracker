@@ -2,7 +2,13 @@
 // iPhone size (the phone rule used to hide the Diff cell).
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs, patchDocFields } from './helpers/emulator.js';
+import {
+    seedPreapprovedEmail,
+    throwawayEmail,
+    findDocs,
+    patchDocFields,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -14,8 +20,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('Record Tester');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 
