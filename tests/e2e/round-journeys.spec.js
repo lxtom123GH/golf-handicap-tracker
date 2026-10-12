@@ -12,6 +12,7 @@ import {
     seedHandicapByEmail,
     seedPreapprovedEmail,
     throwawayEmail,
+    verifyEmulatorEmail,
     writeDocFields,
 } from './helpers/emulator.js';
 
@@ -33,6 +34,9 @@ async function registerApprovedGolfer(page, prefix) {
     const email = throwawayEmail(prefix);
     await seedPreapprovedEmail(email);
     await register(page, { email, name: 'Golden Path Golfer' });
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
     return email;
 }
