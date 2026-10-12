@@ -1,6 +1,5 @@
 // ==========================================
 // shot-start.js — is the hold-still GPS fix this shot's START or its FINISH?
-// Owner decision 2026-10-11 (field test): the golfer sometimes logs a shot
 // A fix far from the expected start
 // (the tee for shot 1, else the previous shot's finish) is where THIS shot
 // finished, not where it began. Pure, no imports; hole-frame metres

@@ -694,8 +694,10 @@ function _setRing(pct, accuracyM) {
 
 /** S4 chain + S10 metadata, from a capture decision. */
 function _applyCapturedPositions(d) {
-    const shotData = AppState.currentShotData;
-    if (!shotData) return;
+    if (!AppState.currentShotData) return;
+    // The AppState proxy observes reference changes, so build a new shot
+    // record and publish it after applying the capture result.
+    const shotData = { ...AppState.currentShotData };
     const fix = d.fix;
     // A distant accepted fix may represent this shot's finish.
     // A fix far from where this shot should start (tee / previous finish) is
@@ -794,6 +796,7 @@ function _applyCapturedPositions(d) {
     if (fix && !_lineCtl && d.state === 'lowConfidence') {
         _gpsReadoutNote = 'GPS is rough (±' + Math.round(fix.accuracyM) + ' m) — no map to correct it on';
     }
+    AppState.currentShotData = shotData;
     refreshShotWizard();
 }
 

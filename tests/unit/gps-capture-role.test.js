@@ -93,8 +93,10 @@ describe('GPS capture role — start or finish of this shot', () => {
         startNewShotInput();
         await mounted();
         const ctl = h.mounts[h.mounts.length - 1];
+        const beforeCapture = AppState.currentShotData;
         standAt([-2.2, 122.8]);
         const d = AppState.currentShotData;
+        expect(d).not.toBe(beforeCapture);
         expect(d.shotNumber).toBe(1);
         expect(d.startXY).toEqual({ x: 0, y: 0 });
         expect(d.startPos).toBeUndefined();
