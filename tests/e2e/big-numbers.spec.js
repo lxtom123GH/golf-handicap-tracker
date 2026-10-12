@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 test('West nine: physical hole 19 has three live big numbers that fit the phone', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'desktop', 'journey uses the phone projects’ mocked GPS');
@@ -12,8 +12,7 @@ test('West nine: physical hole 19 has three live big numbers that fit the phone'
     await page.locator('#auth-name').fill('West Nine Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();
