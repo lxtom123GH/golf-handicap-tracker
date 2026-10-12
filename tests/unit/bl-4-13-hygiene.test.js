@@ -31,7 +31,7 @@ describe('BL-4.13 hygiene contract', () => {
         expect(duplicateKeys).toEqual([]);
     });
 
-    it('runs isolated E2E files in parallel with bounded actions and no retry delays', () => {
+    it('runs the E2E matrix with bounded actions and no retry delays', () => {
         const playwright = read('playwright.config.js');
         expect(playwright).toMatch(/workers:\s*2/);
         expect(playwright).toMatch(/fullyParallel:\s*false/);
@@ -40,8 +40,7 @@ describe('BL-4.13 hygiene contract', () => {
         expect(playwright).toMatch(/navigationTimeout:\s*15_000/);
         expect(playwright).not.toMatch(/dependencies:/);
         const runner = read('scripts/run-e2e.mjs');
-        expect(runner).toMatch(/'desktop',\s*'iphone-se',\s*'phone',\s*'iphone-webkit'/);
-        expect(runner).toMatch(/spawnSync\(process\.execPath/);
+        expect(runner).toMatch(/spawnSync\(process\.execPath,\s*\[playwrightCli,\s*'test'\]/);
         expect(runner).toMatch(/status !== 0/);
     });
 
