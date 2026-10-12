@@ -4,7 +4,9 @@
 // ==========================================================================
 //
 // `npm run test:e2e`. Boots the Firebase auth+firestore emulators and a
-// production `vite preview` build itself. It does not adopt existing listeners.
+// production `vite preview` build itself. reuseExistingServer is false: a
+// server already on those ports makes the run fail fast instead of being
+// trusted (stop it, or pick other ports with scripts/run-e2e-isolated.mjs).
 //
 // The app's environment sniffer (firebase-config.js) routes localhost to the
 // emulators, so specs register brand-new throwaway users through the real UI.
@@ -22,16 +24,28 @@
 // course.
 
 import { defineConfig, devices } from '@playwright/test';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertDemoHarnessEnvironment } from './src/ux-harness-safety.js';
+import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmulatorEnvIsLoopback, assertEmulatorConfigIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
 
+assertEmulatorEnvIsLoopback();
 const projectId = assertDemoHarnessEnvironment(process.env);
-process.env.UX_HARNESS_PROJECT_ID = projectId;
-process.env.GCLOUD_PROJECT = projectId;
-process.env.GOOGLE_CLOUD_PROJECT = projectId;
-process.env.VITE_FIREBASE_PROJECT_ID = projectId;
-process.env.VITE_UX_HARNESS = 'true';
+if (projectId !== E2E_PROJECT_ID) throw new Error('UX harness project must match the offline E2E project.');
 const firebaseCli = fileURLToPath(new URL('./node_modules/firebase-tools/lib/bin/firebase.js', import.meta.url));
+
+// Demo-only harness (fleet/e2e-demo-only): the emulators run the OFFLINE
+// demo- project the app uses on localhost (src/emulator-project.js), every
+// host is loopback, an already-listening server is never silently reused
+// (it could be anything, e.g. a dev emulator on the real project id), and
+// Chromium resolves no external hostname. Pinned by
+// tests/unit/e2e-demo-safety.test.js.
+// Resolve against this file's folder: Playwright runs webServer commands
+// from here, so the file checked is the file the emulators start with.
+const ROOT_DIR = dirname(fileURLToPath(import.meta.url));
+const EMU_CONFIG_PATH = process.env.EMU_CONFIG ? resolve(ROOT_DIR, process.env.EMU_CONFIG) : null;
+assertEmulatorConfigIsLoopback(EMU_CONFIG_PATH || resolve(ROOT_DIR, 'firebase.json'));
+const DENY_EXTERNAL = { launchOptions: { args: [DENY_EXTERNAL_HOSTS_ARG] } };
 
 // Keperra GC, Brisbane — near the clubhouse/1st tee.
 const KEPERRA_FIRST_TEE = { latitude: -27.4136, longitude: 152.9465 };
@@ -39,18 +53,22 @@ const KEPERRA_FIRST_TEE = { latitude: -27.4136, longitude: 152.9465 };
 export default defineConfig({
     testDir: 'tests/e2e',
     globalSetup: './tests/e2e/helpers/install-webkit.js',
-    timeout: 90_000,
-    workers: 1, // auth + Firestore emulators are shared across all projects
-    fullyParallel: false, // shared emulator state — keep journeys sequential
-    workers: 1,
+    timeout: 60_000,
+    expect: { timeout: 10_000 },
+    workers: 1, // serialize journeys that share the emulator state
+    fullyParallel: false,
     forbidOnly: !!process.env.CI,
-    retries: 1,
+    retries: 0,
     reporter: [['list']],
     use: {
         // S3c: matches the preview webServer's port (VITE_PREVIEW_PORT on the
         // runner, 4300 unchanged for local dev).
         baseURL: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
+        actionTimeout: 15_000,
+        navigationTimeout: 15_000,
         trace: 'retain-on-failure',
+        // All browser types, WebKit included: off-box requests hit a dead proxy.
+        proxy: DENY_EXTERNAL_PROXY,
         screenshot: 'only-on-failure',
     },
     projects: [
@@ -60,6 +78,7 @@ export default defineConfig({
                 ...devices['Pixel 7'],
                 permissions: ['geolocation'],
                 geolocation: KEPERRA_FIRST_TEE,
+                ...DENY_EXTERNAL,
             },
         },
         {
@@ -74,9 +93,12 @@ export default defineConfig({
                 viewport: { width: 375, height: 667 },
                 permissions: ['geolocation'],
                 geolocation: KEPERRA_FIRST_TEE,
+                ...DENY_EXTERNAL,
             },
         },
         {
+            // The test:e2e runner starts this GPS project in its own
+            // Playwright process after Chromium projects have stopped.
             name: 'iphone-webkit',
             testMatch: '**/keperra-west-round.spec.js',
             use: {
@@ -88,7 +110,7 @@ export default defineConfig({
         },
         {
             name: 'desktop',
-            use: { ...devices['Desktop Chrome'] },
+            use: { ...devices['Desktop Chrome'], ...DENY_EXTERNAL },
         },
     ],
     webServer: [
@@ -96,13 +118,20 @@ export default defineConfig({
             // S3c: EMU_CONFIG lets the runner point at firebase.ci.json (high
             // ports) so CI never collides with a dev's emulator; the ports are
             // echoed to the app build via VITE_EMU_* and to tests via EMU_*.
-            command: `"${process.execPath}" "${firebaseCli}" emulators:start --only auth,firestore --project ${projectId}` + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
+            command: `"${process.execPath}" "${firebaseCli}" emulators:start --only auth,firestore --project ${E2E_PROJECT_ID} --log-verbosity SILENT` + (EMU_CONFIG_PATH ? ` --config "${EMU_CONFIG_PATH}"` : ''),
             url: `http://127.0.0.1:${process.env.EMU_AUTH_PORT || 9099}`,
             reuseExistingServer: false,
             timeout: 300_000,
         },
         {
             command: `npm run build && npx vite preview --port ${process.env.VITE_PREVIEW_PORT || 4300} --strictPort`,
+            env: {
+                UX_HARNESS_PROJECT_ID: projectId,
+                GCLOUD_PROJECT: projectId,
+                GOOGLE_CLOUD_PROJECT: projectId,
+                VITE_FIREBASE_PROJECT_ID: projectId,
+                VITE_UX_HARNESS: 'true',
+            },
             url: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
             reuseExistingServer: false,
             timeout: 180_000,

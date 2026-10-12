@@ -1,9 +1,16 @@
 // practice-caddy-done.spec.js — a finished Caddy plan closes with one Done
 // tap; no star rating (simplify 2026-10-07, E38).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs, FIRESTORE_PORT, PROJECT_ID, verifyEmulatorEmail } from './helpers/emulator.js';
+import {
+    seedPreapprovedEmail,
+    throwawayEmail,
+    findDocs,
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
-const PROJECT = PROJECT_ID;
+const PROJECT = PROJECT_ID; // the demo- project, as helpers/emulator.js
 
 async function planDoc(uid, method = 'GET', body) {
     const url = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/${PROJECT}/databases/(default)/documents/users/${uid}/practice_plans/active`;
@@ -21,11 +28,7 @@ test('ticking the last step shows one Done; Done closes the plan', async ({ page
     await page.locator('#auth-name').fill('Caddy Done');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
-    await verifyEmulatorEmail(email);
-    await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     let user;
     for (let i = 0; i < 50 && !user; i++) {

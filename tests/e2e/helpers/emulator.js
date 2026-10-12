@@ -9,16 +9,22 @@
 // free to grant it. The E2E suite had been leaning on that shortcut to get a
 // throwaway user into the app.
 //
-// The honest replacement is a fixture: the specs seed the invite list the
-// same way an admin would. Password signup first creates a pending account;
-// after verification, the auth gate reads preapproved_emails and promotes it.
+// Feature specs create accounts through the real UI, complete verification
+// through the Auth emulator, then approve the throwaway account as an admin
+// fixture. The registration spec separately exercises invite-based approval.
 //
 // The Firestore emulator's REST API accepts `Authorization: Bearer owner` and
 // bypasses security rules, which is what an admin write is. Nothing here can
-// reach production: the host is pinned to 127.0.0.1.
+// reach production: the host is pinned to 127.0.0.1 and the project is the
+// offline demo- project (e2e-safety.js).
+
+import { expect } from '@playwright/test';
+import { E2E_PROJECT_ID, assertLoopbackHost } from './e2e-safety.js';
 import { assertDemoHarnessEnvironment } from '../../../src/ux-harness-safety.js';
 
+// Both harnesses use the same offline demo project; refuse any mismatch.
 export const PROJECT_ID = assertDemoHarnessEnvironment(process.env);
+if (PROJECT_ID !== E2E_PROJECT_ID) throw new Error('UX harness project must match the offline E2E project.');
 export function firestorePort(env = process.env) {
     return Number(env.EMU_FIRESTORE_PORT || env.EMU_FS_PORT || 8080);
 }
@@ -29,8 +35,43 @@ export function authPort(env = process.env) {
 }
 
 export const AUTH_PORT = authPort();
-const FIRESTORE_HOST = `127.0.0.1:${FIRESTORE_PORT}`; // allocated or CI runner port, else firebase.json
+const FIRESTORE_HOST = assertLoopbackHost(`127.0.0.1:${FIRESTORE_PORT}`); // allocated or CI runner port, else firebase.json
 const DOCS = `http://${FIRESTORE_HOST}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+const AUTH_HOST = `127.0.0.1:${Number(process.env.EMU_AUTH_PORT || 9099)}`;
+let emulatorReadiness = null;
+
+async function fetchEmulator(url, options) {
+    return fetch(url, { ...options, signal: AbortSignal.timeout(5_000) });
+}
+
+async function emulatorResponds(url) {
+    try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(1_000) });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+
+/** Wait until both emulator services answer before seeding signup fixtures. */
+export function waitForEmulators() {
+    if (!emulatorReadiness) {
+        emulatorReadiness = Promise.all([
+            expect.poll(() => emulatorResponds(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT_ID}/config`), {
+                timeout: 30_000,
+                message: 'Auth emulator must respond before signup fixtures run',
+            }).toBe(true),
+            expect.poll(() => emulatorResponds(`http://${FIRESTORE_HOST}/`), {
+                timeout: 30_000,
+                message: 'Firestore emulator must respond before signup fixtures run',
+            }).toBe(true),
+        ]).catch(error => {
+            emulatorReadiness = null;
+            throw error;
+        });
+    }
+    return emulatorReadiness;
+}
 
 export const UX_HARNESS_PASSWORD = 'demo-only-password';
 export const UX_HARNESS_PERSONAS = {
@@ -87,8 +128,9 @@ export async function seedUxHarnessFixtures() {
  * @param {string} email
  */
 export async function seedPreapprovedEmail(email) {
+    await waitForEmulators();
     const id = encodeURIComponent(email.toLowerCase());
-    const res = await fetch(`${DOCS}/preapproved_emails/${id}`, {
+    const res = await fetchEmulator(`${DOCS}/preapproved_emails/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({ fields: { addedAt: { stringValue: new Date().toISOString() } } }),
@@ -98,32 +140,88 @@ export async function seedPreapprovedEmail(email) {
     }
 }
 
-/** Mark a local Auth emulator account verified, as if its inbox link was used. */
+/** Apply the verification action code sent by the Auth emulator. */
 export async function verifyEmulatorEmail(email) {
-    const host = `127.0.0.1:${Number(process.env.EMU_AUTH_PORT || 9099)}`;
+    await waitForEmulators();
+    const host = AUTH_HOST;
     const api = `http://${host}/identitytoolkit.googleapis.com/v1`;
-    const lookup = await fetch(`${api}/accounts:lookup?key=fake-api-key`, {
+    const emulatorApi = `http://${host}/emulator/v1/projects/${PROJECT_ID}`;
+    const lookup = await fetchEmulator(`${api}/accounts:lookup?key=fake-api-key`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({ email: [email] }),
     });
-    if (!lookup.ok) throw new Error(`Failed to find Auth emulator account ${email}: ${lookup.status} ${await lookup.text()}`);
+    if (!lookup.ok) throw new Error(`Failed to find Auth emulator signup: ${lookup.status}`);
     const user = (await lookup.json()).users?.[0];
-    if (!user?.localId) throw new Error(`No Auth emulator account found for ${email}`);
+    if (!user?.localId) throw new Error('Auth emulator has no account for the signup');
+    let verificationCode;
+    await expect.poll(async () => {
+        const response = await fetchEmulator(`${emulatorApi}/oobCodes`, {});
+        if (!response.ok) throw new Error(`Failed to read Auth emulator verification codes: ${response.status}`);
+        const { oobCodes = [] } = await response.json();
+        verificationCode = oobCodes.find(code =>
+            code.requestType === 'VERIFY_EMAIL' && code.email?.toLowerCase() === email.toLowerCase()
+        );
+        return verificationCode?.oobCode || null;
+    }, { timeout: 10_000, message: 'Auth emulator must issue a verification code for the signup' })
+        .toBeTruthy();
 
-    const update = await fetch(`${api}/accounts:update?key=fake-api-key`, {
+    const update = await fetchEmulator(`${api}/accounts:update?key=fake-api-key`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
-        body: JSON.stringify({ localId: user.localId, emailVerified: true }),
+        body: JSON.stringify({ localId: user.localId, oobCode: verificationCode.oobCode }),
     });
-    if (!update.ok) throw new Error(`Failed to verify Auth emulator account ${email}: ${update.status} ${await update.text()}`);
+    if (!update.ok) throw new Error(`Failed to apply Auth emulator verification code: ${update.status} ${await update.text()}`);
+    const verifiedUser = await update.json();
+    if (verifiedUser.emailVerified !== true || !verifiedUser.localId) {
+        throw new Error('Auth emulator did not confirm the signup email verification');
+    }
+    if (verifiedUser.localId !== user.localId) throw new Error('Auth emulator verified a different signup account');
+    return user.localId;
+}
+
+/** Complete the real signup verification flow against the Auth emulator. */
+export async function registerAndVerifySignup(page, email) {
+    await waitForEmulators();
+    const verificationEmailSent = page.waitForResponse(
+        response => response.url().includes('/accounts:sendOobCode'),
+        { timeout: 15_000 },
+    );
+    const [response] = await Promise.all([
+        verificationEmailSent,
+        page.getByRole('button', { name: 'Create Account' }).click({ timeout: 10_000 }),
+    ]);
+    expect(response.ok(), 'Auth emulator accepted the verification email request').toBe(true);
+    let userDoc;
+    await expect.poll(async () => {
+        [userDoc] = await findDocs('users', 'email', email);
+        return userDoc?._id || null;
+    }, { timeout: 10_000, message: 'Signup must finish writing its user document before verification' })
+        .toBeTruthy();
+    await expect(page.locator('#auth-pending-heading'))
+        .toHaveText('Check your inbox to finish joining', { timeout: 15_000 });
+    const authUid = await verifyEmulatorEmail(email);
+    expect(authUid, 'Firestore user document must belong to the signed-up Auth account').toBe(userDoc._id);
+    // Feature journeys need an admitted golfer; registration.spec.js owns the
+    // invite-promotion contract. Keep this fixture approval on the emulator.
+    await patchDocFields(`users/${authUid}`, { isApproved: true });
+    const appBooted = page.waitForEvent('console', {
+        predicate: message => message.text().includes('[Auth] Bootstrap complete, removing cloak.'),
+        timeout: 15_000,
+    });
+    // Refresh the signed-in SDK user just as the real Check Email control does;
+    // a page reload can restore a cached, still-unverified Auth user.
+    await page.locator('#btn-check-email').click({ timeout: 10_000 });
+    await expect(page.locator('#main-app')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('#auth-pending')).toBeHidden();
+    await appBooted;
 }
 
 /** Seed strategy periods onto a registered E2E user's user document. */
 export async function seedStrategyPeriodsByEmail(email, strategyPeriods) {
     let userDoc;
     for (let attempt = 0; attempt < 10 && !userDoc; attempt++) {
-        const res = await fetch(`${DOCS}:runQuery`, {
+        const res = await fetchEmulator(`${DOCS}:runQuery`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
             body: JSON.stringify({
@@ -149,7 +247,7 @@ export async function seedStrategyPeriodsByEmail(email, strategyPeriods) {
             end: period.end == null ? { nullValue: null } : { stringValue: period.end },
         } } },
     ]));
-    const update = await fetch(`${DOCS}/${userDoc.name.split('/documents/')[1]}?updateMask.fieldPaths=strategyPeriods`, {
+    const update = await fetchEmulator(`${DOCS}/${userDoc.name.split('/documents/')[1]}?updateMask.fieldPaths=strategyPeriods`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({ fields: {
@@ -165,7 +263,7 @@ export async function seedStrategyPeriodsByEmail(email, strategyPeriods) {
  * Admin read (Bearer owner), so it sees exactly what the app wrote.
  */
 export async function findDocs(collection, field, value) {
-    const res = await fetch(`${DOCS}:runQuery`, {
+    const res = await fetchEmulator(`${DOCS}:runQuery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({
@@ -202,7 +300,7 @@ export async function seedHandicapByEmail(email, handicapIndex) {
         if (!user) await new Promise(resolve => setTimeout(resolve, 100));
     }
     if (!user) throw new Error(`No registered user found for ${email}`);
-    const res = await fetch(`${DOCS}/profiles/${user._id}?updateMask.fieldPaths=handicapIndex`, {
+    const res = await fetchEmulator(`${DOCS}/profiles/${user._id}?updateMask.fieldPaths=handicapIndex`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({ fields: { handicapIndex: { doubleValue: handicapIndex } } }),
@@ -219,7 +317,7 @@ export async function patchDocFields(docPath, fields) {
     const encode = (v) => (typeof v === 'boolean' ? { booleanValue: v }
         : typeof v === 'number' ? { doubleValue: v } : { stringValue: String(v) });
     const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
-    const res = await fetch(`${DOCS}/${docPath}?${mask}`, {
+    const res = await fetchEmulator(`${DOCS}/${docPath}?${mask}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({ fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, encode(v)])) }),
@@ -257,7 +355,7 @@ function encodeValue(v) {
  * @param {string} docPath - e.g. 'users/<uid>/private/handicap'
  */
 export async function readDoc(docPath) {
-    const res = await fetch(`${DOCS}/${docPath}`, { headers: { Authorization: 'Bearer owner' } });
+    const res = await fetchEmulator(`${DOCS}/${docPath}`, { headers: { Authorization: 'Bearer owner' } });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`Failed to read ${docPath}: ${res.status} ${await res.text()}`);
     const json = await res.json();
@@ -272,7 +370,7 @@ export async function readDoc(docPath) {
  */
 export async function writeDocFields(docPath, fields) {
     const mask = Object.keys(fields).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
-    const res = await fetch(`${DOCS}/${docPath}?${mask}`, {
+    const res = await fetchEmulator(`${DOCS}/${docPath}?${mask}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
         body: JSON.stringify({ fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, encodeValue(v)])) }),

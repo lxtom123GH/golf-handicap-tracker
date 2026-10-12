@@ -7,7 +7,7 @@
 // (assist off = identical readouts; assist on = bias + snap with ≈).
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildPlayable } from '../../src/gps-bias.js';
@@ -46,8 +46,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('Assist E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 

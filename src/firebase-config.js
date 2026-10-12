@@ -11,9 +11,11 @@ import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { assertDemoHarnessTarget } from './ux-harness-safety.js';
+import { EMULATOR_PROJECT_ID } from "./emulator-project.js";
 
-const isLocal = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
-const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "golf-handicap-tracker-b677c";
+const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
+const isLocal = isLocalHost;
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || (isLocalHost ? EMULATOR_PROJECT_ID : "golf-handicap-tracker-b677c");
 if (import.meta.env.VITE_UX_HARNESS === 'true') {
     assertDemoHarnessTarget({
         projectId,
@@ -32,6 +34,11 @@ if (import.meta.env.VITE_UX_HARNESS === 'true') {
 // Google OAuth client first (see docs/GOOGLE-SIGNIN.md), then set the build
 // variable VITE_AUTH_DOMAIN. Unset = today's behaviour, unchanged.
 const authDomain = import.meta.env.VITE_AUTH_DOMAIN || "golf-handicap-tracker-b677c.firebaseapp.com";
+
+// On localhost/127.0.0.1 the app only talks to the emulator suite (see the
+// sniffer at the bottom), and it does so under the offline demo- project
+// (src/emulator-project.js): start local emulators with
+// `--project demo-golf-tracker`. Production hostnames are unchanged.
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
