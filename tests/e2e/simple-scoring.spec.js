@@ -8,7 +8,7 @@
 // first: a guest by name scores alongside you, and a reload keeps the card.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -20,8 +20,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('Simple E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 }
 
 test('Simple mode: start with a guest, score two players, Next/Prev keeps scores, reload keeps the round, no wizard ever', async ({ page }) => {

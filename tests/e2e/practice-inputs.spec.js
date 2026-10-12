@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 import { createRequire } from 'node:module';
 
 const { normalizePracticeInputs } = createRequire(import.meta.url)('../../functions/lib/practice-inputs.js');
@@ -12,11 +12,7 @@ test.beforeEach(async ({ page }) => {
     await page.locator('#auth-name').fill('Practice Tester');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    const booted = page.waitForEvent('console', {
-        predicate: message => message.text().includes('[Auth] Bootstrap complete'),
-    });
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await booted;
+    await registerAndVerifySignup(page, email);
     await expect(page.locator('#main-app')).toBeVisible();
     await page.locator('.tab-btn[data-target="tab-practice"]').click();
     await expect(page.locator('#practice-state-empty')).toBeVisible();
