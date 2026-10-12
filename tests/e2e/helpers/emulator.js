@@ -57,6 +57,15 @@ export async function seedUxHarnessFixtures() {
         }
         if (!response.ok) throw new Error(`Failed to seed demo auth account ${persona.email}: ${JSON.stringify(result)}`);
 
+        if (persona.approved) {
+            const verified = await fetch(`${authBase}/accounts:update?key=fake-api-key`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ localId: result.localId, emailVerified: true }),
+            });
+            if (!verified.ok) throw new Error(`Failed to verify demo auth account: ${verified.status}`);
+        }
+
         if (persona.approved) await writeDocFields(`preapproved_emails/${encodeURIComponent(persona.email)}`, { addedAt: new Date() });
         await writeDocFields(`users/${result.localId}`, {
             uid: result.localId,
