@@ -44,7 +44,7 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
     await expect(page.locator('#auth-overlay')).toBeVisible();
     await audit(page, 'sign-in', reports);
 
-    const email = throwawayEmail('axe-299');
+    const email = throwawayEmail('rendered-a11y');
     await seedPreapprovedEmail(email);
     await page.locator('#btn-register').click();
     await page.locator('#auth-name').fill('Axe Audit');
