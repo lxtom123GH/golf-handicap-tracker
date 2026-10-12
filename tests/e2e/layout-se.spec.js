@@ -21,7 +21,12 @@
 
 import { test, expect } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { seedPreapprovedEmail, seedStrategyPeriodsByEmail, throwawayEmail } from './helpers/emulator.js';
+import {
+    seedPreapprovedEmail,
+    seedStrategyPeriodsByEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const TABS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-insights', 'tab-oncourse', 'tab-settings'];
@@ -34,8 +39,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('E2E Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 

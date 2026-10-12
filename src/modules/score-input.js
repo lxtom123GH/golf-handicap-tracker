@@ -539,15 +539,17 @@ async function syncShotLineOverlay() {
         // tells us when a tap consumed it.
         deflectArmed: () => _deflectArmed,
         onDeflectPlaced: () => setDeflectArmed(false),
-        onChange: ({ mode, points, frame, curves }) => {
+        onChange: ({ mode, points, frame, curves, anchorChanged }) => {
             // S12 B1: Undo reverts to whatever this mode held before the stroke.
-            _curveUndo.push({
-                mode,
-                field: mode === 'actual' ? 'lineActual' : 'lineIntended',
-                prev: mode === 'actual' ? toPairs(d.lineActual) : toPairs(d.lineIntended),
-                prevDeflectAt: mode === 'actual' ? (d.lineActualDeflectAt ?? null) : undefined,
-            });
-            if (_curveUndo.length > 10) _curveUndo.shift();
+            if (!anchorChanged) {
+                _curveUndo.push({
+                    mode,
+                    field: mode === 'actual' ? 'lineActual' : 'lineIntended',
+                    prev: mode === 'actual' ? toPairs(d.lineActual) : toPairs(d.lineIntended),
+                    prevDeflectAt: mode === 'actual' ? (d.lineActualDeflectAt ?? null) : undefined,
+                });
+                if (_curveUndo.length > 10) _curveUndo.shift();
+            }
             d.lineIntended = toObjs(curves.intended);
             d.lineActual = toObjs(curves.actual);
             // S12 D2: the deflection marker rides on the curves object.

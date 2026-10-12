@@ -9,11 +9,22 @@ const html = readFileSync(path.join(root, 'index.html'), 'utf8');
 const doc = new JSDOM(html).window.document;
 const controls = [...doc.querySelectorAll('input:not([type="hidden"]), select, textarea')];
 
+const associatedLabels = new Map();
+for (const label of doc.querySelectorAll('label')) {
+    const control = label.htmlFor
+        ? doc.getElementById(label.htmlFor)
+        : label.querySelector('input:not([type="hidden"]), select, textarea');
+    if (!control) continue;
+    const labels = associatedLabels.get(control) || [];
+    labels.push(label);
+    associatedLabels.set(control, labels);
+}
+
 function labelText(control) {
     const aria = control.getAttribute('aria-labelledby');
     if (aria) return aria.split(/\s+/).map(id => control.ownerDocument.getElementById(id)?.textContent || '').join(' ').trim();
     return control.getAttribute('aria-label')?.trim()
-        || [...(control.labels || [])].map(label => label.textContent.trim()).join(' ').trim();
+        || (associatedLabels.get(control) || []).map(label => label.textContent.trim()).join(' ').trim();
 }
 
 describe('static form label associations (not a runtime axe substitute)', () => {
