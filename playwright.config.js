@@ -24,6 +24,8 @@
 // course.
 
 import { defineConfig, devices } from '@playwright/test';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmulatorEnvIsLoopback, assertEmulatorConfigIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
 
 // Demo-only harness (fleet/e2e-demo-only): the emulators run the OFFLINE
@@ -33,7 +35,11 @@ import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, DENY_EXTERNAL_PROXY, assertEmu
 // Chromium resolves no external hostname. Pinned by
 // tests/unit/e2e-demo-safety.test.js.
 assertEmulatorEnvIsLoopback();
-assertEmulatorConfigIsLoopback(process.env.EMU_CONFIG || 'firebase.json');
+// Resolve against this file's folder: Playwright runs webServer commands
+// from here, so the file checked is the file the emulators start with.
+const ROOT_DIR = dirname(fileURLToPath(import.meta.url));
+const EMU_CONFIG_PATH = process.env.EMU_CONFIG ? resolve(ROOT_DIR, process.env.EMU_CONFIG) : null;
+assertEmulatorConfigIsLoopback(EMU_CONFIG_PATH || resolve(ROOT_DIR, 'firebase.json'));
 const DENY_EXTERNAL = { launchOptions: { args: [DENY_EXTERNAL_HOSTS_ARG] } };
 
 // Keperra GC, Brisbane — near the clubhouse/1st tee.
@@ -103,7 +109,7 @@ export default defineConfig({
             // S3c: EMU_CONFIG lets the runner point at firebase.ci.json (high
             // ports) so CI never collides with a dev's emulator; the ports are
             // echoed to the app build via VITE_EMU_* and to tests via EMU_*.
-            command: `npx firebase emulators:start --only auth,firestore --project ${E2E_PROJECT_ID}` + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
+            command: `npx firebase emulators:start --only auth,firestore --project ${E2E_PROJECT_ID}` + (EMU_CONFIG_PATH ? ` --config "${EMU_CONFIG_PATH}"` : ''),
             url: `http://127.0.0.1:${process.env.EMU_AUTH_PORT || 9099}`,
             reuseExistingServer: false,
             timeout: 120_000,

@@ -83,6 +83,13 @@ describe('playwright.config.js', () => {
         await expect(load()).rejects.toThrow(/firestore emulator to "0\.0\.0\.0"/);
     });
 
+    it('checks and starts the SAME config file, resolved from the config folder', async () => {
+        vi.stubEnv('EMU_CONFIG', 'firebase.ci.json');
+        const cfg = await load();
+        const emu = cfg.webServer.find((s) => s.command.includes('emulators:start'));
+        expect(emu.command).toContain(`--config "${join(ROOT, 'firebase.ci.json')}"`);
+    });
+
     it('accepts the tracked emulator configs (all loopback)', async () => {
         const { assertEmulatorConfigIsLoopback } = await import('../e2e/helpers/e2e-safety.js');
         for (const f of ['firebase.json', 'firebase.ci.json']) expect(() => assertEmulatorConfigIsLoopback(join(ROOT, f)), f).not.toThrow();
