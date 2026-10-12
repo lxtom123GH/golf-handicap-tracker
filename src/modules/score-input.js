@@ -512,8 +512,8 @@ async function syncShotLineOverlay() {
         // Map first (owner 2026-10-05, "like a GPS map"): target-up is the
         // default there unless the golfer turned Rotate map off in Settings.
         autoRotate: !!AppState.rotateMap || (mapFirstWanted() && _drawMode && rotateMapNotRefused()),
-        // Map-first captures use the light fairway style from play mode.
-        // fairway (thin edge over the aerial) instead of the opaque fill.
+        // Map-first captures use the light outline style, with a thin fairway
+        // edge over the aerial instead of the opaque fill.
         featureStyle: mapFirstWanted() ? 'outline' : 'solid',
         // S3: the coach/self plan under the player's curves.
         plan: planLine,

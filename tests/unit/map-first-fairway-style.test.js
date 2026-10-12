@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 // ==========================================
 // map-first-fairway-style.test.js — Map first draws the light fairway.
-// Map-first mounts should use the outline fairway style.
-// switched the fairway back to the opaque fill. Map first uses play mode's
-// light 'outline' style; the other shot-entry modes keep 'solid'. Same
+// Map-first mounts use the outline fairway style; other shot-entry modes
+// keep the solid style. Same
 // harness as live-follow-wiring.test.js (real score-input, fake overlay).
 // ==========================================
 
