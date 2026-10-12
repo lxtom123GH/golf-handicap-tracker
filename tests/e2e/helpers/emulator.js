@@ -15,15 +15,19 @@
 //
 // The Firestore emulator's REST API accepts `Authorization: Bearer owner` and
 // bypasses security rules, which is what an admin write is. Nothing here can
-// reach production: the host is pinned to 127.0.0.1.
+// reach production: the host is pinned to 127.0.0.1 and the project is the
+// offline demo- project (e2e-safety.js).
 
-const PROJECT_ID = 'golf-handicap-tracker-b677c'; // .firebaserc / firebase-config.js
+import { E2E_PROJECT_ID, assertLoopbackHost } from './e2e-safety.js';
+
+// The offline demo project (src/emulator-project.js), never the real one.
+export const PROJECT_ID = E2E_PROJECT_ID;
 export function firestorePort(env = process.env) {
     return Number(env.EMU_FIRESTORE_PORT || env.EMU_FS_PORT || 8080);
 }
 
 export const FIRESTORE_PORT = firestorePort();
-const FIRESTORE_HOST = `127.0.0.1:${FIRESTORE_PORT}`; // allocated or CI runner port, else firebase.json
+const FIRESTORE_HOST = assertLoopbackHost(`127.0.0.1:${FIRESTORE_PORT}`); // allocated or CI runner port, else firebase.json
 const DOCS = `http://${FIRESTORE_HOST}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
 /**

@@ -1,9 +1,9 @@
 // practice-caddy-done.spec.js — a finished Caddy plan closes with one Done
 // tap; no star rating (simplify 2026-10-07, E38).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs, FIRESTORE_PORT } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, findDocs, FIRESTORE_PORT, PROJECT_ID } from './helpers/emulator.js';
 
-const PROJECT = 'golf-handicap-tracker-b677c'; // as helpers/emulator.js
+const PROJECT = PROJECT_ID; // the demo- project, as helpers/emulator.js
 
 async function planDoc(uid, method = 'GET', body) {
     const url = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/${PROJECT}/databases/(default)/documents/users/${uid}/practice_plans/active`;
