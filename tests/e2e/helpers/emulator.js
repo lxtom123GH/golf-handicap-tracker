@@ -60,7 +60,7 @@ export async function seedUxHarnessFixtures() {
         if (persona.approved) {
             const verified = await fetch(`${authBase}/accounts:update?key=fake-api-key`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
                 body: JSON.stringify({ localId: result.localId, emailVerified: true }),
             });
             if (!verified.ok) throw new Error(`Failed to verify demo auth account: ${verified.status}`);
