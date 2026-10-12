@@ -27,7 +27,7 @@ describe('GPS_POLICY numbers (tests cite the object, not literals)', () => {
         expect(GPS_POLICY).toMatchObject({
             acceptNowM: 8, acceptWindowM: 12, lowConfidenceM: 30,
             windowMs: 4000, maxFixAgeMs: 2000, maxSpeedMps: 0.7, preciseOffM: 1000,
-            agreementFloorM: 3, combinedAccuracyFloorM: 2,
+            agreementFloorM: 3, reportedAccuracyFloorM: 2,
         });
     });
 });
@@ -40,7 +40,7 @@ describe('createCapture — acceptance paths', () => {
         c.advance(500);
         const d = cap.push(fix(6, { at: c.now() }));
         expect(d.state).toBe('accepted');
-        expect(d.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 9 ** 2 + 1 / 6 ** 2)));
+        expect(d.fix.accuracyM).toBe(6);
     });
 
     it('a lone 6 m fix waits — one good fix is not convergence', () => {
@@ -59,7 +59,7 @@ describe('createCapture — acceptance paths', () => {
         c.advance(1100);
         const d = cap.decide({ final: true });
         expect(d.state).toBe('accepted');
-        expect(d.fix.accuracyM).toBeLessThan(11);
+        expect(d.fix.accuracyM).toBe(11);
         expect(d.elapsedMs).toBeGreaterThanOrEqual(GPS_POLICY.windowMs - 100);
     });
 
@@ -149,7 +149,7 @@ describe('createCapture — preciseOff and ignored fixes', () => {
         expect(d1.state).toBe('accepted');
         const d2 = cap.push(fix(50, { at: c.now() }));
         expect(d2).toBe(d1);
-        expect(d2.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 9 ** 2 + 1 / 6 ** 2)));
+        expect(d2.fix.accuracyM).toBe(6);
     });
 });
 
@@ -229,13 +229,13 @@ describe('createCapture — boundaries ±0.1 at each threshold', () => {
         c.advance(1);
         cap.push(fix(10, { at: c.now() }));
         const d = cap.decide({ final: true });
-        expect(d.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 12 ** 2 + 2 / 10 ** 2)));
+        expect(d.fix.accuracyM).toBe(10);
         expect(d.fix.at).toBe(100002); // tie metadata comes from the newest best fix
     });
 });
 
 describe('createCapture — agreeing-fix average', () => {
-    it('averages symmetric noise closer to the truth and reports combined accuracy', () => {
+    it('averages symmetric noise closer to the truth without overstating accuracy', () => {
         const c = fakeClock();
         const cap = createCapture(c.now);
         const truth = { lat: -27.4, lon: 152.9 };
@@ -247,7 +247,7 @@ describe('createCapture — agreeing-fix average', () => {
         expect(d.state).toBe('accepted');
         expect(distanceM(d.fix, truth)).toBeLessThan(distanceM({ lat: offsetLat(-6), lon: truth.lon }, truth));
         expect(d.fix.lat).toBeCloseTo(truth.lat, 7);
-        expect(d.fix.accuracyM).toBeCloseTo(12 / Math.sqrt(3));
+        expect(d.fix.accuracyM).toBe(12);
     });
 
     it('excludes a distant outlier from the averaged position', () => {
@@ -261,7 +261,7 @@ describe('createCapture — agreeing-fix average', () => {
         const d = cap.decide({ final: true });
         expect(d.state).toBe('accepted');
         expect(distanceM(d.fix, truth)).toBeLessThan(2);
-        expect(d.fix.accuracyM).toBeCloseTo(Math.sqrt(1 / (1 / 11 ** 2 + 1 / 12 ** 2)));
+        expect(d.fix.accuracyM).toBe(11);
     });
 
     it('weights each agreeing fix by inverse accuracy squared', () => {
@@ -289,11 +289,20 @@ describe('createCapture — agreeing-fix average', () => {
         expect(d.fix).toEqual(single);
     });
 
-    it('applies the minimum reported accuracy floor', () => {
+    it('repeated callbacks do not make reported accuracy look better', () => {
         const c = fakeClock();
         const cap = createCapture(c.now, { ...GPS_POLICY, acceptPrevM: 0 });
         for (let i = 0; i < 100; i++) cap.push(fix(4, { at: c.now() }));
 
-        expect(cap.decide({ final: true }).fix.accuracyM).toBe(GPS_POLICY.combinedAccuracyFloorM);
+        expect(cap.decide({ final: true }).fix.accuracyM).toBe(4);
+    });
+
+    it('applies a minimum reported-accuracy floor to averaged fixes', () => {
+        const c = fakeClock();
+        const policy = { ...GPS_POLICY, acceptPrevM: 0, reportedAccuracyFloorM: 3 };
+        const cap = createCapture(c.now, policy);
+        for (let i = 0; i < 100; i++) cap.push(fix(1, { at: c.now() }));
+
+        expect(cap.decide({ final: true }).fix.accuracyM).toBe(3);
     });
 });

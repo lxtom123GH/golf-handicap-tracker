@@ -19,7 +19,7 @@ export const GPS_POLICY = {
     maxSpeedMps: 0.7,     // moving = not at the ball
     preciseOffM: 1000,    // accuracy above this = iOS Precise Location off
     agreementFloorM: 3,   // minimum radius for fixes to agree with the best fix
-    combinedAccuracyFloorM: 2, // never report a combined accuracy finer than this
+    reportedAccuracyFloorM: 2, // floor for averaged fixes; never improve on the best source accuracy
     earthRadiusM: 6371000,
 };
 
@@ -71,7 +71,6 @@ export function createCapture(now = Date.now, policy = GPS_POLICY) {
         let x = 0;
         let y = 0;
         let z = 0;
-        let totalWeight = 0;
         for (const f of agreeing) {
             const weight = 1 / (f.accuracyM ** 2);
             const lat = f.lat * Math.PI / 180;
@@ -79,16 +78,13 @@ export function createCapture(now = Date.now, policy = GPS_POLICY) {
             x += Math.cos(lat) * Math.cos(lon) * weight;
             y += Math.cos(lat) * Math.sin(lon) * weight;
             z += Math.sin(lat) * weight;
-            totalWeight += weight;
         }
 
         const lon = Math.atan2(y, x) * 180 / Math.PI;
         const lat = Math.atan2(z, Math.hypot(x, y)) * 180 / Math.PI;
-        const accuracyM = Math.max(
-            policy.combinedAccuracyFloorM,
-            best.accuracyM / Math.sqrt(agreeing.length),
-            Math.sqrt(1 / totalWeight),
-        );
+        // Device callbacks can repeat or correlate the same measurement, so
+        // averaging positions must not make the reported accuracy look finer.
+        const accuracyM = Math.max(policy.reportedAccuracyFloorM, best.accuracyM);
         return { ...best, lat, lon, accuracyM };
     };
 
