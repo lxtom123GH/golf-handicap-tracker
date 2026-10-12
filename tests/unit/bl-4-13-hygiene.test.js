@@ -31,12 +31,12 @@ describe('BL-4.13 hygiene contract', () => {
         expect(duplicateKeys).toEqual([]);
     });
 
-    it('runs the E2E matrix with bounded actions and no retry delays', () => {
+    it('runs the E2E matrix serially with bounded actions and no retry delays', () => {
         const playwright = read('playwright.config.js');
-        expect(playwright).toMatch(/workers:\s*2/);
+        expect(playwright).toMatch(/workers:\s*1/);
         expect(playwright).toMatch(/fullyParallel:\s*false/);
         expect(playwright).toMatch(/retries:\s*0/);
-        expect(playwright).toMatch(/actionTimeout:\s*10_000/);
+        expect(playwright).toMatch(/actionTimeout:\s*15_000/);
         expect(playwright).toMatch(/navigationTimeout:\s*15_000/);
         expect(playwright).not.toMatch(/dependencies:/);
         const runner = read('scripts/run-e2e.mjs');

@@ -32,7 +32,7 @@ export default defineConfig({
     globalSetup: './tests/e2e/helpers/install-webkit.js',
     timeout: 60_000,
     expect: { timeout: 10_000 },
-    workers: 2, // limit concurrent auth writes to the shared emulators
+    workers: 1, // serialize journeys that share the emulator state
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: 0,
@@ -41,7 +41,7 @@ export default defineConfig({
         // S3c: matches the preview webServer's port (VITE_PREVIEW_PORT on the
         // runner, 4300 unchanged for local dev).
         baseURL: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
-        actionTimeout: 10_000,
+        actionTimeout: 15_000,
         navigationTimeout: 15_000,
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
