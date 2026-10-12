@@ -1,5 +1,5 @@
 // ========================================================================
-// golden-paths-300.spec.js — score, recover offline, and approve a new user
+// Round journeys: score, recover offline, and approve a new user
 // ========================================================================
 // Emulator-only end-to-end coverage for the core round journeys. Registration fixtures and
 // Firestore reads use the existing emulator helper; all journeys go through
