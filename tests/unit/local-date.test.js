@@ -20,9 +20,8 @@
 // serverTimestamp() instead.
 //
 // Date's local fields are supplied by a small IANA-timezone fixture instead
-// of mutating process.env.TZ. Runtime TZ changes are not consistent across
-// Node versions and operating systems, while the production code needs local
-// date behavior to be tested independently of the machine's timezone.
+// of mutating process.env.TZ. That keeps these expectations independent of
+// the runner's process timezone and the machine's configured timezone.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
