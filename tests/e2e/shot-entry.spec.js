@@ -87,7 +87,7 @@ test('with no saved choice, a round defaults to Map first and logs on the map', 
     await expect(page.locator('#oncourse-wizard')).toHaveClass(/map-first/, { timeout: 15_000 });
 });
 
-test('S12 E: Both is the map-and-grids layout (Ashgrove)', async ({ page }) => {
+test('Both is the map-and-grids layout (Ashgrove)', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
     await registerFreshUser(page);
     await startAshgroveRound(page);
