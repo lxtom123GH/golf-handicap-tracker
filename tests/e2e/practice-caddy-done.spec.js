@@ -1,7 +1,13 @@
 // practice-caddy-done.spec.js — a finished Caddy plan closes with one Done
 // tap; no star rating (simplify 2026-10-07, E38).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs, FIRESTORE_PORT } from './helpers/emulator.js';
+import {
+    seedPreapprovedEmail,
+    throwawayEmail,
+    findDocs,
+    FIRESTORE_PORT,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PROJECT = 'golf-handicap-tracker-b677c'; // as helpers/emulator.js
 
@@ -21,8 +27,7 @@ test('ticking the last step shows one Done; Done closes the plan', async ({ page
     await page.locator('#auth-name').fill('Caddy Done');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     let user;
     for (let i = 0; i < 50 && !user; i++) {

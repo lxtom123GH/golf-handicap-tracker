@@ -30,17 +30,19 @@ const KEPERRA_FIRST_TEE = { latitude: -27.4136, longitude: 152.9465 };
 export default defineConfig({
     testDir: 'tests/e2e',
     globalSetup: './tests/e2e/helpers/install-webkit.js',
-    timeout: 90_000,
-    workers: 1, // auth + Firestore emulators are shared across all projects
-    fullyParallel: false, // shared emulator state — keep journeys sequential
-    workers: 1,
+    timeout: 60_000,
+    expect: { timeout: 10_000 },
+    workers: 1, // serialize journeys that share the emulator state
+    fullyParallel: false,
     forbidOnly: !!process.env.CI,
-    retries: 1,
+    retries: 0,
     reporter: [['list']],
     use: {
         // S3c: matches the preview webServer's port (VITE_PREVIEW_PORT on the
         // runner, 4300 unchanged for local dev).
         baseURL: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
+        actionTimeout: 15_000,
+        navigationTimeout: 15_000,
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
     },
@@ -68,6 +70,8 @@ export default defineConfig({
             },
         },
         {
+            // The test:e2e runner starts this GPS project in its own
+            // Playwright process after Chromium projects have stopped.
             name: 'iphone-webkit',
             testMatch: '**/keperra-west-round.spec.js',
             use: {
@@ -87,7 +91,7 @@ export default defineConfig({
             // S3c: EMU_CONFIG lets the runner point at firebase.ci.json (high
             // ports) so CI never collides with a dev's emulator; the ports are
             // echoed to the app build via VITE_EMU_* and to tests via EMU_*.
-            command: 'npx firebase emulators:start --only auth,firestore' + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
+            command: 'npx firebase emulators:start --only auth,firestore --log-verbosity SILENT' + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
             url: `http://127.0.0.1:${process.env.EMU_AUTH_PORT || 9099}`,
             reuseExistingServer: true,
             timeout: 120_000,

@@ -6,7 +6,7 @@
 // "a newer build shipped while the app was open".
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -18,8 +18,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('Update E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 }
 
 /** The commit the served bundle was built from: the footer's last token. */

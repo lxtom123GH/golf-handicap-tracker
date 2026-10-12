@@ -3,7 +3,7 @@
 // card's buttons kept every earlier mount's listeners.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -32,8 +32,7 @@ test('mapper: close with ✕, open again, and it works once (no stacked buttons)
     await page.locator('#auth-name').fill('Mapper Reopen');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     await openMapper(page);
     await page.locator('#btn-mapper-exit').click();
