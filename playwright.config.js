@@ -4,8 +4,9 @@
 // ==========================================================================
 //
 // `npm run test:e2e`. Boots the Firebase auth+firestore emulators and a
-// production `vite preview` build itself (reuseExistingServer: an already
-// running emulator suite / preview server is picked up, not fought).
+// production `vite preview` build itself. reuseExistingServer is false: a
+// server already on those ports makes the run fail fast instead of being
+// trusted (stop it, or pick other ports with scripts/run-e2e-isolated.mjs).
 //
 // The app's environment sniffer (firebase-config.js) routes localhost to the
 // emulators, so specs register brand-new throwaway users through the real UI.
@@ -23,6 +24,16 @@
 // course.
 
 import { defineConfig, devices } from '@playwright/test';
+import { E2E_PROJECT_ID, DENY_EXTERNAL_HOSTS_ARG, assertEmulatorEnvIsLoopback } from './tests/e2e/helpers/e2e-safety.js';
+
+// Demo-only harness (fleet/e2e-demo-only): the emulators run the OFFLINE
+// demo- project the app uses on localhost (src/emulator-project.js), every
+// host is loopback, an already-listening server is never silently reused
+// (it could be anything, e.g. a dev emulator on the real project id), and
+// Chromium resolves no external hostname. Pinned by
+// tests/unit/e2e-demo-safety.test.js.
+assertEmulatorEnvIsLoopback();
+const DENY_EXTERNAL = { launchOptions: { args: [DENY_EXTERNAL_HOSTS_ARG] } };
 
 // Keperra GC, Brisbane — near the clubhouse/1st tee.
 const KEPERRA_FIRST_TEE = { latitude: -27.4136, longitude: 152.9465 };
@@ -51,6 +62,7 @@ export default defineConfig({
                 ...devices['Pixel 7'],
                 permissions: ['geolocation'],
                 geolocation: KEPERRA_FIRST_TEE,
+                ...DENY_EXTERNAL,
             },
         },
         {
@@ -65,6 +77,7 @@ export default defineConfig({
                 viewport: { width: 375, height: 667 },
                 permissions: ['geolocation'],
                 geolocation: KEPERRA_FIRST_TEE,
+                ...DENY_EXTERNAL,
             },
         },
         {
@@ -79,7 +92,7 @@ export default defineConfig({
         },
         {
             name: 'desktop',
-            use: { ...devices['Desktop Chrome'] },
+            use: { ...devices['Desktop Chrome'], ...DENY_EXTERNAL },
         },
     ],
     webServer: [
@@ -87,15 +100,15 @@ export default defineConfig({
             // S3c: EMU_CONFIG lets the runner point at firebase.ci.json (high
             // ports) so CI never collides with a dev's emulator; the ports are
             // echoed to the app build via VITE_EMU_* and to tests via EMU_*.
-            command: 'npx firebase emulators:start --only auth,firestore' + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
+            command: `npx firebase emulators:start --only auth,firestore --project ${E2E_PROJECT_ID}` + (process.env.EMU_CONFIG ? ` --config ${process.env.EMU_CONFIG}` : ''),
             url: `http://127.0.0.1:${process.env.EMU_AUTH_PORT || 9099}`,
-            reuseExistingServer: true,
+            reuseExistingServer: false,
             timeout: 120_000,
         },
         {
             command: `npm run build && npx vite preview --port ${process.env.VITE_PREVIEW_PORT || 4300} --strictPort`,
             url: `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`,
-            reuseExistingServer: true,
+            reuseExistingServer: false,
             timeout: 180_000,
         },
     ],
