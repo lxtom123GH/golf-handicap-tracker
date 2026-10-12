@@ -143,7 +143,7 @@ describe('GPS capture role — start or finish of this shot', () => {
         expect(ctl.markers).toEqual([]);
     });
 
-    it('shot 2 logged near the previous finish (6 m): the old S4 chain', async () => {
+    it('shot 2 logged near the previous finish (6 m)', async () => {
         AppState.currentHoleShots = [prevShot()];
         startNewShotInput();
         await mounted();
