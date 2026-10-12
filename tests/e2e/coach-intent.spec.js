@@ -3,7 +3,7 @@
 // importing it, and the ReferenceError was swallowed by a try/catch.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs, FIRESTORE_PORT, PROJECT_ID } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, findDocs, FIRESTORE_PORT, PROJECT_ID, verifyEmulatorEmail } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const DOCS = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
@@ -17,6 +17,9 @@ async function register(page, name, prefix) {
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
     let user;
     for (let i = 0; i < 50 && !user; i++) {
