@@ -11,12 +11,16 @@
 //     of killing the watcher, so the new fix arrives.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
+import {
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    seedPreapprovedEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 import { GPS_POLICY } from '../../src/gps-capture.js';
 
-// Keep this spec pinned to the map-and-grids layout it exercises.
-// map-and-grids 'both' layout it was written for, so it pins that preference;
-// Map first's own coverage lives in map-first*.spec.js and map-follow.spec.js.
+// This spec covers map-and-grids controls; map-first behavior is covered separately.
 test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
 });
@@ -35,11 +39,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('E2E Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
-    await verifyEmulatorEmail(email);
-    await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 
@@ -220,8 +220,7 @@ test('S9: flight unseen logs endpoint-only and reopens with the GPS finish, no c
     // from the users collection by the throwaway email, then take that
     // user's newest endpoint-only shot 1 — never a stale document.
     const fsPort = FIRESTORE_PORT;
-    const shotId = await page.evaluate(async ({ email, fsPort }) => {
-        const project = 'golf-handicap-tracker-b677c';
+    const shotId = await page.evaluate(async ({ email, fsPort, project }) => {
         const base = (path) => `http://127.0.0.1:${fsPort}/v1/projects/${project}/databases/(default)/documents/${path}`;
         const headers = { Authorization: 'Bearer owner' };
         // Query, never list: a persistent emulator holds hundreds of users and
@@ -247,7 +246,7 @@ test('S9: flight unseen logs endpoint-only and reopens with the GPS finish, no c
             })
             .sort((a, b) => (b.fields.timestamp?.stringValue || '').localeCompare(a.fields.timestamp?.stringValue || ''));
         return mine.length ? mine[0].name.split('/').pop() : null;
-    }, { email, fsPort });
+    }, { email, fsPort, project: PROJECT_ID });
     expect(shotId, 'the endpoint-only shot document exists').toBeTruthy();
 
     // Cancel shot 2 and reopen shot 1 through the app's own re-entry.

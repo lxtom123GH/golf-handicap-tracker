@@ -7,11 +7,9 @@
 // Done returns to the wizard with the curve drawn.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
-// Keep this spec pinned to the map-and-grids layout it exercises.
-// map-and-grids 'both' layout it was written for, so it pins that preference;
-// Map first's own coverage lives in map-first*.spec.js and map-follow.spec.js.
+// This spec covers map-and-grids controls; map-first behavior is covered separately.
 test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
 });
@@ -26,11 +24,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('E2E Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
-    await verifyEmulatorEmail(email);
-    await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 }
 
 async function startDetailedRound(page) {
@@ -69,6 +63,7 @@ test('S12 B: draw mode re-mounts full height, auto-extends past the frame, Done 
     await expect(section).toBeVisible({ timeout: 10_000 });
     const canvas = page.locator('#shot-line-canvas');
     await expect(canvas).toHaveAttribute('data-view-mode', 'shot', { timeout: 15_000 });
+    await expect(canvas).toHaveAttribute('data-start', /.+/, { timeout: 15_000 });
     const hWizard = (await canvas.boundingBox()).height;
 
     // Enter draw mode: the card carries the class, Done appears, Draw hides.
@@ -81,6 +76,7 @@ test('S12 B: draw mode re-mounts full height, auto-extends past the frame, Done 
     // is the tall full-screen mount before measuring or drawing.
     await expect.poll(async () => (await canvas.boundingBox())?.height ?? 0, { timeout: 5000 })
         .toBeGreaterThan((hWizard) + 100);
+    await expect(canvas).toHaveAttribute('data-start', /.+/, { timeout: 15_000 });
     const hDraw = (await canvas.boundingBox()).height;
     expect(hDraw).toBeGreaterThan(hWizard + 100); // the map got genuinely bigger
 
@@ -99,11 +95,8 @@ test('S12 B: draw mode re-mounts full height, auto-extends past the frame, Done 
     const mpp0 = Number(await canvas.getAttribute('data-mpp'));
     await swipe(page, canvas, [0.5, 0.85], [0.5, 0.01]);
     await expect(canvas).toHaveAttribute('data-view-mode', 'shot');
-    // The re-frame animates over ~200 ms — wait it out; the frame must have
-    // grown (mpp up) and the auto-extend marker must be set.
-    await page.waitForTimeout(400);
-    const mpp1 = Number(await canvas.getAttribute('data-mpp'));
-    expect(mpp1).toBeGreaterThan(mpp0);
+    await expect.poll(async () => Number(await canvas.getAttribute('data-mpp')), { timeout: 5_000 })
+        .toBeGreaterThan(mpp0);
     await expect(page.locator('#line-readout')).toContainText(/Intended (2[6-9]\d|[3-9]\d\d) m/);
 
     // Done: back to the wizard, the curve drawn (the readout still reports it).

@@ -22,7 +22,7 @@
 // real UI. Anything that breaks either half fails here, by name.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail, findDocs, readDoc } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -55,11 +55,31 @@ function watchForPermissionDenied(page) {
 }
 
 async function verifyInvitedSignup(page, email) {
+    const gateEvents = [];
+    page.on('console', message => {
+        const text = message.text();
+        if (text.startsWith('[Auth] User doc not found')) gateEvents.push('user-document-not-found');
+        else if (text.startsWith('[Auth] User approved')) gateEvents.push('user-approved');
+        else if (text.startsWith('[Auth] User not approved')) gateEvents.push('user-not-approved');
+        else if (text.startsWith('Auth read failed')) gateEvents.push('auth-read-failed');
+        else if (text.startsWith('[Auth] Email verification refresh failed')) gateEvents.push('verification-refresh-failed');
+    });
     await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('#auth-pending-heading')).toHaveText('Check your inbox to finish joining');
-    await verifyEmulatorEmail(email);
+    let userDoc;
+    await expect.poll(async () => {
+        [userDoc] = await findDocs('users', 'email', email);
+        return userDoc?._id || null;
+    }, { timeout: 10_000, message: 'Signup must finish writing its user document before verification' })
+        .toBeTruthy();
+    expect(await readDoc(`preapproved_emails/${email}`), 'invited signup must have an invite fixture').toBeTruthy();
+    expect(await verifyEmulatorEmail(email), 'verified account must match its Firestore document').toBe(userDoc._id);
     await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    try {
+        await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    } catch (error) {
+        throw new Error(`${error.message}\nAuth gate events: ${gateEvents.join(', ') || 'none'}`);
+    }
     await expect(page.locator('#auth-pending')).toBeHidden();
 }
 

@@ -5,7 +5,7 @@
 // dock; shot 2's lie and a holed putt recorded WITHOUT tapping Details.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -47,11 +47,7 @@ test('D32 Map-first dock: ✕, Penalty, Details and Save plan on the map; lie an
     await page.locator('#auth-name').fill('Map Dock');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
-    await verifyEmulatorEmail(email);
-    await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();
@@ -68,7 +64,7 @@ test('D32 Map-first dock: ✕, Penalty, Details and Save plan on the map; lie an
     await expect(wizard).toHaveClass(/map-first/);
     const canvas = page.locator('#shot-line-canvas');
     await expect(canvas).toHaveAttribute('data-start', /.+/, { timeout: 15_000 });
-    await page.waitForTimeout(4600); // the round-start wake toast floats over the map
+    await expect(page.locator('.app-toast')).toHaveCount(0, { timeout: 5_000 });
     const vp = page.viewportSize();
 
     // The top bar: ✕ left, Details right; Penalty on the map. All tappable.

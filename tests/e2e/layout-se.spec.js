@@ -21,11 +21,14 @@
 
 import { test, expect } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { seedPreapprovedEmail, seedStrategyPeriodsByEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
+import {
+    seedPreapprovedEmail,
+    seedStrategyPeriodsByEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
-// Keep this layout check pinned to the map-and-grids mode it measures.
-// map-and-grids 'both' layout it was written for, so it pins that preference
-// (a test that sets its own choice still wins: this only fills an empty slot).
+// This spec measures map-and-grids layout; map-first behavior is covered separately.
 test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
 });
@@ -41,11 +44,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('E2E Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
-    await verifyEmulatorEmail(email);
-    await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 
