@@ -19,9 +19,10 @@
 // has a required Date Played that nothing read, and addRound stamped
 // serverTimestamp() instead.
 //
-// The zone is switched per test via process.env.TZ (Node re-reads it on
-// assignment) and restored afterwards; Date alone is faked, so timers used by
-// the modules under test still run for real.
+// Date's local fields are supplied by a small IANA-timezone fixture instead
+// of mutating process.env.TZ. Runtime TZ changes are not consistent across
+// Node versions and operating systems, while the production code needs local
+// date behavior to be tested independently of the machine's timezone.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -64,19 +65,119 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('firebase/functions', () => ({ httpsCallable: vi.fn() }));
 vi.mock('../../src/notifications.js', () => ({ initNotifications: vi.fn() }));
 
-const ORIGINAL_TZ = process.env.TZ;
+const NativeDate = globalThis.Date;
+let FakeDateBase = null;
+let testTimeZone = null;
+
+function zonedParts(epoch) {
+    const date = new FakeDateBase(epoch);
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: testTimeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(({ type, value }) => [type, Number(value)]));
+    return {
+        year: values.year,
+        month: values.month,
+        day: values.day,
+        hour: values.hour,
+        minute: values.minute,
+        second: values.second,
+        millisecond: date.getUTCMilliseconds(),
+    };
+}
+
+function wallClockEpoch({ year, month, day, hour = 0, minute = 0, second = 0, millisecond = 0 }) {
+    const date = new FakeDateBase(0);
+    date.setUTCFullYear(year, month - 1, day);
+    date.setUTCHours(hour, minute, second, millisecond);
+    return date.getTime();
+}
+
+function epochForZonedWallClock(parts) {
+    const targetWallClock = wallClockEpoch(parts);
+    let epoch = targetWallClock;
+    // Correct the UTC guess by the zone's offset. A second pass handles the
+    // offset change at daylight-saving boundaries without relying on host TZ.
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const observedWallClock = wallClockEpoch(zonedParts(epoch));
+        const correction = targetWallClock - observedWallClock;
+        epoch += correction;
+        if (correction === 0) break;
+    }
+    return epoch;
+}
+
+function dateClassForTestZone(BaseDate) {
+    return class ZonedDate extends BaseDate {
+        constructor(...args) {
+            if (testTimeZone && args.length >= 2) {
+                const [year, month, day = 1, hour = 0, minute = 0, second = 0, millisecond = 0] = args;
+                const normalized = new BaseDate(0);
+                normalized.setUTCFullYear(Number(year) < 100 ? Number(year) + 1900 : Number(year), Number(month), Number(day));
+                normalized.setUTCHours(Number(hour), Number(minute), Number(second), Number(millisecond));
+                super(epochForZonedWallClock({
+                    year: normalized.getUTCFullYear(),
+                    month: normalized.getUTCMonth() + 1,
+                    day: normalized.getUTCDate(),
+                    hour: normalized.getUTCHours(),
+                    minute: normalized.getUTCMinutes(),
+                    second: normalized.getUTCSeconds(),
+                    millisecond: normalized.getUTCMilliseconds(),
+                }));
+                return;
+            }
+            super(...args);
+        }
+
+        getFullYear() { return zonedParts(this.getTime()).year; }
+        getMonth() { return zonedParts(this.getTime()).month - 1; }
+        getDate() { return zonedParts(this.getTime()).day; }
+        getDay() { return new FakeDateBase(wallClockEpoch(zonedParts(this.getTime()))).getUTCDay(); }
+        getHours() { return zonedParts(this.getTime()).hour; }
+        getMinutes() { return zonedParts(this.getTime()).minute; }
+        getSeconds() { return zonedParts(this.getTime()).second; }
+        getMilliseconds() { return zonedParts(this.getTime()).millisecond; }
+
+        getTimezoneOffset() {
+            return (this.getTime() - wallClockEpoch(zonedParts(this.getTime()))) / 60_000;
+        }
+
+        setFullYear(year, month, day) {
+            const current = zonedParts(this.getTime());
+            return this.setTime(epochForZonedWallClock({
+                ...current,
+                year: Number(year),
+                month: month === undefined ? current.month : Number(month) + 1,
+                day: day === undefined ? current.day : Number(day),
+            }));
+        }
+    };
+}
 
 /** Run `fn` as if the browser sat in `tz` at the instant `iso`. */
 function at(tz, iso, fn) {
-    process.env.TZ = tz;
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(iso));
+    if (!vi.isFakeTimers()) {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        FakeDateBase = globalThis.Date;
+    }
+    testTimeZone = tz;
+    globalThis.Date = dateClassForTestZone(FakeDateBase);
+    vi.setSystemTime(new FakeDateBase(iso));
     return fn();
 }
 
 afterEach(() => {
     vi.useRealTimers();
-    process.env.TZ = ORIGINAL_TZ;
+    globalThis.Date = NativeDate;
+    FakeDateBase = null;
+    testTimeZone = null;
 });
 
 // --------------------------------------------------------------------------
