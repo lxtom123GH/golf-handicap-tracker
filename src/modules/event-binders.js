@@ -402,6 +402,21 @@ export function bindShotWizard() {
 }
 
 export function bindSetupToggles() {
+    const startHole = document.getElementById('oc-start-hole');
+    const renderStartHoleOptions = () => {
+        if (!startHole) return;
+        const old = parseInt(startHole.value, 10) || 1;
+        const total = AppState.currentRoundHoles === 18 ? 18 : 9;
+        startHole.replaceChildren(...Array.from({ length: total }, (_, index) => {
+            const hole = index + 1;
+            const option = document.createElement('option');
+            option.value = String(hole);
+            option.textContent = `Hole ${hole}`;
+            return option;
+        }));
+        startHole.value = String(Math.min(old, total));
+    };
+
     if (UI.btnModeSimple && UI.btnModeDetailed) {
         UI.btnModeSimple.addEventListener('click', () => {
             AppState.currentTrackingMode = 'simple';
@@ -437,6 +452,7 @@ export function bindSetupToggles() {
             UI.btnRound18.style.background = 'white';
             UI.btnRound18.style.color = '#64748b';
             applyRoundTypeToCourseList();
+            renderStartHoleOptions();
         });
         UI.btnRound18.addEventListener('click', () => {
             AppState.currentRoundHoles = 18;
@@ -447,11 +463,13 @@ export function bindSetupToggles() {
             UI.btnRound9.style.background = 'white';
             UI.btnRound9.style.color = '#64748b';
             applyRoundTypeToCourseList();
+            renderStartHoleOptions();
         });
         // Apply once at bind time: 9 Holes is the shipped default in the
         // markup, so an unfiltered list is what a player who never touches
         // the toggle sees.
         applyRoundTypeToCourseList();
+        renderStartHoleOptions();
     }
 }
 
@@ -731,6 +749,9 @@ export function bindStartRound() {
                 return;
             }
             const roundHoles = holesForPar(totalPar);
+            const requestedStartHole = parseInt(document.getElementById('oc-start-hole')?.value, 10);
+            const startHole = Number.isInteger(requestedStartHole) && requestedStartHole >= 1 && requestedStartHole <= roundHoles
+                ? requestedStartHole : 1;
             const dhOverrideEl = document.getElementById('oc-dh-override');
             const resolvedPlayers = [];
 
@@ -772,14 +793,15 @@ export function bindStartRound() {
 
             AppState.currentRoundDate = (dateInput && dateInput.value) ? dateInput.value : localToday();
 
-            AppState.currentHole = 1;
+            AppState.currentRoundHoles = roundHoles;
+            AppState.currentRoundStartHole = startHole;
+            AppState.currentHole = startHole;
             AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
 
             // F-2: the holes the Daily Handicap is computed for ARE the round's
             // holes. Derived from the par actually being played so the toggle,
             // the course record and the stroke chart cannot disagree.
-            AppState.currentRoundHoles = roundHoles;
             mutateList('liveRoundGroups', list => {
                 for (let i = 0; i < list.length; i++) {
                     const player = list[i];
@@ -839,8 +861,10 @@ export function bindStartRound() {
             // Owner feedback 2026-07-05: a Detailed round exists to track
             // shots — open the wizard for the first shot automatically
             // instead of demanding a "Track my shot" tap.
+            // One-tap logging (Map first on the play map) logs on the map
+            // itself: no wizard over it.
             if (AppState.currentTrackingMode === 'detailed') {
-                import('./score-input.js').then(m => m.startNewShotInput());
+                import('./score-input.js').then(m => { if (!m.quickLogWanted()) m.startNewShotInput(); });
             }
         };
 

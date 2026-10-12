@@ -30,7 +30,9 @@ vi.mock('../../src/hole-overlay.js', () => ({
     loadCourseOverlay: vi.fn(async () => h.overlay),
     mountHoleOverlay: vi.fn((canvas, hole, opts) => {
         const ctl = {
-            destroy: vi.fn(), setStartMarker: vi.fn(), setViewMode: vi.fn(), opts, hole,
+            destroy: vi.fn(), setStartMarker: vi.fn(), setViewMode: vi.fn(),
+            setReadOnly: vi.fn(), setMode: vi.fn(), setAnchor: vi.fn(), setCurves: vi.fn(),
+            opts, hole,
             frame: { origin: [0, 0], bearing: 0 }, greenXY: [0, 380],
         };
         h.mounts.push(ctl);
@@ -60,6 +62,15 @@ function dom() {
     document.body.className = '';
     document.body.innerHTML = `
       <div id="oc-play-map" class="hidden"><canvas></canvas></div>
+      <button id="btn-play-settings" aria-expanded="false"></button>
+      <div id="play-settings-scrim" class="hidden"></div>
+      <section id="play-settings-sheet" class="hidden" role="dialog">
+        <select id="play-shot-entry"><option value="both">Both</option><option value="map">Map first</option></select>
+        <button id="play-setting-gps" role="switch"></button>
+        <button id="play-setting-awake" role="switch"></button>
+        <button id="play-setting-rotate" role="switch"></button>
+        <button id="play-settings-close"></button>
+      </section>
       <div id="oc-exit-bar"></div>
       <div id="play-rail-left">
         <div id="play-slot-gps"></div>
@@ -80,6 +91,9 @@ function dom() {
         <button id="btn-play-gps"></button>
       </div>
       <button id="btn-toggle-gps"></button>
+      <select id="shot-entry-select"><option value="both">Both</option><option value="map">Map first</option></select>
+      <button class="wakelock-toggle" id="wake-round"></button>
+      <input type="checkbox" id="rotate-map-toggle">
       <div id="oc-bottom-nav"><button id="btn-play-routine"></button></div>
       <input type="checkbox" id="play-mode-toggle" checked>
       <input type="number" id="play-reach" value="230">`;
@@ -116,10 +130,44 @@ beforeEach(() => {
     h.gpsOn = false;
     h.lastFix = null;
     localStorage.clear();
+    // These cover the classic play map (shot entry 'both'). Map first adds
+    // one-tap logging on the map (body.play-quick: one-club strip, start
+    // from the last finish), covered in quick-log*.test.js and
+    // one-tap-logging.spec.js. Pinned so the Map-first default
+    // doesn't silently switch these tests to the one-tap layout.
+    h.AppState.shotEntry = 'both';
     dom();
 });
 
 describe('play mode module', () => {
+    it('opens the glass settings sheet and forwards changes through the existing setting controls', async () => {
+        const sourceEntry = $('shot-entry-select');
+        sourceEntry.addEventListener('change', () => { h.AppState.shotEntry = sourceEntry.value; });
+        $('btn-toggle-gps').addEventListener('click', () => { h.gpsOn = !h.gpsOn; });
+        $('wake-round').addEventListener('click', () => $('wake-round').classList.toggle('active'));
+        $('rotate-map-toggle').addEventListener('change', () => {
+            h.AppState.rotateMap = $('rotate-map-toggle').checked;
+        });
+
+        await on({ shotEntry: 'both', rotateMap: false });
+        $('btn-play-settings').click();
+        expect($('play-settings-sheet').classList.contains('hidden')).toBe(false);
+        expect($('btn-play-settings').getAttribute('aria-expanded')).toBe('true');
+
+        $('play-shot-entry').value = 'map';
+        $('play-shot-entry').dispatchEvent(new Event('change', { bubbles: true }));
+        expect(sourceEntry.value).toBe('map');
+        expect(h.AppState.shotEntry).toBe('map');
+
+        $('play-setting-gps').click();
+        expect(h.gpsOn).toBe(true);
+        $('play-setting-awake').click();
+        expect($('wake-round').classList.contains('active')).toBe(true);
+        $('play-setting-rotate').click();
+        expect($('rotate-map-toggle').checked).toBe(true);
+        expect(h.AppState.rotateMap).toBe(true);
+    });
+
     it('turns on with the round on a mapped course: physical hole, read-only, full-screen, outline, shot view', async () => {
         await on();
         expect(document.body.classList.contains('play-mode')).toBe(true);

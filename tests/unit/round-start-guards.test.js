@@ -69,6 +69,7 @@ beforeEach(() => {
         <div id="oncourse-setup"></div><div id="oncourse-hub"></div>
         <select id="oc-course-select"><option value="A">A</option><option value="B">B</option></select>
         <select id="oc-tee-select"><option value="T">T</option></select>
+        <select id="oc-start-hole">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}">Hole ${i + 1}</option>`).join('')}</select>
         <div id="oc-dh-value"></div><input id="oc-dh-override" value="">`;
     mocks.ui.btnOcStart = document.createElement('button');
     mocks.ui.ocPlayerSelect = null;
@@ -77,6 +78,9 @@ beforeEach(() => {
     mocks.ui.ocLinkComp = null;
     mocks.appState.currentUser = { uid: 'host-uid' };
     mocks.appState.liveRoundGroups = [group('host-uid', 'Host')];
+    mocks.appState.currentHole = 1;
+    mocks.appState.currentRoundStartHole = 1;
+    mocks.appState.currentRoundHoles = 9;
     mocks.appState.currentTrackingMode = 'detailed';
     mocks.oncourse.getPlayerHandicap.mockReset();
     mocks.oncourse.updateModeVisibility = vi.fn();
@@ -93,6 +97,14 @@ beforeEach(() => {
 });
 
 describe('Start Round runs one at a time', () => {
+    it('starts at the selected course hole and records that as the round order origin', async () => {
+        document.getElementById('oc-start-hole').value = '10';
+        await bindStartRound()();
+        expect(mocks.appState.currentRoundHoles).toBe(18);
+        expect(mocks.appState.currentRoundStartHole).toBe(10);
+        expect(mocks.appState.currentHole).toBe(10);
+    });
+
     it('a second tap while the first is resolving handicaps does not start a second round', async () => {
         let release;
         mocks.oncourse.getPlayerHandicap.mockImplementation(() => new Promise(r => { release = r; }));

@@ -10,6 +10,7 @@ import { escapeHtml } from '../escape.js';
 import { STARTER_BAG, hasSavedBag } from '../bag.js';
 import { girOf, fairwayHit } from '../play-mode.js';
 import { computeSkins, computeMatchPlay, computeNassau, sideGameUnavailableReason } from '../side-games.js';
+import { holeOrder } from '../round-hole-order.js';
 
 /**
  * Task 3: Live Leaderboard Logic
@@ -34,7 +35,7 @@ export function updateLiveLeaderboard() {
         let pts = 0;
         let thru = 0;
         const blocked = scoringUnavailableReason(strokeIndex, p.dailyHandicap);
-        for (let h = 1; h <= AppState.currentRoundHoles; h++) {
+        for (const h of holeOrder(AppState.currentRoundHoles || 18, AppState.currentRoundStartHole || 1)) {
             const gross = p.scores[h];
             if (gross > 0) {
                 thru = h;
@@ -426,13 +427,15 @@ export function renderHoleJumper() {
     const container = document.getElementById('hole-jumper-container');
     if (!container) return;
     const total = AppState.currentRoundHoles || 9;
+    const order = holeOrder(total, AppState.currentRoundStartHole || 1);
+    const activePosition = order.indexOf(AppState.currentHole);
     container.innerHTML = '';
     for (let i = 1; i <= total; i++) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = i;
         const isCurrent = i === AppState.currentHole;
-        const isDone = i < AppState.currentHole;
+        const isDone = order.indexOf(i) < activePosition;
         // S12 A4: 56 px snap cells — the strip is a swipe, cells land centred.
         const baseStyle = 'min-width:56px; height:56px; border-radius:50%; border:2px solid; font-weight:700; font-size:0.95rem; cursor:pointer; flex-shrink:0; scroll-snap-align:center;';
         if (isCurrent) {

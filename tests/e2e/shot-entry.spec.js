@@ -67,7 +67,25 @@ test('S12 E: Tap buttons mode hides the map, keeps the grids (Ashgrove)', async 
     await expect(page.locator('#section-miss-pattern')).toBeVisible();
 });
 
-test('S12 E: default Both is the shipped layout (Ashgrove)', async ({ page }) => {
+test('SR-11: with no saved choice, a round is on Map first (the default since 2026-10-11) and logs on the map', async ({ page }) => {
+    await registerFreshUser(page);
+    await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
+    await page.locator('#btn-mode-detailed').click();
+    await page.locator('#btn-round-18').click();
+    await page.locator('#oc-course-select').selectOption({ label: 'Ashgrove GC' });
+    await page.locator('#btn-oc-start').click();
+    expect(await page.evaluate(() => localStorage.getItem('golf.shotEntry'))).toBeNull();
+    await expect(page.locator('#shot-entry-select')).toHaveValue('map');
+    // One-tap logging: a Map first round on a mapped course logs on the play
+    // map (no wizard over it); Track still opens the Map first wizard.
+    await expect(page.locator('body')).toHaveClass(/play-quick/, { timeout: 15_000 });
+    await expect(page.locator('#oncourse-wizard')).toBeHidden();
+    await page.locator('#btn-oc-track-shot').click();
+    await expect(page.locator('#oncourse-wizard')).toHaveClass(/map-first/, { timeout: 15_000 });
+});
+
+test('S12 E: Both is the map-and-grids layout (Ashgrove)', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
     await registerFreshUser(page);
     await startAshgroveRound(page);
     await expect(page.locator('#section-line')).toBeVisible();

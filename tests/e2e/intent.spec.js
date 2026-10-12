@@ -10,6 +10,13 @@
 import { test, expect } from '@playwright/test';
 import { FIRESTORE_PORT, throwawayEmail, seedPreapprovedEmail } from './helpers/emulator.js';
 
+// Keep this layout check pinned to the map-and-grids mode it measures.
+// map-and-grids 'both' layout it was written for, so it pins that preference
+// (a test that sets its own choice still wins: this only fills an empty slot).
+test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
+});
+
 const PASSWORD = 'e2e-password-1';
 
 async function registerFreshUser(page) {

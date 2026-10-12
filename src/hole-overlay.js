@@ -170,7 +170,7 @@ export function measureLabel({ fromBallM, toPinM }) {
     return `${Math.round(fromBallM)} m · ${Math.round(toPinM)} to pin`;
 }
 
-export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended', ghosts = null, ghostMode = 'intended', startMarker = null, finishDot = null, imagery = null, contextImagery = null, plan = null, focus = null, viewMode = null, onStartDrag = null, onChange, startXY = null, startMeasured = false, autoRotate = false, deflectArmed = null, onDeflectPlaced = null, readOnly = false, fill = false, fitInsets = null, featureStyle = 'solid' } = {}) {
+export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended', ghosts = null, ghostMode = 'intended', startMarker = null, finishDot = null, imagery = null, contextImagery = null, plan = null, focus = null, viewMode = null, onStartDrag = null, onChange, startXY = null, startMeasured = false, autoRotate = false, deflectArmed = null, onDeflectPlaced = null, readOnly = false, fill = false, fitInsets = null, featureStyle = 'solid', anchorFirst = false } = {}) {
     const tee = [hole.tee.lat, hole.tee.lon];
     const gc = [hole.green.centre.lat, hole.green.centre.lon];
     const frame = makeFrame(tee, gc);
@@ -823,8 +823,13 @@ export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended',
     // S12 A2: THE start point of this shot — the dragged marker if the
     // golfer moved it, else the passed startXY (metres), else none (the
     // curves then render as stored, e.g. old shots).
-    const anchorXY = () => (startMark.xy ? [...startMark.xy] : (startXY ? [startXY[0], startXY[1]] : null));
+    // One-tap logging (play map): the start dot is the shot chain's start
+    // (tee / last finish) and the GPS ring is "you" (where the ball finished),
+    // so anchorFirst lets startXY win over the marker.
+    const anchorXY = () => (anchorFirst && startXY ? [startXY[0], startXY[1]]
+        : (startMark.xy ? [...startMark.xy] : (startXY ? [startXY[0], startXY[1]] : null)));
     canvas.dataset.start = anchorXY() ? anchorXY().map(v => Math.round(v * 10) / 10).join(',') : '';
+    canvas.dataset.readOnly = String(!!readOnly);
 
     // Pointer capture: one finger draws; two fingers pinch/pan/rotate the
     // view (S12 C, gestures.js). The canvas has touch-action:none.
@@ -1147,6 +1152,16 @@ export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended',
             if (!liveXY || !followLive(liveXY)) redraw();
         },
         setMode(m) { state.mode = m; },
+        /** One-tap logging: the play map draws only while a Plan/Actual chip
+         * is armed; otherwise one finger pans (a stray touch never draws).
+         * Takes effect from the next touch. */
+        setReadOnly(on) { readOnly = !!on; canvas.dataset.readOnly = String(readOnly); },
+        /** One-tap logging: move the start dot new strokes are anchored to. */
+        setAnchor(xy) {
+            startXY = Array.isArray(xy) && xy.every(Number.isFinite) ? [xy[0], xy[1]] : null;
+            canvas.dataset.start = anchorXY() ? anchorXY().map(v => Math.round(v * 10) / 10).join(',') : '';
+            redraw();
+        },
         setCurves(c) { if (c.intended !== undefined) state.curves.intended = c.intended; if (c.actual !== undefined) state.curves.actual = c.actual; if (c.deflectAt !== undefined) state.curves.deflectAt = c.deflectAt; redraw(); },
         setPlan(p) { state.plan = p; redraw(); },
         // S7: apply ghost data/mode after an async query (mount-first design).

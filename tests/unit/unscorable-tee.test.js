@@ -437,6 +437,19 @@ describe('F-9 the live leaderboard does not disagree with the record', () => {
         expect(body.textContent).toContain('—');
         expect(body.textContent).not.toMatch(/\b1[0-9]\b/);
     });
+
+    it('reports the latest hole in play order after a late start wraps', async () => {
+        const AppState = await playNine({ course: 'Keperra - Old Course (9 holes)' });
+        AppState.currentRoundStartHole = 8;
+        AppState.currentHole = 1;
+        AppState.liveRoundGroups[0].scores = { 8: 5, 9: 6, 1: 5 };
+        document.body.insertAdjacentHTML('beforeend', '<table><tbody id="oc-leaderboard-tbody"></tbody></table>');
+        const { updateLiveLeaderboard } = await import('../../src/modules/card-render.js');
+
+        updateLiveLeaderboard();
+
+        expect(document.querySelector('#oc-leaderboard-tbody tr td:nth-child(3)').textContent).toBe('1');
+    });
 });
 
 describe('owner 2026-10-06: GIR is worked out from strokes and putts on the card', () => {
