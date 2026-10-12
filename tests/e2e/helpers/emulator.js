@@ -21,6 +21,15 @@
 import { expect } from '@playwright/test';
 import { E2E_PROJECT_ID, assertLoopbackHost } from './e2e-safety.js';
 
+/**
+ * Keep legacy round-flow specs on the wizard UI. Map-first behavior has its
+ * own E2E coverage; run this before the first navigation so AppState reads
+ * the intended per-device preference at boot.
+ */
+export async function pinLegacyShotEntry(page) {
+    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
+}
+
 // The offline demo project (src/emulator-project.js), never the real one.
 export const PROJECT_ID = E2E_PROJECT_ID;
 export function firestorePort(env = process.env) {

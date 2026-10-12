@@ -9,7 +9,7 @@
 // at is picked for a brand-new golfer.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup, pinLegacyShotEntry } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const OLD18 = 'Keperra - Old (1-18)';
@@ -17,6 +17,7 @@ const OLD18 = 'Keperra - Old (1-18)';
 async function registerFreshUser(page, prefix) {
     const email = throwawayEmail(prefix);
     await seedPreapprovedEmail(email);
+    await pinLegacyShotEntry(page);
     await page.goto('/');
     await page.locator('#btn-register').click();
     await page.locator('#auth-name').fill('Quick Start');
