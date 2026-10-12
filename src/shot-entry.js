@@ -3,7 +3,6 @@
 // ==========================================================================
 //
 // 'both' uses the map and button grids.
-//                     2026-10-11).
 // 'draw'            — the map stays; the intent/result button grids collapse
 //                     into Details disclosures (still there, closed).
 // 'buttons'         — the button grids stay; #section-line and the draw
