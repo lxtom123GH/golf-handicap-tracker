@@ -111,5 +111,6 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
         .filter(({ impact }) => impact === 'moderate')
         .map(({ id, nodes }) => ({ screen, id, targets: nodes.map(({ target }) => target) })));
     console.log(`[axe] moderate findings: ${JSON.stringify(moderate)}`);
+    expect(moderate.filter(({ id }) => id === 'meta-viewport'), 'mobile zoom must stay available').toEqual([]);
     expect(blocking, 'unresolved serious or critical axe findings').toEqual([]);
 });
