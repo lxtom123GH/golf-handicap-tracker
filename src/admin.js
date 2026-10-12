@@ -19,27 +19,31 @@ window.refreshAdminDashboard = async () => {
         snap.forEach(d => {
             const data = d.data();
             const tr = document.createElement('tr');
+            const userLabel = escapeHtml(`${data.displayName || 'User'} (${data.email || d.id})`);
             tr.innerHTML = `
-                <td>${escapeHtml(data.displayName || 'N/A')}</td>
-                <td>${escapeHtml(data.email)}</td>
+                <td class="admin-user-name">${escapeHtml(data.displayName || 'N/A')}</td>
+                <td class="admin-user-email">${escapeHtml(data.email)}</td>
                 <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
                 <td>
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
+                    <label class="toggle-switch admin-user-toggle">
+                        <span class="admin-user-field">Approved</span>
+                        <input type="checkbox" aria-label="Approve ${userLabel}" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
                 <td>
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${escapeHtml(d.id)}', this.checked)">
+                    <label class="toggle-switch admin-user-toggle">
+                        <span class="admin-user-field">Coach</span>
+                        <input type="checkbox" aria-label="Coach ${userLabel}" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
                 <td>
-                    <input type="number" min="0" step="100" aria-label="Video quota in MB"
+                    <label class="admin-user-quota"><span class="admin-user-field">Video quota (MB)</span>
+                    <input type="number" min="0" step="100" aria-label="Video quota in MB for ${userLabel}"
                         value="${Number(data.videoQuotaBytes) > 0 ? Math.round(data.videoQuotaBytes / (1024 * 1024)) : 500}"
                         style="width:80px;"
-                        onchange="setVideoQuota('${escapeHtml(d.id)}', this.value)">
+                        onchange="setVideoQuota('${escapeHtml(d.id)}', this.value)"></label>
                     <div style="font-size:0.7rem; color:#94a3b8;">${Math.round((Number(data.videoBytesUsed) || 0) / (1024 * 1024))} MB used</div>
                 </td>
             `;

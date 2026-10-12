@@ -3416,3 +3416,21 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     cursor: pointer;
     pointer-events: auto;
 }
+
+/* Task 099: user-specific controls remain usable without sideways scrolling. */
+.admin-user-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.admin-user-toggle input { width: 20px; height: 20px; margin: 0; flex: none; }
+.admin-user-quota { display: flex; flex-direction: column; gap: 4px; }
+.admin-user-field { font-size: 0.8rem; font-weight: 700; }
+@media (max-width: 600px) {
+    #tab-admin .dashboard-grid > .card { min-width: 0; grid-column: 1 / -1; }
+    .admin-users-table, .admin-users-table tbody { display: block; width: 100%; }
+    .admin-users-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    #admin-users-list tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; padding: 14px 0; border-bottom: 1px solid #cbd5e1; }
+    #admin-users-list td { min-width: 0; overflow-wrap: anywhere; }
+    #admin-users-list td:nth-child(-n+3), #admin-users-list td:last-child { grid-column: 1 / -1; }
+    .admin-user-name { font-weight: 700; }
+    .admin-user-email { font-size: 0.85rem; }
+    .admin-user-toggle { display: flex; justify-content: space-between; }
+    .admin-user-quota { flex-direction: row; align-items: center; justify-content: space-between; }
+}
