@@ -6,10 +6,11 @@ import {
     throwawayEmail,
     findDocs,
     FIRESTORE_PORT,
+    PROJECT_ID,
     registerAndVerifySignup,
 } from './helpers/emulator.js';
 
-const PROJECT = 'golf-handicap-tracker-b677c'; // as helpers/emulator.js
+const PROJECT = PROJECT_ID; // the demo- project, as helpers/emulator.js
 
 async function planDoc(uid, method = 'GET', body) {
     const url = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/${PROJECT}/databases/(default)/documents/users/${uid}/practice_plans/active`;

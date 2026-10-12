@@ -12,12 +12,18 @@
 // self-hosted runner's high ports and on a developer's default-port stack.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import {
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    seedPreapprovedEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const PREVIEW = `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`;
 const FS_PORT = FIRESTORE_PORT;
-const DOCS = `http://127.0.0.1:${FS_PORT}/v1/projects/golf-handicap-tracker-b677c/databases/(default)/documents`;
+const DOCS = `http://127.0.0.1:${FS_PORT}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
 async function registerFreshUser(page) {
     const email = throwawayEmail('plan');

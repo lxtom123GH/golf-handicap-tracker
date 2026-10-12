@@ -11,7 +11,13 @@
 //     of killing the watcher, so the new fix arrives.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import {
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    seedPreapprovedEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 import { GPS_POLICY } from '../../src/gps-capture.js';
 
 const PASSWORD = 'e2e-password-1';
@@ -209,8 +215,7 @@ test('S9: flight unseen logs endpoint-only and reopens with the GPS finish, no c
     // from the users collection by the throwaway email, then take that
     // user's newest endpoint-only shot 1 — never a stale document.
     const fsPort = FIRESTORE_PORT;
-    const shotId = await page.evaluate(async ({ email, fsPort }) => {
-        const project = 'golf-handicap-tracker-b677c';
+    const shotId = await page.evaluate(async ({ email, fsPort, project }) => {
         const base = (path) => `http://127.0.0.1:${fsPort}/v1/projects/${project}/databases/(default)/documents/${path}`;
         const headers = { Authorization: 'Bearer owner' };
         // Query, never list: a persistent emulator holds hundreds of users and
@@ -236,7 +241,7 @@ test('S9: flight unseen logs endpoint-only and reopens with the GPS finish, no c
             })
             .sort((a, b) => (b.fields.timestamp?.stringValue || '').localeCompare(a.fields.timestamp?.stringValue || ''));
         return mine.length ? mine[0].name.split('/').pop() : null;
-    }, { email, fsPort });
+    }, { email, fsPort, project: PROJECT_ID });
     expect(shotId, 'the endpoint-only shot document exists').toBeTruthy();
 
     // Cancel shot 2 and reopen shot 1 through the app's own re-entry.

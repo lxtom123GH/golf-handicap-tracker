@@ -8,11 +8,12 @@ import {
     throwawayEmail,
     findDocs,
     FIRESTORE_PORT,
+    PROJECT_ID,
     registerAndVerifySignup,
 } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
-const DOCS = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/golf-handicap-tracker-b677c/databases/(default)/documents`;
+const DOCS = `http://127.0.0.1:${FIRESTORE_PORT}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
 async function register(page, name, prefix) {
     const email = throwawayEmail(prefix);
