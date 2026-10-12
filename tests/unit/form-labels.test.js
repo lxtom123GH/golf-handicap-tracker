@@ -20,8 +20,6 @@ describe('static form label associations (not a runtime axe substitute)', () => 
     it('checks a non-empty inventory of every static form control', () => {
         expect(controls.length).toBeGreaterThanOrEqual(105);
         expect(controls.filter(control => !labelText(control)).map(control => control.id)).toEqual([]);
-    // Native jsdom label association walks the full document for each control.
-    // Windows CI measured 7.2s under load; this is coverage, not a UI speed SLA.
     }, 15_000);
 
     it('uses valid, non-empty references for explicit labels', () => {
