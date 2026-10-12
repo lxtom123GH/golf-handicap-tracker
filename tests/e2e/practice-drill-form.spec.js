@@ -1,7 +1,7 @@
 // practice-drill-form.spec.js — drill counts start at 0 and saving shows a
 // toast, not a pop-up (simplify 2026-10-07, E37).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 test('drill counts start at 0; Save shows a toast and no dialog', async ({ page }) => {
     const email = throwawayEmail('practice-form');
@@ -11,8 +11,7 @@ test('drill counts start at 0; Save shows a toast and no dialog', async ({ page 
     await page.locator('#auth-name').fill('Practice Form');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     await page.locator('.tab-btn[data-target="tab-practice"]').click();
 
     await page.locator('#drill-select').selectOption('bunker_game');
