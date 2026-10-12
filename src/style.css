@@ -1226,14 +1226,14 @@ body.round-active #tab-oncourse {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.75rem;
-    opacity: 0.75;
+    opacity: 1;
 }
 
 .oc-strip-gps {
     font-family: 'Roboto Mono', monospace;
     font-weight: 800;
     font-size: 1rem;
-    color: #38bdf8;
+    color: #bae6fd;
     white-space: nowrap;
 }
 
@@ -1378,7 +1378,7 @@ body.round-active #tab-oncourse {
 
 .oc-card-total {
     font-size: 0.85rem;
-    color: #64748b;
+    color: #475569;
     font-weight: 600;
 }
 
@@ -1417,6 +1417,8 @@ body.round-active #tab-oncourse {
 
 .oc-stats-row .mini-stat {
     flex: 1;
+    min-width: 44px;
+    min-height: 44px;
     padding: 8px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
@@ -1426,7 +1428,7 @@ body.round-active #tab-oncourse {
 }
 
 .oc-putts {
-    flex: 1.5;
+    flex: 1.5 0 154px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1437,6 +1439,9 @@ body.round-active #tab-oncourse {
 }
 
 .oc-putts button {
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
     border: none;
     background: none;
     font-weight: bold;
@@ -1445,6 +1450,7 @@ body.round-active #tab-oncourse {
 }
 
 .oc-putts-val {
+    white-space: nowrap;
     font-size: 0.85rem;
     font-weight: 800;
     color: var(--primary-color);
@@ -1903,7 +1909,7 @@ body.play-mode.round-active .oc-track-wrap {
 /* ---- Right rail: your score card, stood up -------------------------------- */
 #oc-scoring-notice {
     background: #fffbeb;
-    color: #92400e;
+    color: #78350f;
     border: 1px solid #fde68a;
     border-radius: 8px;
     padding: 10px;
@@ -1919,7 +1925,7 @@ body.play-mode.round-active .oc-track-wrap {
 #oc-past-round-note {
     margin: 6px 0 0;
     font-size: 0.8rem;
-    color: #64748b;
+    color: #475569;
 }
 
 body.play-mode.round-active #oc-score-sheet {
@@ -2085,7 +2091,7 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
 
 body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary .oc-putts button {
     width: 52px;
-    height: 30px;
+    height: 44px;
     padding: 0;
     border-radius: 15px;
     background: rgba(255, 255, 255, 0.1);
@@ -2760,9 +2766,9 @@ body {
 
 /* ===================== S10: GPS capture ===================== */
 /* Strip accuracy colours (oncourse.js sets the class; no inline styles). */
-.oc-strip-gps.gps-acc-good { color: #10b981; }
-.oc-strip-gps.gps-acc-warn { color: #f59e0b; }
-.oc-strip-gps.gps-acc-bad { color: #ef4444; }
+.oc-strip-gps.gps-acc-good { color: #bbf7d0; }
+.oc-strip-gps.gps-acc-warn { color: #fef08a; }
+.oc-strip-gps.gps-acc-bad { color: #fecaca; }
 
 /* Sunlight view: state controls .hidden; dvh follows the phone's browser chrome. */
 .big-numbers-button { width: calc(100% - 30px); min-height: 44px; margin: 0 15px 12px; }
@@ -2838,6 +2844,10 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
 .gps-pill-fb { font-size: 1rem; }
 .gps-pill-sep { opacity: 0.5; }
 .gps-pill-mode { font-size: 0.7rem; font-weight: 700; color: #cbd5e1; margin-left: 2px; }
+.gps-action-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Readable on the white form hub as well as over the course map. */
+#btn-play-gps { background: rgba(8, 12, 18, 0.8); }
+#explainer-stats > summary { color: #1e40af; }
 /* The pill is the opener while GPS runs; the text button covers GPS-off. */
 .gps-pill:not(.hidden) + .big-numbers-button { display: none; }
 /* Weather / plays-like + strategy hint, moved into the big view. */
