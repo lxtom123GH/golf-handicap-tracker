@@ -1,7 +1,7 @@
 // practice-log.spec.js — Practice: a saved drill shows in "Last 5 sessions"
 // and can be deleted (simplify 2026-10-07, E36).
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 test('a saved drill appears in Last 5 sessions and can be deleted', async ({ page }) => {
     const email = throwawayEmail('practice-log');
@@ -11,8 +11,7 @@ test('a saved drill appears in Last 5 sessions and can be deleted', async ({ pag
     await page.locator('#auth-name').fill('Practice Log');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     await page.locator('.tab-btn[data-target="tab-practice"]').click();
 
     await expect(page.locator('#practice-empty-state')).toBeVisible();

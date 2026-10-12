@@ -12,7 +12,13 @@
 import { test as base, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { seedPreapprovedEmail, seedHandicapByEmail, throwawayEmail, findDocs } from './helpers/emulator.js';
+import {
+    seedPreapprovedEmail,
+    seedHandicapByEmail,
+    throwawayEmail,
+    findDocs,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 import { COURSE_DATA, KEPERRA_GPS } from '../../src/course-data.js';
 import { roundDifferential } from '../../src/differential.js';
 import { previewProxy } from './helpers/preview-proxy.js';
@@ -85,8 +91,7 @@ test('Sunday: 9 holes Keperra West (19-27) — mapping, F/M/B, scoring, reload, 
     await page.locator('#auth-name').fill('Sunday E2E');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     await seedHandicapByEmail(email, INDEX);
 
     // On Course -> 9 holes -> Keperra West; both tees offered.

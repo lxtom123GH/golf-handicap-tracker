@@ -11,7 +11,7 @@
     "test:rules": "node scripts/run-emulator-tests.mjs --only firestore,storage --project demo-golf-tracker -- \"npx vitest run tests/rules --no-file-parallelism\"",
     "test:offline": "node scripts/run-emulator-tests.mjs --only firestore --project demo-golf-tracker -- \"npx vitest run tests/offline --environment node\"",
     "test:auth": "node scripts/run-emulator-tests.mjs --only auth --project demo-golf-tracker -- \"npx vitest run tests/auth --no-file-parallelism\"",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/run-e2e.mjs",
     "test": "vitest run tests/unit tests/oncourse.test.js"
   },
   "keywords": [],

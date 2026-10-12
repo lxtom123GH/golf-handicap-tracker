@@ -9,7 +9,13 @@
 // section must stay hidden there — that is pinned too.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import {
+    FIRESTORE_PORT,
+    PROJECT_ID,
+    seedPreapprovedEmail,
+    throwawayEmail,
+    registerAndVerifySignup,
+} from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -21,8 +27,7 @@ async function registerFreshUser(page) {
     await page.locator('#auth-name').fill('E2E Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
     return email;
 }
 
@@ -151,8 +156,8 @@ test('Ashgrove: the wizard shows the hole, takes an intended and an actual line,
     // hundred ms after the toast. Read until it lands (5 s cap).
     let check;
     for (let attempt = 0; attempt < 20; attempt++) {
-    check = await page.evaluate(async ({ email, docsPort, ax, ay }) => {
-        const base = `http://127.0.0.1:${docsPort}/v1/projects/golf-handicap-tracker-b677c/databases/(default)/documents`;
+    check = await page.evaluate(async ({ email, docsPort, ax, ay, project }) => {
+        const base = `http://127.0.0.1:${docsPort}/v1/projects/${project}/databases/(default)/documents`;
         const runQuery = async (collectionId, filters) => {
             const res = await fetch(`${base}:runQuery`, {
                 method: 'POST', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
@@ -176,7 +181,7 @@ test('Ashgrove: the wizard shows the hole, takes an intended and an actual line,
         const [ix, iy] = first(doc, 'lineIntended');
         const [rx, ry] = first(doc, 'lineActual');
         return { ix, iy, rx, ry };
-    }, { email, docsPort, ax, ay });
+    }, { email, docsPort, ax, ay, project: PROJECT_ID });
     if (!check.error) break;
     await page.waitForTimeout(250);
     }
@@ -225,6 +230,7 @@ test('S11: Save plan keeps no stroke, the hub names the pending shot, Log shot c
     await expect(canvas).toBeVisible({ timeout: 10_000 });
     // The overlay mounts async and resizes the canvas; swipe only once it has.
     await expect(canvas).toHaveAttribute('data-view-mode', 'shot');
+    await expect(canvas).toHaveAttribute('data-start', /.+/, { timeout: 15_000 });
 
     // Step 1 → draw the plan → step 2 → Save plan (no stroke).
     await swipe(page, canvas, [0.5, 0.92], [0.5, 0.35], -0.05);

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
 
 async function register(page) {
     const email = throwawayEmail('hygiene');
@@ -9,8 +9,7 @@ async function register(page) {
     await page.locator('#auth-name').fill('Hygiene Golfer');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await registerAndVerifySignup(page, email);
 }
 
 test('bag confirmation survives a repeated save and is cleared on leaving Settings', async ({ page }) => {
