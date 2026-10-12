@@ -6,7 +6,7 @@
 // logged without leaving the map. Done shows the rest of the wizard.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -20,6 +20,9 @@ test('Map first: the shot opens full-screen; draw, club, Log all on the map', as
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
 
     // The Settings select offers it and reflects the stored choice.

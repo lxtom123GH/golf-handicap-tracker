@@ -31,7 +31,7 @@ describe('S12 E: shotEntryVisibility — pure function of the preference', () =>
         expect(v.resultGridsOpen).toBe(true);
     });
 
-    it('undefined/unknown preferences degrade to the default (Map first, SR-11), never hide the wizard', () => {
+    it('undefined/unknown preferences degrade to the default (Map first), never hide the wizard', () => {
         expect(normaliseShotEntry(undefined)).toBe('map');
         expect(normaliseShotEntry('')).toBe('map');
         expect(normaliseShotEntry('nonsense')).toBe('map');

@@ -1,6 +1,6 @@
 // Late starts keep course-hole scoring keys while navigation wraps in play order.
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const GPS = { latitude: -27.4112, longitude: 152.9524, accuracy: 40 };
@@ -20,6 +20,9 @@ async function startNorthNine(page, prefix, startHole = 1) {
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();

@@ -11,7 +11,7 @@
 //     of killing the watcher, so the new fix arrives.
 
 import { test, expect } from '@playwright/test';
-import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { FIRESTORE_PORT, seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
 import { GPS_POLICY } from '../../src/gps-capture.js';
 
 // Keep this spec pinned to the map-and-grids layout it exercises.
@@ -36,6 +36,9 @@ async function registerFreshUser(page) {
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
     return email;
 }

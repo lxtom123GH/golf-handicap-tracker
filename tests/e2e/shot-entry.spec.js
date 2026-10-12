@@ -8,7 +8,7 @@
 // boot mirror.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -21,6 +21,9 @@ async function registerFreshUser(page) {
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
+    await verifyEmulatorEmail(email);
+    await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
 }
 
@@ -67,7 +70,7 @@ test('S12 E: Tap buttons mode hides the map, keeps the grids (Ashgrove)', async 
     await expect(page.locator('#section-miss-pattern')).toBeVisible();
 });
 
-test('SR-11: with no saved choice, a round is on Map first (the default since 2026-10-11) and logs on the map', async ({ page }) => {
+test('with no saved choice, a round defaults to Map first and logs on the map', async ({ page }) => {
     await registerFreshUser(page);
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();
