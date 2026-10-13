@@ -47,9 +47,33 @@ describe('Practice save confirmation copy', () => {
     };
     it('pending write does not claim confirmed save or durable phone storage', () => {
         submit();
+        expect(h.setDoc).toHaveBeenCalledTimes(1);
         expect(h.showToast.mock.calls.at(-1)[0]).toMatch(/requested|queued/i);
         expect(h.showToast.mock.calls.at(-1)[0]).not.toMatch(/saved|synced|saved on this phone/i);
         expect(h.showToast.mock.calls.at(-1)[0]).toMatch(/before.*again/i);
+    });
+    it('pending write releases the form and a repeated submit cannot duplicate it', () => {
+        submit();
+        const form = document.getElementById('form-log-practice');
+        expect(document.getElementById('btn-save-practice').disabled).toBe(false);
+        expect(document.getElementById('drill-select').value).toBe('');
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+        expect(h.setDoc).toHaveBeenCalledTimes(1);
+        expect(h.showToast).toHaveBeenCalledTimes(1);
+        pick('putting_9');
+        expect(form.querySelector('.drill-outcome-field').value).toBe('0');
+    });
+    it('a synchronous write failure preserves the entered counts and releases Save', () => {
+        const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+        h.setDoc.mockImplementationOnce(() => { throw new Error('synthetic write failure'); });
+        try {
+            submit();
+            expect(alertSpy).toHaveBeenCalledWith(expect.stringMatching(/could not be confirmed/));
+            expect(h.showToast).not.toHaveBeenCalled();
+            expect(document.getElementById('drill-select').value).toBe('bunker_game');
+            expect(document.querySelector('#form-log-practice .drill-outcome-field').value).toBe('3');
+            expect(document.getElementById('btn-save-practice').disabled).toBe(false);
+        } finally { alertSpy.mockRestore(); }
     });
     it('server acknowledgement confirms sync', async () => {
         h.setDoc.mockResolvedValueOnce(); submit(); await Promise.resolve(); await Promise.resolve();
@@ -62,9 +86,9 @@ describe('Practice save confirmation copy', () => {
         expect(text).toMatch(/not confirmed|couldn.t confirm/i);
         expect(text).toMatch(/History/); expect(text).not.toContain('SECRET_SERVICE_DETAIL');
     });
-    it('late acknowledgement never notifies a different signed-in account', async () => {
+    it.each([null, { uid: 'other' }])('late acknowledgement never notifies account %j', async (nextUser) => {
         let finish; h.setDoc.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
-        submit(); h.showToast.mockClear(); AppState.currentUser = { uid: 'other' };
+        submit(); h.showToast.mockClear(); AppState.currentUser = nextUser;
         finish(); await Promise.resolve(); await Promise.resolve();
         expect(h.showToast).not.toHaveBeenCalled();
     });
@@ -76,9 +100,9 @@ describe('Practice save confirmation copy', () => {
             expect(h.showToast.mock.calls.at(-1)[0]).not.toMatch(/saved on this phone/);
         } finally { online.mockRestore(); }
     });
-    it('late rejection does not surface in a different account', async () => {
+    it.each([null, { uid: 'other' }])('late rejection never notifies account %j', async (nextUser) => {
         let fail; h.setDoc.mockImplementationOnce(() => new Promise((_, reject) => { fail = reject; }));
-        submit(); h.showToast.mockClear(); AppState.currentUser = null;
+        submit(); h.showToast.mockClear(); AppState.currentUser = nextUser;
         fail(new Error('synthetic failure')); await Promise.resolve(); await Promise.resolve();
         expect(h.showToast).not.toHaveBeenCalled();
     });
