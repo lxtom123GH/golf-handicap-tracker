@@ -23,4 +23,7 @@ loopback-only Firebase Auth/Firestore emulators using `demo-golf-tracker`.
   removed before the passing run and is not part of the shipped test.
 
 These Chromium layout checks do not reproduce physical iOS focus/pinch gestures.
-CI also uploads subsequent emitted JSON files as `rendered-a11y-results`.
+The test also attaches its emitted JSON files to the Playwright result. An
+optional CI-upload step was removed after GitHub rejected the push because
+the current OAuth credential lacks workflow scope. These committed reports
+provide the review evidence without changing credentials or repository settings.
