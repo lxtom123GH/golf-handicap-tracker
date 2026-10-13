@@ -130,7 +130,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     <button type="button" class="btn-text vid-ai" style="padding:2px 8px; color:#8b5cf6;">🤖 AI analysis</button>
                     ${canDelete ? '<button type="button" class="btn-text vid-delete" aria-label="Delete video" style="margin-left:auto; color:#ef4444;">🗑️ Delete</button>' : ''}
                 </div>
-                <div class="vid-ai-result hidden"
+                <div class="vid-ai-result hidden" role="status" aria-live="polite" aria-atomic="true"
                     style="margin-top:8px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:10px 12px; font-size:0.85rem; white-space:pre-wrap;"></div>
                 <div class="vid-annotate-bar hidden" style="display:flex; gap:8px; margin-top:6px; align-items:center; font-size:0.8rem; color:#64748b;">
                     Drag on the video to draw lines.

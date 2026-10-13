@@ -51,6 +51,18 @@ describe('video AI analysis error copy', () => {
         await vi.waitFor(() => expect(button.disabled).toBe(false));
         expect(output.textContent).toContain('before requesting another');
     });
+    it('exposes asynchronous next steps as a polite status', async () => {
+        mocks.call.mockRejectedValue({ code: 'functions/internal' });
+        const { button, output } = await controls();
+        // Establish the live region before the callable changes its contents.
+        expect(output.getAttribute('role')).toBe('status');
+        expect(output.getAttribute('aria-live')).toBe('polite');
+        expect(output.getAttribute('aria-atomic')).toBe('true');
+        button.click();
+        await vi.waitFor(() => expect(button.disabled).toBe(false));
+        expect(output.classList.contains('hidden')).toBe(false);
+        expect(output.textContent).toContain('before requesting another');
+    });
     it('recovers a saved result on reload after a timeout without another AI request', async () => {
         mocks.call.mockRejectedValue({ code: 'functions/deadline-exceeded' });
         const { button, output } = await controls(); button.click();
