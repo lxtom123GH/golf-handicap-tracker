@@ -66,6 +66,54 @@ export function waitForEmulators() {
     return emulatorReadiness;
 }
 
+export const UX_HARNESS_PASSWORD = 'demo-only-password';
+export const UX_HARNESS_PERSONAS = {
+    player: { email: 'player@ux-harness.example.test', name: 'Taylor Fairway', approved: true },
+    pending: { email: 'pending@ux-harness.example.test', name: 'Jordan Awaiting', approved: false },
+    coach: { email: 'coach@ux-harness.example.test', name: 'Casey Coach', approved: true, isCoach: true },
+    admin: { email: 'admin@ux-harness.example.test', name: 'Riley Admin', approved: true, isAdmin: true },
+};
+
+/** Create deterministic synthetic identities and roles in the local emulators. */
+export async function seedUxHarnessFixtures() {
+    await waitForEmulators();
+    const authBase = `http://${AUTH_HOST}/identitytoolkit.googleapis.com/v1`;
+    for (const persona of Object.values(UX_HARNESS_PERSONAS)) {
+        const payload = { email: persona.email, password: UX_HARNESS_PASSWORD, returnSecureToken: true };
+        let response = await fetchEmulator(`${authBase}/accounts:signUp?key=fake-api-key`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        });
+        let result = await response.json();
+        if (!response.ok && result.error?.message === 'EMAIL_EXISTS') {
+            response = await fetchEmulator(`${authBase}/accounts:signInWithPassword?key=fake-api-key`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+            });
+            result = await response.json();
+        }
+        if (!response.ok) throw new Error(`Failed to seed demo auth account: ${response.status}`);
+
+        // Pending means awaiting admin approval, not awaiting email verification.
+        const verified = await fetchEmulator(`${authBase}/accounts:update?key=fake-api-key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+            body: JSON.stringify({ localId: result.localId, emailVerified: true }),
+        });
+        if (!verified.ok) throw new Error(`Failed to verify demo auth account: ${verified.status}`);
+
+        if (persona.approved) await writeDocFields(`preapproved_emails/${encodeURIComponent(persona.email)}`, { addedAt: new Date() });
+        await writeDocFields(`users/${result.localId}`, {
+            uid: result.localId,
+            email: persona.email,
+            displayName: persona.name,
+            isApproved: persona.approved,
+            isAdmin: !!persona.isAdmin,
+            isCoach: !!persona.isCoach,
+            coaches: [],
+            authProvider: 'password',
+        });
+    }
+}
+
 /**
  * Put `email` on the invite list, exactly as admin.js does (lowercased doc id).
  * Must run BEFORE registration: the verified signup flow reads this document
