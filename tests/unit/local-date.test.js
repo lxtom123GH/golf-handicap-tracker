@@ -72,6 +72,7 @@ function zonedParts(epoch) {
     const date = new FakeDateBase(epoch);
     const parts = new Intl.DateTimeFormat('en-US', {
         timeZone: testTimeZone,
+        era: 'short',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -81,8 +82,10 @@ function zonedParts(epoch) {
         hourCycle: 'h23',
     }).formatToParts(date);
     const values = Object.fromEntries(parts.map(({ type, value }) => [type, Number(value)]));
+    // Intl uses 1 BC for astronomical year 0; Date uses the signed year.
+    const isBC = parts.find(({ type }) => type === 'era').value === 'BC';
     return {
-        year: values.year,
+        year: isBC ? 1 - values.year : values.year,
         month: values.month,
         day: values.day,
         hour: values.hour,
@@ -266,6 +269,15 @@ describe('localToday — the boundaries the UTC day gets wrong', () => {
 });
 
 describe('parseLocalDate — a picked YYYY-MM-DD is local midnight', () => {
+    it.each(['0000', '0001', '0042', '0099'])('preserves year %s through the timezone fixture', async year => {
+        const { parseLocalDate } = await import('../../src/dates.js');
+        at('UTC', '2026-01-01T00:00:00Z', () => {
+            const d = parseLocalDate(`${year}-01-05`);
+            expect(d.getFullYear()).toBe(Number(year));
+            expect(d.toISOString()).toBe(`${year}-01-05T00:00:00.000Z`);
+        });
+    });
+
     it('does not shift the day (new Date(str) would parse it as UTC midnight)', async () => {
         const { parseLocalDate } = await import('../../src/dates.js');
         at('America/New_York', '2026-09-11T15:00:00Z', () => {
