@@ -170,6 +170,16 @@ test('new user waits for an admin to approve the account, then enters the app', 
         expect(pending).toBeTruthy();
         expect(pending.isApproved).toBe(false);
 
+        // Isolate admin approval from email verification: a verified account
+        // without an invite must still be denied entry until the admin acts.
+        expect(await verifyEmulatorEmail(pendingEmail)).toBe(pending._id);
+        await page.locator('#btn-check-email').click();
+        await expect(page.locator('#auth-pending-heading')).toHaveText('Account Pending');
+        await expect(page.locator('#auth-pending-message')).toContainText('waiting for admin approval');
+        await expect(page.locator('#auth-pending')).toBeVisible();
+        await expect(page.locator('#main-app')).toBeHidden();
+        expect((await readDoc(`users/${pending._id}`)).isApproved).toBe(false);
+
         await adminPage.locator('#tab-btn-admin').click();
         const pendingRow = adminPage.locator('#admin-users-list tr').filter({ hasText: pendingEmail });
         await expect(pendingRow).toHaveCount(1, { timeout: 15_000 });
@@ -178,9 +188,7 @@ test('new user waits for an admin to approve the account, then enters the app', 
         await approval.check();
         await expect.poll(async () => (await readDoc(`users/${pending._id}`))?.isApproved, { timeout: 15_000 }).toBe(true);
 
-        // The pending page checks admission at sign-in; reload exercises that
-        // same gate after the administrator grants access and the address is verified.
-        await verifyEmulatorEmail(pendingEmail);
+        // Recheck the same verified account after the admin grants access.
         await page.reload();
         await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
         await expect(page.locator('#auth-pending')).toBeHidden();
