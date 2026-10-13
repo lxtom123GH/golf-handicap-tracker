@@ -998,6 +998,10 @@ export function bindPracticeCaddyUI() {
         } catch (err) {
             console.error("[Practice Caddy] Load active fail:", err);
             setPracticeState('empty');
+            if (errorEl) {
+                errorEl.textContent = "We couldn't check for a saved practice plan. Reload this page before generating again.";
+                errorEl.classList.remove('hidden');
+            }
         }
     };
 
