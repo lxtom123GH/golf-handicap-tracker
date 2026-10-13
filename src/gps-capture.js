@@ -58,6 +58,9 @@ export function createCapture(now = Date.now, policy = GPS_POLICY) {
 
     const averageAgreeingFixes = (best) => {
         if (!best || !Number.isFinite(best.lat) || !Number.isFinite(best.lon)) return best;
+        // Zero accuracy cannot be inverse-weighted. Keep that best source fix
+        // rather than discard it and average only its less accurate neighbours.
+        if (!(best.accuracyM > 0)) return best;
 
         const agreementRadiusM = Math.max(best.accuracyM, policy.agreementFloorM);
         const agreeing = usable.filter((f) => Number.isFinite(f.lat)

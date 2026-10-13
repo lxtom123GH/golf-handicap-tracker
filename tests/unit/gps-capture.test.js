@@ -289,6 +289,32 @@ describe('createCapture — agreeing-fix average', () => {
         expect(d.fix).toEqual(single);
     });
 
+    it('preserves a zero-accuracy best fix instead of averaging only worse neighbours', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now);
+        cap.push({ ...fix(11, { at: c.now() }), lat: offsetLat(2) });
+        cap.push({ ...fix(12, { at: c.now() }), lat: offsetLat(2) });
+        const best = fix(0, { at: c.now() });
+        cap.push(best);
+
+        const d = cap.decide({ final: true });
+        expect(d.state).toBe('accepted');
+        expect(d.fix).toEqual(best);
+    });
+
+    it('averages nearby fixes across the date line without jumping to Greenwich', () => {
+        const c = fakeClock();
+        const cap = createCapture(c.now);
+        cap.push({ ...fix(11, { at: c.now() }), lat: 0, lon: 179.99999 });
+        cap.push({ ...fix(11, { at: c.now() }), lat: 0, lon: -179.99999 });
+
+        const d = cap.decide({ final: true });
+        expect(d.state).toBe('accepted');
+        expect(d.fix.lat).toBeCloseTo(0, 8);
+        expect(Math.abs(d.fix.lon)).toBeCloseTo(180, 8);
+        expect(d.fix.accuracyM).toBe(11);
+    });
+
     it('repeated callbacks do not make reported accuracy look better', () => {
         const c = fakeClock();
         const cap = createCapture(c.now, { ...GPS_POLICY, acceptPrevM: 0 });
