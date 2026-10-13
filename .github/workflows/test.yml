@@ -89,6 +89,18 @@ jobs:
       timeout-minutes: 60
       run: npm run test:e2e
 
+    - name: Install pinned golden screenshot browser
+      run: |
+        curl --fail --location --retry 2 https://storage.googleapis.com/chrome-for-testing-public/155.0.8059.39/linux64/chrome-headless-shell-linux64.zip -o /tmp/golden-chrome.zip
+        echo "39dcb8c46550632a3d911850ab3b8af840b4e3f6d8622faa2018eb8756278786  /tmp/golden-chrome.zip" | sha256sum --check
+        unzip -q /tmp/golden-chrome.zip -d /tmp/golden-chrome
+
+    - name: Run synthetic golden journeys and screenshot baselines
+      env:
+        GOLDEN_CHROME_EXECUTABLE: /tmp/golden-chrome/chrome-headless-shell-linux64/chrome-headless-shell
+      timeout-minutes: 15
+      run: node scripts/run-e2e-isolated.mjs --config playwright.golden.config.js
+
   # The rules suite is the app's authorization contract; it gates every PR
   # to main.
   #
