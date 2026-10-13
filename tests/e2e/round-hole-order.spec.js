@@ -1,6 +1,6 @@
 // Late starts keep course-hole scoring keys while navigation wraps in play order.
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, verifyEmulatorEmail, findDocs } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 const GPS = { latitude: -27.4112, longitude: 152.9524, accuracy: 40 };
@@ -36,6 +36,7 @@ async function startNorthNine(page, prefix, startHole = 1) {
     await expect(page.locator('body')).toHaveClass(/play-quick/, { timeout: 15_000 });
     await expect(page.locator('#oc-hole-display')).toHaveText(`Hole ${startHole}`);
     await expect(page.locator('#oc-play-map canvas')).toHaveAttribute('data-hole', String(startHole + 9));
+    return email;
 }
 
 test('the map hole chip opens the existing 9-hole jumper and jumps to hole 4 without a shot', async ({ page }) => {
@@ -69,7 +70,8 @@ test('the map hole chip opens the existing 9-hole jumper and jumps to hole 4 wit
 });
 
 test('starting late wraps to hole 1 and keeps scores on course-hole keys', async ({ page }) => {
-    await startNorthNine(page, 'hole-chip-order', 8);
+    test.setTimeout(90_000);
+    const email = await startNorthNine(page, 'hole-chip-order', 8);
     const score = page.locator('#oc-group-scores .compact-score-card').first();
     await score.locator('.btn-grid-plus').click();
     await expect(score.locator('.oc-score-value')).toHaveText('1');
@@ -86,4 +88,42 @@ test('starting late wraps to hole 1 and keeps scores on course-hole keys', async
     expect(round.currentRoundStartHole).toBe(8);
     expect(round.currentHole).toBe(1);
     expect(round.liveRoundGroups[0].scores).toMatchObject({ 1: 1, 8: 1, 9: 1 });
+
+    // A fresh boot must restore the route as well as the displayed hole.
+    await page.reload();
+    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('body')).toHaveClass(/play-quick/);
+    await page.evaluate(() => document.querySelector('.firebase-emulator-warning')?.remove());
+    await expect(page.locator('#oc-hole-display')).toHaveText('Hole 1');
+    await expect(score.locator('.oc-score-value')).toHaveText('1');
+    await page.locator('#btn-oc-prev-hole').click();
+    await expect(page.locator('#oc-hole-display')).toHaveText('Hole 9');
+    await expect(score.locator('.oc-score-value')).toHaveText('1');
+    await page.locator('#btn-oc-next-hole').click();
+    for (let hole = 2; hole <= 7; hole++) {
+        await page.locator('#btn-oc-next-hole').click();
+        await expect(page.locator('#oc-hole-display')).toHaveText(`Hole ${hole}`);
+        for (let stroke = 0; stroke < hole; stroke++) await score.locator('.btn-grid-plus').click();
+    }
+    await expect(page.locator('#btn-oc-next-hole')).toHaveText('Finish ✓');
+    // Exercise the More/Finish hit targets on both phone layouts too.
+    await page.locator('#btn-oc-more').click();
+    await page.locator('#btn-oc-finish').click();
+    await expect(page.locator('#oc-finish-modal')).toBeVisible();
+    await expect(page.locator('#sum-total-shots')).toHaveText('30');
+    await page.locator('#btn-oc-save-whs').click();
+
+    const [user] = await findDocs('users', 'email', email);
+    let saved;
+    await expect.poll(async () => {
+        [saved] = await findDocs('whs_rounds', 'uid', user._id);
+        return !!saved;
+    }, { timeout: 15_000 }).toBe(true);
+    expect(saved).toMatchObject({ holesPlayed: 9, totalGross: 30,
+        rating: round.currentRoundRatings.rating, slope: round.currentRoundRatings.slope });
+    expect(saved.holeScores.map(({ h, gross, par }) => ({ h, gross, par }))).toEqual(
+        [1, 2, 3, 4, 5, 6, 7, 1, 1].map((gross, index) => ({
+            h: index + 1, gross, par: round.currentCoursePars[index],
+        })),
+    );
 });
