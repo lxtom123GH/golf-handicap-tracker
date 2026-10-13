@@ -16,7 +16,9 @@ const h = vi.hoisted(() => ({ mounts: [], fixCbs: [], watch: true, lastFix: null
 vi.mock('../../src/firebase-config.js', () => ({ db: {}, auth: { currentUser: { uid: 'u1' } }, functions: {} }));
 vi.mock('firebase/firestore', () => ({
     collection: vi.fn(), query: vi.fn(), where: vi.fn(), limit: vi.fn(),
-    doc: vi.fn((_db, col, id) => ({ id: id || 'x' })), getDoc: vi.fn(async () => ({ exists: () => false })),
+    doc: vi.fn((_db, col, id) => ({ id: id || 'x' })),
+    getDoc: vi.fn(async () => ({ exists: () => true,
+        data: () => ({ line: [{ x: 0, y: 0 }, { x: 0, y: 120 }] }) })),
     getDocs: vi.fn(() => new Promise(() => { })),
     setDoc: vi.fn(() => new Promise(() => { })),
     updateDoc: vi.fn((ref, patch) => { h.updates.push([ref.id, patch]); return new Promise(() => { }); }),
@@ -52,6 +54,7 @@ vi.mock('../../src/hole-overlay.js', () => ({
 import { AppState } from '../../src/state.js';
 import { startNewShotInput, setWizardActive } from '../../src/modules/score-input.js';
 import { fromFrame } from '../../src/geo.js';
+import { getDoc } from 'firebase/firestore';
 
 const ROOT = path.resolve(__dirname, '../..');
 const HTML = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -89,6 +92,53 @@ beforeEach(() => {
 afterEach(() => { AppState.shotEntry = 'both'; setWizardActive(false); });
 
 describe('GPS capture role — start or finish of this shot', () => {
+    it('mounts the captured position when GPS resolves while the plan loads', async () => {
+        let resolvePlan;
+        getDoc.mockImplementationOnce(() => new Promise(resolve => { resolvePlan = resolve; }));
+        startNewShotInput();
+        await vi.waitFor(() => expect(resolvePlan).toBeTypeOf('function'));
+        standAt([0, 5]);
+        const captured = AppState.currentShotData;
+        resolvePlan({ exists: () => true,
+            data: () => ({ line: [{ x: 0, y: 0 }, { x: 0, y: 120 }] }) });
+        await mounted();
+        expect(captured.startPos).toBeDefined();
+        expect(h.mounts[0].opts.startMarker).toMatchObject({
+            lat: captured.startPos.lat, lon: captured.startPos.lon,
+        });
+        expect(AppState.currentShotData.planId).toBeDefined();
+    });
+
+    it('keeps a plan selected after GPS replaces the shot record', async () => {
+        startNewShotInput();
+        await mounted();
+        standAt([0, 123]);
+        const captured = AppState.currentShotData;
+        document.getElementById('btn-line-use-plan').click();
+        expect(AppState.currentShotData.lineIntended).toEqual([{ x: 0, y: 0 }, { x: 0, y: 120 }]);
+        expect(AppState.currentShotData.finishXY).toEqual({ x: 0, y: 123 });
+        expect(AppState.currentShotData.gpsCapture).toEqual(captured.gpsCapture);
+        expect(AppState.currentShotData).not.toBe(captured);
+    });
+
+    it.each([[0, 5], [0, 123]])('keeps curves drawn after a capture at [%s, %s] metres', async (x, y) => {
+        startNewShotInput();
+        await mounted();
+        const ctl = h.mounts[h.mounts.length - 1];
+        standAt([x, y]);
+        const captured = AppState.currentShotData;
+        const intended = [[0, 0], [0, 120]];
+        const actual = [[0, 0], [5, 125]];
+        ctl.opts.onChange({ mode: 'actual', points: actual, frame: FRAME,
+            curves: { intended, actual } });
+        expect(AppState.currentShotData.lineActual).toEqual([{ x: 0, y: 0 }, { x: 5, y: 125 }]);
+        expect(AppState.currentShotData.lineIntended).toEqual([{ x: 0, y: 0 }, { x: 0, y: 120 }]);
+        expect(AppState.currentShotData.gpsCapture).toEqual(captured.gpsCapture);
+        expect(AppState.currentShotData.derived).toBeDefined();
+        expect(AppState.currentShotData).not.toBe(captured);
+        expect(h.mounts).toHaveLength(1);
+    });
+
     it('tee shot logged 123 m up the hole: start stays on the tee, the fix is this shot\'s finish', async () => {
         startNewShotInput();
         await mounted();

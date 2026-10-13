@@ -393,7 +393,6 @@ async function syncShotLineOverlay() {
     // club row and Log over nothing.
     if (!hole && _drawMode) applyDrawModeChrome(false);
     if (!hole) return;
-    const d = AppState.currentShotData;
     // S3: the plan for this hole — ONE getDoc per hole per round (no
     // listener), cached by planId for the session. Offline the persistent
     // cache serves it; if the read fails, no plan and no error shown.
@@ -419,6 +418,8 @@ async function syncShotLineOverlay() {
         planLine = planCache.get(pid);
     }
     if (seq !== _mountSeq) return; // D31: superseded while the plan loaded
+    // A capture may have replaced the shot while the plan was loading.
+    const d = AppState.currentShotData;
     if (planLine && planLine.length >= 2) {
         d.planId = pid; // the shot records which plan it was scored against
     } else {
@@ -471,10 +472,12 @@ async function syncShotLineOverlay() {
             if (e.target.closest('#btn-line-use-plan')) {
                 const planLine = planCache.get(planIdFor(slug, physical));
                 if (planLine && _lineCtl) {
+                    const d = { ...AppState.currentShotData };
                     _lineCtl.setCurves({ intended: planLine });
                     d.lineIntended = toObjs(planLine);
                     const f = _lineCtl.frame;
                     d.lineFrame = { origin: { lat: f.origin[0], lon: f.origin[1] }, bearing: f.bearing, courseSlug: slug, physicalHole: physical };
+                    AppState.currentShotData = d;
                     setLineMode('intended');
                     lineReadout();
                 }
@@ -540,6 +543,9 @@ async function syncShotLineOverlay() {
         deflectArmed: () => _deflectArmed,
         onDeflectPlaced: () => setDeflectArmed(false),
         onChange: ({ mode, points, frame, curves, anchorChanged }) => {
+            // GPS capture replaces the shot record without remounting the map.
+            // Read the live record so later strokes retain the captured position.
+            const d = { ...AppState.currentShotData };
             // S12 B1: Undo reverts to whatever this mode held before the stroke.
             if (!anchorChanged) {
                 _curveUndo.push({
@@ -556,6 +562,7 @@ async function syncShotLineOverlay() {
             d.lineActualDeflectAt = curves.deflectAt ?? null;
             d.lineFrame = { origin: { lat: frame.origin[0], lon: frame.origin[1] }, bearing: frame.bearing, courseSlug: slug, physicalHole: physical };
             if (d.lineActual) applyDerivedShape(d);
+            AppState.currentShotData = d;
             lineReadout();
         },
     });
