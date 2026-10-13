@@ -27,10 +27,14 @@ afterEach(() => vi.restoreAllMocks());
 describe('video AI analysis error copy', () => {
     it.each([
         ['functions/unauthenticated', 'Sign in again'], ['functions/permission-denied', 'access'],
-        ['functions/not-found', 'Refresh'], ['functions/resource-exhausted', 'limit'],
+        ['functions/not-found', 'Refresh'], ['functions/resource-exhausted', 'midnight Brisbane time'],
         ['functions/failed-precondition', 'requirements'], ['functions/invalid-argument', 'Refresh'],
         ['functions/deadline-exceeded', 'before requesting another'], ['functions/internal', 'before requesting another'],
-        ['functions/unknown', 'before requesting another']
+        ['functions/unknown', 'before requesting another'],
+        ['functions/unavailable', 'before requesting another'], ['functions/cancelled', 'before requesting another'],
+        ['functions/data-loss', 'before requesting another'], ['functions/new-code', 'before requesting another'],
+        ['constructor', 'before requesting another'], ['__proto__', 'before requesting another'],
+        [undefined, 'before requesting another']
     ])('uses safe next steps for %s without echoing service details', async (code, nextStep) => {
         mocks.call.mockRejectedValue({ code, message: 'PRIVATE_SERVICE_DETAIL <img src=x>' });
         const { button, output } = await controls(); button.click();
@@ -46,6 +50,27 @@ describe('video AI analysis error copy', () => {
         const { button, output } = await controls(); button.click();
         await vi.waitFor(() => expect(button.disabled).toBe(false));
         expect(output.textContent).toContain('before requesting another');
+    });
+    it('recovers a saved result on reload after a timeout without another AI request', async () => {
+        mocks.call.mockRejectedValue({ code: 'functions/deadline-exceeded' });
+        const { button, output } = await controls(); button.click();
+        await vi.waitFor(() => expect(button.disabled).toBe(false));
+        expect(output.textContent).toContain('check for a saved result');
+
+        mocks.getDocs.mockResolvedValue({ empty: false, docs: [{
+            id: 'synthetic-video',
+            data: () => ({
+                uid: 'owner', path: 'videos/owner/test.mp4', bytes: 12,
+                aiAnalysis: { analysis: 'Saved analysis <img src=x>', drill: 'Saved drill' }
+            })
+        }] });
+        document.body.innerHTML = '';
+        const reloaded = await controls();
+        expect(reloaded.output.classList.contains('hidden')).toBe(false);
+        expect(reloaded.output.textContent).toContain('Saved analysis <img src=x>');
+        expect(reloaded.output.textContent).toContain('Saved drill');
+        expect(reloaded.output.querySelector('img')).toBeNull();
+        expect(mocks.call).toHaveBeenCalledTimes(1);
     });
     it('keeps the button disabled until acknowledgement and renders the successful result', async () => {
         let resolve;
