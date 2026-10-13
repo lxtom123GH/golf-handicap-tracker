@@ -45,18 +45,18 @@ describe('F-2 calculateDailyHandicap halves the index over nine holes', () => {
     //   ((GA Handicap / 2 x 9-hole Slope / 113) + (9-hole CR - 9-hole Par)) x 0.93
     // https://help.miclub.com.au/support/solutions/articles/14000159379
     it('gives an 18.0 index 7 strokes over a nine, not 16', () => {
-        expect(calculateDailyHandicap(18.0, 121, 34, 36, 9)).toBe(7);
+        expect(calculateDailyHandicap(18.0, 121, 34, 36, 9, 'men')).toBe(7);
     });
 
     it('leaves the eighteen-hole formula exactly as it was', () => {
-        expect(calculateDailyHandicap(10.0, 113, 72, 72, 18)).toBe(9);
-        expect(calculateDailyHandicap(20.0, 125, 74, 72)).toBe(22);
-        expect(calculateDailyHandicap(-2.0, 113, 70, 70)).toBe(-2);
+        expect(calculateDailyHandicap(10.0, 113, 72, 72, 18, 'men')).toBe(9);
+        expect(calculateDailyHandicap(20.0, 125, 74, 72, 18, 'men')).toBe(22);
+        expect(calculateDailyHandicap(-2.0, 113, 70, 70, 18, 'men')).toBe(-2);
     });
 
     it('a nine is worth about half an eighteen for the same player and tee', () => {
-        const full = calculateDailyHandicap(18.0, 121, 68, 72, 18);
-        const half = calculateDailyHandicap(18.0, 121, 34, 36, 9);
+        const full = calculateDailyHandicap(18.0, 121, 68, 72, 18, 'men');
+        const half = calculateDailyHandicap(18.0, 121, 34, 36, 9, 'men');
         expect(Math.abs(half - full / 2)).toBeLessThanOrEqual(1);
     });
 });

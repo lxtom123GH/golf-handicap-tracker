@@ -1,3 +1,5 @@
+import { playerHandicapCategory, setPlayerHandicapCategory } from './handicap-category.js';
+import { gaScoreRecord, nineHoleStatus } from './ga-score-record.js';
 // ==========================================
 // Centralized DOM Element Caching & UI Helpers
 // ==========================================
@@ -355,6 +357,7 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
         if (UI.emptyState) UI.emptyState.classList.remove('hidden');
     } else {
         if (UI.emptyState) UI.emptyState.classList.add('hidden');
+        const gaRecord = gaScoreRecord(rounds);
         rounds.forEach(round => {
             const tr = document.createElement('tr');
 
@@ -370,6 +373,9 @@ export function renderRoundsHistory(rounds = AppState.currentRounds, usedIds = [
             if (usedIds.includes(round.id)) {
                 diffSpan = `<span class="asterisk-highlight">${dif} *</span>`;
             }
+
+            const status = nineHoleStatus(round, gaRecord);
+            if (status) diffSpan += `<small class="round-nine-status">${escapeHtml(status)}</small>`;
 
             let dateObj = round.date;
             if (dateObj && dateObj.toDate) {
@@ -647,6 +653,12 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
             <div style="display:flex; flex-direction:column; min-width:0;">
                 <span style="font-weight:600; color:var(--text-dark);">${escapeHtml(p.name)}${p.isGuest ? ' <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(guest)</span>' : ''}</span>
                 <span style="font-size:0.75rem; color:var(--text-muted);">ID: ${escapeHtml(p.uid.substring(0, 8))}...</span>
+                ${p.uid !== AppState.currentUser?.uid ? `<label>Handicap category
+                  <select class="player-category-input" aria-label="Handicap category for ${escapeHtml(p.name)}">
+                    <option value="">Choose or enter Daily HC</option>
+                    <option value="men" ${playerHandicapCategory(p) === 'men' ? 'selected' : ''}>Men / boys</option>
+                    <option value="women" ${playerHandicapCategory(p) === 'women' ? 'selected' : ''}>Women / girls</option>
+                  </select></label>` : ''}
             </div>
             <label class="oc-player-hc" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--text-muted); margin:0 8px;">Daily HC
                 <input type="number" inputmode="decimal" step="0.1" min="-10" max="54" class="player-hc-input" data-uid="${escapeHtml(p.uid)}" value="${hc}" placeholder="auto" aria-label="Daily handicap for ${escapeHtml(p.name)}" style="width:64px; min-height:44px; padding:6px 8px; border:1px solid var(--border-color); border-radius:6px; font-size:1rem;">
@@ -657,6 +669,9 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
 
         // The box writes straight onto this player's group entry via
         // mutateList (D-03: reference change, so persistence sees it).
+        li.querySelector('.player-category-input')?.addEventListener('change', e => {
+            setPlayerHandicapCategory(p, e.target.value);
+        });
         li.querySelector('.player-hc-input').addEventListener('change', (e) => {
             const v = parseFloat(e.target.value);
             mutateList('liveRoundGroups', list => {
@@ -700,18 +715,12 @@ export function renderTrendChart(rounds = AppState.currentRounds) {
     const noData = document.getElementById('chart-no-data');
     if (!canvas) return;
 
-    const counting = (rounds || [])
-        .filter(isCountingRound)
-        .sort((a, b) => {
-            const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-            const db_ = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-            return da - db_;
-        });
+    const counting = gaScoreRecord(rounds || []).completed.reverse();
 
     if (counting.length < 3) {
         canvas.style.display = 'none';
         if (noData) {
-            noData.innerHTML = coldStartPreview(counting, 'trend');
+            noData.innerHTML = coldStartPreview(rounds, 'trend');
             noData.classList.remove('hidden');
         }
         return;
@@ -723,7 +732,7 @@ export function renderTrendChart(rounds = AppState.currentRounds) {
         const d = r.date?.toDate ? r.date.toDate() : new Date(r.date);
         return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
     });
-    const diffs = counting.map(r => roundHandicap(grossDifferentialDecimal(r)));
+    const diffs = counting.map(r => r.diff);
 
     if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
 

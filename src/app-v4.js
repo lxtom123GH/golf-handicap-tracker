@@ -1,3 +1,4 @@
+import { categoryForRating } from './handicap-category.js';
 // ==========================================
 // app.js
 // Main Entry Point & Global Event Bindings
@@ -271,6 +272,7 @@ export function bindWHSForm() {
         }));
 
         if (totalStablefordInput) totalStablefordInput.addEventListener('input', recalculateAGS);
+        document.getElementById('entry-handicap-category')?.addEventListener('change', recalculateAGS);
 
         // Advanced-stat ceilings follow the round length: Insights divides
         // GIR and fairways by holesPlayed, so a nine with 18 greens read as
@@ -456,7 +458,7 @@ export function bindWHSForm() {
             // 36 (PRODUCT SWEEP 2026-09-10 F-1/F-2/F-6).
             const holes = holesForPar(par);
             // GA Daily Handicap incl. the 0.93 multiplier — single source in whs.js.
-            const dailyHandicap = calculateDailyHandicap(hi, sr, parseFloat(crInput.value || 72), par, holes);
+            const dailyHandicap = calculateDailyHandicap(hi, sr, parseFloat(crInput.value || 72), par, holes, categoryForRating(document.getElementById('entry-handicap-category')?.value, courseSelect.value.split('|')[1]));
             // No established index means no Daily Handicap, and Stableford
             // can't be converted to an AGS without one (F-4). The Manual AGS
             // entry mode is the way in until the player declares an index.
@@ -524,7 +526,7 @@ export function bindWHSForm() {
                 // looking up the index on that date, offline, or none on record).
                 const why = document.querySelector('input[name="entry-mode"]:checked')?.value !== 'manual-ags'
                     && indexNote && !indexNote.classList.contains('hidden') ? indexNote.textContent : '';
-                alert(why || "AGS Score calculation is missing.");
+                alert(why || "Choose your handicap category and check the score inputs, or use Manual AGS.");
                 return;
             }
             // The box's min="50" was 18-hole only, so it went; this floor is

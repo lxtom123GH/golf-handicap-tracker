@@ -1,0 +1,58 @@
+[
+  {
+    "path": "iphone-se/manual-conversion-category.png",
+    "sha256": "0ac4d96e591997dcde94f305d8d054a7ae984b8a704bb9e909b4f4e534129b4c"
+  },
+  {
+    "path": "iphone-se/mens-daily-handicap.png",
+    "sha256": "7e50ecd8ae34c0a6b73dec64ab9847f8ef21a20050a901ab2adf7bf65aabe420"
+  },
+  {
+    "path": "iphone-se/pending-first-nine.png",
+    "sha256": "8a66f05af46f02b0ce8b0cee9268b24528ca0d268fb258e1dd121c95591a0040"
+  },
+  {
+    "path": "iphone-se/pending-seventh-nine.png",
+    "sha256": "739ca8e65bc66c9816c32cbe97485bb8428570925e4cef72f2bd302aeb3c792e"
+  },
+  {
+    "path": "iphone-se/states.json",
+    "sha256": "6a7d0417dc97cfff0e26116b8e08d269aa29f48064b8755eaa5e6e3d7a7e72e9"
+  },
+  {
+    "path": "iphone-se/three-completed-pairs.png",
+    "sha256": "aace639252d8a2406270799ff6479e59f49fa23feea127ee9a4a81db49551b80"
+  },
+  {
+    "path": "iphone-se/womens-daily-handicap.png",
+    "sha256": "46e2bdb55a688c986d73b85af8655963d5dc24e6eb7e60da11cc426e9f72a629"
+  },
+  {
+    "path": "phone/manual-conversion-category.png",
+    "sha256": "e4cbf2c0ec9e89ff977c7a50f3f1ad4943e13ff8fc31f21b1a3c60076bef63f7"
+  },
+  {
+    "path": "phone/mens-daily-handicap.png",
+    "sha256": "dfbe747cab8105055a9e116c85b2bd7a94a5521f7d2410641f7f4be0f619e9d4"
+  },
+  {
+    "path": "phone/pending-first-nine.png",
+    "sha256": "39cb114a586dc82ab519a2f3df53097f5083f8aded4fb734028599dfe744b210"
+  },
+  {
+    "path": "phone/pending-seventh-nine.png",
+    "sha256": "60ee9a82633f3e2aef0d5f171e37aff870ddc19961cea934c013821151c594cb"
+  },
+  {
+    "path": "phone/states.json",
+    "sha256": "4ad247de4bdc3b45ba4c093258f5667907622d1a251d6781d53741a8e23867d5"
+  },
+  {
+    "path": "phone/three-completed-pairs.png",
+    "sha256": "efcbd89e24dcb798e1c570511f903b77818c52e667c6a552b84c11040d4d65c4"
+  },
+  {
+    "path": "phone/womens-daily-handicap.png",
+    "sha256": "37243bd5d60c527b139015ec6dbe319ac98b917732bf73d46f28c2c565d82fa2"
+  }
+]

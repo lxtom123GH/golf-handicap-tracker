@@ -52,6 +52,11 @@ vi.mock('../../src/shot-entry.js', () => ({
     shotEntryVisibility: vi.fn(),
 }));
 vi.mock('../../src/modules/card-render.js', () => ({ renderHoleJumper: vi.fn() }));
+// Keep deferred detailed-shot UI outside these round-start guard tests.
+vi.mock('../../src/modules/score-input.js', () => ({
+    startNewShotInput: vi.fn(),
+    showToast: vi.fn(),
+}));
 
 import { bindStartRound, rememberRoundSetup, updateDhPreview } from '../../src/modules/event-binders.js';
 import { isGuestId as guestIds } from '../../src/guests.js';
@@ -182,6 +187,17 @@ describe('rememberRoundSetup', () => {
 });
 
 describe('daily handicap preview', () => {
+    it('ignores an old-category response after the category changed', async () => {
+        document.body.insertAdjacentHTML('beforeend', '<select id="oc-handicap-category"><option value="men">Men</option><option value="women">Women</option></select>');
+        let release;
+        mocks.oncourse.getPlayerHandicap.mockImplementation(() => new Promise(r => { release = r; }));
+        const pending = updateDhPreview();
+        await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+        document.getElementById('oc-handicap-category').value = 'women';
+        release(20); await pending;
+        expect(document.getElementById('oc-dh-override').value).toBe('');
+    });
+
     it("a preview for the old course never lands after the course changed (it would read as today's override)", async () => {
         let release;
         mocks.oncourse.getPlayerHandicap.mockImplementation(() => new Promise(r => { release = r; }));

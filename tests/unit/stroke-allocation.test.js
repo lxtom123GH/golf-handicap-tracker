@@ -60,7 +60,7 @@ describe('F-2 the stroke chart must wrap where the Daily Handicap was computed',
     const FRONT_NINE_SI = [1, 11, 7, 18, 14, 13, 17, 6, 15];
 
     it('reproduces the regression: an 18-hole DH on a 9-hole chart over-allocates', () => {
-        const dh18 = calculateDailyHandicap(18.0, 124, 67, 68, 18);
+        const dh18 = calculateDailyHandicap(18.0, 124, 67, 68, 18, 'men');
         expect(dh18).toBe(17);
         // What shipped: DH computed for 18, chart wrapped at 9.
         const shipped = FRONT_NINE_SI.reduce((t, si) => t + strokesReceived(dh18, si, 9), 0);
@@ -70,7 +70,7 @@ describe('F-2 the stroke chart must wrap where the Daily Handicap was computed',
         expect(consistent).toBe(8);
         // What Golf Australia gives for a nine: the index is halved and the
         // nine's own CR/par used, then allocated over a 1..9 chart.
-        const dh9 = calculateDailyHandicap(18.0, 124, 33.5, 34, 9);
+        const dh9 = calculateDailyHandicap(18.0, 124, 33.5, 34, 9, 'men');
         expect(dh9).toBe(9);
         expect(permutation(9).reduce((t, si) => t + strokesReceived(dh9, si, 9), 0)).toBe(9);
     });
