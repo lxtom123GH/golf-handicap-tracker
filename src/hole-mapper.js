@@ -1,3 +1,4 @@
+import { userErrorMessage } from './user-messages.js';
 // ==========================================================================
 // hole-mapper.js — S6 Part 2: "Map this hole", hand-placed vertices
 // ==========================================================================
@@ -619,11 +620,11 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
         // The card ships the button disabled (2a, before the save existed);
         // the mount enables it — enabling is not awaiting the write.
         btnSave.disabled = false;
-        btnSave.title = 'Save this trace to your holeTraces';
+        btnSave.title = 'Save the areas drawn on this hole';
         btnSave.addEventListener('click', async () => {
             const status = document.getElementById('mapper-status');
             if (!model.features.length) {
-                if (status) status.textContent = 'nothing to save: close a ring first';
+                if (status) status.textContent = 'No area is ready to save. Join the last point to the first to close an area, then choose Save.';
                 return;
             }
             try {
@@ -631,7 +632,7 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
                 const { db } = await import('./firebase-config.js');
                 const { doc, setDoc } = await import('firebase/firestore');
                 const uid = AppState.currentUser?.uid;
-                if (!uid) throw new Error('not signed in');
+                if (!uid) throw Object.assign(new Error('not signed in'), { code: 'unauthenticated' });
                 const payload = {
                     features: mapperGeoJSON(model, hole, {
                         authorUid: uid,
@@ -646,13 +647,13 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
                 const write = setDoc(doc(db, 'users', uid, 'holeTraces', `${slug}-${Number(holeNumber)}`), payload);
                 // The status line is shared with the next mount: a closed
                 // mapper must not write into another hole's status.
-                if (status && !destroyed) status.textContent = `saved ${payload.features.features.length} feature(s) — syncs when online`;
+                if (status && !destroyed) status.textContent = `${payload.features.features.length} map area(s) queued. Reconnect to finish syncing.`;
                 write.catch((err) => {
                     const el = document.getElementById('mapper-status');
-                    if (el && !destroyed) el.textContent = `save refused: ${err.message || err}`;
+                    if (el && !destroyed) el.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');
                 });
             } catch (err) {
-                if (status && !destroyed) status.textContent = `save refused: ${err.message || err}`;
+                if (status && !destroyed) status.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');
             }
         }, on);
     }

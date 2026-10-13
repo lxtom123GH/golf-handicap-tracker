@@ -37,7 +37,7 @@ export function initSocialFeed() {
             });
 
             if (!matches.length) {
-                resultsEl.textContent = 'No players found.';
+                resultsEl.textContent = 'No players found. Check the name and try another search.';
                 return;
             }
 
@@ -272,7 +272,7 @@ async function loadFeed(afterDoc = null) {
         if (!myUid) return;
 
         if (!afterDoc) {
-            feedEl.innerHTML = '<p style="color:#94a3b8;">Loading...</p>';
+            feedEl.innerHTML = '<p style="color:#94a3b8;">Loading recent activity… Please wait.</p>';
         }
 
         const constraints = [
@@ -310,6 +310,6 @@ async function loadFeed(afterDoc = null) {
     } catch (err) {
         console.error("[Social] Failed to load feed:", err);
         const feedEl = document.getElementById('feed-activity-list');
-        if (feedEl) feedEl.innerHTML = '<p style="color:#ef4444;">Error loading activity feed. Please try again later.</p>';
+        if (feedEl) feedEl.innerHTML = '<p style="color:#ef4444;">Could not load recent activity. Try again later; if it keeps happening, ask the app administrator for help.</p>';
     }
 }

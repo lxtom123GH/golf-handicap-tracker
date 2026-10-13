@@ -110,7 +110,7 @@ describe('T3-setTimeout shared-element lifetimes', () => {
         UI.btnVoiceRules.click();
         speech.fail(error);
         expect(UI.voiceStatus.textContent).toBe(error === 'not-allowed'
-            ? 'Mic access denied. Tap the mic again to retry.' : 'Error: network');
+            ? 'Mic blocked. Allow it in browser settings, or use the score buttons.' : 'Voice input is unavailable. Enter your score with the buttons instead.');
         vi.advanceTimersByTime(delay - 1);
         expect(UI.voiceOverlay.classList.contains('hidden')).toBe(false);
         vi.advanceTimersByTime(1);

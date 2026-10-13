@@ -461,7 +461,7 @@ export async function playHistoricalAudio(url) {
         await audio.play();
     } catch (err) {
         console.error("[Audio] Historical playback failed:", err);
-        alert("Audio Diary could not be loaded. This might be due to a poor network connection or a deleted file.");
+        alert("Could not play this audio diary. Check your connection and try again. If it is still unavailable, ask the app administrator for help.");
         throw err;
     }
 }
@@ -568,7 +568,7 @@ export async function showAiBriefing(round, btn, roundRow) {
 
     } catch (err) {
         console.error("[AI Briefing] Error:", err);
-        alert(aiErrorMessage(err, "Could not generate AI briefing. Ensure your internet is connected."));
+        alert(aiErrorMessage(err, "Could not create the AI briefing. Check your connection, then try the briefing button again."));
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -628,7 +628,7 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
     UI.ocAddedPlayersList.innerHTML = '';
 
     if (groups.length === 0) {
-        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet</li>';
+        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet. Choose a player or add a guest above.</li>';
         return;
     }
 
@@ -1026,7 +1026,7 @@ export function bindPracticeCaddyUI() {
             console.error('[Practice Caddy] Generation error:', err);
             setPracticeState('empty');
             if (errorEl) {
-                errorEl.textContent = `Error: ${err.message}`;
+                errorEl.textContent = aiErrorMessage(err, 'Could not create your practice plan. Check your connection, then try generating it again.');
                 errorEl.classList.remove('hidden');
             }
         } finally {

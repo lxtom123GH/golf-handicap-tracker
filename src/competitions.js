@@ -55,7 +55,7 @@ function bindArchiveControls() {
                 await updateDoc(doc(db, 'competitions', comp.id), { archived: !comp.archived });
             } catch (e) {
                 console.error('[Comps] archive failed:', e);
-                alert('Could not update the competition.');
+                alert('Could not update the competition. Check your connection, then try again.');
             }
         });
     }
@@ -97,7 +97,7 @@ function bindArchiveControls() {
             setActiveCompetition(null);
         } catch (e) {
             console.error('[Comps] delete failed:', e);
-            alert('Could not delete the competition.');
+            alert('Could not delete the competition. Check your connection and confirm it is still listed before trying again.');
             confirmBtn.disabled = false;
         }
     });
@@ -566,7 +566,7 @@ function bindCompetitionCreation() {
     function renderRulesList() {
         if (!rulesListEl) return;
         if (rules.length === 0) {
-            rulesListEl.innerHTML = '<div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added yet.</div>';
+            rulesListEl.innerHTML = '<div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added yet. Add a rule above, or continue with standard scoring.</div>';
             return;
         }
         rulesListEl.innerHTML = rules.map((r, i) => `
@@ -829,7 +829,7 @@ function populateInvitePool() {
             }
         });
         if (listEl.innerHTML === '') {
-            listEl.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem;">No other approved players to invite yet.</p>';
+            listEl.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem;">No other approved players are available. Ask the app administrator to approve their accounts, then reopen this list.</p>';
         }
     }).catch(err => {
         console.error('[Competitions] Failed to load invite pool:', err);
@@ -854,7 +854,7 @@ function populateRegularsPool() {
             }
         });
         if (UI.compRegularsList.innerHTML === '') {
-            UI.compRegularsList.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem;">No approved players found.</p>';
+            UI.compRegularsList.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem;">No approved players found. Ask the app administrator to approve the players, then reopen this list.</p>';
         }
     }).catch(err => {
         console.error('[Competitions] Failed to load regulars pool:', err);

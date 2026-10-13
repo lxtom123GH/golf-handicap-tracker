@@ -63,7 +63,7 @@
     <!-- Connectivity status updates when the browser goes online or offline. -->
     <div id="offline-banner" class="hidden" role="status"
         style="position:fixed; top:0; left:0; right:0; z-index:9000; pointer-events:none; background:#78350f; color:#fef3c7; text-align:center; padding:6px 12px; font-size:0.85rem; font-weight:600;">
-        📵 You're offline — scores are saved on this phone and will sync when signal returns.
+        📵 You're offline. Keep this app open and reconnect to sync. Avoid reloading during your round.
     </div>
 
     <!-- Authentication Overlay -->
@@ -410,7 +410,7 @@
                     <div
                         style="font-size: 2.5rem; margin-bottom: 16px; animation: cloak-spin 1s linear infinite; display: inline-block;">
                         ⚙️</div>
-                    <p style="font-weight: 600; color: var(--text-muted);">Your Caddy is thinking...</p>
+                    <p style="font-weight: 600; color: var(--text-muted);">Creating your practice plan… Please wait.</p>
                 </div>
 
             </div>
@@ -925,7 +925,7 @@
                 <div id="oc-past-round-entry">
                     <button type="button" id="btn-oc-log-past-round" class="btn btn-secondary"
                         aria-haspopup="dialog" aria-describedby="oc-past-round-note" style="width:100%;">＋ Log a past round to my record</button>
-                    <p id="oc-past-round-note">Saved to your official WHS record.</p>
+                    <p id="oc-past-round-note">Saved to your scoring record in this app.</p>
                 </div>
 
                 <!-- On-Course Leaderboard View -->
@@ -1663,8 +1663,7 @@
             <section class="card hidden" id="whs-welcome"
                 style="text-align:center; border:2px solid var(--primary-color);">
                 <h2 style="margin-top:0;">👋 Welcome to Golf Tracker</h2>
-                <p class="section-desc">Log a round to start building your official WHS
-                    handicap. Your index, trends and insights all appear here once you
+                <p class="section-desc">Log a round to start building your handicap estimate in this app. Your index, trends and insights all appear here once you
                     have a few rounds in.</p>
                 <button type="button" id="btn-whs-welcome-start" class="btn btn-primary"
                     style="margin-top:8px;">⛳ Start Your First Round</button>
@@ -1735,7 +1734,7 @@
                       <button type="button" id="btn-close-log-round" class="btn btn-secondary btn-sm" style="width:auto; margin:0;" aria-label="Close">✕</button>
                     </div>
                     <div class="modal-body">
-                    <p class="section-desc">You are logging this round to your official WHS profile.</p>
+                    <p class="section-desc">This round is saved in this app. It does not submit a score to Golf Australia.</p>
                     <form id="add-round-form" class="round-form">
                         <div class="form-row">
                             <div class="form-group flex-2">
@@ -1906,10 +1905,10 @@
                     </table>
                 </div>
                 <div id="empty-state" class="empty-state">
-                    <p>No rounds logged yet.</p>
+                    <p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p>
                 </div>
                 <div id="loading-state" class="empty-state">
-                    <p>Loading WHS data...</p>
+                    <p>Loading your scoring record… Please wait.</p>
                 </div>
             </section>
 
@@ -1934,19 +1933,20 @@
                 <!-- Plain-language handicap explanations for new golfers. -->
                 <details id="explainer-handicaps" class="explainer">
                     <summary>New to handicaps? The 30-second version</summary>
-                    <p>Every round you log gets a <strong>score differential</strong> — roughly "how well you
-                        played, adjusted for how hard the course was". Your <strong>Handicap Index</strong> is the
-                        average of your best differentials from your last 20 rounds (fewer while you're starting
-                        out). One bad round can't hurt it — only your <em>best</em> rounds count. It updates
-                        automatically every time you save a round here.</p>
-                    <p><strong>Stableford points</strong>, the other number you'll see: 2 points for par on your
-                        handicap-adjusted score, 3 for birdie, 1 for bogey, 0 after that — so a blow-up hole stops
-                        costing you and you can pick up. Higher is better; 36 means you played to your handicap.</p>
-                    <p><strong>Index vs Daily Handicap:</strong> your <strong>Handicap Index</strong> is your
-                        portable skill number — it follows you to any course. Your <strong>Daily Handicap</strong> is
-                        that number adjusted for the course and tees you're playing <em>today</em> (harder course →
-                        more strokes). Golf Australia's formula: Index × Slope ÷ 113 + (CR − Par), then × 0.93. On
-                        Course works it out for you the moment you pick a tee.</p>
+                    <p>A <strong>score differential</strong> puts a round in the context of the course’s difficulty.
+                        Your <strong>Handicap Index</strong> reflects your demonstrated ability, using your stronger
+                        recent scores and the applicable handicapping adjustments. A new score can change which older
+                        scores count. This app calculates an estimate; use your official record for competitions.</p>
+                    <p><strong>Stableford points</strong> reward each hole against a target score. In standard handicap
+                        Stableford, net par earns 2 points, net birdie 3, net bogey 1 and net double bogey or worse 0.
+                        Nine net pars total 18 points; eighteen net pars total 36 points. Higher is better.</p>
+                    <p><strong>Index vs Daily Handicap:</strong> your <strong>Handicap Index</strong> is a standardised
+                        measure of ability. Your <strong>Daily Handicap</strong> is the stroke allowance for the course,
+                        tees and round length you are playing. Check the club’s or Golf Australia’s official lookup
+                        before competition play.</p>
+                    <p><strong>AGS</strong> means <strong>adjusted gross score</strong>: the round total after the
+                        handicapping adjustments to hole scores. It may differ from the total strokes you actually took.
+                        Use Manual AGS only when you know that adjusted total.</p>
                 </details>
             </section>
         </div> <!-- End WHS Tab -->
@@ -2135,7 +2135,7 @@
                         <div id="comp-regulars-list"
                             style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background:white; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
                             <!-- Checkboxes injected here via JS -->
-                            <p style="color:#94a3b8; font-size:0.85rem;">Loading potential regulars...</p>
+                            <p style="color:#94a3b8; font-size:0.85rem;">Loading players you can add… Please wait.</p>
                         </div>
                     </div>
 
@@ -2243,8 +2243,7 @@
 
                         <div id="comp-rules-list"
                             style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                            <div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added
-                                yet.</div>
+                            <div class="empty-state" style="padding: 10px; font-size: 0.9rem;">No custom rules added yet. Add a rule above, or continue with standard scoring.</div>
                         </div>
                     </div>
 
@@ -2355,7 +2354,7 @@
                             </table>
                         </div>
                         <div id="comp-empty-state" class="empty-state" style="padding: 20px;">
-                            <p>No rounds logged yet.</p>
+                            <p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p>
                         </div>
                     </section>
                 </div>
@@ -2417,7 +2416,7 @@
                     <span id="coach-roster-count" style="font-size:0.85rem;color:#64748b;"></span>
                 </div>
                 <div id="coach-roster-list" style="display:flex;flex-direction:column;gap:10px;">
-                    <p style="color:#94a3b8;">Loading athlete roster...</p>
+                    <p style="color:#94a3b8;">Loading your players… Please wait.</p>
                 </div>
             </section>
 
@@ -2519,7 +2518,7 @@
                         <p class="section-desc">Analysis of tendencies across all tracked shots.</p>
                         <div id="coach-shot-dispersion"
                             style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-top:15px;">
-                            <p style="color:#94a3b8;">Loading analytics...</p>
+                            <p style="color:#94a3b8;">Loading shot patterns… Please wait.</p>
                         </div>
                     </section>
 
@@ -2695,7 +2694,7 @@
                 <section class="card">
                     <h2>People You Follow</h2>
                     <ul id="feed-following-list" style="list-style:none;padding:0;margin:0;font-size:0.875rem;">
-                        <p style="color:#94a3b8;">Loading...</p>
+                        <p style="color:#94a3b8;">Loading people you follow… Please wait.</p>
                     </ul>
                 </section>
 

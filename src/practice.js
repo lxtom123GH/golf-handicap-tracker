@@ -456,7 +456,7 @@ function renderPracticeDashboard() {
     const viewDrillId = UI.insightsDrillSelect ? UI.insightsDrillSelect.value : null;
 
     if (!AppState.currentPracticeRounds.length) {
-        UI.practiceDashboardResults.innerHTML = '<p class="empty-text">No practice records found.</p>';
+        UI.practiceDashboardResults.innerHTML = '<p class="empty-text">No practice sessions recorded yet. Choose a drill on Practice, then save a session.</p>';
         return;
     }
 
@@ -468,7 +468,7 @@ function renderPracticeDashboard() {
     const filteredRecords = AppState.currentPracticeRounds.filter(r => r.drillId === viewDrillId);
 
     if (!filteredRecords.length) {
-        UI.practiceDashboardResults.innerHTML = `<p class="empty-text">No records logged for <strong>${DRILL_TEMPLATES[viewDrillId].name}</strong> yet.</p>`;
+        UI.practiceDashboardResults.innerHTML = `<p class="empty-text">No records logged for <strong>${DRILL_TEMPLATES[viewDrillId].name}</strong> yet. Choose this drill on Practice, then save a session.</p>`;
         return;
     }
 
