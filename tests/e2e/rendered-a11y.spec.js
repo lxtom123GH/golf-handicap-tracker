@@ -1,7 +1,9 @@
 // Runtime WCAG 2.2 AA scan for the six rendered application states.
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { writeFile } from 'node:fs/promises';
 import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { COURSE_DATA } from '../../src/course-data.js';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -24,8 +26,15 @@ async function verifyAuthEmulatorEmail(email, password) {
 
 async function audit(page, screen, reports) {
     const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+    const editableControls = screen.startsWith('on-course') || screen === 'scorecard'
+        ? await page.locator('input:visible:not([readonly]):not([type="checkbox"]):not([type="radio"]):not([type="range"]), select:visible, textarea:visible')
+            .evaluateAll(controls => controls.map(control => ({
+                id: control.id, fontSize: parseFloat(getComputedStyle(control).fontSize),
+            }))) : [];
+    if (screen.startsWith('on-course')) expect(editableControls.length, 'setup input inventory').toBeGreaterThan(0);
     reports.push({
         screen,
+        editableControls,
         violations: violations.map(({ id, impact, description, help, helpUrl, nodes }) => ({
             id, impact, description, help, helpUrl,
             nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })),
@@ -36,8 +45,16 @@ async function audit(page, screen, reports) {
     })))}`);
 }
 
-test('axe: sign-in, home, history, round start, scorecard and settings at phone size', async ({ page }, testInfo) => {
+test('axe: sign-in, home, history, round start, scorecard and settings', async ({ page }, testInfo) => {
     test.setTimeout(180_000);
+    // Explicit phone floors, with desktop coverage retained for header contrast.
+    const viewport = {
+        phone: { width: 412, height: 839 },
+        'iphone-se': { width: 375, height: 667 },
+        desktop: { width: 1280, height: 720 },
+    }[testInfo.project.name];
+    expect(viewport, 'accessibility journey requires a known viewport').toBeTruthy();
+    await page.setViewportSize(viewport);
     const reports = [];
 
     await page.goto('/');
@@ -56,7 +73,7 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
     await page.locator('#btn-check-email').click();
     await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
 
-    // The browser may retain another default tab from prior emulator runs.
+    // Choose the screen explicitly; the new context and account have no saved tab.
     await page.locator('.tab-btn[data-target="tab-whs"]').click();
     await expect(page.locator('#tab-whs')).toBeVisible();
     await audit(page, 'home', reports);
@@ -67,7 +84,15 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
     // Add one synthetic round so the history scan covers a rendered record row.
     await page.locator('#btn-oc-log-past-round').click();
     await expect(page.locator('#add-round-container')).toBeVisible();
-    await page.locator('#course-select').selectOption('Ashgrove GC|Blue (Men)');
+    const availableCourses = await page.locator('#oc-course-select option').evaluateAll(options => options.map(o => o.value));
+    const roundOption = await page.locator('#course-select option').evaluateAll((options, { availableCourses, data }) =>
+        options.map(o => o.value).find(value => {
+            const [course, tee] = value.split('|');
+            return availableCourses.includes(course) && data[course]?.[tee]?.pars?.length === 18;
+        }), { availableCourses, data: COURSE_DATA });
+    expect(roundOption, 'a shared rated 18-hole course and tee must be available').toBeTruthy();
+    const [course, tee] = roundOption.split('|');
+    await page.locator('#course-select').selectOption(roundOption);
     const yesterday = await page.evaluate(() => {
         const date = new Date();
         date.setDate(date.getDate() - 1);
@@ -86,8 +111,15 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-simple').click();
     await page.locator('#btn-round-18').click();
-    await page.locator('#oc-course-select').selectOption({ label: 'Ashgrove GC' });
+    await page.locator('#oc-course-select').selectOption(course);
+    await page.locator('#oc-tee-select').selectOption(tee);
+    await expect(page.locator('#oc-course-stats')).toBeVisible();
+    await expect(page.locator('#oc-stat-par')).toHaveValue(String(COURSE_DATA[course][tee].par));
+    await expect(page.locator('#oc-dh-value')).not.toHaveText('--');
     await audit(page, 'on-course round start', reports);
+    await page.locator('#btn-mode-detailed').click();
+    await audit(page, 'on-course detailed toggle', reports);
+    await page.locator('#btn-mode-simple').click();
 
     // In play mode the tab row is hidden, so audit Settings before starting.
     await page.locator('#tab-btn-settings').click();
@@ -100,10 +132,10 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
     await expect(page.locator('#oncourse-hub')).toBeVisible({ timeout: 15_000 });
     await audit(page, 'scorecard', reports);
 
-    await testInfo.attach('axe-results.json', {
-        body: JSON.stringify(reports, null, 2),
-        contentType: 'application/json',
-    });
+    // A file attachment survives the list reporter and is available to CI artifacts.
+    const reportPath = testInfo.outputPath('axe-results.json');
+    await writeFile(reportPath, JSON.stringify({ viewport, reports }, null, 2));
+    await testInfo.attach('axe-results.json', { path: reportPath, contentType: 'application/json' });
     const blocking = reports.flatMap(({ screen, violations }) => violations
         .filter(({ impact }) => impact === 'serious' || impact === 'critical')
         .map(({ id, impact, nodes }) => ({ screen, id, impact, targets: nodes.map(({ target }) => target) })));
@@ -111,6 +143,12 @@ test('axe: sign-in, home, history, round start, scorecard and settings at phone 
         .filter(({ impact }) => impact === 'moderate')
         .map(({ id, nodes }) => ({ screen, id, targets: nodes.map(({ target }) => target) })));
     console.log(`[axe] moderate findings: ${JSON.stringify(moderate)}`);
-    expect(moderate.filter(({ id }) => id === 'meta-viewport'), 'mobile zoom must stay available').toEqual([]);
+    expect(reports.flatMap(({ violations }) => violations).filter(({ id }) => id === 'meta-viewport'),
+        'mobile zoom must stay available at every impact level').toEqual([]);
+    expect(await page.locator('meta[name="viewport"]').getAttribute('content'))
+        .not.toMatch(/maximum-scale|user-scalable\s*=\s*(no|0)/i);
+    expect(reports.flatMap(({ screen, editableControls }) => editableControls
+        .filter(({ fontSize }) => !Number.isFinite(fontSize) || fontSize < 16).map(control => ({ screen, ...control }))),
+        'on-course editable controls must avoid small-text focus zoom').toEqual([]);
     expect(blocking, 'unresolved serious or critical axe findings').toEqual([]);
 });
