@@ -13,6 +13,7 @@ const h = vi.hoisted(() => ({
         20: { tee: { lat: 0.01, lon: 0 }, green: { centre: { lat: 0.012, lon: 0 } } },
     } },
     fixListeners: [],
+    quickLogShot: vi.fn(async () => null),
     // A tiny bag with made-up carries; the mocked ranking picks the club
     // nearest the distance (the real one is card-render's orderClubsFor).
     carry: { Driver: 210, '5 Iron': 170, '7 Iron': 146, PW: 105, Putter: null },
@@ -44,6 +45,10 @@ vi.mock('../../src/oncourse.js', () => ({
     isGpsWatchActive: () => h.gpsOn === true,
     getLastGpsFix: () => h.lastFix ?? null,
 }));
+vi.mock('../../src/modules/score-input.js', () => ({
+    quickLogShot: h.quickLogShot,
+    showToast: vi.fn(),
+}));
 vi.mock('../../src/modules/card-render.js', () => ({
     currentBag: () => Object.keys(h.carry),
     flattenClubs: (bag, ordered) => ordered,
@@ -63,6 +68,7 @@ function dom() {
     document.body.innerHTML = `
       <div id="oc-play-map" class="hidden"><canvas></canvas></div>
       <button id="btn-play-settings" aria-expanded="false"></button>
+      <button id="btn-quick-actual"></button>
       <div id="play-settings-scrim" class="hidden"></div>
       <section id="play-settings-sheet" class="hidden" role="dialog">
         <select id="play-shot-entry"><option value="both">Both</option><option value="map">Map first</option></select>
@@ -129,6 +135,7 @@ beforeEach(() => {
     h.fixListeners.length = 0;
     h.gpsOn = false;
     h.lastFix = null;
+    h.quickLogShot.mockClear();
     localStorage.clear();
     // These cover the classic play map (shot entry 'both'). Map first adds
     // one-tap logging on the map (body.play-quick: one-club strip, start
@@ -140,6 +147,28 @@ beforeEach(() => {
 });
 
 describe('play mode module', () => {
+    it('saves a quick draw with the geometry and club from its current hole', async () => {
+        await on({ shotEntry: 'map' });
+        $('btn-quick-actual').click();
+        const actual = [[0, 0], [0, 150]];
+        h.mounts.at(-1).opts.onChange({ points: actual });
+        await settle(); await settle();
+        expect(h.quickLogShot).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+            actual, slug: 'keperra', physical: 19, club: 'Driver', startXY: [0, 0],
+        }));
+    });
+
+    it('does not save an old map draw on a hole selected while the save module loads', async () => {
+        await on({ shotEntry: 'map' });
+        $('btn-quick-actual').click();
+        h.mounts.at(-1).opts.onChange({ points: [[0, 0], [0, 150]] });
+        // The save yields for its dynamic import; navigation can win that race.
+        h.AppState.currentHole = 2;
+        document.dispatchEvent(new CustomEvent('oc-hole-loaded'));
+        await settle(); await settle();
+        expect(h.quickLogShot).not.toHaveBeenCalled();
+    });
+
     it('opens the glass settings sheet and forwards changes through the existing setting controls', async () => {
         const sourceEntry = $('shot-entry-select');
         sourceEntry.addEventListener('change', () => { h.AppState.shotEntry = sourceEntry.value; });

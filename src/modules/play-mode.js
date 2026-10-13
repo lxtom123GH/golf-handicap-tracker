@@ -676,7 +676,12 @@ function runQuickEffect(effect) {
 /** Save the shot through the wizard's own save path (score-input.js). */
 async function logQuickShot(effect) {
     if (_quickBusy || !_ctl?.frame) return;
+    const context = shotKey();
+    const uid = AppState.currentUser?.uid;
     const frame = _ctl.frame;
+    const { slug, physical } = _mounted;
+    const greenXY = _ctl.greenXY || null;
+    const club = _clubs.key === context ? _clubs.ladder[_clubs.sel]?.val || null : null;
     const start = chainStart(); // not the view's ball: the nudge window may still hold the last shot
     let actual = effect.actual;
     let finishFix = null;
@@ -693,10 +698,12 @@ async function logQuickShot(effect) {
     if (effect.source === 'gps') _holdStart = start;
     try {
         const m = await import('./score-input.js');
-        const club = _clubs.key === shotKey() ? _clubs.ladder[_clubs.sel]?.val || null : null;
+        // Navigation, round teardown or another entry path may win the import.
+        // Never apply the old map's geometry to the now-current shot.
+        if (context !== shotKey() || uid !== AppState.currentUser?.uid || !_quickOn || !roundActive()) return;
         const res = await m.quickLogShot({
-            actual, intended: effect.intended, frame, slug: _mounted.slug, physical: _mounted.physical,
-            club, startXY: start, greenXY: _ctl?.greenXY || null, finishFix,
+            actual, intended: effect.intended, frame, slug, physical,
+            club, startXY: start, greenXY, finishFix,
         });
         if (!res?.shotId) { _holdStart = null; quickToast('Shot not logged — try again'); return; }
         const clubLbl = club ? ` · ${shortClubLabel(club)}` : '';
