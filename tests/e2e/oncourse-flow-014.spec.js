@@ -55,7 +55,7 @@ test('nine synthetic holes: timing, correction, interruption and saved readback'
             const recovered = await expect(page.locator('#app-loading-cloak')).toHaveClass(/cloak-hidden/, { timeout: 12000 }).then(() => true, () => false);
             result.checks.warmOfflineReload = recovered;
             await context.setOffline(false);
-            if (!recovered) await page.reload();
+            expect(recovered, 'the warmed offline application shell must recover before reconnect').toBe(true);
             await expect(page.locator('#oncourse-hub')).toBeVisible();
             expect(await snapshot()).toEqual(before);
             result.checks.networkReturn = 'exact round state retained';
