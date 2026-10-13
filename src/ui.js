@@ -856,7 +856,7 @@ function practiceGenerationErrorMessage(error) {
         return 'Your account is awaiting approval. Ask an admin to approve it before using AI features.';
     }
     if (code === 'functions/resource-exhausted') {
-        return "You've reached today's AI practice plan limit. Try again tomorrow.";
+        return "You've reached today's limit across AI features. Try again tomorrow.";
     }
     if (code === 'functions/unauthenticated') {
         return 'Your session has ended. Sign in again to generate a practice plan.';

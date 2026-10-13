@@ -35,7 +35,7 @@ describe('Practice Caddy generation failure copy', () => {
         ['functions/permission-denied', 'private service detail',
             'Your account is awaiting approval. Ask an admin to approve it before using AI features.'],
         ['functions/resource-exhausted', 'private service detail',
-            "You've reached today's AI practice plan limit. Try again tomorrow."],
+            "You've reached today's limit across AI features. Try again tomorrow."],
         ['functions/unauthenticated', 'private service detail',
             'Your session has ended. Sign in again to generate a practice plan.'],
         ['functions/internal', 'private backend trace marker', uncertainOutcome],
