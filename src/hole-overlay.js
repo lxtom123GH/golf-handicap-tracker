@@ -1198,7 +1198,9 @@ export function mountHoleOverlay(canvas, hole, { curves = {}, mode = 'intended',
             if (typeof next?.lat === 'number') {
                 startMark.xy = toFrame(frame, [next.lat, next.lon]);
                 startIsMeasured = true; // review P3: a GPS start is a measured one (green dot)
-                reanchorStoredCurves(startMark.xy);
+                // On the quick-log map GPS is the golfer's position, not
+                // the shot start. Moving it must never edit or log a line.
+                if (!anchorFirst) reanchorStoredCurves(startMark.xy);
             }
             if ('quality' in next) startMark.quality = next.quality;
             if ('draggable' in next) startMark.draggable = next.draggable;
