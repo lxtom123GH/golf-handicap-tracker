@@ -101,16 +101,19 @@ function wallClockEpoch({ year, month, day, hour = 0, minute = 0, second = 0, mi
 
 function epochForZonedWallClock(parts) {
     const targetWallClock = wallClockEpoch(parts);
-    let epoch = targetWallClock;
-    // Correct the UTC guess by the zone's offset. A second pass handles the
-    // offset change at daylight-saving boundaries without relying on host TZ.
-    for (let attempt = 0; attempt < 3; attempt++) {
-        const observedWallClock = wallClockEpoch(zonedParts(epoch));
-        const correction = targetWallClock - observedWallClock;
-        epoch += correction;
-        if (correction === 0) break;
-    }
-    return epoch;
+    // Sample both sides of a nearby transition. Iterative correction can
+    // oscillate across a skipped time or settle on the later repeated time.
+    const offsets = new Set([-86_400_000, 0, 86_400_000].map(delta => {
+        const epoch = targetWallClock + delta;
+        return wallClockEpoch(zonedParts(epoch)) - epoch;
+    }));
+    const candidates = [...offsets]
+        .map(offset => targetWallClock - offset)
+        .sort((a, b) => a - b);
+    // Native Date chooses the earlier instant in an overlap; in a gap it
+    // advances by the gap duration (including Lord Howe's half-hour gap).
+    return candidates.find(epoch => wallClockEpoch(zonedParts(epoch)) === targetWallClock)
+        ?? candidates.at(-1);
 }
 
 function dateClassForTestZone(BaseDate) {
@@ -182,6 +185,25 @@ afterEach(() => {
 // --------------------------------------------------------------------------
 // The helper itself
 // --------------------------------------------------------------------------
+
+describe('timezone fixture matches native Date at DST transitions', () => {
+    it.each([
+        ['America/New_York', [2026, 2, 8, 2, 30], '2026-03-08T07:30:00.000Z'],
+        ['America/New_York', [2026, 10, 1, 1, 30], '2026-11-01T05:30:00.000Z'],
+        ['Australia/Sydney', [2026, 9, 4, 2, 30], '2026-10-03T16:30:00.000Z'],
+        ['Australia/Sydney', [2026, 3, 5, 2, 30], '2026-04-04T15:30:00.000Z'],
+        ['Australia/Lord_Howe', [2026, 9, 4, 2, 15], '2026-10-03T15:45:00.000Z'],
+        ['Australia/Lord_Howe', [2026, 3, 5, 1, 45], '2026-04-04T14:45:00.000Z'],
+    ])('%s wall clock %j resolves to %s', (zone, fields, expected) => {
+        at(zone, '2026-01-01T00:00:00Z', () => {
+            // Assert the instant, not a round-trip through the same fake getters.
+            expect(new Date(...fields).toISOString()).toBe(expected);
+            const moved = new Date(fields[0] - 1, ...fields.slice(1));
+            moved.setFullYear(fields[0]);
+            expect(moved.toISOString()).toBe(expected);
+        });
+    });
+});
 
 describe('localToday — the boundaries the UTC day gets wrong', () => {
     it('is the local day at local midnight (UTC+10: the UTC day is still yesterday)', async () => {
