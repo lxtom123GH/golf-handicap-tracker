@@ -12,6 +12,14 @@
    ========================================== */
 
 :root {
+    /* Exact-value consolidation; task 017 keeps every computed value unchanged. */
+    --space-8: 8px;
+    --space-10: 10px;
+    --radius-8: 8px;
+    --radius-12: 12px;
+    --text-085: 0.85rem;
+    --text-090: 0.9rem;
+    --text-100: 1rem;
     --primary-color: #0b2e13;
     /* Deep Golf Green */
     --secondary-color: #1a5829;
@@ -81,7 +89,7 @@ body {
     align-items: center;
     background-color: var(--card-bg);
     padding: 15px 20px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-color);
@@ -90,7 +98,7 @@ body {
 .player-selector {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
     font-weight: 600;
 }
 
@@ -99,12 +107,12 @@ body {
     border-radius: 4px;
     border: 1px solid var(--border-color);
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .btn-sm {
     padding: 8px 16px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 .hidden {
@@ -120,11 +128,11 @@ body {
     margin-bottom: 6px;
     background: white;
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 /* Dashboard Grid */
@@ -147,7 +155,7 @@ body {
 
 .section-desc {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     margin-bottom: 20px;
     margin-top: -15px;
 }
@@ -156,7 +164,7 @@ body {
 .header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     color: white;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     /* Slimmer banner: on a phone the old 30/40px padding + 30px margin burned
        ~2 thumb-heights of every tab before any content appeared. */
     padding: 18px 24px;
@@ -180,14 +188,14 @@ body {
 
 .branding p {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .index-display {
     background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 20px 40px;
     text-align: center;
     display: flex;
@@ -198,7 +206,7 @@ body {
 .index-label {
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     font-weight: 600;
     color: var(--accent-color);
 }
@@ -219,14 +227,14 @@ body {
 }
 
 .index-subtext {
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     color: rgba(255, 255, 255, 0.7);
 }
 
 /* Cards */
 .card {
     background-color: var(--card-bg);
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 30px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
     border: 1px solid var(--border-color);
@@ -266,7 +274,7 @@ body {
 
 .form-group label {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     margin-bottom: 8px;
     color: var(--text-main);
 }
@@ -277,7 +285,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--text-100);
     transition: all 0.3s ease;
 }
 
@@ -311,7 +319,7 @@ body {
     border-radius: 6px;
     font-family: inherit;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: var(--text-100);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -342,7 +350,7 @@ body {
     background: none;
     color: var(--danger);
     padding: 5px 10px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 /* D29 review: a disabled Undo (draw mode, nothing to undo) must look it. */
@@ -397,7 +405,7 @@ body {
     padding: 12px 15px;
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -480,7 +488,7 @@ body {
     padding: 4px 6px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
@@ -507,7 +515,7 @@ body {
     color: white;
     font-size: 0.7rem;
     padding: 3px 6px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     font-weight: 600;
 }
 
@@ -590,7 +598,7 @@ body {
 .auth-buttons {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-10);
     margin-top: 20px;
 }
 
@@ -601,7 +609,7 @@ body {
     gap: 12px;
     margin: 18px 0 12px;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: var(--text-085);
 }
 
 .auth-divider::before,
@@ -616,7 +624,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--space-10);
     width: 100%;
     background: #ffffff;
     color: #3c4043;
@@ -639,7 +647,7 @@ body {
 .auth-switch {
     text-align: center;
     margin-top: 15px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 .auth-switch a {
@@ -654,14 +662,14 @@ body {
     padding: 10px;
     border-radius: 6px;
     margin-bottom: 15px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     border: 1px solid var(--danger);
 }
 
 .user-controls {
     display: flex;
     align-items: center;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 /* Non-counting rounds styling */
@@ -673,7 +681,7 @@ body {
 .status-badge {
     font-size: 0.7rem;
     padding: 3px 6px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     font-weight: 600;
     background-color: #e9ecef;
     color: var(--text-muted);
@@ -818,7 +826,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     background-color: #f1f5f9;
     color: var(--text-main);
     border: 2px solid #cbd5e1;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 20px 10px;
     font-size: 1.1rem;
     font-weight: 700;
@@ -844,7 +852,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     padding: 10px 4px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     font-weight: 700;
     text-align: center;
     cursor: pointer;
@@ -871,13 +879,13 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 .club-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr)) 76px;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 .club-chip {
     min-width: 0;
     min-height: 48px;
-    font-size: 1rem;
+    font-size: var(--text-100);
     line-height: 1.1;
     /* Custom long labels ("Long hybrid") wrap inside the cell, never past it. */
     white-space: normal;
@@ -891,12 +899,12 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 
 .club-all-btn {
     min-height: 48px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     border: 1px solid rgba(255, 255, 255, 0.18);
     background: rgba(8, 12, 18, 0.86);
     color: #fff;
     font-weight: 800;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -920,7 +928,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     gap: 6px;
     margin-top: 8px;
     padding: 8px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     background: rgba(8, 12, 18, 0.86);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
@@ -1021,7 +1029,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     justify-content: space-between;
     background: #f8f9fa;
     padding: 10px 15px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     margin-bottom: 10px;
     border: 1px solid var(--border-color);
 }
@@ -1100,7 +1108,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     }
 
     .header-content {
-        gap: 10px;
+        gap: var(--space-10);
     }
 
     .branding h1 {
@@ -1125,7 +1133,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 
     .user-controls {
         font-size: 0.8rem;
-        gap: 8px;
+        gap: var(--space-8);
     }
 
     .user-controls>span {
@@ -1142,7 +1150,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 
     .player-selector label {
         white-space: nowrap;
-        font-size: 0.85rem;
+        font-size: var(--text-085);
     }
 
     .player-selector select {
@@ -1188,7 +1196,7 @@ body.round-active #tab-oncourse {
     z-index: 100;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     min-height: 44px;
     padding: 0 8px 0 4px;
     background: #1e3c72;
@@ -1202,7 +1210,7 @@ body.round-active #tab-oncourse {
     min-height: 44px;
     padding: 0 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     background: transparent;
     color: white;
     font-weight: 800;
@@ -1232,7 +1240,7 @@ body.round-active #tab-oncourse {
 .oc-strip-gps {
     font-family: 'Roboto Mono', monospace;
     font-weight: 800;
-    font-size: 1rem;
+    font-size: var(--text-100);
     color: #38bdf8;
     white-space: nowrap;
 }
@@ -1241,7 +1249,7 @@ body.round-active #tab-oncourse {
     min-width: 44px;
     min-height: 44px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     background: transparent;
     color: white;
     font-size: 1.5rem;
@@ -1267,7 +1275,7 @@ body.round-active #tab-oncourse {
        sat off the right edge. Rows wrap; a button is never narrower than
        half the row. */
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-8);
     margin-bottom: 8px;
 }
 
@@ -1288,7 +1296,7 @@ body.round-active #tab-oncourse {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     flex-wrap: wrap;
 }
 .oc-finish-head h2 { margin-bottom: 0; border-bottom: none; }
@@ -1316,7 +1324,7 @@ body.round-active #tab-oncourse {
     bottom: 0;
     z-index: 90;
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     padding: 10px 0 4px;
     margin-top: 8px;
     background: var(--card-bg);
@@ -1327,7 +1335,7 @@ body.round-active #tab-oncourse {
     flex: 1;
     min-height: 56px;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .oc-thumb-next {
@@ -1346,7 +1354,7 @@ body.round-active #tab-oncourse {
 .compact-score-card .oc-score-label {
     flex: 1;
     text-align: left;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     font-weight: 600;
     color: #475569;
 }
@@ -1377,14 +1385,14 @@ body.round-active #tab-oncourse {
 }
 
 .oc-card-total {
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     color: #64748b;
     font-weight: 600;
 }
 
 .oc-card-num {
     color: var(--primary-color);
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 /* The worked-out GIR: Play mode shows it; the normal card keeps its button. */
@@ -1418,7 +1426,7 @@ body.round-active #tab-oncourse {
 .oc-stats-row .mini-stat {
     flex: 1;
     padding: 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     border: 1px solid #e2e8f0;
     background: #f8fafc;
     font-size: 0.75rem;
@@ -1431,7 +1439,7 @@ body.round-active #tab-oncourse {
     align-items: center;
     justify-content: space-between;
     padding: 4px 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     border: 1px solid #e2e8f0;
     background: #f8fafc;
 }
@@ -1441,11 +1449,11 @@ body.round-active #tab-oncourse {
     background: none;
     font-weight: bold;
     padding: 4px 8px;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .oc-putts-val {
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     font-weight: 800;
     color: var(--primary-color);
 }
@@ -1454,7 +1462,7 @@ body.round-active #tab-oncourse {
    restyle them; identical values. */
 #hole-jumper-container {
     display: flex;
-    gap: 8px;
+    gap: var(--space-8);
     padding: 10px 16px;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
@@ -1478,7 +1486,7 @@ body.round-active #tab-oncourse {
     width: 100%;
     height: 60px;
     font-size: 1.2rem;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
 }
 
@@ -1660,7 +1668,7 @@ body.play-mode.round-active .play-rail-left {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     width: 60px;
     pointer-events: none;
 }
@@ -1674,7 +1682,7 @@ body.play-mode.round-active .play-slot {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 body.play-mode.round-active .play-slot:empty {
@@ -1895,7 +1903,7 @@ body.play-mode.round-active .oc-track-wrap {
 
 .oc-stats-row {
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     margin-top: 5px;
     align-items: center;
 }
@@ -1905,9 +1913,9 @@ body.play-mode.round-active .oc-track-wrap {
     background: #fffbeb;
     color: #92400e;
     border: 1px solid #fde68a;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     padding: 10px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     margin-bottom: 10px;
 }
 
@@ -1943,7 +1951,7 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     width: 64px;
     margin: 0;
     padding: 0;
@@ -1957,7 +1965,7 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
     order: 1;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin: 0;
 }
 
@@ -2153,7 +2161,7 @@ body.play-mode.round-active #oc-bottom-nav {
     z-index: 30;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin: 0;
     padding: 0;
     background: transparent;
@@ -2218,9 +2226,9 @@ body.play-mode.round-active #oc-leaderboard {
 .play-reach-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin-top: 12px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     font-weight: 600;
 }
 
@@ -2228,9 +2236,9 @@ body.play-mode.round-active #oc-leaderboard {
     width: 80px;
     min-height: 44px;
     padding: 0 8px;
-    font-size: 1rem;
+    font-size: var(--text-100);
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
 }
 
 /* Practice Last 5 (E36): the delete ✕ is a 44px thumb target. */
@@ -2241,7 +2249,7 @@ body.play-mode.round-active #oc-leaderboard {
 .map-first #bag-default-hint { display: none; }
 
 /* My Bag rows (E35): one line each, 44px tap height. */
-.bag-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.bag-row { display: flex; align-items: center; gap: var(--space-8); min-height: 44px; }
 .bag-row input { width: 22px; height: 22px; flex: none; }
 /* Save status under the bag; red when the device refused the write. */
 .bag-msg { margin: 8px 0 0; font-size: 0.88rem; color: #10b981; }
@@ -2298,7 +2306,7 @@ body.play-mode.round-active #oc-leaderboard {
     width: 100%;
     min-height: 55px;
     font-size: 1.15rem;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     font-weight: 800;
 }
 
@@ -2306,7 +2314,7 @@ body.play-mode.round-active #oc-leaderboard {
    canvas never slides under it (the S10 lock-ring lesson). */
 .wizard-footer {
     display: flex;
-    gap: 8px;
+    gap: var(--space-8);
     align-items: stretch;
     /* Was inline in index.html; moved here so .map-first can dock it. */
     position: sticky;
@@ -2324,7 +2332,7 @@ body.play-mode.round-active #oc-leaderboard {
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     flex: 1;
     width: auto;
-    font-size: 1rem;
+    font-size: var(--text-100);
     white-space: nowrap;
     padding-left: 8px;
     padding-right: 8px;
@@ -2339,7 +2347,7 @@ body.play-mode.round-active #oc-leaderboard {
 }
 
 .wizard-log-shot.secondary {
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 .wizard-log-shot {
@@ -2400,7 +2408,7 @@ body.active-wizard-mode #oncourse-wizard {
     padding: 15px;
     border-top: 1px solid #e2e8f0;
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     z-index: 2001;
 }
 
@@ -2587,7 +2595,7 @@ body.active-wizard-mode #oncourse-wizard {
 .oc-quick-start {
     background: #f0fdf4;
     border: 2px solid #16a34a;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 12px 14px;
     margin: -6px 0 18px;
 }
@@ -2596,7 +2604,7 @@ body.active-wizard-mode #oncourse-wizard {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 .oc-quick-start-title {
@@ -2650,7 +2658,7 @@ body.active-wizard-mode #oncourse-wizard {
 /* New-golfer inline explainers (BL-NG-01) — native <details>, plain language */
 .explainer {
     margin-top: 10px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     color: #475569;
 }
 
@@ -2693,7 +2701,7 @@ body.active-wizard-mode #oncourse-wizard {
     cursor: pointer;
     color: #2563eb;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     text-transform: none;
     white-space: nowrap;
     list-style: none;
@@ -2725,7 +2733,7 @@ body.active-wizard-mode #oncourse-wizard {
     background: #eff6ff;
     color: #334155;
     text-align: left;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     font-weight: 400;
     line-height: 1.5;
     text-transform: none;
@@ -2788,7 +2796,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     line-height: 1.2;
 }
 .big-numbers-view header { font-size: 20px; }
@@ -2835,18 +2843,18 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 .gps-pill-main { font-size: 1.35rem; font-weight: 900; color: #7dd3fc; }
-.gps-pill-fb { font-size: 1rem; }
+.gps-pill-fb { font-size: var(--text-100); }
 .gps-pill-sep { opacity: 0.5; }
 .gps-pill-mode { font-size: 0.7rem; font-weight: 700; color: #cbd5e1; margin-left: 2px; }
 /* The pill is the opener while GPS runs; the text button covers GPS-off. */
 .gps-pill:not(.hidden) + .big-numbers-button { display: none; }
 /* Weather / plays-like + strategy hint, moved into the big view. */
 .big-extra { display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.3; }
-.big-plays-like { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.big-plays-like { display: flex; justify-content: center; gap: var(--space-10); flex-wrap: wrap; }
 .big-plays-like-value { font-weight: 800; color: #b45309; }
 .big-strategy-hint { color: #4338ca; font-weight: 600; }
 .big-numbers-view footer { font-size: 12px; }
-.big-numbers-view footer button { min-height: 44px; padding: 0 16px; font-size: 16px; background: #111; color: #fff; border: 0; border-radius: 8px; }
+.big-numbers-view footer button { min-height: 44px; padding: 0 16px; font-size: 16px; background: #111; color: #fff; border: 0; border-radius: var(--radius-8); }
 
 /* The hold-still ring in the wizard header: a 44 px SVG arc that fills over
    the 4 s window, the live accuracy in its centre, the instruction under it.
@@ -2862,7 +2870,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     top: -2px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     z-index: 5;
 }
 .gps-lock-ring.hidden { display: none; }
@@ -2900,7 +2908,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
    ========================================================================== */
 .mapper-pills {
     display: flex;
-    gap: 8px;
+    gap: var(--space-8);
     flex-wrap: wrap;
     margin-bottom: 10px;
 }
@@ -2961,7 +2969,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     display: flex;
     align-items: center;
     padding: 0 64px 0 12px;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 .draw-mode .line-tools {
     position: fixed;
@@ -3118,7 +3126,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     min-height: 48px;
     height: 48px;
     padding: 0 6px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     white-space: normal;
     line-height: 1.1;
 }
@@ -3251,7 +3259,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     background: rgba(255, 255, 255, 0.95);
     color: #2563eb;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     cursor: pointer;
 }
 
@@ -3270,7 +3278,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     backdrop-filter: blur(8px);
     color: #fff;
     font-weight: 800;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     cursor: pointer;
 }
 
@@ -3307,7 +3315,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     color: #fff;
     padding: 10px 16px;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     text-align: center;
 }
 .round-save-toast {
@@ -3321,7 +3329,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     color: #fff;
     padding: 10px 16px;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     text-align: center;
 }
 .update-banner {
@@ -3332,14 +3340,14 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     z-index: 1001;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
     background: #fff;
     color: #0f172a;
     border: 1px solid var(--primary-color);
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 10px 12px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 .update-banner span { flex: 1; min-width: 0; }
 .update-banner .btn {
@@ -3347,7 +3355,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     margin: 0;
     min-height: 44px;
     padding: 8px 14px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     flex: none;
 }
 
@@ -3381,7 +3389,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     z-index: 1002;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
     padding: 8px 8px 8px 16px;
     border-radius: 14px;
     background: rgba(8, 12, 18, 0.86);
@@ -3412,7 +3420,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     background: #ffd60a;
     color: #000;
     font-weight: 800;
-    font-size: 1rem;
+    font-size: var(--text-100);
     cursor: pointer;
     pointer-events: auto;
 }
