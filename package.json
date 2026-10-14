@@ -13,7 +13,8 @@
     "test:auth": "node scripts/run-emulator-tests.mjs --only auth --project demo-golf-tracker -- \"npx vitest run tests/auth --no-file-parallelism\"",
     "test:e2e": "node scripts/run-e2e.mjs",
     "ux:harness": "node scripts/run-e2e-isolated.mjs --project=phone --project=iphone-se --workers=1 --retries=0 --reporter=line tests/e2e/ux-harness.spec.js",
-    "test": "vitest run tests/unit tests/oncourse.test.js"
+    "test": "vitest run tests/unit tests/oncourse.test.js",
+    "dev:emu": "node scripts/dev-ux-emulators.mjs"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
     "@playwright/test": "^1.61.1",
+    "axe-core": "4.13.0",
     "firebase-tools": "^15.8.0",
     "jsdom": "^28.1.0",
     "playwright": "^1.58.2",
