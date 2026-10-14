@@ -96,12 +96,12 @@ async function deleteVideo(v) {
  */
 export async function renderVideoLibrary(uid, container, { canDelete = false } = {}) {
     if (!container) return;
-    container.innerHTML = '<p style="color:#94a3b8;">Loading swing videos… Please wait.</p>';
+    container.innerHTML = '<p style="color:var(--text-muted);">Loading swing videos… Please wait.</p>';
     try {
         const q = query(collection(db, 'videos'), where('uid', '==', uid), orderBy('createdAt', 'desc'));
         const snap = await getDocs(q);
         if (snap.empty) {
-            container.innerHTML = `<p style="color:#94a3b8;">${canDelete
+            container.innerHTML = `<p style="color:var(--text-muted);">${canDelete
                 ? 'No swing videos yet. Choose a video above, then select Upload video.'
                 : 'No swing videos yet. Ask the player to upload one on their Practice tab.'}</p>`;
             return;
@@ -120,7 +120,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.85rem; flex-wrap:wrap; gap:6px;">
                     <span><strong class="vid-angle"></strong> <span class="vid-note" style="color:#64748b;"></span></span>
-                    <span style="color:#94a3b8;">${escapeHtml(when)} · ${formatBytes(v.bytes)}</span>
+                    <span style="color:var(--text-muted);">${escapeHtml(when)} · ${formatBytes(v.bytes)}</span>
                 </div>
                 <div style="display:flex; gap:6px; margin-top:6px; align-items:center; flex-wrap:wrap;">
                     <span style="font-size:0.75rem; color:#64748b;">Speed:</span>
@@ -132,7 +132,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     <button type="button" class="btn-text vid-step" data-dir="1" aria-label="Forward one frame" style="padding:2px 8px;">frame ▶</button>
                     <button type="button" class="btn-text vid-annotate" style="padding:2px 8px; color:#2563eb;">✏️ Annotate</button>
                     <button type="button" class="btn-text vid-ai" style="padding:2px 8px; color:#8b5cf6;">🤖 AI analysis</button>
-                    ${canDelete ? '<button type="button" class="btn-text vid-delete" aria-label="Delete video" style="margin-left:auto; color:#ef4444;">🗑️ Delete</button>' : ''}
+                    ${canDelete ? '<button type="button" class="btn-text vid-delete" aria-label="Delete video" style="margin-left:auto; color:var(--danger);">🗑️ Delete</button>' : ''}
                 </div>
                 <div class="vid-ai-result hidden"
                     style="margin-top:8px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:10px 12px; font-size:0.85rem; white-space:pre-wrap;"></div>
@@ -140,7 +140,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     Drag on the video to draw lines.
                     <button type="button" class="btn-text vid-anno-undo" style="padding:2px 8px;">↩ Undo</button>
                     <button type="button" class="btn-text vid-anno-clear" style="padding:2px 8px;">Clear</button>
-                    <button type="button" class="btn-text vid-anno-save" style="padding:2px 8px; color:#10b981; font-weight:700;">💾 Save</button>
+                    <button type="button" class="btn-text vid-anno-save" style="padding:2px 8px; color:var(--success-readable); font-weight:700;">💾 Save</button>
                 </div>`;
             // User-controlled strings via textContent only (BL-4.17 discipline):
             row.querySelector('.vid-angle').textContent = v.angle || 'Video';
@@ -148,7 +148,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
             const player = row.querySelector('video');
             getDownloadURL(storageRef(storage, v.path))
                 .then(url => { player.src = url; })
-                .catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'This video could not be opened. Check your connection and reopen the library.', style: 'color:#ef4444;' })); });
+                .catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'This video could not be opened. Check your connection and reopen the library.', style: 'color:var(--danger);' })); });
             row.querySelectorAll('.vid-rate').forEach(b => b.addEventListener('click', () => {
                 player.playbackRate = parseFloat(b.getAttribute('data-rate'));
                 row.querySelectorAll('.vid-rate').forEach(x => x.style.fontWeight = '400');
@@ -178,7 +178,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
         }
     } catch (e) {
         console.error('[Videos] library load failed:', e);
-        container.innerHTML = '<p style="color:#ef4444;">Could not load videos. Check your connection, then reload when you are not playing a round.</p>';
+        container.innerHTML = '<p style="color:var(--danger);">Could not load videos. Check your connection, then reload when you are not playing a round.</p>';
     }
 }
 

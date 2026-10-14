@@ -40,14 +40,14 @@ window.refreshAdminDashboard = async () => {
                         value="${Number(data.videoQuotaBytes) > 0 ? Math.round(data.videoQuotaBytes / (1024 * 1024)) : 500}"
                         style="width:80px;"
                         onchange="setVideoQuota('${escapeHtml(d.id)}', this.value)">
-                    <div style="font-size:0.7rem; color:#94a3b8;">${Math.round((Number(data.videoBytesUsed) || 0) / (1024 * 1024))} MB used</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">${Math.round((Number(data.videoBytesUsed) || 0) / (1024 * 1024))} MB used</div>
                 </td>
             `;
             if (usersList) usersList.appendChild(tr);
         });
     } catch (e) {
         console.error("Admin dashboard fetch error:", e);
-        if (usersList) usersList.innerHTML = '<tr><td colspan="6" style="color:#ef4444;">Could not load accounts. Check your connection, then reopen Admin.</td></tr>';
+        if (usersList) usersList.innerHTML = '<tr><td colspan="6" style="color:var(--danger);">Could not load accounts. Check your connection, then reopen Admin.</td></tr>';
     }
 
     loadPreapprovedEmails();
@@ -171,7 +171,7 @@ export function bindAdminInvite() {
             const targetUid = importSelect ? importSelect.value : null;
             if (!fileInput.files.length || !targetUid) {
                 importMsgEl.textContent = '❌ Please select a user and a CSV file.';
-                importMsgEl.style.color = '#ef4444';
+                importMsgEl.style.color = 'var(--danger)';
                 return;
             }
 
@@ -214,7 +214,7 @@ export function bindAdminInvite() {
             }
 
             importMsgEl.textContent = `✅ Import complete: ${imported} rounds added${errors > 0 ? `, ${errors} rows skipped (invalid data)` : ''}.`;
-            importMsgEl.style.color = errors > 0 ? '#f59e0b' : '#10b981';
+            importMsgEl.style.color = errors > 0 ? '#92400e' : 'var(--success-readable)';
         });
     }
 }

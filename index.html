@@ -210,10 +210,10 @@
             <button class="tab-btn hidden" id="tab-btn-feed" data-target="tab-feed"><span class="tab-ico"
                     aria-hidden="true">📣</span><span class="tab-lbl">Feed</span></button>
             <button class="tab-btn hidden" id="tab-btn-coach" data-target="tab-coach"
-                style="background-color: #d1d8e0; color: #3867d6;"><span class="tab-ico"
+                style="background-color: #d1d8e0; color: #24468f;"><span class="tab-ico"
                     aria-hidden="true">🧑‍🏫</span><span class="tab-lbl">Coach</span></button>
             <button class="tab-btn hidden" id="tab-btn-admin" data-target="tab-admin"
-                style="background-color: #ffeaa7; color: #d35400;"><span class="tab-ico"
+                style="background-color: #ffeaa7; color: #8a3500;"><span class="tab-ico"
                     aria-hidden="true">🛠️</span><span class="tab-lbl">Admin</span></button>
             <button class="tab-btn" id="tab-btn-settings" data-target="tab-settings" style="margin-left:auto;"><span
                     class="tab-ico" aria-hidden="true">⚙️</span><span class="tab-lbl">Settings</span></button>
@@ -247,7 +247,7 @@
                     <h2 style="margin-bottom: 4px; color: var(--primary-color);">🎥 Swing Videos</h2>
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">
                         Record or upload swings — your coach can watch them from their dashboard.</p>
-                    <p id="video-quota-line" style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 12px;"></p>
+                    <p id="video-quota-line" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;"></p>
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
                         <input type="file" id="video-file-input" accept="video/*" capture="environment"
                             aria-label="Choose or record a swing video">
@@ -286,14 +286,14 @@
                                         style="width:100%; border-radius:8px; background:#000;"></video>
                                     <button type="button" id="btn-mark-impact-a" class="btn-text"
                                         style="padding:2px 8px; color:#2563eb;">📍 Mark impact</button>
-                                    <span id="impact-a-label" style="font-size:0.75rem; color:#94a3b8;"></span>
+                                    <span id="impact-a-label" style="font-size:0.75rem; color:var(--text-muted);"></span>
                                 </div>
                                 <div>
                                     <video id="compare-video-b" preload="metadata" playsinline muted
                                         style="width:100%; border-radius:8px; background:#000;"></video>
                                     <button type="button" id="btn-mark-impact-b" class="btn-text"
                                         style="padding:2px 8px; color:#2563eb;">📍 Mark impact</button>
-                                    <span id="impact-b-label" style="font-size:0.75rem; color:#94a3b8;"></span>
+                                    <span id="impact-b-label" style="font-size:0.75rem; color:var(--text-muted);"></span>
                                 </div>
                             </div>
                             <div style="display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;">
@@ -305,7 +305,7 @@
                                     style="padding:2px 8px;">frame ▶</button>
                                 <button type="button" id="btn-compare-slow" class="btn-text"
                                     style="padding:2px 8px;">¼× both</button>
-                                <span id="compare-sync-status" style="font-size:0.75rem; color:#94a3b8;">Mark impact
+                                <span id="compare-sync-status" style="font-size:0.75rem; color:var(--text-muted);">Mark impact
                                     on both clips to lock the sync.</span>
                             </div>
                         </div>
@@ -359,7 +359,7 @@
                         ⚡ Generate Practice Plan
                     </button>
                     <div id="practice-generate-error" class="hidden"
-                        style="margin-top: 14px; color: #ef4444; font-size: 0.9rem; font-weight: 600;"></div>
+                        style="margin-top: 14px; color: var(--danger); font-size: 0.9rem; font-weight: 600;"></div>
                 </div>
 
                 <!-- STATE B: Active drill — show checklist steps -->
@@ -583,7 +583,7 @@
                     <button type="button" id="btn-oc-map-hole" class="btn btn-secondary btn-sm">🗺️ Map this
                         hole</button>
                     <button type="button" id="btn-oc-finish" class="btn btn-secondary btn-sm"
-                        style="color:#ef4444;">🏁 Finish Round</button>
+                        style="color:var(--danger);">🏁 Finish Round</button>
                     <button type="button" id="btn-oc-exit" class="btn btn-secondary btn-sm"
                         style="color:#b91c1c;">✕ Abandon</button>
                 </div>
@@ -995,7 +995,7 @@
                                 Penalty</button>
                             <button type="button" id="btn-wizard-delete" class="btn btn-secondary btn-sm hidden"
                                 aria-label="Delete Shot"
-                                style="padding:4px 12px; color: #ef4444; border-color: #ef4444; background: #fee2e2;">🗑️</button>
+                                style="padding:4px 12px; color: var(--danger); border-color: var(--danger); background: #fee2e2;">🗑️</button>
                             <button type="button" id="btn-wizard-cancel" class="btn-text" aria-label="Close Wizard"
                                 style="color: #64748b; padding:0; font-weight:bold; font-size: 1.2rem;">✕</button>
                         </div>
@@ -1015,7 +1015,7 @@
                                 <!-- Dynamically injected: .club-row (3 chips + All), #club-grid-panel -->
                             </div>
                             <p id="bag-default-hint" class="hidden"
-                                style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                                style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
                                 Not your clubs? Set up your real bag in <strong>Settings → My Bag</strong> —
                                 these buttons become yours.</p>
                         </div>
@@ -1048,7 +1048,7 @@
                                 style="display:block; width:100%; height:240px; border-radius:12px; touch-action:none; border:1px solid var(--border-color);"></canvas>
                             <p id="line-readout"></p>
                             <span id="line-ghost-count" class="hidden" style="font-size:0.7rem; color:#64748b;"></span>
-                            <p id="line-attribution" style="font-size:0.65rem; color:#94a3b8; margin:2px 0 0;">Map data ©
+                            <p id="line-attribution" style="font-size:0.65rem; color:var(--text-muted); margin:2px 0 0;">Map data ©
                                 OpenStreetMap contributors (ODbL)</p>
                         </div>
 
@@ -1254,7 +1254,7 @@
                                     <div
                                         style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase;">
                                         Penalties</div>
-                                    <div id="sum-total-pen" style="font-size:1.1rem; font-weight:700; color:#ef4444;">--
+                                    <div id="sum-total-pen" style="font-size:1.1rem; font-weight:700; color:var(--danger);">--
                                     </div>
                                 </div>
                             </div>
@@ -1272,7 +1272,7 @@
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
                         <button type="button" id="btn-oc-save-whs" class="btn btn-primary"
-                            style="padding:15px; font-size:1.1rem; background-color: #10b981;">Confirm & Save
+                            style="padding:15px; font-size:1.1rem; background-color: var(--success-readable);">Confirm & Save
                             Round</button>
                         <button type="button" id="btn-oc-edit-review" class="btn btn-secondary"
                             style="padding:15px; border-color: #1e3c72; color: #1e3c72;">Edit Hole-by-Hole</button>
@@ -1360,7 +1360,7 @@
                                         onclick="adjustEditorField('penalties', -1)"
                                         style="width:50px; height:50px; border-radius:50%; border:2px solid #cbd5e1; background:white; font-size:1.8rem; font-weight:bold;">−</button>
                                     <span id="editor-pen-val"
-                                        style="font-size:2.2rem; font-weight:800; min-width:50px; color:#ef4444;">0</span>
+                                        style="font-size:2.2rem; font-weight:800; min-width:50px; color:var(--danger);">0</span>
                                     <button type="button" class="editor-btn-plus" aria-label="Increase"
                                         onclick="adjustEditorField('penalties', 1)"
                                         style="width:50px; height:50px; border-radius:50%; border:2px solid #cbd5e1; background:white; font-size:1.8rem; font-weight:bold;">+</button>
@@ -1377,7 +1377,7 @@
 
                             <div style="display:flex; flex-direction:column; gap:10px;">
                                 <button type="button" id="btn-editor-save" class="btn btn-primary"
-                                    style="padding:15px; font-weight:bold; font-size:1.1rem; background-color:#10b981;">Save
+                                    style="padding:15px; font-weight:bold; font-size:1.1rem; background-color:var(--success-readable);">Save
                                     Changes</button>
                                 <button type="button" id="btn-editor-cancel" class="btn-text"
                                     style="color:#64748b; font-weight:bold;">Discard</button>
@@ -1966,7 +1966,7 @@
                 <h2 style="margin-bottom:8px;">📊 Performance Insights</h2>
                 <p class="section-desc" style="margin-bottom:16px;">Your averages vs golfers at your handicap
                     (typical figures, not official strokes gained).</p>
-                <div id="performance-insights"><p style="color:#94a3b8;">Performance insights will appear after 3
+                <div id="performance-insights"><p style="color:var(--text-muted);">Performance insights will appear after 3
                     rounds with stats (putts / FIR / GIR).</p></div>
                 <div style="margin-top:16px; border-top:1px solid var(--border-color); padding-top:14px;">
                     <button id="btn-load-club-insights" class="btn btn-secondary" style="width:auto;">🏌️ Analyse my
@@ -2135,7 +2135,7 @@
                         <div id="comp-regulars-list"
                             style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background:white; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
                             <!-- Checkboxes injected here via JS -->
-                            <p style="color:#94a3b8; font-size:0.85rem;">Loading players you can add… Please wait.</p>
+                            <p style="color:var(--text-muted); font-size:0.85rem;">Loading players you can add… Please wait.</p>
                         </div>
                     </div>
 
@@ -2400,7 +2400,7 @@
         <!-- COACH DASHBOARD TAB (Redesigned)           -->
         <!-- ========================================== -->
         <div id="tab-coach" class="tab-content hidden">
-            <header class="header" style="background:linear-gradient(135deg,#3867d6 0%,#4b7bec 100%);">
+            <header class="header" style="background:linear-gradient(135deg,#24468f 0%,#294fa3 100%);">
                 <div class="header-content">
                     <div class="branding">
                         <h1>Coach Dashboard</h1>
@@ -2416,7 +2416,7 @@
                     <span id="coach-roster-count" style="font-size:0.85rem;color:#64748b;"></span>
                 </div>
                 <div id="coach-roster-list" style="display:flex;flex-direction:column;gap:10px;">
-                    <p style="color:#94a3b8;">Loading your players… Please wait.</p>
+                    <p style="color:var(--text-muted);">Loading your players… Please wait.</p>
                 </div>
             </section>
 
@@ -2518,7 +2518,7 @@
                         <p class="section-desc">Analysis of tendencies across all tracked shots.</p>
                         <div id="coach-shot-dispersion"
                             style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-top:15px;">
-                            <p style="color:#94a3b8;">Loading shot patterns… Please wait.</p>
+                            <p style="color:var(--text-muted);">Loading shot patterns… Please wait.</p>
                         </div>
                     </section>
 
@@ -2581,7 +2581,7 @@
         <!-- ADMIN DASHBOARD TAB (Static Structure)     -->
         <!-- ========================================== -->
         <div id="tab-admin" class="tab-content hidden">
-            <header class="header" style="background: linear-gradient(135deg, #d35400 0%, #e67e22 100%);">
+            <header class="header" style="background: linear-gradient(135deg, #8a3500 0%, #994000 100%);">
                 <div class="header-content">
                     <div class="branding">
                         <h1>Admin Dashboard</h1>
@@ -2651,7 +2651,7 @@
                     <h2>📈 Bulk Excel Import</h2>
                     <input type="file" id="excel-file-input" accept=".xlsx,.xls" aria-label="Excel file to import">
                     <button id="btn-import-excel" class="btn btn-primary"
-                        style="margin-top:10px;background:#10b981;border-color:#10b981;">🚀 Start Auto
+                        style="margin-top:10px;background:var(--success-readable);border-color:var(--success-readable);">🚀 Start Auto
                         Import</button>
                     <div id="excel-import-msg" style="margin-top:10px;font-size:0.8rem;white-space:pre-wrap;"></div>
                 </section>
@@ -2663,7 +2663,7 @@
         <!-- FRIENDS / FEED TAB                         -->
         <!-- ========================================== -->
         <div id="tab-feed" class="tab-content hidden">
-            <header class="header" style="background:linear-gradient(135deg,#0f766e,#14b8a6);">
+            <header class="header" style="background:linear-gradient(135deg,#0f766e,#115e59);">
                 <div class="header-content">
                     <div class="branding">
                         <h1>Activity Feed</h1>
@@ -2694,7 +2694,7 @@
                 <section class="card">
                     <h2>People You Follow</h2>
                     <ul id="feed-following-list" style="list-style:none;padding:0;margin:0;font-size:0.875rem;">
-                        <p style="color:#94a3b8;">Loading people you follow… Please wait.</p>
+                        <p style="color:var(--text-muted);">Loading people you follow… Please wait.</p>
                     </ul>
                 </section>
 
@@ -2702,7 +2702,7 @@
                 <section class="card two-span">
                     <h2>Recent Activity</h2>
                     <div id="feed-activity-list" style="display:flex;flex-direction:column;gap:12px;">
-                        <p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>
+                        <p style="color:var(--text-muted);">Follow some players to see their recent rounds here.</p>
                     </div>
                 </section>
             </div>
