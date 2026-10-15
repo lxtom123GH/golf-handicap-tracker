@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { shotEntryVisibility, normaliseShotEntry, SHOT_ENTRY_PREFS } from '../../src/shot-entry.js';
 
 describe('S12 E: shotEntryVisibility — pure function of the preference', () => {
-    it("'both' (default) is the shipped layout: everything visible and open", () => {
+    it("'both' is the map-and-grids layout: everything visible and open", () => {
         expect(shotEntryVisibility('both')).toEqual({
             pref: 'both',
             lineSection: true,
@@ -31,11 +31,12 @@ describe('S12 E: shotEntryVisibility — pure function of the preference', () =>
         expect(v.resultGridsOpen).toBe(true);
     });
 
-    it('undefined/unknown preferences degrade to the default, never hide the wizard', () => {
-        expect(normaliseShotEntry(undefined)).toBe('both');
-        expect(normaliseShotEntry('')).toBe('both');
-        expect(normaliseShotEntry('nonsense')).toBe('both');
-        expect(shotEntryVisibility(undefined)).toEqual(shotEntryVisibility('both'));
+    it('undefined/unknown preferences degrade to the default (Map first), never hide the wizard', () => {
+        expect(normaliseShotEntry(undefined)).toBe('map');
+        expect(normaliseShotEntry('')).toBe('map');
+        expect(normaliseShotEntry('nonsense')).toBe('map');
+        expect(shotEntryVisibility(undefined)).toEqual(shotEntryVisibility('map'));
+        expect(shotEntryVisibility(undefined).mapFirst).toBe(true);
         expect(shotEntryVisibility(null).lineSection).toBe(true);
     });
 

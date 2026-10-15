@@ -10,8 +10,7 @@ import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from '.
 
 const PASSWORD = 'e2e-password-1';
 
-test('Map first: the shot opens full-screen; draw, club, Log all on the map', async ({ page }, testInfo) => {
-    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'map'));
+test('Map first by default: the shot opens full-screen; draw, club, Log all on the map', async ({ page }, testInfo) => {
     const email = throwawayEmail('mapfirst');
     await seedPreapprovedEmail(email);
     await page.goto('/');
@@ -21,7 +20,8 @@ test('Map first: the shot opens full-screen; draw, club, Log all on the map', as
     await page.locator('#auth-password').fill(PASSWORD);
     await registerAndVerifySignup(page, email);
 
-    // The Settings select offers it and reflects the stored choice.
+    // A fresh device gets Map first without saving a device preference.
+    expect(await page.evaluate(() => localStorage.getItem('golf.shotEntry'))).toBeNull();
     await expect(page.locator('#shot-entry-select option[value="map"]')).toHaveCount(1);
     await expect(page.locator('#shot-entry-select')).toHaveValue('map');
 

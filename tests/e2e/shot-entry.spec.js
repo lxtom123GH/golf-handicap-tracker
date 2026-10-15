@@ -66,7 +66,16 @@ test('S12 E: Tap buttons mode hides the map, keeps the grids (Ashgrove)', async 
     await expect(page.locator('#section-miss-pattern')).toBeVisible();
 });
 
-test('S12 E: default Both is the shipped layout (Ashgrove)', async ({ page }) => {
+test('with no saved choice, a shot opens on Map first by default', async ({ page }) => {
+    await registerFreshUser(page);
+    await startAshgroveRound(page);
+    expect(await page.evaluate(() => localStorage.getItem('golf.shotEntry'))).toBeNull();
+    await expect(page.locator('#oncourse-wizard')).toHaveClass(/map-first/);
+    await expect(page.locator('#shot-entry-select')).toHaveValue('map');
+});
+
+test('Both is the map-and-grids layout (Ashgrove)', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
     await registerFreshUser(page);
     await startAshgroveRound(page);
     await expect(page.locator('#section-line')).toBeVisible();
@@ -75,14 +84,17 @@ test('S12 E: default Both is the shipped layout (Ashgrove)', async ({ page }) =>
     await expect(page.locator('#section-miss-pattern')).toBeVisible();
 });
 
-test('S12 E: the boot mirror reads golf.shotEntry into AppState at boot', async ({ page }) => {
-    // The stored preference exists BEFORE any app script runs — this is the
-    // exact path a returning golfer takes (stored 'draw' from last round).
-    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'draw'));
+test('a choice made in Settings survives reload and overrides the Map first default', async ({ page }) => {
     await registerFreshUser(page);
+    await page.locator('#tab-btn-settings').click();
+    await expect(page.locator('#shot-entry-select')).toHaveValue('map');
+    await page.locator('#shot-entry-select').selectOption('draw');
+    expect(await page.evaluate(() => localStorage.getItem('golf.shotEntry'))).toBe('draw');
 
-    // The Settings select renders FROM AppState.shotEntry at bind: its value
-    // proves the boot mirror ran and normalised nothing away.
+    // Reload without an init script that could recreate a lost preference.
+    await page.reload();
+    await expect(page.locator('#main-app')).toBeVisible({ timeout: 15_000 });
+
     await page.locator('#tab-btn-settings').click();
     await expect(page.locator('#shot-entry-select')).toHaveValue('draw');
 

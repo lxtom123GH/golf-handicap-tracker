@@ -28,6 +28,11 @@ import {
     registerAndVerifySignup,
 } from './helpers/emulator.js';
 
+// This spec measures map-and-grids layout; map-first behavior is covered separately.
+test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
+});
+
 const PASSWORD = 'e2e-password-1';
 const TABS = ['tab-whs', 'tab-comp', 'tab-practice', 'tab-insights', 'tab-oncourse', 'tab-settings'];
 

@@ -64,11 +64,12 @@ const initialState = {
     roundSelfOptOut: false
 };
 
-    // S12 E: shot-entry preference — 'both' (default) | 'draw' | 'buttons'.
+    // Shot-entry preference defaults to Map first; saved choices are retained.
+    // | 'both' | 'draw' | 'buttons'.
     // A per-device UI preference (localStorage golf.shotEntry, try/catch),
     // never round state; the visibility decision itself is pure
     // (src/shot-entry.js) so tests pin it without a DOM.
-    initialState.shotEntry = 'both';
+    initialState.shotEntry = 'map';
 
 try {
     // Owner's call 2026-09-19 ("can the best GPS possible just be on as a
@@ -81,10 +82,11 @@ try {
 }
 
 try {
-    // S12 E: the shot-entry preference mirrors in at boot ('both' default —
+    // The shot-entry preference is mirrored into app state at boot. A saved choice is
+    // kept; no choice means Map first.
     // normaliseShotEntry rejects anything else, so a corrupted value degrades
-    // to the shipped layout rather than hiding the wizard).
-    initialState.shotEntry = localStorage.getItem('golf.shotEntry') || 'both';
+    // to the default rather than hiding the wizard.
+    initialState.shotEntry = localStorage.getItem('golf.shotEntry') || 'map';
 } catch (e) {
     console.warn('Failed to read shotEntry from localStorage', e);
 }
