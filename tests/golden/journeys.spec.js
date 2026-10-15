@@ -24,7 +24,8 @@ async function approved(page, info, suffix = '') {
 }
 async function image(page, name) {
     await page.evaluate(() => document.fonts.ready);
-    await expect(page).toHaveScreenshot(name+'.png', {
+    // Collect every changed screen in one run; soft failures still fail the test.
+    await expect.soft(page).toHaveScreenshot(name+'.png', {
         mask: [page.locator('#app-version'), page.locator('#footer-version'), page.locator('#logged-in-user-name'), page.locator('.firebase-emulator-warning')],
     });
 }
