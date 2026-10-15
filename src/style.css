@@ -3449,4 +3449,10 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
 
 /* A mapless form has room for an in-flow GPS row; mapped canvas layout stays unchanged. */
 .map-unavailable #wizard-header { flex-wrap: wrap; gap: 10px; }
-.map-unavailable #gps-lock-ring { position: static; transform: none; order: 3; flex-basis: 100%; }
+.map-unavailable #gps-lock-ring {
+    position: relative;
+    inset: auto;
+    transform: none;
+    order: 3;
+    flex-basis: 100%;
+}
