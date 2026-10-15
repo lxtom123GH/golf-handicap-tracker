@@ -3,6 +3,10 @@
 Date: 13 October 2026 (AEST). Synthetic local-emulator testing only.
 Base: public main `0c5a0fcc1dd4f8ee3ba36199fe2e3ff73685c6c7`.
 
+The [15 October follow-up](task098-15oct.md) supersedes the installation
+mechanics and test ordering described below, and records fresh base reproduction
+and response-validation evidence. This report retains the original run history.
+
 ## Finding and fix
 
 The first-session failure occurred **before authentication could start**. The
