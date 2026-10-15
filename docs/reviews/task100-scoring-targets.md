@@ -76,3 +76,76 @@ An initial post-sync command omitted the unit paths and consequently selected
 auth/rules integration tests without their separate emulators; those failed on
 loopback connection refusal. The corrected package-equivalent command above
 passed. This report does not claim a full rules/storage-emulator run.
+
+## 15 October 2026 follow-up
+
+Merged current main `a43d7e5` in `d71022a` without conflicts. The PR remains
+necessary: a fresh Pixel 7 run against that main measured rail putt buttons at
+52 × 30 px, sheet putt buttons at 25.34 × 26 px, and FW at 34 px tall. Axe
+reported the GPS name mismatch and the scoring notice's 6.83:1 contrast against
+the enhanced rule's 7:1 requirement. [Fresh main screenshot](img/task100/pass-2026-10-15/main-sheet.png).
+The form case timed out seeding its emulator invite, so these fresh main
+measurements cover the rail and sheet only.
+
+Both October 13 reviews identify the same P3: contrast was scanned only when
+`AXE_CORE_PATH` was supplied and was never asserted. The regression now loads
+the pinned `axe-core` dependency unconditionally and asserts all three scoped
+rules in every measured state. Incomplete results remain in its measurement
+JSON. No production HTML, CSS, scoring handlers or state code changed in this
+follow-up.
+
+Mutation proof: with `AXE_CORE_PATH` unset, restoring only the notice's old
+`#92400e` colour made the revised browser test fail on
+`color-contrast-enhanced` at 6.83:1. Every target-size check still passed in
+that run. The mutation was reverted before the positive run.
+
+All four fresh target cases passed on `phone` and `iphone-se`: six rendered
+states, minimum 44 × 44 px, no horizontal target-bound failures, and zero
+detected violations of the three scoped axe rules. Incomplete checks remain.
+[Compact before/mutation/after measurements](img/task100/pass-2026-10-15/measurements.jsonl),
+[fresh sheet](img/task100/pass-2026-10-15/after-sheet.png), and
+[fresh narrow-phone form](img/task100/pass-2026-10-15/after-iphone-se-form.png).
+
+Node 24.19.0 final unit check: **143 files / 1,399 tests passed**, exit 0:
+
+```
+npm run test:unit -- --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000
+npm run build
+```
+
+Build: **106 modules transformed; built in 2m 13s**, exit 0. The initial full
+unit run with the default five-second budget passed 1,397 tests and timed out
+on two cold imports (`local-date` and `rounds-history`). The final run extends
+only execution budgets; it uses every original assertion.
+
+The shared C: drive fell below 300 MB free. Browser checks ran from a disposable
+D: checkout with the same HEAD, lockfile, test and restored stylesheet (hashes
+checked). A temporary `playwright.pass27.local.js` changed only service startup
+budgets, after emulator startup took 3m 22s; it is not a PR configuration change:
+
+```js
+import config from './playwright.config.js';
+export default {
+    ...config,
+    webServer: config.webServer.map(server => ({ ...server, timeout: 300_000 })),
+};
+```
+
+The broader mobile selection finished **17 passed / 1 failed**, exit 1. The
+Pixel 7 Keperra West case failed before course setup: first on invite seeding,
+then on the verification-email response deadline. A follow-up reran that full
+round and both desktop target cases: **3 passed**, exit 0, with no retries used.
+This also checks CI's desktop axe path: all three desktop states have zero
+scoped violations or target failures. Both mobile WHS Diff-column cases passed;
+this does not waive the owner-triaged race tracked in PR #30 or fresh CI.
+
+Browser commands (`AXE_CORE_PATH` unset, private ports via `E2E_PORT_BASE`,
+`JAVA_TOOL_OPTIONS=-Xmx512m`, temporary config above):
+
+```
+node scripts/run-e2e-isolated.mjs tests/e2e/scoring-targets.spec.js tests/e2e/simple-scoring.spec.js tests/e2e/keperra-west-round.spec.js tests/e2e/whs-record.spec.js --project=phone --project=iphone-se --grep 'scoring-targets|simple-scoring|keperra-west-round|the scoring record shows Date' --retries=1 --config=playwright.pass27.local.js
+node scripts/run-e2e-isolated.mjs tests/e2e/scoring-targets.spec.js tests/e2e/keperra-west-round.spec.js --project=phone --project=desktop --grep 'desktop.*scoring-targets|phone.*keperra-west-round' --retries=2 --config=playwright.pass27.local.js
+```
+
+This pass did not run the whole browser, Auth, rules or offline suites, or a
+physical-device check. New-head CI and independent review remain required.

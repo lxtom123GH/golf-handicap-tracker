@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { seedPreapprovedEmail, registerAndVerifySignup } from './helpers/emulator.js';
+
+const axePath = createRequire(import.meta.url).resolve('axe-core/axe.min.js');
 
 // Synthetic users only. Keperra exercises the form hub; Ashgrove also covers
 // the Play-mode side rail and the expanded group sheet.
@@ -25,6 +28,7 @@ for (const course of [
         await page.locator('#oc-course-select').selectOption({ label: course.name });
         await page.locator('#btn-oc-start').click();
         await expect(page.locator('#oncourse-hub')).toBeVisible();
+        await page.addScriptTag({ path: axePath });
         const out = testInfo.outputPath('targets');
         mkdirSync(out, { recursive: true });
         const reports = [];
@@ -37,14 +41,11 @@ for (const course of [
                     viewport: innerWidth };
             }));
             reports.push({ state, rows });
-            if (process.env.AXE_CORE_PATH) {
-                await page.addScriptTag({ path: process.env.AXE_CORE_PATH });
-                reports.at(-1).axe = await page.evaluate(async () => {
-                    const result = await window.axe.run('#tab-oncourse', { runOnly: { type: 'rule',
-                        values: ['color-contrast', 'color-contrast-enhanced', 'label-content-name-mismatch'] } });
-                    return { violations: result.violations, incomplete: result.incomplete };
-                });
-            }
+            reports.at(-1).axe = await page.evaluate(async () => {
+                const result = await window.axe.run('#tab-oncourse', { runOnly: { type: 'rule',
+                    values: ['color-contrast', 'color-contrast-enhanced', 'label-content-name-mismatch'] } });
+                return { violations: result.violations, incomplete: result.incomplete };
+            });
             await page.screenshot({ path: join(out, `${course.key}-${state}.png`), fullPage: true });
         }
         writeFileSync(join(out, 'measurements.json'), JSON.stringify(reports, null, 2));
@@ -52,9 +53,9 @@ for (const course of [
         const bad = reports.flatMap(r => r.rows.filter(b => b.width < 43.99 || b.height < 43.99
             || b.left < -0.5 || b.right > b.viewport + 0.5).map(b => ({ state: r.state, ...b })));
         expect(bad, 'every rendered hub button has a 44px box inside the phone width').toEqual([]);
-        for (const report of reports.filter(r => r.axe)) {
-            expect(report.axe.violations.filter(v => v.id === 'label-content-name-mismatch'),
-                `${report.state}: visible names remain in accessible names`).toEqual([]);
+        for (const report of reports) {
+            expect(report.axe.violations,
+                `${report.state}: scoped contrast and visible-name rules`).toEqual([]);
         }
     });
 }
