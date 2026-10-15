@@ -140,7 +140,7 @@ async function render() {
     const periods = await loadPeriods();
     renderBanner(periods);
     if (!periods.length) {
-        listEl.innerHTML = '<p style="color:#94a3b8;">No strategy periods yet — start one below and every round from that date counts toward it.</p>';
+        listEl.innerHTML = '<p style="color:var(--text-muted);">No strategy periods yet — start one below and every round from that date counts toward it.</p>';
         tableEl.innerHTML = '';
         return;
     }
@@ -170,7 +170,7 @@ async function render() {
         const delBtn = document.createElement('button');
         delBtn.type = 'button'; delBtn.className = 'btn-text'; delBtn.textContent = '✕';
         delBtn.setAttribute('aria-label', `Delete period ${p.name}`);
-        delBtn.style.cssText = 'color:#ef4444; padding:2px 8px;';
+        delBtn.style.cssText = 'color:var(--danger); padding:2px 8px;';
         delBtn.addEventListener('click', async () => {
             if (!confirm(`Delete the "${p.name}" period? (Rounds are untouched.)`)) return;
             await savePeriods(periods.filter((_, j) => j !== i)); render();
@@ -192,11 +192,11 @@ async function render() {
                     <td>${r.rounds}${r.rounds < 10 ? ' ⚠️' : ''}</td>
                     <td>${r.stableford ?? '—'}</td>
                     <td>${r.putts ?? '—'}</td>
-                    <td>${r.tiger5 != null ? `${r.tiger5} <span style="color:#94a3b8;">(${r.tiger5Rounds}r)</span>` : '—'}</td>
+                    <td>${r.tiger5 != null ? `${r.tiger5} <span style="color:var(--text-muted);">(${r.tiger5Rounds}r)</span>` : '—'}</td>
                 </tr>`).join('')}
             </tbody>
         </table>
-        <p style="color:#94a3b8; font-size:0.75rem; margin-top:6px;">⚠️ under 10 rounds = small sample, treat as a hint not a verdict. Tiger-5 needs rounds saved after 2026-07-04 (per-hole detail).</p>`;
+        <p style="color:var(--text-muted); font-size:0.75rem; margin-top:6px;">⚠️ under 10 rounds = small sample, treat as a hint not a verdict. Tiger-5 needs rounds saved after 2026-07-04 (per-hole detail).</p>`;
 }
 
 export function initStrategy() {
