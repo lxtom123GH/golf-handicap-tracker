@@ -1,0 +1,10 @@
+{
+  "bounds": {
+    "left": 21,
+    "right": 181.5,
+    "viewport": 375,
+    "pageWidth": 375,
+    "scrollX": 0
+  },
+  "controls": "- row \"Test Pending C test-pending-iphone-se-1792047724256@example.invalid Player Approved Approve Test Pending C (test-pending-iphone-se-1792047724256@example.invalid) Coach Coach Test Pending C (test-pending-iphone-se-1792047724256@example.invalid) Video quota (MB) 500 0 MB used\":\n  - cell \"Test Pending C\"\n  - cell \"test-pending-iphone-se-1792047724256@example.invalid\"\n  - cell \"Player\"\n  - cell \"Approved Approve Test Pending C (test-pending-iphone-se-1792047724256@example.invalid)\":\n    - text: Approved\n    - checkbox \"Approve Test Pending C (test-pending-iphone-se-1792047724256@example.invalid)\"\n  - cell \"Coach Coach Test Pending C (test-pending-iphone-se-1792047724256@example.invalid)\":\n    - text: Coach\n    - checkbox \"Coach Test Pending C (test-pending-iphone-se-1792047724256@example.invalid)\"\n  - cell \"Video quota (MB) 500 0 MB used\":\n    - text: Video quota (MB)\n    - spinbutton \"Video quota in MB for Test Pending C (test-pending-iphone-se-1792047724256@example.invalid)\": \"500\"\n    - text: 0 MB used"
+}

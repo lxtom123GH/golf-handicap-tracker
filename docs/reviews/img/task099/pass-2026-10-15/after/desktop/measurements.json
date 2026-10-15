@@ -1,0 +1,15 @@
+{
+  "bounds": {
+    "left": 781.234375,
+    "right": 876.984375,
+    "viewport": 1280,
+    "pageWidth": 1280,
+    "scrollX": 0
+  },
+  "controls": "- row \"Test Pending C test-pending-desktop-1792047881444@example.invalid Player Approved Approved Test Pending C (test-pending-desktop-1792047881444@example.invalid) Coach Coach Test Pending C (test-pending-desktop-1792047881444@example.invalid) Video quota (MB) 500 0 MB used\":\n  - cell \"Test Pending C\"\n  - cell \"test-pending-desktop-1792047881444@example.invalid\"\n  - cell \"Player\"\n  - cell \"Approved Approved Test Pending C (test-pending-desktop-1792047881444@example.invalid)\":\n    - text: Approved\n    - checkbox \"Approved Test Pending C (test-pending-desktop-1792047881444@example.invalid)\"\n  - cell \"Coach Coach Test Pending C (test-pending-desktop-1792047881444@example.invalid)\":\n    - text: Coach\n    - checkbox \"Coach Test Pending C (test-pending-desktop-1792047881444@example.invalid)\"\n  - cell \"Video quota (MB) 500 0 MB used\":\n    - text: Video quota (MB)\n    - spinbutton \"Video quota (MB) for Test Pending C (test-pending-desktop-1792047881444@example.invalid)\": \"500\"\n    - text: 0 MB used",
+  "axe": {
+    "violations": []
+  },
+  "storedApproval": true,
+  "pendingTesterAdmitted": true
+}
