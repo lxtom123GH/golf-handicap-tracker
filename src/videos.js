@@ -134,7 +134,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     <button type="button" class="btn-text vid-ai" style="padding:2px 8px; color:#8b5cf6;">🤖 AI analysis</button>
                     ${canDelete ? '<button type="button" class="btn-text vid-delete" aria-label="Delete video" style="margin-left:auto; color:var(--danger);">🗑️ Delete</button>' : ''}
                 </div>
-                <div class="vid-ai-result hidden"
+                <div class="vid-ai-result hidden" role="status" aria-live="polite" aria-atomic="true"
                     style="margin-top:8px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:10px 12px; font-size:0.85rem; white-space:pre-wrap;"></div>
                 <div class="vid-annotate-bar hidden" style="display:flex; gap:8px; margin-top:6px; align-items:center; font-size:0.8rem; color:#64748b;">
                     Drag on the video to draw lines.
@@ -272,6 +272,20 @@ function bindAnnotations(row, player, v) {
     });
 }
 
+function analysisErrorCopy(error) {
+    // Codes only: callable messages can contain arbitrary service diagnostics.
+    const messages = {
+        'functions/unauthenticated': 'Sign in again, then reopen this video to request analysis.',
+        'functions/permission-denied': 'Your account cannot analyse this video. Ask its owner or an admin to check your access.',
+        'functions/not-found': 'This video could not be found. Refresh the video library and check whether it is still there.',
+        'functions/resource-exhausted': 'Your daily AI limit has been reached. Request another analysis after midnight Brisbane time, when the allowance resets.',
+        'functions/failed-precondition': 'This video does not meet the analysis requirements. Check its size (about 19 MB maximum); if it is already smaller, ask an admin to check the video record.',
+        'functions/invalid-argument': 'The analysis request was not accepted. Refresh the video library and reopen the video.'
+    };
+    return Object.hasOwn(messages, error?.code) ? messages[error.code]
+        : 'Analysis could not be confirmed. Refresh the video library and check for a saved result before requesting another analysis.';
+}
+
 /**
  * BL-VID-03: Gemini swing analysis. The callable checks owner/coach/admin
  * server-side, spends one unit of the shared daily AI quota, grounds the
@@ -299,7 +313,7 @@ function bindAiAnalysis(row, v) {
             render(res.data || {});
         } catch (e) {
             console.error('[Videos] AI analysis failed:', e);
-            out.textContent = aiErrorMessage(e, 'Could not analyse this video. Check your connection, then choose AI analysis again.');
+            out.textContent = analysisErrorCopy(e);
         } finally {
             btn.disabled = false;
         }
