@@ -83,12 +83,6 @@ jobs:
       if: runner.os == 'Windows'
       run: npx playwright install chromium
 
-    - name: Run E2E Tests
-      # A normal run is 12-35 min; fail loudly on a hung suite instead of
-      # holding the runner forever.
-      timeout-minutes: 60
-      run: npm run test:e2e
-
     - name: Install pinned golden screenshot browser
       run: |
         curl --fail --location --retry 2 https://storage.googleapis.com/chrome-for-testing-public/155.0.8059.39/linux64/chrome-headless-shell-linux64.zip -o /tmp/golden-chrome.zip
@@ -100,6 +94,12 @@ jobs:
         GOLDEN_CHROME_EXECUTABLE: /tmp/golden-chrome/chrome-headless-shell-linux64/chrome-headless-shell
       timeout-minutes: 15
       run: node scripts/run-e2e-isolated.mjs --config playwright.golden.config.js
+
+    - name: Run E2E Tests
+      # A normal run is 12-35 min; fail loudly on a hung suite instead of
+      # holding the runner forever.
+      timeout-minutes: 60
+      run: npm run test:e2e
 
     - name: Preserve failed browser evidence
       if: failure()
