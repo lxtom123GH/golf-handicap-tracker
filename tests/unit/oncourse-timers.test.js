@@ -110,7 +110,7 @@ describe('T3-setTimeout shared-element lifetimes', () => {
         UI.btnVoiceRules.click();
         speech.fail(error);
         expect(UI.voiceStatus.textContent).toBe(error === 'not-allowed'
-            ? 'Mic blocked. Allow it in browser settings, or use the score buttons.' : 'Voice input is unavailable. Enter your score with the buttons instead.');
+            ? 'Mic blocked. Allow it in browser settings, or ask the competition committee about your rules question.' : 'Voice rules advice is unavailable. Check the Rules of Golf or ask the competition committee.');
         vi.advanceTimersByTime(delay - 1);
         expect(UI.voiceOverlay.classList.contains('hidden')).toBe(false);
         vi.advanceTimersByTime(1);

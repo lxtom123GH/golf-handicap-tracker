@@ -1394,11 +1394,11 @@ function initVoiceRules() {
         if (event.error === 'not-allowed') {
             // Reset for a later attempt; browser permission may still need changing.
             recognition = null;
-            UI.voiceStatus.textContent = "Mic blocked. Allow it in browser settings, or use the score buttons.";
+            UI.voiceStatus.textContent = "Mic blocked. Allow it in browser settings, or ask the competition committee about your rules question.";
         } else {
             UI.voiceStatus.textContent = event.error === 'no-speech'
                 ? "No speech was heard. Tap the mic and try speaking again."
-                : "Voice input is unavailable. Enter your score with the buttons instead.";
+                : "Voice rules advice is unavailable. Check the Rules of Golf or ask the competition committee.";
         }
         voiceHideTimer = setTimeout(() => {
             voiceHideTimer = null;
