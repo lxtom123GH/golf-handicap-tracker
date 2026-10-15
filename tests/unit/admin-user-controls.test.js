@@ -23,14 +23,22 @@ beforeEach(() => {
 });
 
 describe('admin user control labels and existing handlers', () => {
+    it.each(['Approved', 'Coach', 'Video quota (MB)'])('includes visible caption "%s" in the accessible name', async caption => {
+        await window.refreshAdminDashboard();
+        const label = [...document.querySelectorAll('#admin-users-list label')]
+            .find(el => el.querySelector('.admin-user-field')?.textContent === caption);
+        expect(label).toBeDefined();
+        expect(label.querySelector('input').getAttribute('aria-label')).toContain(caption);
+    });
+
     it('names every input for its user and keeps visible approval/coach labels', async () => {
         await window.refreshAdminDashboard();
         const inputs = [...document.querySelectorAll('#admin-users-list input')];
         expect(inputs).toHaveLength(3);
         expect(inputs.map(el => el.getAttribute('aria-label'))).toEqual([
-            'Approve Test Pending C (test-pending@example.invalid)',
+            'Approved Test Pending C (test-pending@example.invalid)',
             'Coach Test Pending C (test-pending@example.invalid)',
-            'Video quota in MB for Test Pending C (test-pending@example.invalid)',
+            'Video quota (MB) for Test Pending C (test-pending@example.invalid)',
         ]);
         expect(inputs[0].closest('label').textContent).toContain('Approved');
         expect(inputs[1].closest('label').textContent).toContain('Coach');
@@ -51,7 +59,7 @@ describe('admin user control labels and existing handlers', () => {
         expect(document.querySelector('img')).toBeNull();
         expect(document.querySelector('.admin-user-name').textContent).toBe(name);
         expect(document.querySelector('input').getAttribute('aria-label'))
-            .toBe(`Approve ${name} (test-pending@example.invalid)`);
+            .toBe(`Approved ${name} (test-pending@example.invalid)`);
     });
 
     it('preserves the admin-only write guard and exact approval update', async () => {

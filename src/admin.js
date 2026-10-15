@@ -27,7 +27,7 @@ window.refreshAdminDashboard = async () => {
                 <td>
                     <label class="toggle-switch admin-user-toggle">
                         <span class="admin-user-field">Approved</span>
-                        <input type="checkbox" aria-label="Approve ${userLabel}" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
+                        <input type="checkbox" aria-label="Approved ${userLabel}" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
@@ -40,7 +40,7 @@ window.refreshAdminDashboard = async () => {
                 </td>
                 <td>
                     <label class="admin-user-quota"><span class="admin-user-field">Video quota (MB)</span>
-                    <input type="number" min="0" step="100" aria-label="Video quota in MB for ${userLabel}"
+                    <input type="number" min="0" step="100" aria-label="Video quota (MB) for ${userLabel}"
                         value="${Number(data.videoQuotaBytes) > 0 ? Math.round(data.videoQuotaBytes / (1024 * 1024)) : 500}"
                         style="width:80px;"
                         onchange="setVideoQuota('${escapeHtml(d.id)}', this.value)"></label>

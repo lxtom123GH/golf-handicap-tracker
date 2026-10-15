@@ -51,18 +51,31 @@ test('admin approves a pending tester without horizontal phone scrolling', async
                 { runOnly: { type: 'rule', values: ['label'] } }).then(r => ({ violations: r.violations })));
         }
         await admin.screenshot({ path: join(out, 'pending-before-approval.png'), fullPage: true });
-        writeFileSync(join(out, 'measurements.json'), JSON.stringify({ bounds, axe }, null, 2));
+        const controls = await row.ariaSnapshot();
+        writeFileSync(join(out, 'measurements.json'), JSON.stringify({ bounds, controls, axe }, null, 2));
         expect(bounds.scrollX).toBe(0);
         expect(bounds.pageWidth).toBeLessThanOrEqual(bounds.viewport);
         expect(bounds.left).toBeGreaterThanOrEqual(0);
         expect(bounds.right).toBeLessThanOrEqual(bounds.viewport);
-        await expect(approve).toHaveAccessibleName(/Approve Test Pending C/);
+        const labels = row.locator('label');
+        await expect(labels).toHaveCount(3);
+        for (const label of await labels.all()) {
+            const caption = await label.locator('.admin-user-field').innerText();
+            const escapedCaption = caption.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            await expect(label.locator('input')).toHaveAccessibleName(new RegExp(escapedCaption));
+        }
+        await expect(approve).toHaveAccessibleName(`Approved Test Pending C (${pendingEmail})`);
         if (axe) expect(axe.violations).toEqual([]);
         await approve.check();
         await expect.poll(async () => (await findDocs('users', 'email', pendingEmail))[0]?.isApproved).toBe(true);
         await page.reload();
         await expect(page.locator('#main-app')).toBeVisible({ timeout: 25_000 });
         await expect(page.locator('#auth-pending')).toBeHidden();
+        const [storedUser] = await findDocs('users', 'email', pendingEmail);
+        expect(storedUser.isApproved).toBe(true);
+        writeFileSync(join(out, 'measurements.json'), JSON.stringify({
+            bounds, controls, axe, storedApproval: storedUser.isApproved, pendingTesterAdmitted: true,
+        }, null, 2));
         await admin.screenshot({ path: join(out, 'approved.png'), fullPage: true });
     } finally { await adminContext.close(); }
 });
