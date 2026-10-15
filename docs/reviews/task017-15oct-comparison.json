@@ -1,0 +1,2012 @@
+{
+  "screenshots": 100,
+  "screenshotFailures": 0,
+  "computedStyleScreens": 100,
+  "computedStyleFailures": 0,
+  "pixelTolerance": 0,
+  "masks": [],
+  "rows": [
+    {
+      "path": "iphone-se/admin-e-home.png",
+      "beforeSha256": "ede738754f51021b8c6b5d969c4f24f30f702ff559dc05171d421ea36960f7be",
+      "afterSha256": "ede738754f51021b8c6b5d969c4f24f30f702ff559dc05171d421ea36960f7be",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-admin.png",
+      "beforeSha256": "11a99747ec7b4bf0598d65cd356e18921e6b6b0b8d5f52095b9aed3cc9c5f7e4",
+      "afterSha256": "11a99747ec7b4bf0598d65cd356e18921e6b6b0b8d5f52095b9aed3cc9c5f7e4",
+      "beforeSize": [
+        375,
+        1811
+      ],
+      "afterSize": [
+        375,
+        1811
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-comp.png",
+      "beforeSha256": "4bfe55afda85ea31e53f87e1f07a7a1c285b7a55e5b492c251bc20102401d417",
+      "afterSha256": "4bfe55afda85ea31e53f87e1f07a7a1c285b7a55e5b492c251bc20102401d417",
+      "beforeSize": [
+        375,
+        713
+      ],
+      "afterSize": [
+        375,
+        713
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-feed.png",
+      "beforeSha256": "9a014721eacda35ca13bd7a67169699433bba034b447aaa0a1b0c54b08f0c1db",
+      "afterSha256": "9a014721eacda35ca13bd7a67169699433bba034b447aaa0a1b0c54b08f0c1db",
+      "beforeSize": [
+        375,
+        899
+      ],
+      "afterSize": [
+        375,
+        899
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-insights.png",
+      "beforeSha256": "331cf5b6b6341675b2d1b584c602834e466257c8371fb0de1b74a854548ac53d",
+      "afterSha256": "331cf5b6b6341675b2d1b584c602834e466257c8371fb0de1b74a854548ac53d",
+      "beforeSize": [
+        375,
+        1681
+      ],
+      "afterSize": [
+        375,
+        1681
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-oncourse.png",
+      "beforeSha256": "ede738754f51021b8c6b5d969c4f24f30f702ff559dc05171d421ea36960f7be",
+      "afterSha256": "ede738754f51021b8c6b5d969c4f24f30f702ff559dc05171d421ea36960f7be",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-practice.png",
+      "beforeSha256": "2f5a9a1d0b796b43d906c11d53022f698d6f454696c4947949110f3106aaa961",
+      "afterSha256": "2f5a9a1d0b796b43d906c11d53022f698d6f454696c4947949110f3106aaa961",
+      "beforeSize": [
+        375,
+        3301
+      ],
+      "afterSize": [
+        375,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-settings.png",
+      "beforeSha256": "23328a20878b70a41ba3891f57aeec0ff007ed4b6fdf80d89d59ce6827b0074f",
+      "afterSha256": "23328a20878b70a41ba3891f57aeec0ff007ed4b6fdf80d89d59ce6827b0074f",
+      "beforeSize": [
+        375,
+        3985
+      ],
+      "afterSize": [
+        375,
+        3985
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-e-tab-whs.png",
+      "beforeSha256": "f0b5a17751c8fee4c15ea4eae209d77b5f91db4a22778ee281605e451065425f",
+      "afterSha256": "f0b5a17751c8fee4c15ea4eae209d77b5f91db4a22778ee281605e451065425f",
+      "beforeSize": [
+        375,
+        2113
+      ],
+      "afterSize": [
+        375,
+        2113
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/admin-pending-before-approval.png",
+      "beforeSha256": "11a99747ec7b4bf0598d65cd356e18921e6b6b0b8d5f52095b9aed3cc9c5f7e4",
+      "afterSha256": "11a99747ec7b4bf0598d65cd356e18921e6b6b0b8d5f52095b9aed3cc9c5f7e4",
+      "beforeSize": [
+        375,
+        1811
+      ],
+      "afterSize": [
+        375,
+        1811
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/auth-login.png",
+      "beforeSha256": "b071566008b7024116a9ed913c6e31560de546a63b7b63890e3b977a919aad4f",
+      "afterSha256": "b071566008b7024116a9ed913c6e31560de546a63b7b63890e3b977a919aad4f",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/auth-register.png",
+      "beforeSha256": "b5e244fc970198eb9e5ff72536df37b03e10509694dab503d0ce4ea5d24f7008",
+      "afterSha256": "b5e244fc970198eb9e5ff72536df37b03e10509694dab503d0ce4ea5d24f7008",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-home.png",
+      "beforeSha256": "d8c7642891deae1bb2130a7f552b5c435bc4a16f780fa8b515832b6f0a959b76",
+      "afterSha256": "d8c7642891deae1bb2130a7f552b5c435bc4a16f780fa8b515832b6f0a959b76",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-coach.png",
+      "beforeSha256": "21121f3935633984c62a417d9305b74845b96e75efa0013f842c1a8529bd885b",
+      "afterSha256": "21121f3935633984c62a417d9305b74845b96e75efa0013f842c1a8529bd885b",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-comp.png",
+      "beforeSha256": "37cfcd0b624dd30b9c25d336a0c11ed2b50f7fe6a07b04f3e3c6a3832a604b49",
+      "afterSha256": "37cfcd0b624dd30b9c25d336a0c11ed2b50f7fe6a07b04f3e3c6a3832a604b49",
+      "beforeSize": [
+        375,
+        713
+      ],
+      "afterSize": [
+        375,
+        713
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-feed.png",
+      "beforeSha256": "00bf7929ea3a2b4444197bf9d370bd1ee7273681ba99c408770195cf76ae155e",
+      "afterSha256": "00bf7929ea3a2b4444197bf9d370bd1ee7273681ba99c408770195cf76ae155e",
+      "beforeSize": [
+        375,
+        899
+      ],
+      "afterSize": [
+        375,
+        899
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-insights.png",
+      "beforeSha256": "9f0ef3bac57e551d5770e3d41c4517c8ea7a8aad44cdff1f55f8bd7e22e49eb7",
+      "afterSha256": "9f0ef3bac57e551d5770e3d41c4517c8ea7a8aad44cdff1f55f8bd7e22e49eb7",
+      "beforeSize": [
+        375,
+        1681
+      ],
+      "afterSize": [
+        375,
+        1681
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-oncourse.png",
+      "beforeSha256": "d8c7642891deae1bb2130a7f552b5c435bc4a16f780fa8b515832b6f0a959b76",
+      "afterSha256": "d8c7642891deae1bb2130a7f552b5c435bc4a16f780fa8b515832b6f0a959b76",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-practice.png",
+      "beforeSha256": "923911467b657d86d1b09a4568b816497a7c17a94e020cc732bf5340a81fa114",
+      "afterSha256": "923911467b657d86d1b09a4568b816497a7c17a94e020cc732bf5340a81fa114",
+      "beforeSize": [
+        375,
+        3301
+      ],
+      "afterSize": [
+        375,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-settings.png",
+      "beforeSha256": "116d0ddf09f88d418e29fa6606d98428db433456c2a64fe92f962c9557697faa",
+      "afterSha256": "116d0ddf09f88d418e29fa6606d98428db433456c2a64fe92f962c9557697faa",
+      "beforeSize": [
+        375,
+        3985
+      ],
+      "afterSize": [
+        375,
+        3985
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/coach-d-tab-whs.png",
+      "beforeSha256": "249eb59d79b4866b463aab4ca07f15a0f84093d52415fc058fd389bcd96d711d",
+      "afterSha256": "249eb59d79b4866b463aab4ca07f15a0f84093d52415fc058fd389bcd96d711d",
+      "beforeSize": [
+        375,
+        2113
+      ],
+      "afterSize": [
+        375,
+        2113
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-excluded-round-reason.png",
+      "beforeSha256": "611602af87599da59c21f0b347e8523d56da261b04ebef82dda5c7a285a81360",
+      "afterSha256": "611602af87599da59c21f0b347e8523d56da261b04ebef82dda5c7a285a81360",
+      "beforeSize": [
+        375,
+        1968
+      ],
+      "afterSize": [
+        375,
+        1968
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-finish-summary.png",
+      "beforeSha256": "7f6de52a2e3671093d5b04d9b6e90e2af6f839805e236fb790f6589c76bbe541",
+      "afterSha256": "7f6de52a2e3671093d5b04d9b6e90e2af6f839805e236fb790f6589c76bbe541",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-hole-one-scored.png",
+      "beforeSha256": "b3eb00c3247e85f9b12a5652489e54e6d89a3e40fe32cb333048e5cbcfe15d45",
+      "afterSha256": "b3eb00c3247e85f9b12a5652489e54e6d89a3e40fe32cb333048e5cbcfe15d45",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-index-after-one-nine.png",
+      "beforeSha256": "5988d3e29683f0dc2d456a0813d1512298c95611d857cef6b0a4ffe530972a17",
+      "afterSha256": "5988d3e29683f0dc2d456a0813d1512298c95611d857cef6b0a4ffe530972a17",
+      "beforeSize": [
+        375,
+        1798
+      ],
+      "afterSize": [
+        375,
+        1798
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-nine-setup.png",
+      "beforeSha256": "90b221fab4ae4cf2b9efbdecb2299277c612101817c5870f64cb46da24605090",
+      "afterSha256": "90b221fab4ae4cf2b9efbdecb2299277c612101817c5870f64cb46da24605090",
+      "beforeSize": [
+        375,
+        1588
+      ],
+      "afterSize": [
+        375,
+        1588
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-round-more.png",
+      "beforeSha256": "436774d3ed3bd26e78fa0d5383fd5e9896e11b608fd5e243651c4456a44fea85",
+      "afterSha256": "436774d3ed3bd26e78fa0d5383fd5e9896e11b608fd5e243651c4456a44fea85",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/new-player-round-saved.png",
+      "beforeSha256": "15a94f6c4fbf3265317af6d07a31d1b70c755b5c52a24d4ce3d965c419f979d6",
+      "afterSha256": "15a94f6c4fbf3265317af6d07a31d1b70c755b5c52a24d4ce3d965c419f979d6",
+      "beforeSize": [
+        375,
+        1143
+      ],
+      "afterSize": [
+        375,
+        1143
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/pending-c-approved-but-still-pending.png",
+      "beforeSha256": "adce4c2a35dddb0e70c6de9738c9e742d1dc63ccf5fafd1a6e047feeed6b46f5",
+      "afterSha256": "adce4c2a35dddb0e70c6de9738c9e742d1dc63ccf5fafd1a6e047feeed6b46f5",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/pending-c-approved.png",
+      "beforeSha256": "e58a3437f19522c83aa2001f8941362d49f1484cc123f51d41d9cda6ab2c8598",
+      "afterSha256": "e58a3437f19522c83aa2001f8941362d49f1484cc123f51d41d9cda6ab2c8598",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/pending-c-home.png",
+      "beforeSha256": "adce4c2a35dddb0e70c6de9738c9e742d1dc63ccf5fafd1a6e047feeed6b46f5",
+      "afterSha256": "adce4c2a35dddb0e70c6de9738c9e742d1dc63ccf5fafd1a6e047feeed6b46f5",
+      "beforeSize": [
+        375,
+        667
+      ],
+      "afterSize": [
+        375,
+        667
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-handicap.png",
+      "beforeSha256": "8c620be4e32a12d6dc3cf6b66feb406a61559e6da18d268cd384e76d828e991f",
+      "afterSha256": "8c620be4e32a12d6dc3cf6b66feb406a61559e6da18d268cd384e76d828e991f",
+      "beforeSize": [
+        375,
+        3376
+      ],
+      "afterSize": [
+        375,
+        3376
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-history-actions.png",
+      "beforeSha256": "2bc2fab58bb936bbb3851bb78bceeee906748b72ba889ad23691f6ffe50a5f12",
+      "afterSha256": "2bc2fab58bb936bbb3851bb78bceeee906748b72ba889ad23691f6ffe50a5f12",
+      "beforeSize": [
+        375,
+        3546
+      ],
+      "afterSize": [
+        375,
+        3546
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-home.png",
+      "beforeSha256": "92f17c9d6cade1cd19113041f83484455fa64cd5ec821f7cd98c25632158f020",
+      "afterSha256": "92f17c9d6cade1cd19113041f83484455fa64cd5ec821f7cd98c25632158f020",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-log-past-round.png",
+      "beforeSha256": "9f25291ae57d300cccce12dfb09b0615059d34c06ee18bdb4bd39c548bfac4e1",
+      "afterSha256": "9f25291ae57d300cccce12dfb09b0615059d34c06ee18bdb4bd39c548bfac4e1",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-comp.png",
+      "beforeSha256": "28daf014aa7f1d2884f066f31ca240dd73850af0763dec07f5f767a21bde7577",
+      "afterSha256": "28daf014aa7f1d2884f066f31ca240dd73850af0763dec07f5f767a21bde7577",
+      "beforeSize": [
+        375,
+        713
+      ],
+      "afterSize": [
+        375,
+        713
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-feed.png",
+      "beforeSha256": "9b1e7f90d47973795c49c7feaee9fe240bf9894cdabba7d9ebf852ee2fabe70a",
+      "afterSha256": "9b1e7f90d47973795c49c7feaee9fe240bf9894cdabba7d9ebf852ee2fabe70a",
+      "beforeSize": [
+        375,
+        899
+      ],
+      "afterSize": [
+        375,
+        899
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-insights.png",
+      "beforeSha256": "7a18a4071912ff86616ef68a782d0b3d2afd7c369acfe16c758d92ee6d7f3f39",
+      "afterSha256": "7a18a4071912ff86616ef68a782d0b3d2afd7c369acfe16c758d92ee6d7f3f39",
+      "beforeSize": [
+        375,
+        1681
+      ],
+      "afterSize": [
+        375,
+        1681
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-oncourse.png",
+      "beforeSha256": "92f17c9d6cade1cd19113041f83484455fa64cd5ec821f7cd98c25632158f020",
+      "afterSha256": "92f17c9d6cade1cd19113041f83484455fa64cd5ec821f7cd98c25632158f020",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-practice.png",
+      "beforeSha256": "5a42a1122a973f5c209176036bcb1da2654caa587c8c880198af1fdb5e473227",
+      "afterSha256": "5a42a1122a973f5c209176036bcb1da2654caa587c8c880198af1fdb5e473227",
+      "beforeSize": [
+        375,
+        3301
+      ],
+      "afterSize": [
+        375,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-settings.png",
+      "beforeSha256": "45195e1531b917847bfbc7a8d3460c11b7d4ad119636beac09abab94c6c01232",
+      "afterSha256": "45195e1531b917847bfbc7a8d3460c11b7d4ad119636beac09abab94c6c01232",
+      "beforeSize": [
+        375,
+        3960
+      ],
+      "afterSize": [
+        375,
+        3960
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-a-tab-whs.png",
+      "beforeSha256": "8c620be4e32a12d6dc3cf6b66feb406a61559e6da18d268cd384e76d828e991f",
+      "afterSha256": "8c620be4e32a12d6dc3cf6b66feb406a61559e6da18d268cd384e76d828e991f",
+      "beforeSize": [
+        375,
+        3376
+      ],
+      "afterSize": [
+        375,
+        3376
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-home.png",
+      "beforeSha256": "6632aeb2f5baee9a70421ba66dc64f667d11c2b2f62622db4895e2f61445274f",
+      "afterSha256": "6632aeb2f5baee9a70421ba66dc64f667d11c2b2f62622db4895e2f61445274f",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-comp.png",
+      "beforeSha256": "87ea77c7af25391c94d75cb0f1cbbedf8a02907d766f98d1b8865bf6338cb3ef",
+      "afterSha256": "87ea77c7af25391c94d75cb0f1cbbedf8a02907d766f98d1b8865bf6338cb3ef",
+      "beforeSize": [
+        375,
+        713
+      ],
+      "afterSize": [
+        375,
+        713
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-feed.png",
+      "beforeSha256": "3dc4bbcfed6b0dcd7b2c4e3c6ce17c55580921bf2e8292088f7fd37e13c33211",
+      "afterSha256": "3dc4bbcfed6b0dcd7b2c4e3c6ce17c55580921bf2e8292088f7fd37e13c33211",
+      "beforeSize": [
+        375,
+        899
+      ],
+      "afterSize": [
+        375,
+        899
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-insights.png",
+      "beforeSha256": "13ae17697d00ae583b23c1cdb558abafa05a8c0cd7b32048eeb4dae3770b2585",
+      "afterSha256": "13ae17697d00ae583b23c1cdb558abafa05a8c0cd7b32048eeb4dae3770b2585",
+      "beforeSize": [
+        375,
+        1681
+      ],
+      "afterSize": [
+        375,
+        1681
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-oncourse.png",
+      "beforeSha256": "6632aeb2f5baee9a70421ba66dc64f667d11c2b2f62622db4895e2f61445274f",
+      "afterSha256": "6632aeb2f5baee9a70421ba66dc64f667d11c2b2f62622db4895e2f61445274f",
+      "beforeSize": [
+        375,
+        1302
+      ],
+      "afterSize": [
+        375,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-practice.png",
+      "beforeSha256": "bb343dcc8837bf072b896a08ece39f6bdf1a4a9315928f4c18a05e5c45c2783a",
+      "afterSha256": "bb343dcc8837bf072b896a08ece39f6bdf1a4a9315928f4c18a05e5c45c2783a",
+      "beforeSize": [
+        375,
+        3301
+      ],
+      "afterSize": [
+        375,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-settings.png",
+      "beforeSha256": "ebe24f9f1e9d9b70336776f1b362693fff764231a39d7c0516d2a79efcb1a82a",
+      "afterSha256": "ebe24f9f1e9d9b70336776f1b362693fff764231a39d7c0516d2a79efcb1a82a",
+      "beforeSize": [
+        375,
+        3960
+      ],
+      "afterSize": [
+        375,
+        3960
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "iphone-se/player-b-tab-whs.png",
+      "beforeSha256": "fcc48055490d2f966371c9dc161ca3775a555db6dabca1e087d5b3a5cd8955ce",
+      "afterSha256": "fcc48055490d2f966371c9dc161ca3775a555db6dabca1e087d5b3a5cd8955ce",
+      "beforeSize": [
+        375,
+        2113
+      ],
+      "afterSize": [
+        375,
+        2113
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-home.png",
+      "beforeSha256": "3b7f37199187dee70edfe15aff8bfd52be883042560e98f2ed6f0c4b258c66bf",
+      "afterSha256": "3b7f37199187dee70edfe15aff8bfd52be883042560e98f2ed6f0c4b258c66bf",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-admin.png",
+      "beforeSha256": "324a08bf50912c5a164fa0297b55318dd416acad733d361ac293e1c5c2f7fe0f",
+      "afterSha256": "324a08bf50912c5a164fa0297b55318dd416acad733d361ac293e1c5c2f7fe0f",
+      "beforeSize": [
+        412,
+        1545
+      ],
+      "afterSize": [
+        412,
+        1545
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-comp.png",
+      "beforeSha256": "4bea9e9fd27c285f188a4762a2877881974392f65912a3f2b2696416cda9252c",
+      "afterSha256": "4bea9e9fd27c285f188a4762a2877881974392f65912a3f2b2696416cda9252c",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-feed.png",
+      "beforeSha256": "361bebf3cb2224e898ed0640f2e56f0d60dc009d310c0335551279996538faa6",
+      "afterSha256": "361bebf3cb2224e898ed0640f2e56f0d60dc009d310c0335551279996538faa6",
+      "beforeSize": [
+        412,
+        899
+      ],
+      "afterSize": [
+        412,
+        899
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-insights.png",
+      "beforeSha256": "fbcffc07083bc696c2a634de4b4c949902007ecbed4fd9a01c0b3b2145ac2b30",
+      "afterSha256": "fbcffc07083bc696c2a634de4b4c949902007ecbed4fd9a01c0b3b2145ac2b30",
+      "beforeSize": [
+        412,
+        1612
+      ],
+      "afterSize": [
+        412,
+        1612
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-oncourse.png",
+      "beforeSha256": "3b7f37199187dee70edfe15aff8bfd52be883042560e98f2ed6f0c4b258c66bf",
+      "afterSha256": "3b7f37199187dee70edfe15aff8bfd52be883042560e98f2ed6f0c4b258c66bf",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-practice.png",
+      "beforeSha256": "c5facf4dbd8d74a1ecc92170ebb4f10b79fb682be3b19c6a85216a1b0284c907",
+      "afterSha256": "c5facf4dbd8d74a1ecc92170ebb4f10b79fb682be3b19c6a85216a1b0284c907",
+      "beforeSize": [
+        412,
+        3301
+      ],
+      "afterSize": [
+        412,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-settings.png",
+      "beforeSha256": "0d4e916dc557cee8e8eb5fda7c19c098c4dce27f36496bb3aa5e57662cb52ae7",
+      "afterSha256": "0d4e916dc557cee8e8eb5fda7c19c098c4dce27f36496bb3aa5e57662cb52ae7",
+      "beforeSize": [
+        412,
+        3866
+      ],
+      "afterSize": [
+        412,
+        3866
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-e-tab-whs.png",
+      "beforeSha256": "22093e646712a5a83a96c26b159ba73a47432799690e177281828ffcd6da8b2a",
+      "afterSha256": "22093e646712a5a83a96c26b159ba73a47432799690e177281828ffcd6da8b2a",
+      "beforeSize": [
+        412,
+        2113
+      ],
+      "afterSize": [
+        412,
+        2113
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/admin-pending-before-approval.png",
+      "beforeSha256": "324a08bf50912c5a164fa0297b55318dd416acad733d361ac293e1c5c2f7fe0f",
+      "afterSha256": "324a08bf50912c5a164fa0297b55318dd416acad733d361ac293e1c5c2f7fe0f",
+      "beforeSize": [
+        412,
+        1545
+      ],
+      "afterSize": [
+        412,
+        1545
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/auth-login.png",
+      "beforeSha256": "361e7055184c4732ecaded52346c2f38ef145c28e85c3c4f4ddbaf044d0ad1fd",
+      "afterSha256": "361e7055184c4732ecaded52346c2f38ef145c28e85c3c4f4ddbaf044d0ad1fd",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/auth-register.png",
+      "beforeSha256": "672d0ae63529af26fab25e82d315e9d2a1f87acfb7c35d5a1ad92580cb853e9f",
+      "afterSha256": "672d0ae63529af26fab25e82d315e9d2a1f87acfb7c35d5a1ad92580cb853e9f",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-home.png",
+      "beforeSha256": "e7320b2447badebeedd3e9359fbacf45e05b35868d04819124e0743cce6c207b",
+      "afterSha256": "e7320b2447badebeedd3e9359fbacf45e05b35868d04819124e0743cce6c207b",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-coach.png",
+      "beforeSha256": "714e0b5c6d3f31fe80d56cad73c9705eca0e608f1d1879b9aaeacca737a3ee3d",
+      "afterSha256": "714e0b5c6d3f31fe80d56cad73c9705eca0e608f1d1879b9aaeacca737a3ee3d",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-comp.png",
+      "beforeSha256": "d565eacd084650be162c1acf30310c9286f9d78684f71bc469b7031527998014",
+      "afterSha256": "d565eacd084650be162c1acf30310c9286f9d78684f71bc469b7031527998014",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-feed.png",
+      "beforeSha256": "8b73ea87608ff2e223e0326c80bf8512c0d8706778b0a8c1cff44c070eac202f",
+      "afterSha256": "8b73ea87608ff2e223e0326c80bf8512c0d8706778b0a8c1cff44c070eac202f",
+      "beforeSize": [
+        412,
+        873
+      ],
+      "afterSize": [
+        412,
+        873
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-insights.png",
+      "beforeSha256": "e1976dc544059f7562aac87212fd6964cee010417b2f81cdd95517679a7d110e",
+      "afterSha256": "e1976dc544059f7562aac87212fd6964cee010417b2f81cdd95517679a7d110e",
+      "beforeSize": [
+        412,
+        1612
+      ],
+      "afterSize": [
+        412,
+        1612
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-oncourse.png",
+      "beforeSha256": "e7320b2447badebeedd3e9359fbacf45e05b35868d04819124e0743cce6c207b",
+      "afterSha256": "e7320b2447badebeedd3e9359fbacf45e05b35868d04819124e0743cce6c207b",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-practice.png",
+      "beforeSha256": "46093df8aa21e334d9e4193b5ad436b3fea58a9c5b8076272cf6e9503b11d3fa",
+      "afterSha256": "46093df8aa21e334d9e4193b5ad436b3fea58a9c5b8076272cf6e9503b11d3fa",
+      "beforeSize": [
+        412,
+        3301
+      ],
+      "afterSize": [
+        412,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-settings.png",
+      "beforeSha256": "138f75fba2988d7fe0e839680adef707796f382c1f8ed23cca6f3a61209951b7",
+      "afterSha256": "138f75fba2988d7fe0e839680adef707796f382c1f8ed23cca6f3a61209951b7",
+      "beforeSize": [
+        412,
+        3866
+      ],
+      "afterSize": [
+        412,
+        3866
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/coach-d-tab-whs.png",
+      "beforeSha256": "1e1120eae1d1653f2835d1fccd3954e63ee69d0aaec848edc2818d183e921b69",
+      "afterSha256": "1e1120eae1d1653f2835d1fccd3954e63ee69d0aaec848edc2818d183e921b69",
+      "beforeSize": [
+        412,
+        2113
+      ],
+      "afterSize": [
+        412,
+        2113
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-excluded-round-reason.png",
+      "beforeSha256": "c1b5838b9d9b0b0dff91d9fce88567df810d02e59afbebcb55f336bc7bb9c17f",
+      "afterSha256": "c1b5838b9d9b0b0dff91d9fce88567df810d02e59afbebcb55f336bc7bb9c17f",
+      "beforeSize": [
+        412,
+        1942
+      ],
+      "afterSize": [
+        412,
+        1942
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-finish-summary.png",
+      "beforeSha256": "a640ae949d36e2fef0a61d5914a299786550d71dd908323084d632be5b3cc8b3",
+      "afterSha256": "a640ae949d36e2fef0a61d5914a299786550d71dd908323084d632be5b3cc8b3",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-hole-one-scored.png",
+      "beforeSha256": "4509a65f87b9374fa6fbd5392379c074b9e926f59083250dd60fc193af780ad4",
+      "afterSha256": "4509a65f87b9374fa6fbd5392379c074b9e926f59083250dd60fc193af780ad4",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-index-after-one-nine.png",
+      "beforeSha256": "33d757dd1185f6d02cdbbb6bbd0b14c0fe7bb93e217b92f2bd3941a1b14a2609",
+      "afterSha256": "33d757dd1185f6d02cdbbb6bbd0b14c0fe7bb93e217b92f2bd3941a1b14a2609",
+      "beforeSize": [
+        412,
+        1772
+      ],
+      "afterSize": [
+        412,
+        1772
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-nine-setup.png",
+      "beforeSha256": "5ef27ab07d9b3ca68bdd389946cab63c5748fa32228b71631ea16106b0aaa337",
+      "afterSha256": "5ef27ab07d9b3ca68bdd389946cab63c5748fa32228b71631ea16106b0aaa337",
+      "beforeSize": [
+        412,
+        1588
+      ],
+      "afterSize": [
+        412,
+        1588
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-round-more.png",
+      "beforeSha256": "4829d80e8dbf6c9f98dc277505411466ff98f53cad904129e99c94cb425fdb66",
+      "afterSha256": "4829d80e8dbf6c9f98dc277505411466ff98f53cad904129e99c94cb425fdb66",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/new-player-round-saved.png",
+      "beforeSha256": "84ea20ae34dba7040252037ce28c8b61ec2f64e1cd83130a30dbfd5923119b66",
+      "afterSha256": "84ea20ae34dba7040252037ce28c8b61ec2f64e1cd83130a30dbfd5923119b66",
+      "beforeSize": [
+        412,
+        1120
+      ],
+      "afterSize": [
+        412,
+        1120
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/pending-c-approved-but-still-pending.png",
+      "beforeSha256": "aa43c9e8278d107845e207b5977347f6a6b456a82b76b56f8ad26f60b5ab611f",
+      "afterSha256": "aa43c9e8278d107845e207b5977347f6a6b456a82b76b56f8ad26f60b5ab611f",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/pending-c-approved.png",
+      "beforeSha256": "38d40b4deeb1612e23592814207f868f78ef18115d2197ab376dac60adc5d5bf",
+      "afterSha256": "38d40b4deeb1612e23592814207f868f78ef18115d2197ab376dac60adc5d5bf",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/pending-c-home.png",
+      "beforeSha256": "aa43c9e8278d107845e207b5977347f6a6b456a82b76b56f8ad26f60b5ab611f",
+      "afterSha256": "aa43c9e8278d107845e207b5977347f6a6b456a82b76b56f8ad26f60b5ab611f",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-handicap.png",
+      "beforeSha256": "40ae6dc2fc24a7d84d3039a512cef7aefeb45c86b1540b91cac45386fa866457",
+      "afterSha256": "40ae6dc2fc24a7d84d3039a512cef7aefeb45c86b1540b91cac45386fa866457",
+      "beforeSize": [
+        412,
+        3376
+      ],
+      "afterSize": [
+        412,
+        3376
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-history-actions.png",
+      "beforeSha256": "f4954c1994ccb0a62929c3dd9c9e22667a69640e0932c4aa7b1308aae5aeb6fe",
+      "afterSha256": "f4954c1994ccb0a62929c3dd9c9e22667a69640e0932c4aa7b1308aae5aeb6fe",
+      "beforeSize": [
+        412,
+        3546
+      ],
+      "afterSize": [
+        412,
+        3546
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-home.png",
+      "beforeSha256": "70c9d1c87a14d253991a3ce03d8a9b00009f4aca904a77c5c1253c44b91092ed",
+      "afterSha256": "70c9d1c87a14d253991a3ce03d8a9b00009f4aca904a77c5c1253c44b91092ed",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-log-past-round.png",
+      "beforeSha256": "b79e6531aea9425070d0ad370f4312f34653438425b706f24e55d04583044714",
+      "afterSha256": "b79e6531aea9425070d0ad370f4312f34653438425b706f24e55d04583044714",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-comp.png",
+      "beforeSha256": "2507234f7d11bf9f4950b7a19aa572e89f2bcb1d000b1f1f1962e4f7aae30102",
+      "afterSha256": "2507234f7d11bf9f4950b7a19aa572e89f2bcb1d000b1f1f1962e4f7aae30102",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-feed.png",
+      "beforeSha256": "e7b865f118aae3f8311a4c8a837ebb5fed98dfc0bcdc787ede8a180dab9598b5",
+      "afterSha256": "e7b865f118aae3f8311a4c8a837ebb5fed98dfc0bcdc787ede8a180dab9598b5",
+      "beforeSize": [
+        412,
+        873
+      ],
+      "afterSize": [
+        412,
+        873
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-insights.png",
+      "beforeSha256": "d79a8cf887915e27492afa9bd27046ce4161f6ce3979a59e3dae11c2844a2401",
+      "afterSha256": "d79a8cf887915e27492afa9bd27046ce4161f6ce3979a59e3dae11c2844a2401",
+      "beforeSize": [
+        412,
+        1612
+      ],
+      "afterSize": [
+        412,
+        1612
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-oncourse.png",
+      "beforeSha256": "70c9d1c87a14d253991a3ce03d8a9b00009f4aca904a77c5c1253c44b91092ed",
+      "afterSha256": "70c9d1c87a14d253991a3ce03d8a9b00009f4aca904a77c5c1253c44b91092ed",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-practice.png",
+      "beforeSha256": "93b50d381f506b1b18e366d1555eec5fd22c4e621f6f1c9f15e4834158e0c282",
+      "afterSha256": "93b50d381f506b1b18e366d1555eec5fd22c4e621f6f1c9f15e4834158e0c282",
+      "beforeSize": [
+        412,
+        3301
+      ],
+      "afterSize": [
+        412,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-settings.png",
+      "beforeSha256": "1df66c1bf0fb8df329d63e36a85c2f6df26cb273747ce6577656f2035175b79d",
+      "afterSha256": "1df66c1bf0fb8df329d63e36a85c2f6df26cb273747ce6577656f2035175b79d",
+      "beforeSize": [
+        412,
+        3840
+      ],
+      "afterSize": [
+        412,
+        3840
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-a-tab-whs.png",
+      "beforeSha256": "40ae6dc2fc24a7d84d3039a512cef7aefeb45c86b1540b91cac45386fa866457",
+      "afterSha256": "40ae6dc2fc24a7d84d3039a512cef7aefeb45c86b1540b91cac45386fa866457",
+      "beforeSize": [
+        412,
+        3376
+      ],
+      "afterSize": [
+        412,
+        3376
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-home.png",
+      "beforeSha256": "5fbe1a5999ad122479c803a056725376148fa3949003c2a5841f17b74f0b09e0",
+      "afterSha256": "5fbe1a5999ad122479c803a056725376148fa3949003c2a5841f17b74f0b09e0",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-comp.png",
+      "beforeSha256": "9d764be22662323bcc47c8b1c32d908e5fb4e54bc9d79455f8f1ef66d64467e0",
+      "afterSha256": "9d764be22662323bcc47c8b1c32d908e5fb4e54bc9d79455f8f1ef66d64467e0",
+      "beforeSize": [
+        412,
+        839
+      ],
+      "afterSize": [
+        412,
+        839
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-feed.png",
+      "beforeSha256": "2cf5084b24dd096ed97013883523785af54ecd1c3804febbd4acdbc0c09643ba",
+      "afterSha256": "2cf5084b24dd096ed97013883523785af54ecd1c3804febbd4acdbc0c09643ba",
+      "beforeSize": [
+        412,
+        873
+      ],
+      "afterSize": [
+        412,
+        873
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-insights.png",
+      "beforeSha256": "a8c401ecce8d2af73c486926d4ab1dc51043f1d53b91404c4075443346eac509",
+      "afterSha256": "a8c401ecce8d2af73c486926d4ab1dc51043f1d53b91404c4075443346eac509",
+      "beforeSize": [
+        412,
+        1612
+      ],
+      "afterSize": [
+        412,
+        1612
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-oncourse.png",
+      "beforeSha256": "5fbe1a5999ad122479c803a056725376148fa3949003c2a5841f17b74f0b09e0",
+      "afterSha256": "5fbe1a5999ad122479c803a056725376148fa3949003c2a5841f17b74f0b09e0",
+      "beforeSize": [
+        412,
+        1302
+      ],
+      "afterSize": [
+        412,
+        1302
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-practice.png",
+      "beforeSha256": "5868a304ce04161144066d0ef4a875af1befa3b212d44029d3a7e4104603e271",
+      "afterSha256": "5868a304ce04161144066d0ef4a875af1befa3b212d44029d3a7e4104603e271",
+      "beforeSize": [
+        412,
+        3301
+      ],
+      "afterSize": [
+        412,
+        3301
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-settings.png",
+      "beforeSha256": "a7f5b5cc84934ea60432fa5840a4682243ab940aab554d4c149e59ada2284a2e",
+      "afterSha256": "a7f5b5cc84934ea60432fa5840a4682243ab940aab554d4c149e59ada2284a2e",
+      "beforeSize": [
+        412,
+        3840
+      ],
+      "afterSize": [
+        412,
+        3840
+      ],
+      "changedPixels": 0
+    },
+    {
+      "path": "phone/player-b-tab-whs.png",
+      "beforeSha256": "f28d560efe5e0dd36079b1d3b8673fdc21f86578b2e474d3beb347b0ce84c628",
+      "afterSha256": "f28d560efe5e0dd36079b1d3b8673fdc21f86578b2e474d3beb347b0ce84c628",
+      "beforeSize": [
+        412,
+        2113
+      ],
+      "afterSize": [
+        412,
+        2113
+      ],
+      "changedPixels": 0
+    }
+  ],
+  "styleRows": [
+    {
+      "path": "iphone-se/admin-e-home-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-admin-styles.json",
+      "beforeElements": 236,
+      "afterElements": 236,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-comp-styles.json",
+      "beforeElements": 46,
+      "afterElements": 46,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-feed-styles.json",
+      "beforeElements": 55,
+      "afterElements": 55,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-insights-styles.json",
+      "beforeElements": 101,
+      "afterElements": 101,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-oncourse-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-practice-styles.json",
+      "beforeElements": 146,
+      "afterElements": 146,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-settings-styles.json",
+      "beforeElements": 160,
+      "afterElements": 160,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-e-tab-whs-styles.json",
+      "beforeElements": 109,
+      "afterElements": 109,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/admin-pending-before-approval-styles.json",
+      "beforeElements": 236,
+      "afterElements": 236,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/auth-login-styles.json",
+      "beforeElements": 30,
+      "afterElements": 30,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/auth-register-styles.json",
+      "beforeElements": 32,
+      "afterElements": 32,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-home-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-coach-styles.json",
+      "beforeElements": 58,
+      "afterElements": 58,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-comp-styles.json",
+      "beforeElements": 46,
+      "afterElements": 46,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-feed-styles.json",
+      "beforeElements": 55,
+      "afterElements": 55,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-insights-styles.json",
+      "beforeElements": 101,
+      "afterElements": 101,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-oncourse-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-practice-styles.json",
+      "beforeElements": 146,
+      "afterElements": 146,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-settings-styles.json",
+      "beforeElements": 160,
+      "afterElements": 160,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/coach-d-tab-whs-styles.json",
+      "beforeElements": 109,
+      "afterElements": 109,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-excluded-round-reason-styles.json",
+      "beforeElements": 113,
+      "afterElements": 113,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-finish-summary-styles.json",
+      "beforeElements": 83,
+      "afterElements": 83,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-hole-one-scored-styles.json",
+      "beforeElements": 50,
+      "afterElements": 50,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-index-after-one-nine-styles.json",
+      "beforeElements": 113,
+      "afterElements": 113,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-nine-setup-styles.json",
+      "beforeElements": 104,
+      "afterElements": 104,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-round-more-styles.json",
+      "beforeElements": 66,
+      "afterElements": 66,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/new-player-round-saved-styles.json",
+      "beforeElements": 49,
+      "afterElements": 49,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/pending-c-approved-but-still-pending-styles.json",
+      "beforeElements": 6,
+      "afterElements": 6,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/pending-c-approved-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/pending-c-home-styles.json",
+      "beforeElements": 6,
+      "afterElements": 6,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-handicap-styles.json",
+      "beforeElements": 429,
+      "afterElements": 429,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-history-actions-styles.json",
+      "beforeElements": 429,
+      "afterElements": 429,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-home-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-log-past-round-styles.json",
+      "beforeElements": 134,
+      "afterElements": 134,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-comp-styles.json",
+      "beforeElements": 43,
+      "afterElements": 43,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-feed-styles.json",
+      "beforeElements": 52,
+      "afterElements": 52,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-insights-styles.json",
+      "beforeElements": 98,
+      "afterElements": 98,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-oncourse-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-practice-styles.json",
+      "beforeElements": 143,
+      "afterElements": 143,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-settings-styles.json",
+      "beforeElements": 155,
+      "afterElements": 155,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-a-tab-whs-styles.json",
+      "beforeElements": 429,
+      "afterElements": 429,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-home-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-comp-styles.json",
+      "beforeElements": 43,
+      "afterElements": 43,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-feed-styles.json",
+      "beforeElements": 52,
+      "afterElements": 52,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-insights-styles.json",
+      "beforeElements": 98,
+      "afterElements": 98,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-oncourse-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-practice-styles.json",
+      "beforeElements": 143,
+      "afterElements": 143,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-settings-styles.json",
+      "beforeElements": 155,
+      "afterElements": 155,
+      "equal": true
+    },
+    {
+      "path": "iphone-se/player-b-tab-whs-styles.json",
+      "beforeElements": 106,
+      "afterElements": 106,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-home-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-admin-styles.json",
+      "beforeElements": 161,
+      "afterElements": 161,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-comp-styles.json",
+      "beforeElements": 46,
+      "afterElements": 46,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-feed-styles.json",
+      "beforeElements": 55,
+      "afterElements": 55,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-insights-styles.json",
+      "beforeElements": 101,
+      "afterElements": 101,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-oncourse-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-practice-styles.json",
+      "beforeElements": 146,
+      "afterElements": 146,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-settings-styles.json",
+      "beforeElements": 160,
+      "afterElements": 160,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-e-tab-whs-styles.json",
+      "beforeElements": 109,
+      "afterElements": 109,
+      "equal": true
+    },
+    {
+      "path": "phone/admin-pending-before-approval-styles.json",
+      "beforeElements": 161,
+      "afterElements": 161,
+      "equal": true
+    },
+    {
+      "path": "phone/auth-login-styles.json",
+      "beforeElements": 30,
+      "afterElements": 30,
+      "equal": true
+    },
+    {
+      "path": "phone/auth-register-styles.json",
+      "beforeElements": 32,
+      "afterElements": 32,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-home-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-coach-styles.json",
+      "beforeElements": 58,
+      "afterElements": 58,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-comp-styles.json",
+      "beforeElements": 46,
+      "afterElements": 46,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-feed-styles.json",
+      "beforeElements": 55,
+      "afterElements": 55,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-insights-styles.json",
+      "beforeElements": 101,
+      "afterElements": 101,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-oncourse-styles.json",
+      "beforeElements": 77,
+      "afterElements": 77,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-practice-styles.json",
+      "beforeElements": 146,
+      "afterElements": 146,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-settings-styles.json",
+      "beforeElements": 160,
+      "afterElements": 160,
+      "equal": true
+    },
+    {
+      "path": "phone/coach-d-tab-whs-styles.json",
+      "beforeElements": 109,
+      "afterElements": 109,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-excluded-round-reason-styles.json",
+      "beforeElements": 113,
+      "afterElements": 113,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-finish-summary-styles.json",
+      "beforeElements": 83,
+      "afterElements": 83,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-hole-one-scored-styles.json",
+      "beforeElements": 50,
+      "afterElements": 50,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-index-after-one-nine-styles.json",
+      "beforeElements": 113,
+      "afterElements": 113,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-nine-setup-styles.json",
+      "beforeElements": 104,
+      "afterElements": 104,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-round-more-styles.json",
+      "beforeElements": 66,
+      "afterElements": 66,
+      "equal": true
+    },
+    {
+      "path": "phone/new-player-round-saved-styles.json",
+      "beforeElements": 49,
+      "afterElements": 49,
+      "equal": true
+    },
+    {
+      "path": "phone/pending-c-approved-but-still-pending-styles.json",
+      "beforeElements": 6,
+      "afterElements": 6,
+      "equal": true
+    },
+    {
+      "path": "phone/pending-c-approved-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "phone/pending-c-home-styles.json",
+      "beforeElements": 6,
+      "afterElements": 6,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-handicap-styles.json",
+      "beforeElements": 429,
+      "afterElements": 429,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-history-actions-styles.json",
+      "beforeElements": 429,
+      "afterElements": 429,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-home-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-log-past-round-styles.json",
+      "beforeElements": 134,
+      "afterElements": 134,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-comp-styles.json",
+      "beforeElements": 43,
+      "afterElements": 43,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-feed-styles.json",
+      "beforeElements": 52,
+      "afterElements": 52,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-insights-styles.json",
+      "beforeElements": 98,
+      "afterElements": 98,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-oncourse-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-practice-styles.json",
+      "beforeElements": 143,
+      "afterElements": 143,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-settings-styles.json",
+      "beforeElements": 155,
+      "afterElements": 155,
+      "equal": true
+    },
+    {
+      "path": "phone/player-a-tab-whs-styles.json",
+      "beforeElements": 429,
+      "afterElements": 429,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-home-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-comp-styles.json",
+      "beforeElements": 43,
+      "afterElements": 43,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-feed-styles.json",
+      "beforeElements": 52,
+      "afterElements": 52,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-insights-styles.json",
+      "beforeElements": 98,
+      "afterElements": 98,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-oncourse-styles.json",
+      "beforeElements": 74,
+      "afterElements": 74,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-practice-styles.json",
+      "beforeElements": 143,
+      "afterElements": 143,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-settings-styles.json",
+      "beforeElements": 155,
+      "afterElements": 155,
+      "equal": true
+    },
+    {
+      "path": "phone/player-b-tab-whs-styles.json",
+      "beforeElements": 106,
+      "afterElements": 106,
+      "equal": true
+    }
+  ]
+}
