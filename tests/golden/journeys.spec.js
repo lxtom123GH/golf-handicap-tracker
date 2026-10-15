@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedPreapprovedEmail, registerAndVerifySignup, seedHandicapByEmail,
-    findDocs, patchDocFields, verifyEmulatorEmail, readDoc } from '../e2e/helpers/emulator.js';
+    findDocs, patchDocFields, verifyEmulatorEmail, readDoc, writeDocFields } from '../e2e/helpers/emulator.js';
 test.beforeAll(async ({ browser }) => {
     expect(browser.version(), 'Use pinned Chrome Headless Shell155.0.8059.39 for committed screenshot baselines').toBe('155.0.8059.39');
 });
@@ -26,7 +26,6 @@ async function image(page, name) {
     await page.evaluate(() => document.fonts.ready);
     await expect(page).toHaveScreenshot(name+'.png', {
         mask: [page.locator('#app-version'), page.locator('#footer-version'), page.locator('#logged-in-user-name'), page.locator('.firebase-emulator-warning')],
-        style: '* { scroll-behavior: auto !important; }',
     });
 }
 async function setup(page, holes) {
@@ -89,12 +88,26 @@ test('eighteen-hole abandonment removes active state and creates no scored round
     const state=await page.evaluate(()=>JSON.parse(localStorage.getItem('golf_round_state')));
     expect(state.currentRoundHoles).toBe(18);
     await page.locator('#oc-group-scores .compact-score-card').first().locator('.btn-grid-plus').click();
+    const [user]=await findDocs('users','email',email);
+    expect(state.activeRoundId).toEqual(expect.any(String));
+    expect(state.activeRoundId).not.toBe('');
+    // Simple scoring creates no shot documents. Seed a logged shot explicitly
+    // so the real golfer's abandonment must delete persisted data under rules.
+    const shotId=`golden-abandon-${state.activeRoundId}-${user._id}`;
+    await writeDocFields(`shots/${shotId}`, {
+        uid:user._id, roundId:state.activeRoundId, hole:1, shotNumber:1,
+        club:'Driver', timestamp:'2026-01-15T00:00:00.000Z',
+    });
+    expect(await findDocs('shots','roundId',state.activeRoundId))
+        .toEqual([expect.objectContaining({_id:shotId,uid:user._id})]);
     page.once('dialog',d=>d.accept());
     await page.locator('#btn-oc-more').click();await page.locator('#btn-oc-exit').click();
     await expect(page.locator('#oncourse-setup')).toBeVisible();
+    await expect.poll(async()=>await findDocs('shots','roundId',state.activeRoundId), {
+        message:'Abandonment must delete the persisted active-round shot',
+    }).toHaveLength(0);
     await page.reload();await expect(page.locator('#oncourse-setup')).toBeVisible();
     expect(await page.evaluate(()=>localStorage.getItem('golf_round_state'))).toBeNull();
-    const [user]=await findDocs('users','email',email);
     expect(await findDocs('whs_rounds','uid',user._id)).toHaveLength(0);
     expect(await findDocs('shots','roundId',state.activeRoundId)).toHaveLength(0);
 });
