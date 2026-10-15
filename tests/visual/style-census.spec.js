@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { registerAndVerifySignup, verifyEmulatorEmail, waitForEmulators,
     findDocs, patchDocFields, writeDocFields, readDoc } from '../e2e/helpers/emulator.js';
 import { UX_PERSONAS, syntheticRounds } from './ux-fixtures.js';
 import { fixedVisualIdentity } from './fixed-identity.js';
 import { DENY_EXTERNAL_PROXY } from '../e2e/helpers/e2e-safety.js';
+const require = createRequire(import.meta.url);
 
 test('task 017 synthetic full-screen style census', async ({ browser }, testInfo) => {
     const hold = false;
@@ -13,7 +15,7 @@ test('task 017 synthetic full-screen style census', async ({ browser }, testInfo
     await waitForEmulators();
     const { browserName, launchOptions, defaultBrowserType, ...contextOptions } = testInfo.project.use;
     const contexts = [], users = new Map(), census = [];
-    const axe = readFileSync(process.env.AXE_CORE_PATH, 'utf8');
+    const axe = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
     const stamp = `style-${testInfo.project.name}`;
     const out = join('style-evidence', testInfo.project.name); mkdirSync(out, { recursive: true });
     async function capture(page, name) {

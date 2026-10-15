@@ -1,6 +1,6 @@
 # Golf UI style guide
 
-A description of the shipped visual language, not a redesign. Baseline: public main `0c5a0fcc1dd4f8ee3ba36199fe2e3ff73685c6c7`, 13 October 2026. The application source is unchanged in this documentation branch; the additional files are the guide, screenshots and synthetic evidence harness.
+A description of the shipped visual language, not a redesign. Baseline: public main `0c5a0fcc1dd4f8ee3ba36199fe2e3ff73685c6c7`, 13 October 2026. The inventory, ledger and selected screenshots record that historical baseline. Later base merges include separately reviewed application changes; rerunning the harness captures the current checkout, not a byte-identical reproduction of the historical images. This PR adds no application changes relative to its current base.
 
 ## Read this first
 
@@ -102,7 +102,19 @@ The twelve selected screenshots below were visually inspected; full-page capture
 | Scoring | ![Scoring, 412 px](screenshots/style-guide/phone/new-player-hole-one-scored.png) | ![Scoring, 375 px](screenshots/style-guide/iphone-se/new-player-hole-one-scored.png) |
 | Settings | ![Settings, 412 px](screenshots/style-guide/phone/player-b-tab-settings.png) | ![Settings, 375 px](screenshots/style-guide/iphone-se/player-b-tab-settings.png) |
 
-Reproduce through `node scripts/run-e2e-isolated.mjs --config playwright.visual.config.js` after installing the locked dependencies and configuring the pinned local browser. The configuration retains the demo-only network guards. The test-only Vite config replaces the course catalogue, mapped-course labels and overlay geometry, never the normal production configuration. Historic cards are 26 invented eighteen-hole records, seeded while the app is unloaded; the journey separately saves a nine-hole round. Fixed demo-only Auth IDs keep admin row ordering reproducible. That identity bootstrap intercepts signup to seed a fixture and return an emulator sign-in response, so this is not an Auth signup-conformance test. Verification and admission UI still run. Captures bring the page to the foreground and start at scroll origin, with no masks or changed application styles. For a populated visible handicap chart, the harness waits for plotted blue pixels and consecutive equal canvas images; it reads rather than replaces or redraws the chart.
+Reproduce through these commands (Node and Java supported by the locked Firebase tools must be installed):
+
+```sh
+npm ci
+npx playwright install chromium
+node scripts/run-e2e-isolated.mjs --config playwright.visual.config.js
+```
+
+The harness resolves `axe-core/axe.min.js` from locked `axe-core` 4.13.0; no `AXE_CORE_PATH` or private script is needed. Playwright installs its locked Chromium revision. `GOLDEN_CHROME_EXECUTABLE` optionally selects a local browser, changing the rendering environment. Output is written to `style-evidence/phone` and `style-evidence/iphone-se`; use a fresh output directory for each run.
+
+Compare two complete runs with `node tests/visual/compare-results.mjs BEFORE AFTER OUTPUT.json`. Both roots must contain the 100 PNG paths in `docs/style-screen-census.json`, each with its matching `-styles.json`. Empty, missing, extra and unpaired captures fail. For a deliberately different census, supply a fourth argument naming a JSON manifest with `screenCount` and `screens: [{"path":"profile/screen.png"}]`; the default is the committed 100-screen ledger. Run `node tests/visual/compare-selfcheck.mjs` to check equality and rejection behavior.
+
+The configuration retains the demo-only network guards. The test-only Vite config replaces the course catalogue, mapped-course labels and overlay geometry, never the normal production configuration. Historic cards are 26 invented eighteen-hole records, seeded while the app is unloaded; the journey separately saves a nine-hole round. Fixed demo-only Auth IDs keep admin row ordering reproducible. That identity bootstrap intercepts signup to seed a fixture and return an emulator sign-in response, so this is not an Auth signup-conformance test. Verification and admission UI still run. Captures bring the page to the foreground and start at scroll origin, with no masks or changed application styles. For a populated visible handicap chart, the harness waits for plotted blue pixels and consecutive equal canvas images; it reads rather than replaces or redraws the chart.
 
 ## Follow-on token consolidation
 
