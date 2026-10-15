@@ -19,9 +19,9 @@
 // has a required Date Played that nothing read, and addRound stamped
 // serverTimestamp() instead.
 //
-// The zone is switched per test via process.env.TZ (Node re-reads it on
-// assignment) and restored afterwards; Date alone is faked, so timers used by
-// the modules under test still run for real.
+// Date's local fields are supplied by a small IANA-timezone fixture instead
+// of mutating process.env.TZ. That keeps these expectations independent of
+// the runner's process timezone and the machine's configured timezone.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -64,24 +64,149 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('firebase/functions', () => ({ httpsCallable: vi.fn() }));
 vi.mock('../../src/notifications.js', () => ({ initNotifications: vi.fn() }));
 
-const ORIGINAL_TZ = process.env.TZ;
+const NativeDate = globalThis.Date;
+let FakeDateBase = null;
+let testTimeZone = null;
+
+function zonedParts(epoch) {
+    const date = new FakeDateBase(epoch);
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: testTimeZone,
+        era: 'short',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(({ type, value }) => [type, Number(value)]));
+    // Intl uses 1 BC for astronomical year 0; Date uses the signed year.
+    const isBC = parts.find(({ type }) => type === 'era').value === 'BC';
+    return {
+        year: isBC ? 1 - values.year : values.year,
+        month: values.month,
+        day: values.day,
+        hour: values.hour,
+        minute: values.minute,
+        second: values.second,
+        millisecond: date.getUTCMilliseconds(),
+    };
+}
+
+function wallClockEpoch({ year, month, day, hour = 0, minute = 0, second = 0, millisecond = 0 }) {
+    const date = new FakeDateBase(0);
+    date.setUTCFullYear(year, month - 1, day);
+    date.setUTCHours(hour, minute, second, millisecond);
+    return date.getTime();
+}
+
+function epochForZonedWallClock(parts) {
+    const targetWallClock = wallClockEpoch(parts);
+    // Sample both sides of a nearby transition. Iterative correction can
+    // oscillate across a skipped time or settle on the later repeated time.
+    const offsets = new Set([-86_400_000, 0, 86_400_000].map(delta => {
+        const epoch = targetWallClock + delta;
+        return wallClockEpoch(zonedParts(epoch)) - epoch;
+    }));
+    const candidates = [...offsets]
+        .map(offset => targetWallClock - offset)
+        .sort((a, b) => a - b);
+    // Native Date chooses the earlier instant in an overlap; in a gap it
+    // advances by the gap duration (including Lord Howe's half-hour gap).
+    return candidates.find(epoch => wallClockEpoch(zonedParts(epoch)) === targetWallClock)
+        ?? candidates.at(-1);
+}
+
+function dateClassForTestZone(BaseDate) {
+    return class ZonedDate extends BaseDate {
+        constructor(...args) {
+            if (testTimeZone && args.length >= 2) {
+                const [year, month, day = 1, hour = 0, minute = 0, second = 0, millisecond = 0] = args;
+                const normalized = new BaseDate(0);
+                normalized.setUTCFullYear(Number(year) < 100 ? Number(year) + 1900 : Number(year), Number(month), Number(day));
+                normalized.setUTCHours(Number(hour), Number(minute), Number(second), Number(millisecond));
+                super(epochForZonedWallClock({
+                    year: normalized.getUTCFullYear(),
+                    month: normalized.getUTCMonth() + 1,
+                    day: normalized.getUTCDate(),
+                    hour: normalized.getUTCHours(),
+                    minute: normalized.getUTCMinutes(),
+                    second: normalized.getUTCSeconds(),
+                    millisecond: normalized.getUTCMilliseconds(),
+                }));
+                return;
+            }
+            super(...args);
+        }
+
+        getFullYear() { return zonedParts(this.getTime()).year; }
+        getMonth() { return zonedParts(this.getTime()).month - 1; }
+        getDate() { return zonedParts(this.getTime()).day; }
+        getDay() { return new FakeDateBase(wallClockEpoch(zonedParts(this.getTime()))).getUTCDay(); }
+        getHours() { return zonedParts(this.getTime()).hour; }
+        getMinutes() { return zonedParts(this.getTime()).minute; }
+        getSeconds() { return zonedParts(this.getTime()).second; }
+        getMilliseconds() { return zonedParts(this.getTime()).millisecond; }
+
+        getTimezoneOffset() {
+            return (this.getTime() - wallClockEpoch(zonedParts(this.getTime()))) / 60_000;
+        }
+
+        setFullYear(year, month, day) {
+            const current = zonedParts(this.getTime());
+            return this.setTime(epochForZonedWallClock({
+                ...current,
+                year: Number(year),
+                month: month === undefined ? current.month : Number(month) + 1,
+                day: day === undefined ? current.day : Number(day),
+            }));
+        }
+    };
+}
 
 /** Run `fn` as if the browser sat in `tz` at the instant `iso`. */
 function at(tz, iso, fn) {
-    process.env.TZ = tz;
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(iso));
+    if (!vi.isFakeTimers()) {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        FakeDateBase = globalThis.Date;
+    }
+    testTimeZone = tz;
+    globalThis.Date = dateClassForTestZone(FakeDateBase);
+    vi.setSystemTime(new FakeDateBase(iso));
     return fn();
 }
 
 afterEach(() => {
     vi.useRealTimers();
-    process.env.TZ = ORIGINAL_TZ;
+    globalThis.Date = NativeDate;
+    FakeDateBase = null;
+    testTimeZone = null;
 });
 
 // --------------------------------------------------------------------------
 // The helper itself
 // --------------------------------------------------------------------------
+
+describe('timezone fixture matches native Date at DST transitions', () => {
+    it.each([
+        ['America/New_York', [2026, 2, 8, 2, 30], '2026-03-08T07:30:00.000Z'],
+        ['America/New_York', [2026, 10, 1, 1, 30], '2026-11-01T05:30:00.000Z'],
+        ['Australia/Sydney', [2026, 9, 4, 2, 30], '2026-10-03T16:30:00.000Z'],
+        ['Australia/Sydney', [2026, 3, 5, 2, 30], '2026-04-04T15:30:00.000Z'],
+        ['Australia/Lord_Howe', [2026, 9, 4, 2, 15], '2026-10-03T15:45:00.000Z'],
+        ['Australia/Lord_Howe', [2026, 3, 5, 1, 45], '2026-04-04T14:45:00.000Z'],
+    ])('%s wall clock %j resolves to %s', (zone, fields, expected) => {
+        at(zone, '2026-01-01T00:00:00Z', () => {
+            // Assert the instant, not a round-trip through the same fake getters.
+            expect(new Date(...fields).toISOString()).toBe(expected);
+            const moved = new Date(fields[0] - 1, ...fields.slice(1));
+            moved.setFullYear(fields[0]);
+            expect(moved.toISOString()).toBe(expected);
+        });
+    });
+});
 
 describe('localToday — the boundaries the UTC day gets wrong', () => {
     it('is the local day at local midnight (UTC+10: the UTC day is still yesterday)', async () => {
@@ -144,6 +269,15 @@ describe('localToday — the boundaries the UTC day gets wrong', () => {
 });
 
 describe('parseLocalDate — a picked YYYY-MM-DD is local midnight', () => {
+    it.each(['0000', '0001', '0042', '0099'])('preserves year %s through the timezone fixture', async year => {
+        const { parseLocalDate } = await import('../../src/dates.js');
+        at('UTC', '2026-01-01T00:00:00Z', () => {
+            const d = parseLocalDate(`${year}-01-05`);
+            expect(d.getFullYear()).toBe(Number(year));
+            expect(d.toISOString()).toBe(`${year}-01-05T00:00:00.000Z`);
+        });
+    });
+
     it('does not shift the day (new Date(str) would parse it as UTC midnight)', async () => {
         const { parseLocalDate } = await import('../../src/dates.js');
         at('America/New_York', '2026-09-11T15:00:00Z', () => {
