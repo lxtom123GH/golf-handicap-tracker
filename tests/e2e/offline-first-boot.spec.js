@@ -33,7 +33,8 @@ for (const variant of ['no-online-reload-first', 'online-reload-first']) {
         await expect(page.locator('#oncourse-hub')).toBeVisible({ timeout: 15_000 });
         const card = page.locator('#oc-group-scores .compact-score-card').first();
         for (let i = 0; i < 4; i++) await card.locator('.btn-grid-plus').click();
-        await page.waitForTimeout(1500);
+        await expect.poll(() => page.evaluate(() =>
+            !!navigator.serviceWorker.controller), { timeout: 30_000 }).toBe(true);
         await context.setOffline(true);
         const mark = logs.length;
         const cacheBeforeReload = await page.evaluate(async () => {
@@ -52,16 +53,19 @@ for (const variant of ['no-online-reload-first', 'online-reload-first']) {
             }
             return { controlled: !!navigator.serviceWorker.controller, entries };
         });
-        await page.reload();
-        const ok = await expect(page.locator('#app-loading-cloak')).toHaveClass(/cloak-hidden/, { timeout: 30_000 }).then(() => true, () => false);
-        await page.screenshot({ path: join(dir, `${variant}.png`) });
-        const after = logs.slice(mark).filter(l => /Auth|error|warn|offline|Firestore/i.test(l)).slice(0, 25);
-        writeFileSync(join(dir, `${variant}-${testInfo.repeatEachIndex}.json`), JSON.stringify({ variant, cloakCleared: ok,
-            cacheBeforeReload, failures,
-            score: ok ? await card.locator('.oc-score-value').textContent().catch(() => '?') : null, logs: after }, null, 2));
-        await context.setOffline(false);
-        expect(ok, JSON.stringify({variant, cacheBeforeReload, failures}, null, 2)).toBe(true);
-        await expect(page.locator('#oncourse-hub')).toBeVisible();
-        await expect(card.locator('.oc-score-value')).toHaveText('4');
+        try {
+            await page.reload();
+            const ok = await expect(page.locator('#app-loading-cloak')).toHaveClass(/cloak-hidden/, { timeout: 30_000 }).then(() => true, () => false);
+            await page.screenshot({ path: join(dir, `${variant}.png`) });
+            const after = logs.slice(mark).filter(l => /Auth|error|warn|offline|Firestore/i.test(l)).slice(0, 25);
+            writeFileSync(join(dir, `${variant}-${testInfo.repeatEachIndex}.json`), JSON.stringify({ variant, cloakCleared: ok,
+                cacheBeforeReload, failures,
+                score: ok ? await card.locator('.oc-score-value').textContent().catch(() => '?') : null, logs: after }, null, 2));
+            expect(ok, JSON.stringify({variant, cacheBeforeReload, failures}, null, 2)).toBe(true);
+            await expect(page.locator('#oncourse-hub')).toBeVisible();
+            await expect(card.locator('.oc-score-value')).toHaveText('4');
+        } finally {
+            await context.setOffline(false);
+        }
     });
 }
