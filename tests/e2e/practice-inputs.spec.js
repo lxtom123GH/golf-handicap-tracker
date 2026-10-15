@@ -71,7 +71,7 @@ test('Practice Caddy does not send an untouched default time as a preference', a
     expect(sent).toEqual([{ focus: '', goal: '' }]);
 });
 
-test('real goal validation rejects invisible text and allows a corrected goal on retry', async ({ page }) => {
+test('real goal validation rejects invisible text and allows a corrected goal on retry', async ({ page }, testInfo) => {
     await expect(page.locator('#practice-focus')).toHaveValue('');
     await expect(page.locator('#practice-goal')).toHaveValue('');
     await expect(page.locator('#practice-minutes')).toHaveValue('30');
@@ -79,9 +79,12 @@ test('real goal validation rejects invisible text and allows a corrected goal on
     const sent = await mockPlan(page, () => ({ result: plan }));
     await page.locator('#btn-generate-practice').click();
     await expect(page.locator('#practice-generate-error'))
-        .toContainText('goal must not contain invisible or bidirectional control characters');
+        .toContainText('Retype your goal using plain text');
+    await expect(page.locator('#practice-generate-error')).not.toContainText('Check your connection');
+    await expect(page.locator('#practice-generate-error')).not.toContainText('bidirectional control characters');
     await expect(page.locator('#btn-generate-practice')).toBeEnabled();
     await expect(page.locator('#practice-goal')).toHaveValue('Putts\u200b under 32');
+    await page.screenshot({ path: testInfo.outputPath('practice-validation.png') });
     await page.locator('#practice-goal').fill('Putts < 32 per round');
     await page.locator('#btn-generate-practice').click();
     await expect(page.locator('#practice-state-active')).toBeVisible();

@@ -1026,7 +1026,9 @@ export function bindPracticeCaddyUI() {
             console.error('[Practice Caddy] Generation error:', err);
             setPracticeState('empty');
             if (errorEl) {
-                errorEl.textContent = aiErrorMessage(err, 'Could not create your practice plan. Check your connection, then try generating it again.');
+                errorEl.textContent = err?.code === 'functions/invalid-argument'
+                    ? 'The practice inputs were not accepted. Retype your goal using plain text (up to 120 characters), check the focus and session length, then try again.'
+                    : aiErrorMessage(err, 'Could not create your practice plan. Check your connection, then try generating it again.');
                 errorEl.classList.remove('hidden');
             }
         } finally {
