@@ -19,8 +19,8 @@ const PRECACHE = ['/', '/manifest.json', '/favicon.ico'];
 
 // The first page loads its JS/CSS before this worker controls it. Waiting for
 // later fetch events leaves those boot assets uncached until an online reload.
-// Vite emits the exact hashed build list. Install it atomically with the shell:
-// a missing asset must not replace a previously working offline shell.
+// Vite emits the exact hashed build list. Validate and store every required
+// asset before replacing the shell, preserving the previous shell on failure.
 async function prepareOfflineShell() {
     const response = await fetch('/offline-shell.json', { cache: 'no-store', redirect: 'error' });
     if (!response.ok || response.type !== 'basic') throw new Error('Offline build manifest unavailable');
@@ -29,8 +29,23 @@ async function prepareOfflineShell() {
         !assets.every(path => typeof path === 'string' && /^\/assets\/[\w.-]+\.(?:js|css)$/.test(path))) {
         throw new Error('Invalid offline build manifest');
     }
+    const paths = ['/', ...new Set(assets)];
+    const responses = await Promise.all(paths.map(async path => {
+        const res = await fetch(path, { cache: 'no-store', redirect: 'error' });
+        const mime = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+        const validType = path === '/' ? mime === 'text/html'
+            : path.endsWith('.css') ? mime === 'text/css'
+            : ['text/javascript', 'application/javascript', 'application/ecmascript', 'text/ecmascript'].includes(mime);
+        if (!res.ok || res.type !== 'basic' || !validType) {
+            throw new Error(`Invalid offline shell response: ${path}`);
+        }
+        return res;
+    }));
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(['/', ...new Set(assets)]);
+    // Store these exact validated responses; addAll would fetch again and race
+    // a deployment. If a body read or cache write fails, keep the old HTML.
+    await Promise.all(paths.slice(1).map((path, i) => cache.put(path, responses[i + 1])));
+    await cache.put('/', responses[0]);
     // Optional icons must not stop a complete app shell from activating.
     await Promise.allSettled(PRECACHE.filter(path => path !== '/').map(path => cache.add(path)));
 }
