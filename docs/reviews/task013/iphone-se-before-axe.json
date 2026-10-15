@@ -1,0 +1,156 @@
+{
+  "axeVersion": "4.13.0",
+  "screens": [
+    {
+      "screen": "nonadmin-feed",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "#feed-following-list > li"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#feed-activity-list > p"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #ef4444, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "tab-practice",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "#tab-btn-coach > .tab-lbl"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.58 (foreground color: #3867d6, background color: #d1d8e0, font size: 7.2pt (9.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#tab-btn-admin > .tab-lbl"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #d35400, background color: #ffeaa7, font size: 7.2pt (9.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#video-quota-line"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#video-library > p"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": 2
+        }
+      ]
+    },
+    {
+      "screen": "tab-insights",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "#tab-btn-coach > .tab-lbl"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.58 (foreground color: #3867d6, background color: #d1d8e0, font size: 7.2pt (9.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#tab-btn-admin > .tab-lbl"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #d35400, background color: #ffeaa7, font size: 7.2pt (9.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#strategy-periods-list > p"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "incomplete": []
+    },
+    {
+      "screen": "tab-feed",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "#tab-btn-coach > .tab-lbl"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.58 (foreground color: #3867d6, background color: #d1d8e0, font size: 7.2pt (9.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#tab-btn-admin > .tab-lbl"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #d35400, background color: #ffeaa7, font size: 7.2pt (9.6px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#feed-following-list > li"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            {
+              "target": [
+                "#feed-activity-list > p"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.56 (foreground color: #94a3b8, background color: #ffffff, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "#btn-oc-finish",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "#btn-oc-finish-close,#btn-oc-save-whs",
+      "violations": [],
+      "incomplete": []
+    }
+  ]
+}
