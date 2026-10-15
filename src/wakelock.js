@@ -5,6 +5,7 @@
 
 let wakeLock = null;
 let isWakeLockEnabled = false;
+let wakeRequestGeneration = 0;
 
 // Decision 12 (simplify 2026-10-07): keep-awake remembers the golfer's last
 // choice instead of resetting to Off on every launch.
@@ -35,7 +36,7 @@ export function applyRememberedWakeLock({ gesture = false } = {}) {
     isWakeLockEnabled = true;
     updateToggleUI(true); // the golfer's choice shows at once; a tap meanwhile means "off"
     _applying = requestWakeLock().then(ok => {
-        if (!ok) { isWakeLockEnabled = false; updateToggleUI(false); }
+        if (ok === false) { isWakeLockEnabled = false; updateToggleUI(false); }
         return ok;
     }).finally(() => { _applying = null; });
     return _applying;
@@ -66,13 +67,21 @@ function askAgainInGesture(pending) {
  * Request Screen Wake Lock
  */
 async function requestWakeLock() {
+    const generation = ++wakeRequestGeneration;
     if (!('wakeLock' in navigator)) {
         console.warn("[WakeLock] API not supported in this browser.");
         return false;
     }
 
     try {
-        wakeLock = await navigator.wakeLock.request('screen');
+        const granted = await navigator.wakeLock.request('screen');
+        // A permission response may arrive after Off, or after a newer On.
+        // Retire that lock without changing the latest choice or its sentinel.
+        if (generation !== wakeRequestGeneration || !isWakeLockEnabled) {
+            await granted.release?.();
+            return null;
+        }
+        wakeLock = granted;
         wakeLock.addEventListener('release', () => {
             console.log("[WakeLock] Released.");
         });
@@ -80,6 +89,7 @@ async function requestWakeLock() {
         updateToggleUI(true);
         return true;
     } catch (err) {
+        if (generation !== wakeRequestGeneration || !isWakeLockEnabled) return null;
         console.error(`[WakeLock] Failed to acquire: ${err.name}, ${err.message}`);
         return false;
     }
@@ -89,6 +99,7 @@ async function requestWakeLock() {
  * Release Screen Wake Lock
  */
 function releaseWakeLock() {
+    wakeRequestGeneration++;
     if (wakeLock) {
         wakeLock.release();
         wakeLock = null;
@@ -151,6 +162,7 @@ export function initWakeLock() {
             isWakeLockEnabled = wantOn;
             if (isWakeLockEnabled) {
                 const success = await requestWakeLock();
+                if (success === null) return; // a newer toggle owns state/persistence
                 if (!success) {
                     isWakeLockEnabled = false;
                     alert("Wake Lock not supported or failed to activate. Keep your screen on manually.");
