@@ -1,0 +1,6 @@
+[phone] › abandon-round.spec.js:51:1 › ⋯ Abandon deletes the round's shots on the server (non-admin golfer)
+[phone] › coach-intent.spec.js:64:1 › a coach sees the athlete's Intent vs execution card
+[iphone-webkit] › keperra-west-round.spec.js:82:1 › Sunday: 9 holes Keperra West (19-27) — mapping, F/M/B, scoring, reload, offline, save with a 9-hole differential
+[phone] › map-first-dock.spec.js:41:1 › D32 Map-first dock: ✕, Penalty, Details and Save plan on the map; lie and a holed putt record without Details
+[phone] › map-first.spec.js:13:1 › Map first: the shot opens full-screen; draw, club, Log all on the map
+[iphone-se] › simple-scoring.spec.js:182:1 › Owner 2026-09-20: a saved guest is pickable next round (same record) and every player has a Daily HC box
