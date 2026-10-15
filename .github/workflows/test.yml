@@ -148,4 +148,3 @@ jobs:
 
     - name: Run Firestore rules suite
       run: npm run test:rules
-
