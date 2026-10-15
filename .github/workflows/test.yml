@@ -101,6 +101,14 @@ jobs:
       timeout-minutes: 15
       run: node scripts/run-e2e-isolated.mjs --config playwright.golden.config.js
 
+    - name: Preserve failed browser evidence
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: browser-failure-evidence
+        path: test-results/
+        retention-days: 7
+
   # The rules suite is the app's authorization contract; it gates every PR
   # to main.
   #
@@ -140,3 +148,4 @@ jobs:
 
     - name: Run Firestore rules suite
       run: npm run test:rules
+
