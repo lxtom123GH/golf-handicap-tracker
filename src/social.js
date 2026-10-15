@@ -192,7 +192,7 @@ async function loadFollowing() {
         if (listEl) listEl.innerHTML = '';
 
         if (snap.empty) {
-            if (listEl) listEl.innerHTML = '<li style="color:#94a3b8;">Not following anyone yet.</li>';
+            if (listEl) listEl.innerHTML = '<li style="color:var(--text-muted);">Not following anyone yet.</li>';
             return;
         }
 
@@ -239,7 +239,7 @@ function buildFeedCard(entry) {
     const nameEl = document.createElement('strong');
     nameEl.textContent = entry.actorDisplayName || 'Unknown';
     const dateEl = document.createElement('span');
-    dateEl.style.cssText = 'color:#94a3b8;font-size:0.8rem;margin-left:8px;';
+    dateEl.style.cssText = 'color:var(--text-muted);font-size:0.8rem;margin-left:8px;';
     dateEl.textContent = feedDate(entry.date);
     nameBlock.appendChild(nameEl);
     nameBlock.appendChild(dateEl);
@@ -272,7 +272,7 @@ async function loadFeed(afterDoc = null) {
         if (!myUid) return;
 
         if (!afterDoc) {
-            feedEl.innerHTML = '<p style="color:#94a3b8;">Loading...</p>';
+            feedEl.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
         }
 
         const constraints = [
@@ -286,7 +286,7 @@ async function loadFeed(afterDoc = null) {
 
         if (feedSnap.empty) {
             if (!afterDoc) {
-                feedEl.innerHTML = '<p style="color:#94a3b8;">Follow some players to see their recent rounds here.</p>';
+                feedEl.innerHTML = '<p style="color:var(--text-muted);">Follow some players to see their recent rounds here.</p>';
             }
             return;
         }
@@ -310,6 +310,6 @@ async function loadFeed(afterDoc = null) {
     } catch (err) {
         console.error("[Social] Failed to load feed:", err);
         const feedEl = document.getElementById('feed-activity-list');
-        if (feedEl) feedEl.innerHTML = '<p style="color:#ef4444;">Error loading activity feed. Please try again later.</p>';
+        if (feedEl) feedEl.innerHTML = '<p style="color:var(--danger);">Error loading activity feed. Please try again later.</p>';
     }
 }
