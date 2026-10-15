@@ -1,0 +1,38 @@
+{
+  "project": "iphone-se",
+  "personas": [
+    {
+      "key": "player-a",
+      "name": "Test Player A",
+      "rounds": 26
+    },
+    {
+      "key": "player-b",
+      "name": "Test Player B",
+      "rounds": 0
+    },
+    {
+      "key": "pending-c",
+      "name": "Test Pending C",
+      "approved": false
+    },
+    {
+      "key": "coach-d",
+      "name": "Test Coach D",
+      "coach": true
+    },
+    {
+      "key": "admin-e",
+      "name": "Test Admin E",
+      "admin": true
+    }
+  ],
+  "playerRounds": {
+    "total": 26,
+    "nine": 9,
+    "eighteen": 17
+  },
+  "coachLinkedToPlayer": true,
+  "pendingStillUnapproved": true,
+  "adminTabVisible": true
+}
