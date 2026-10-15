@@ -34,3 +34,61 @@ Frozen test source789d146: five repeats of all four tests on each of two phone p
 Fixture setup reloads after initial registration so the existing header changes from its synthetic email fallback to the display name. This does not claim the first-render header issue is fixed. The saved-round journey explicitly returns from the Locker Room before navigating to Handicap; hidden text alone is not accepted as evidence of a visible success screen.
 
 The initial saved-round draft tried to navigate to a hidden tab without returning from the Locker Room. Corrected to assert visible success and use Return to Home first. An intermediate run also showed the header email fallback is not replaced by the display name until reload; fixture reload is explicit. These are harness/setup discoveries, not claimed application fixes. No failed/intermediate run is counted among the40final passes.
+
+## Codex pass, 15 October 2026
+
+The 13 October results above are historical. Main at `a43d7e5` was merged without
+conflicts in `80fd12e`; PR #3's complementary round journeys now arrive through
+that base. This PR still adds synthetic fixtures, eighteen-hole abandonment and
+versioned screenshots, so it is not superseded.
+
+All outstanding review findings (the conversation review of `f4b29ff`; there
+were no inline comments or submitted reviews):
+
+- **ACT ON P2, vacuous shot-deletion assertion → `8d08b8d`.** Simple scoring
+  creates no shot documents. The test now seeds one synthetic shot belonging
+  to the actual round/user, reads it back before abandonment, and polls until
+  the app deletes it. Local-state and no-WHS-round checks remain.
+- **ACT ON P3, new capture `!important` → `8d08b8d`.** Removed the capture style.
+- **DISMISSED:** none.
+
+Outside judge for P2: the real app on the demo Auth/Firestore emulators, pinned
+Chrome Headless Shell 155.0.8059.39, Pixel 7 profile. The test is absent from
+main; this is a defect in PR coverage, not a claimed production bug. Against
+main's unchanged abandonment implementation, temporarily removing
+`shotSnaps.forEach(sdoc => batch.delete(sdoc.ref))` let the original golden test
+pass (1/1, 20.7 s). With the strengthened test, the same mutation failed at the
+deletion poll: expected length 0, received length 1 (including the exact seeded
+shot ID). After restoring application code, both phone profiles passed the
+abandonment journey. No application mutation is committed.
+
+The screenshot helper now collects all five comparisons with soft assertions;
+any differing image still fails its test. Failed browser runs preserve their
+screenshots/diffs/traces as the seven-day `browser-failure-evidence` CI artifact.
+Automatic CI still compares committed baselines and never updates them.
+The short golden gate runs before the full E2E matrix so a baseline failure
+produces evidence without waiting for the longer suite.
+
+Local verification after the fixes: unit **144 files / 1,403 tests passed**;
+auth **2 files / 14 tests passed**; rules **6 files / 164 tests passed**; offline
+**1 file / 3 tests passed**; `npm run build` passed with existing import/chunk
+warnings. All six non-visual golden journeys passed. The two visual tests
+detected baseline differences.
+
+Linux run [38697805901](https://github.com/lxtom123GH/golf-handicap-tracker/actions/runs/38697805901)
+at `d895ff2` independently passed all six behavioral golden journeys. All five
+captures per phone were attempted; only the two login images differed (36,747
+pixels / 11% on Pixel 7; 30,184 / 13% on SE). The other eight comparisons passed.
+Both changed images were visually inspected against their old versions and
+main's `c336ff0` auth-overlay padding/alignment and readable-text changes. The
+two login baselines were copied byte-for-byte from that runner's generated
+`01-login-actual.png` files, never raster-edited. Their source
+[artifact](https://github.com/lxtom123GH/golf-handicap-tracker/actions/runs/38697805901/artifacts/11954988048)
+also contains diffs and traces (seven-day retention). The 0.5% tolerance,
+browser pin, masks and other eight baselines are unchanged. Final exact-head
+verification is linked from the PR's 15 October comment.
+
+Bigger version: physical iPhone/WebKit usability and GPS checks, independent
+accessibility assessment, and an owner-approved golf-method specification.
+Those are separate acceptance efforts; the outside judges here are emulator
+readback, mutation testing and pinned-browser screenshot comparisons.
