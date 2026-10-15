@@ -1,23 +1,30 @@
 import { test, expect } from '@playwright/test';
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { registerAndVerifySignup, verifyEmulatorEmail, waitForEmulators,
     findDocs, patchDocFields, writeDocFields, readDoc } from '../e2e/helpers/emulator.js';
 import { UX_PERSONAS, syntheticRounds } from './ux-fixtures.js';
 import { fixedVisualIdentity } from './fixed-identity.js';
 import { DENY_EXTERNAL_PROXY } from '../e2e/helpers/e2e-safety.js';
+import { PROJECTS, SCREENS } from './capture-contract.mjs';
 
 test('task 017 synthetic full-screen style census', async ({ browser }, testInfo) => {
-    const hold = false;
     test.setTimeout(600_000);
+    expect(PROJECTS).toContain(testInfo.project.name);
+    // The allowlisted profile resolves inside this checkout's evidence directory.
+    const out = resolve('style-evidence', testInfo.project.name);
+    // Remove the previous journey, including its success marker, before any await.
+    rmSync(out, { recursive: true, force: true }); mkdirSync(out, { recursive: true });
     await waitForEmulators();
     const { browserName, launchOptions, defaultBrowserType, ...contextOptions } = testInfo.project.use;
     const contexts = [], users = new Map(), census = [];
     const axe = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
     const stamp = `style-${testInfo.project.name}`;
-    const out = join('style-evidence', testInfo.project.name); mkdirSync(out, { recursive: true });
+    const captured = [];
     async function capture(page, name) {
+        expect(SCREENS).toContain(name);
+        expect(captured).not.toContain(name);
         await page.bringToFront();
         await page.evaluate(() => window.scrollTo({top:0, left:0, behavior:'instant'}));
         await expect(page.locator('body')).not.toContainText(/Keperra|Ashgrove|Redcliffe|Virginia/);
@@ -59,6 +66,7 @@ test('task 017 synthetic full-screen style census', async ({ browser }, testInfo
         });
         census.push({ name, ...result });
         writeFileSync(join(out, 'census.json'), JSON.stringify(census, null, 2));
+        captured.push(name);
     }
     try {
         for (const persona of UX_PERSONAS) {
@@ -206,6 +214,8 @@ test('task 017 synthetic full-screen style census', async ({ browser }, testInfo
         await newbie.locator('#history-tbody tr').first().locator('.round-actions > summary').click();
         await capture(newbie, 'new-player-excluded-round-reason');
         writeFileSync(join(out, 'census.json'), JSON.stringify(census, null, 2));
+        expect(captured.sort()).toEqual(SCREENS);
+        writeFileSync(join(out, 'capture-complete.json'), JSON.stringify({ screens: captured }, null, 2));
 
     } finally { await Promise.all(contexts.map(c => c.close())); }
 });
