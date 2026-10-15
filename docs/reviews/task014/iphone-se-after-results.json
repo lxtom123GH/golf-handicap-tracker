@@ -1,0 +1,150 @@
+{
+  "project": "iphone-se",
+  "timings": [
+    {
+      "hole": 1,
+      "taps": 8,
+      "robotMilliseconds": 546,
+      "correction": false
+    },
+    {
+      "hole": 2,
+      "taps": 7,
+      "robotMilliseconds": 471,
+      "correction": false
+    },
+    {
+      "hole": 3,
+      "taps": 11,
+      "robotMilliseconds": 817,
+      "correction": true
+    },
+    {
+      "hole": 4,
+      "taps": 6,
+      "robotMilliseconds": 454,
+      "correction": false
+    },
+    {
+      "hole": 5,
+      "taps": 8,
+      "robotMilliseconds": 617,
+      "correction": false
+    },
+    {
+      "hole": 6,
+      "taps": 7,
+      "robotMilliseconds": 482,
+      "correction": false
+    },
+    {
+      "hole": 7,
+      "taps": 8,
+      "robotMilliseconds": 617,
+      "correction": false
+    },
+    {
+      "hole": 8,
+      "taps": 9,
+      "robotMilliseconds": 571,
+      "correction": false
+    },
+    {
+      "hole": 9,
+      "taps": 6,
+      "robotMilliseconds": 449,
+      "correction": false
+    }
+  ],
+  "checks": {
+    "onlineReload": "exact round state retained",
+    "warmOfflineReload": true,
+    "networkReturn": "exact round state retained",
+    "rendererCrashReopen": "exact round state retained in a new page, same browser context",
+    "simpleModeWakeToggleVisible": true,
+    "savedRound": [
+      {
+        "holeScores": [
+          {
+            "h": 1,
+            "par": 4,
+            "gross": 5,
+            "putts": 2
+          },
+          {
+            "h": 2,
+            "par": 4,
+            "gross": 4,
+            "putts": 2
+          },
+          {
+            "h": 3,
+            "par": 4,
+            "gross": 6,
+            "putts": 2
+          },
+          {
+            "h": 4,
+            "par": 4,
+            "gross": 3,
+            "putts": 2
+          },
+          {
+            "h": 5,
+            "par": 4,
+            "gross": 5,
+            "putts": 2
+          },
+          {
+            "h": 6,
+            "par": 4,
+            "gross": 4,
+            "putts": 2
+          },
+          {
+            "h": 7,
+            "par": 4,
+            "gross": 5,
+            "putts": 2
+          },
+          {
+            "h": 8,
+            "par": 4,
+            "gross": 6,
+            "putts": 2
+          },
+          {
+            "h": 9,
+            "par": 4,
+            "gross": 4,
+            "putts": 2
+          }
+        ],
+        "course": "Synthetic Nine (9H)",
+        "courseName": "Synthetic Nine",
+        "rating": null,
+        "slope": null,
+        "par": null,
+        "adjustedGross": 42,
+        "notCounting": true,
+        "notCountingReason": "This tee publishes no stroke index, so Stableford can't be scored — gross scores only, and this round won't count toward your index.",
+        "totalGross": 42,
+        "totalScore": 42,
+        "totalStableford": null,
+        "dailyHandicap": null,
+        "isLiveTracked": true,
+        "liveRoundsMode": "simple",
+        "holesPlayed": 9,
+        "stats": {
+          "putts": 18,
+          "gir": 4,
+          "fwy": 0
+        },
+        "totalPutts": 18,
+        "date": "2026-10-13T00:00:00Z"
+      }
+    ]
+  },
+  "synthetic": true,
+  "totalScoringTaps": 70
+}

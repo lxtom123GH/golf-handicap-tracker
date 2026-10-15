@@ -1,0 +1,304 @@
+{
+  "phone": {
+    "scannedStates": 49,
+    "statesWithViolations": 49,
+    "pageOverflowAt200Percent": 0,
+    "findingTargets": [
+      {
+        "rule": "meta-viewport",
+        "target": [
+          "meta[name=\"viewport\"]"
+        ],
+        "occurrences": 49
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#header-version"
+        ],
+        "occurrences": 42
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#btn-mode-detailed"
+        ],
+        "occurrences": 11
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#oc-past-round-note"
+        ],
+        "occurrences": 13
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(1) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(1) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(2) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(2) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(3) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(3) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(4) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(4) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(5) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(5) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#btn-oc-next-hole"
+        ],
+        "occurrences": 2
+      }
+    ],
+    "remainingClippedLeafDiagnostics": {
+      "oc-exit-course-label": 3,
+      "btn-oc-more": 3
+    }
+  },
+  "iphone-se": {
+    "scannedStates": 49,
+    "statesWithViolations": 49,
+    "pageOverflowAt200Percent": 0,
+    "findingTargets": [
+      {
+        "rule": "meta-viewport",
+        "target": [
+          "meta[name=\"viewport\"]"
+        ],
+        "occurrences": 49
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#header-version"
+        ],
+        "occurrences": 42
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#btn-mode-detailed"
+        ],
+        "occurrences": 11
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#oc-past-round-note"
+        ],
+        "occurrences": 12
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(1) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(1) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(2) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(2) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(3) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(3) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(4) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(4) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(5) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(5) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(6) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(6) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(7) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(7) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(8) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(8) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(9) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(9) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(10) > td:nth-child(4) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "label",
+        "target": [
+          "tr:nth-child(10) > td:nth-child(5) > .toggle-switch > input[type=\"checkbox\"]"
+        ],
+        "occurrences": 2
+      },
+      {
+        "rule": "color-contrast",
+        "target": [
+          "#btn-oc-next-hole"
+        ],
+        "occurrences": 2
+      }
+    ],
+    "remainingClippedLeafDiagnostics": {
+      "oc-exit-course-label": 3,
+      "btn-oc-more": 3
+    }
+  }
+}
