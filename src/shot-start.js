@@ -1,14 +1,16 @@
 // ==========================================
 // shot-start.js — is the hold-still GPS fix this shot's START or its FINISH?
-// A fix far from the expected start
-// (the tee for shot 1, else the previous shot's finish) is where THIS shot
-// finished, not where it began. Pure, no imports; hole-frame metres
+// A fix clearly beyond the tee area for shot 1, or far from the previous
+// shot's finish for later shots, is where THIS shot finished.
+// Pure, no imports; hole-frame metres
 // (tee at [0, 0], y towards the green).
 // ==========================================
 
 export const SHOT_START = {
-    // Farther than this from the expected start → the fix is the finish.
+    // GPS margin beyond the tee area / distance from a later shot's start.
     nearM: 20,
+    // Overlays may omit forward tees. Reserve 30 m before the GPS margin.
+    teeForwardM: 30,
 };
 
 function xyOf(p) {
@@ -31,13 +33,18 @@ export function expectedStartXY({ shotNumber, prevShot } = {}) {
 }
 
 /**
- * 'finish' when the expected start is known and the fix is more than nearM
- * from that point is classified as this shot's finish; otherwise it is a start.
- * Shot 1 with no expected start passed uses the tee.
+ * Later shots: 'finish' when the fix is more than nearM from a known start.
+ * Shot 1 must be beyond the forward-most mapped tee plus nearM, with a
+ * minimum allowance for unmapped forward tees. Sideways/backward fixes
+ * cannot establish that the golfer has played up the hole.
  */
-export function classifyCaptureRole({ shotNumber, fixXY, expectedStartXY: exp, nearM = SHOT_START.nearM } = {}) {
+export function classifyCaptureRole({ shotNumber, fixXY, expectedStartXY: exp, teeXY = [], nearM = SHOT_START.nearM } = {}) {
     const fix = xyOf(fixXY);
     const start = xyOf(exp) || (exp == null && shotNumber === 1 ? [0, 0] : null);
     if (!fix || !start) return 'start';
+    if (shotNumber === 1) {
+        const forwardY = Math.max(SHOT_START.teeForwardM, ...teeXY.map(xyOf).filter(Boolean).map(p => p[1]));
+        return fix[1] > forwardY + nearM ? 'finish' : 'start';
+    }
     return Math.hypot(fix[0] - start[0], fix[1] - start[1]) > nearM ? 'finish' : 'start';
 }

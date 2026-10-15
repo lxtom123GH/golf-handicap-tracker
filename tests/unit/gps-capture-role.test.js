@@ -55,6 +55,7 @@ import { AppState } from '../../src/state.js';
 import { startNewShotInput, setWizardActive } from '../../src/modules/score-input.js';
 import { fromFrame } from '../../src/geo.js';
 import { getDoc } from 'firebase/firestore';
+import { loadCourseOverlay } from '../../src/hole-overlay.js';
 
 const ROOT = path.resolve(__dirname, '../..');
 const HTML = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -158,6 +159,33 @@ describe('GPS capture role — start or finish of this shot', () => {
         expect(ctl.refocused).toEqual([]);
         expect(h.updates).toEqual([]);
         expect(document.getElementById('line-readout').textContent).toMatch(/where this shot finished/);
+    });
+
+    it('keeps a forward tee 30 m ahead of the mapped origin as the start', async () => {
+        startNewShotInput();
+        await mounted();
+        standAt([0, 30]);
+        const d = AppState.currentShotData;
+        expect(d.startXY).toEqual({ x: 0, y: 30 });
+        expect(d.startPos).toMatchObject({ accuracyM: 3 });
+        expect(d.finishXY).toBeUndefined();
+        expect(d.gpsCapture.role).toBe('start');
+    });
+
+    it.each(['Point', 'Polygon', 'MultiPolygon'])('uses mapped %s tees farther forward than the allowance', async (type) => {
+        const [lat, lon] = fromFrame(FRAME, [0, 80]);
+        const point = [lon, lat];
+        const coordinates = type === 'Point' ? point : type === 'Polygon' ? [[point]] : [[[point]]];
+        loadCourseOverlay.mockResolvedValueOnce({ holes: { 1: {
+            tee: { lat: 0, lon: 0 }, green: { centre: { lat: 0.003, lon: 0 } },
+            features: { features: [{ properties: { golf: 'tee' }, geometry: { type, coordinates } }] },
+        } } });
+        startNewShotInput();
+        await mounted();
+        standAt([0, 80]);
+        expect(AppState.currentShotData.startXY).toEqual({ x: 0, y: 80 });
+        expect(AppState.currentShotData.finishXY).toBeUndefined();
+        expect(AppState.currentShotData.gpsCapture.role).toBe('start');
     });
 
     it('tee shot logged on the tee (5 m away): unchanged — the fix is the start', async () => {

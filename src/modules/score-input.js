@@ -721,7 +721,18 @@ function _applyCapturedPositions(d) {
     if (fix && frame) {
         const prev = (AppState.currentHoleShots || []).filter(s => s.id !== shotData.id && s.hole === AppState.currentHole).slice(-1)[0] || null;
         expected = expectedStartXY({ shotNumber: shotData.shotNumber, prevShot: prev });
-        role = classifyCaptureRole({ shotNumber: shotData.shotNumber, fixXY: toFrame(frame, [fix.lat, fix.lon]), expectedStartXY: expected });
+        const teeVertices = (_overlayHole?.features?.features || [])
+            .filter(f => f.properties?.golf === 'tee')
+            .flatMap(f => {
+                const g = f.geometry;
+                if (g?.type === 'Point') return [g.coordinates];
+                if (g?.type === 'Polygon') return g.coordinates.flat();
+                if (g?.type === 'MultiPolygon') return g.coordinates.flat(2);
+                return [];
+            });
+        role = classifyCaptureRole({ shotNumber: shotData.shotNumber,
+            fixXY: toFrame(frame, [fix.lat, fix.lon]), expectedStartXY: expected,
+            teeXY: teeVertices.map(([lon, lat]) => toFrame(frame, [lat, lon])) });
     }
     const r1 = (v) => Math.round(v * 10) / 10;
     if (role === 'finish') {

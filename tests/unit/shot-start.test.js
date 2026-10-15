@@ -27,11 +27,21 @@ describe('classifyCaptureRole', () => {
         expect(classifyCaptureRole({ shotNumber: 2, fixXY: [10, 260], expectedStartXY: null })).toBe('start');
         expect(classifyCaptureRole({ shotNumber: 3, fixXY: [10, 260] })).toBe('start');
     });
-    it('boundary: exactly nearM is still the start; just past it is the finish', () => {
+    it('later-shot boundary: exactly nearM is still the start; just past it is the finish', () => {
         expect(SHOT_START.nearM).toBe(20);
-        expect(classifyCaptureRole({ shotNumber: 1, fixXY: [0, 20], expectedStartXY: [0, 0] })).toBe('start');
-        expect(classifyCaptureRole({ shotNumber: 1, fixXY: [0, 20.1], expectedStartXY: [0, 0] })).toBe('finish');
-        expect(classifyCaptureRole({ shotNumber: 1, fixXY: [0, 30], expectedStartXY: [0, 0], nearM: 35 })).toBe('start');
+        expect(classifyCaptureRole({ shotNumber: 2, fixXY: [0, 20], expectedStartXY: [0, 0] })).toBe('start');
+        expect(classifyCaptureRole({ shotNumber: 2, fixXY: [0, 20.1], expectedStartXY: [0, 0] })).toBe('finish');
+        expect(classifyCaptureRole({ shotNumber: 2, fixXY: [0, 30], expectedStartXY: [0, 0], nearM: 35 })).toBe('start');
+    });
+    it('uses the forward tee edge plus the GPS margin for shot 1', () => {
+        const classify = (fixXY, teeXY = []) => classifyCaptureRole({ shotNumber: 1, fixXY, teeXY });
+        expect(classify([0, 30])).toBe('start');
+        expect(classify([60, 0])).toBe('start');
+        expect(classify([0, -60])).toBe('start');
+        expect(classify([0, 50])).toBe('start');
+        expect(classify([0, 50.1])).toBe('finish');
+        expect(classify([0, 100], [[5, 80], [NaN, 200]])).toBe('start');
+        expect(classify([0, 100.1], [[5, 80]])).toBe('finish');
     });
     it('accepts {x, y} objects and refuses garbage as start (old behaviour)', () => {
         expect(classifyCaptureRole({ shotNumber: 2, fixXY: { x: 0, y: 100 }, expectedStartXY: { x: 0, y: 0 } })).toBe('finish');
