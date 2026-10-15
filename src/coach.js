@@ -1,3 +1,4 @@
+import { gaScoreRecord, nineHoleStatus } from './ga-score-record.js';
 // ==========================================
 // coach.js
 // Coach Portal & Player Management
@@ -241,17 +242,11 @@ export function bindCoachDashboard() {
         for (const athlete of athletes) {
             const athleteHI = await fetchAthleteIndex(athlete.uid);
             // Trend analysis
-            const roundsQuery = query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10));
+            const roundsQuery = query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'));
             const hiSnap = await getDocs(roundsQuery);
-            let rounds = [];
-            hiSnap.forEach(docSnap => {
-                const r = docSnap.data();
-                // F-6: an athlete who mixes nines and eighteens had the two
-                // scales averaged together, which is exactly when a trend
-                // badge would be wrong in an interesting way.
-                const diff = roundDifferential(r, athleteHI);
-                if (diff !== null) rounds.push({ diff, date: r.date?.toDate?.() || new Date() });
-            });
+            const sourceRounds = [];
+            hiSnap.forEach(docSnap => sourceRounds.push({ ...docSnap.data(), id: docSnap.id }));
+            const rounds = gaScoreRecord(sourceRounds).completed.slice(0, 10);
 
             let trendBadge = '';
             if (rounds.length >= 4) {
@@ -323,16 +318,18 @@ export function bindCoachDashboard() {
         document.getElementById('coach-view-name').textContent = athlete.displayName || athlete.email;
 
         const athleteHI = await fetchAthleteIndex(athlete.uid);
-        const roundsSnap = await getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10)));
+        const roundsSnap = await getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc')));
         const tbodyWhs = document.getElementById('coach-whs-tbody');
         if (tbodyWhs) {
             tbodyWhs.innerHTML = '';
-            let putts = [], fwy = [], gir = [], diffs = [];
-            roundsSnap.forEach(d => {
-                const r = d.data();
+            const sourceRounds = [];
+            roundsSnap.forEach(d => sourceRounds.push({ ...d.data(), id: d.id }));
+            const record = gaScoreRecord(sourceRounds);
+            let putts = [], fwy = [], gir = [], diffs = record.completed.slice(0, 10).map(r => r.diff);
+            sourceRounds.slice(0, 10).forEach(r => {
                 const diffNum = roundDifferential(r, athleteHI);          // F-6
-                const diff = diffNum === null ? '--' : formatHandicap(diffNum);
-                if (diffNum !== null) diffs.push(diffNum);
+                const number = diffNum === null ? '--' : formatHandicap(diffNum);
+                const diff = number + (r.holesPlayed === 9 ? `<small>${escapeHtml(nineHoleStatus(r, record))}</small>` : '');
                 const date = r.date?.toDate ? r.date.toDate().toLocaleDateString('en-AU') : '--';
                 if (r.stats?.putts) putts.push(r.stats.putts);
                 if (r.stats?.fwy) fwy.push(r.stats.fwy);
@@ -372,7 +369,7 @@ export function bindCoachDashboard() {
             document.getElementById('coach-view-hi').textContent = await fetchAthleteIndex(athlete.uid) ?? '--';
         }
 
-        const pracSnap = await getDocs(query(collection(db, 'practice_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10)));
+        const pracSnap = await getDocs(query(collection(db, 'practice_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc')));
         const tbodyPrac = document.getElementById('coach-practice-tbody');
         if (tbodyPrac) {
             tbodyPrac.innerHTML = '';

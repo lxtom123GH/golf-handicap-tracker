@@ -1,4 +1,5 @@
-import { countCountingRounds, countPerformanceRounds, countCountingHoles, INITIAL_INDEX_HOLES } from './round-validity.js';
+import { gaScoreRecord } from './ga-score-record.js';
+import { countCountingRounds, countPerformanceRounds, INITIAL_INDEX_HOLES } from './round-validity.js';
 
 const UNLOCK_ROUNDS = 3;
 
@@ -9,7 +10,7 @@ const FEATURE_COPY = {
 };
 
 const FEATURE_PROGRESS_LABEL = {
-    trend: 'counting rounds',
+    trend: 'completed 18-hole scores',
     index: 'counting rounds',
     performance: 'rounds with putts logged'
 };
@@ -17,14 +18,15 @@ const FEATURE_PROGRESS_LABEL = {
 export function coldStartPreview(rounds = [], feature) {
     if (feature === 'index') {
         // The index unlocks on holes (54), the same count calculateIndex uses.
-        const holes = Math.min(INITIAL_INDEX_HOLES, countCountingHoles(rounds));
+        const record = gaScoreRecord(rounds);
+        const holes = Math.min(INITIAL_INDEX_HOLES, record.completed.length * 18 + record.pending.length * 9);
         return `<div class="explainer cold-start-preview">
         <p><strong>${holes} of ${INITIAL_INDEX_HOLES} counting holes</strong> · ${INITIAL_INDEX_HOLES - holes} to go</p>
         <p><strong>What this unlocks · after ${INITIAL_INDEX_HOLES} counting holes (any mix of 9s and 18s)</strong><br>${FEATURE_COPY.index}</p>
     </div>`;
     }
     const count = feature === 'performance' ? countPerformanceRounds : countCountingRounds;
-    const logged = Math.min(UNLOCK_ROUNDS, count(rounds));
+    const logged = Math.min(UNLOCK_ROUNDS, feature === 'trend' ? gaScoreRecord(rounds).completed.length : count(rounds));
     const progressLabel = FEATURE_PROGRESS_LABEL[feature] || 'eligible rounds';
     const unlockCopy = FEATURE_COPY[feature] || 'More personal analytics based on your logged rounds.';
     return `<div class="explainer cold-start-preview">

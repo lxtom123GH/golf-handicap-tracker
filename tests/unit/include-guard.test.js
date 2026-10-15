@@ -39,9 +39,9 @@ describe('appExcludedReason', () => {
         expect(appExcludedReason({ ...base, notCounting: true, notCountingReason: STROKE_INDEX_REASON }))
             .toMatch(/^this tee has no stroke index/);
     });
-    it('gives the no-index-yet reason a short label (its stored advice is stale once an index exists)', () => {
+    it('gives the unavailable-Daily-Handicap reason a timeless short label', () => {
         const why = appExcludedReason({ ...base, notCounting: true, notCountingReason: NO_INDEX_REASON });
-        expect(why).toMatch(/^played before you had an index/);
+        expect(why).toMatch(/^played without a confirmed Daily Handicap/);
         expect(why).not.toMatch(/Set your index/);
     });
     it('keeps any other stored reason, without a trailing full stop', () => {

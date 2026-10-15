@@ -57,12 +57,9 @@ describe('calculateIndex: the 54-hole gate is for a first index only', () => {
         expect(calculateIndex(sixNinesOneExcluded()).index).toBeNull();
     });
 
-    it('established: 45 counting holes recalculate with the five-score row', () => {
-        // Five scores -> best 1, no adjustment: 22.0
+    it('45 holes leave only two complete pairs, so no new index is manufactured', () => {
         const res = calculateIndex(sixNinesOneExcluded(), null, null, true);
-        expect(res.index).toBe('22.0');
-        expect(res.usedIds).toEqual(['b']);
-        expect(res.details).toMatchObject({ scoresUsed: 1, of: 5, adj: 0 });
+        expect(res.index).toBeNull();expect(res.usedIds).toEqual([]);
     });
 
     it('established still needs three scores (the 5.2 table starts at 3)', () => {
@@ -83,10 +80,9 @@ describe('listenToWHSRounds decides "established" from the stored profile', () =
         // Index first established at 20.0 from the six nines (doubled, no prior HI).
         h.profile = { handicapIndex: '20.0', indexHistory: [{ date: new Date().toISOString(), index: '20.0' }] };
         await fireSnapshot(sixNinesOneExcluded());
-        // priorHI 20 -> each nine is SD9 + (0.52*20 + 1.2 = 11.6): b = 11 + 11.6 = 22.6
-        expect(AppState.handicapIndex).toBe('22.6');
-        // The profile is updated to match, so app and profile agree.
-        expect(h.updates.at(-1)).toMatchObject({ handicapIndex: '22.6' });
+        // Fewer than three complete scores: retain the known index, publish nothing new.
+        expect(AppState.handicapIndex).toBe('20.0');
+        expect(h.updates).toEqual([]);expect(h.sets).toEqual([]);
     });
 
     it('no indexHistory: 45 holes give no index and nothing is published', async () => {

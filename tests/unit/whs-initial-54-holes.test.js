@@ -54,22 +54,22 @@ describe('calculateIndex: 54 holes before a first index', () => {
         expect(res.index).toBeNull();
     });
 
-    it('six nines (54 holes) do: best 2 of 6, minus 1.0', () => {
-        // Differentials 20, 22, 24, 26, 28, 30 → best two 20 & 22 → 21.0 − 1.0 = 20.0
+    it('six nines (54 holes) do: best 1 of 3 pairs, minus 2.0', () => {
+        // Components 10,11,12,13,14,15 form pairs21,25,29; best21 minus2 =19.
         const res = calculateIndex([nine('a', 46), nine('b', 47), nine('c', 48), nine('d', 49), nine('e', 50), nine('f', 51)]);
-        expect(res.index).toBe('20.0');
+        expect(res.index).toBe('19.0');
         expect(res.usedIds.sort()).toEqual(['a', 'b']);
-        expect(res.details).toMatchObject({ scoresUsed: 2, of: 6, adj: -1 });
+        expect(res.details).toMatchObject({ scoresUsed: 1, of: 3, adj: -2 });
     });
 
     it('two 18s and a nine (45 holes) give no index', () => {
         expect(calculateIndex([eighteen('a', 90), eighteen('b', 92), nine('c', 46)]).index).toBeNull();
     });
 
-    it('two 18s and two nines (54 holes) do: best 1 of 4, minus 1.0', () => {
-        // Differentials 18, 20, 20, 22 → best one 18 → 18 − 1.0 = 17.0
+    it('two 18s and two nines create 3 complete scores, minus 2.0', () => {
+        // Completed differentials18,20,21; best18 minus2 =16.
         const res = calculateIndex([eighteen('a', 90), eighteen('b', 92), nine('c', 46), nine('d', 47)]);
-        expect(res.index).toBe('17.0');
+        expect(res.index).toBe('16.0');
         expect(res.usedIds).toEqual(['a']);
     });
 

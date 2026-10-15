@@ -1,3 +1,4 @@
+import { playerHandicapCategory, categoryForRating } from '../handicap-category.js';
 import { AppState, mutateList } from '../state.js';
 import { normaliseShotEntry, shotEntryVisibility } from "../shot-entry.js";
 import { UI } from '../ui.js';
@@ -503,6 +504,7 @@ export async function updateDhPreview() {
     if (!AppState.currentUser) return;
     const courseName = document.getElementById('oc-course-select')?.value;
     const teeName = document.getElementById('oc-tee-select')?.value;
+    const category = document.getElementById('oc-handicap-category')?.value;
     const ocModule = await import('../oncourse.js');
     const hi = await ocModule.getPlayerHandicap(AppState.currentUser.uid);
     // Codex P2 (quick start): a preview still waiting on the handicap lookup
@@ -510,12 +512,13 @@ export async function updateDhPreview() {
     // write the OLD course's daily handicap into the override box — Start
     // Round would read it as a manual override. The newer preview writes.
     if (document.getElementById('oc-course-select')?.value !== courseName
-        || document.getElementById('oc-tee-select')?.value !== teeName) return;
+        || document.getElementById('oc-tee-select')?.value !== teeName
+        || document.getElementById('oc-handicap-category')?.value !== category) return;
     const { rating, slope, par } = ocModule.resolveRoundRatings(courseName, teeName);
     const dhValue = document.getElementById('oc-dh-value');
     const dhOverride = document.getElementById('oc-dh-override');
 
-    const dh = par > 0 ? calculateDailyHandicap(hi, slope || 113, rating || 72, par, holesForPar(par)) : null; // GA formula incl. ×0.93, halved over nine
+    const dh = par > 0 ? calculateDailyHandicap(hi, slope || 113, rating || 72, par, holesForPar(par), categoryForRating(category, teeName)) : null; // GA formula incl. ×0.93, halved over nine
     if (dh !== null) {
         if (dhValue) dhValue.textContent = dh;
         if (dhOverride) dhOverride.value = dh;
@@ -555,6 +558,8 @@ function renderSetupRatings(courseName, teeName) {
         updateDhPreview();
 
         const triggerPreview = () => updateDhPreview();
+        const categoryInput = document.getElementById('oc-handicap-category');
+        if (categoryInput) categoryInput.onchange = triggerPreview;
         if (parInput) parInput.oninput = triggerPreview;
         if (crInput) crInput.oninput = triggerPreview;
         if (srInput) srInput.oninput = triggerPreview;
@@ -739,7 +744,9 @@ export function bindStartRound() {
             for (const p of AppState.liveRoundGroups) {
                 const hi = await ocModule.getPlayerHandicap(p.uid);
                 let dailyHandicap = calculateDailyHandicap(
-                    hi, slope || 113, rating || 72, totalPar, roundHoles
+                    hi, slope || 113, rating || 72, totalPar, roundHoles,
+                    categoryForRating(p.uid === AppState.currentUser?.uid
+                        ? document.getElementById('oc-handicap-category')?.value : playerHandicapCategory(p), teeName)
                 );
                 if (p.uid === AppState.currentUser?.uid && dhOverrideEl) {
                     const overrideVal = parseFloat(dhOverrideEl.value);

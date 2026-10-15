@@ -14,6 +14,7 @@ import { countCountingHoles, INITIAL_INDEX_HOLES } from './round-validity.js';
 import { parseLocalDate } from './dates.js';
 import { privateHandicapPath, mergeIndexHistories } from './index-history.js';
 import { strokesReceived } from './stroke-allocation.js';
+import { gaScoreRecord } from './ga-score-record.js';
 import { expectedNineDifferential, roundDifferential } from './differential.js';
 import { HandicapDecimal, formatHandicap, meanHandicap, roundHandicap } from './handicap-decimal.js';
 import { isValidRound, isCountingRound, appExcludedReason } from './round-validity.js';
@@ -53,46 +54,24 @@ export function getAdjustmentFactor(count) {
 // NEW WHS STABLEFORD & AGS CALCULATIONS
 // -------------------------------------------------------------------------------- //
 
-/**
- * Calculates the Golf Australia Daily Handicap for a player on a specific course.
- *
- * GA formula (GA Handicap System, all forms of play in Australia):
- *   Daily Handicap = (Handicap Index × (Slope ÷ 113) + (CR − Par)) × 0.93, rounded.
- * The 0.93 multiplier is GA's standing adjustment — it is part of every
- * Australian Daily Handicap, not just competitions. Previously this function
- * omitted both the (CR − Par) term and the 0.93, and four inline copies of
- * the formula (each missing the 0.93) lived in app-v4/event-binders; this is
- * now the single source of truth.
- *
- * Over NINE holes GA halves the Handicap Index before the slope term and uses
- * the nine's own Slope, CR and Par:
- *   Daily Handicap = ((Index ÷ 2) × (9-hole Slope ÷ 113) + (9-hole CR − 9-hole Par)) × 0.93
- * (Golf Australia CONNECT / MiClub, "How Daily Handicaps are calculated".)
- * PRODUCT SWEEP 2026-09-10 F-2: the halving was missing, so a nine-hole player
- * received roughly double the strokes they were entitled to — an 18.0 index
- * was given 16 strokes over nine where GA gives 7. That inflated Stableford
- * total then flowed into the saved AGS and into the handicap index itself.
- *
- * @param {number} handicapIndex - The player's exact WHS Handicap Index.
- * @param {number} slopeRating - The Slope Rating of the tees being played.
- * @param {number} [courseRating] - The Course Rating (CR) of the tees. Omit with par to get the slope-only form.
- * @param {number} [par] - The par for the holes being rated.
- * @param {number} [holes=18] - Holes being played; 9 halves the index per GA.
- * @returns {number|null} The rounded Daily Handicap, or null when there is no
- *   established index (or no slope) to compute one from.
+/** GA Jan2026 §3H pp11–12. Apply the category's consistency factor before
+ * whole-number rounding; halve the index for nine holes. Category is explicit,
+ * never inferred from the tee or the viewer. Missing category/index is unknown.
  */
-export function calculateDailyHandicap(handicapIndex, slopeRating, courseRating, par, holes = 18) {
+export function calculateDailyHandicap(handicapIndex, slopeRating, courseRating, par, holes = 18, category = null) {
     // PRODUCT SWEEP 2026-09-10 F-4: this returned 0 — a genuine scratch Daily
     // Handicap — for a player with no established index, so a real 26-marker
     // received no strokes for the whole round and nothing on screen said why.
     // "Cannot be computed" is now its own answer and every caller must handle
     // it; scoring off scratch by accident is the failure being prevented.
     if (!Number.isFinite(Number(handicapIndex)) || handicapIndex === null || handicapIndex === '') return null;
-    if (!slopeRating) return null;
+    if (!Number.isFinite(Number(slopeRating)) || Number(slopeRating) <= 0) return null;
+    const factor = category === 'women' ? '1.0483' : category === 'men' ? '0.9986' : null;
+    if (!factor) return null;
     const crAdj = (Number.isFinite(courseRating) && Number.isFinite(par))
         ? new HandicapDecimal(courseRating).minus(par) : 0;
     const index = new HandicapDecimal(Number(handicapIndex)).div(holes === 9 ? 2 : 1);
-    return roundHandicap(index.times(Number(slopeRating)).div(113).plus(crAdj).times('0.93'), 0);
+    return roundHandicap(index.times(Number(slopeRating)).div(113).plus(crAdj).times('0.93').times(factor), 0);
 }
 
 /**
@@ -151,7 +130,7 @@ export function scoringUnavailableReason(strokeIndex, dailyHandicap) {
         return "This tee publishes no stroke index, so Stableford can't be scored — gross scores only, and this round won't count toward your index.";
     }
     if (!Number.isFinite(Number(dailyHandicap)) || dailyHandicap === null) {
-        return "Your Handicap Index isn't established yet, so there's no Daily Handicap to score against — gross scores only. Set your index on the Handicap tab, or enter a Daily Handicap at Start Round.";
+        return "No Daily Handicap is available, so this round is gross-only. Check your index and handicap category, or enter a known Daily Handicap at Start Round.";
     }
     return null;
 }
@@ -190,7 +169,8 @@ export function convertStablefordToAGS(totalStableford, dailyHandicap, coursePar
  * differentials, and calculates the rolling average for the WHS Handicap Index,
  * applying the WHS soft and hard caps against the player's Low HI.
  *
- * WHS caps (Rules of Handicapping 5.7/5.8, used unchanged by Golf Australia):
+ * Existing cap implementation (GA threshold/date-window differences are listed
+ * for follow-up in docs/GA-METHOD-DESIGN.md):
  * once a player has a Low HI (established at 20+ acceptable scores), upward
  * movement beyond Low HI + 3.0 is halved (soft cap) and the index can never
  * exceed Low HI + 5.0 (hard cap). PCC is not applied — it needs same-day field
@@ -200,7 +180,7 @@ export function convertStablefordToAGS(totalStableford, dailyHandicap, coursePar
  * @param {number|null} [lowHI] - The player's Low HI (lowest index in the trailing
  *   365 days). Pass null/omit when no Low HI is established; caps are then skipped.
  * @param {number|null} [priorHI] - The player's current published Handicap Index,
- *   used only to scale 9-hole scores via the expected-score method (5.1b).
+ *   retained in the call signature; it no longer creates an unplayed nine.
  * @param {boolean} [established=false] - True once this app has published an
  *   index for the player (their index history is non-empty). The 54-hole
  *   minimum applies only to a FIRST index (Rule 5.2); after that the index is
@@ -220,10 +200,8 @@ export function calculateIndex(rounds, lowHI = null, priorHI = null, established
     // wins best-N selection because every NaN comparison is false). The rules
     // layer validates new client creates, but admin CSV import and legacy
     // docs can carry malformation straight into this engine.
-    const scoreDiffs = rounds
-        .filter(isCountingRound)
-        // One differential, shared with every surface that shows one (F-6).
-        .map(r => ({ id: r.id, diff: roundDifferential(r, priorHI) }));
+    const record = gaScoreRecord(rounds);
+    const scoreDiffs = record.completed;
 
     // The 5.2 table starts at three scores.
     if (scoreDiffs.length < 3) return { "index": null, "usedIds": [] };
@@ -258,7 +236,7 @@ export function calculateIndex(rounds, lowHI = null, priorHI = null, established
     // AFTER the W4 validity filter but BEFORE the notCounting filter.
     // Record size and counting size are different quantities under the rules:
     // the caps gate on the former, the 5.2 table row on the latter.
-    const recordCount = rounds.filter(isValidRound).length;
+    const recordCount = gaScoreRecord(rounds.filter(isValidRound).map(r => ({ ...r, notCounting: false }))).completed.length;
 
     // Soft/hard caps apply only once a Low HI exists (WHS: 20+ scores).
     if (lowHI != null && Number.isFinite(lowHI) && recordCount >= 20) {
@@ -273,8 +251,9 @@ export function calculateIndex(rounds, lowHI = null, priorHI = null, established
     // `details` feeds the "Why this index?" trust card (additive, non-breaking).
     return {
         "index": formatHandicap(avg),
-        "usedIds": bestDiffs.map(d => d.id),
+        "usedIds": bestDiffs.flatMap(d => d.ids),
         "details": {
+            pendingNines: record.pending.length,
             scoresUsed: rules.use,
             of: count,
             adj: rules.adj,
@@ -337,7 +316,7 @@ async function fetchLowHI(uid) {
         if (profile === null) return { lowHI: null, priorHI: null, established: null };
         const priorHI = parseFloat(profile.handicapIndex);
         // History unreadable but the profile isn't: its current index still
-        // scales nines and stays on show; only Low HI and "established" are
+        // stays on show; only Low HI and "established" are
         // unknown.
         if (history === null) return { lowHI: null, priorHI: Number.isFinite(priorHI) ? priorHI : null, established: null };
         const cutoff = Date.now() - 365 * 24 * 60 * 60 * 1000;
@@ -480,7 +459,7 @@ export function listenToWHSRounds() {
         _lastCalculated = { uid: viewed, index };
         // Until the rounds establish one, the index on the profile (a declared
         // starting index) is the one in use: On Course reads it for Daily
-        // Handicaps, and calculateIndex already scales nines with it. Showing
+        // Handicaps, without manufacturing an unplayed nine. Showing
         // "—" instead made a declared index look unsaved after every reload.
         const shownIndex = index != null ? index
             : (Number.isFinite(priorHI) ? formatHandicap(priorHI) : null);
@@ -522,18 +501,12 @@ export function renderTrendChart(rounds) {
     if (!canvas) return;
 
     // Filter to counting rounds with valid data, sorted oldest → newest
-    const counting = (rounds || [])
-        .filter(isCountingRound)
-        .sort((a, b) => {
-            const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-            const db_ = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-            return da - db_;
-        });
+    const counting = gaScoreRecord(rounds || []).completed.reverse();
 
     if (counting.length < 3) {
         canvas.style.display = 'none';
         if (noData) {
-            noData.innerHTML = coldStartPreview(counting, 'trend');
+            noData.innerHTML = coldStartPreview(rounds, 'trend');
             noData.classList.remove('hidden');
         }
         return;
@@ -548,7 +521,7 @@ export function renderTrendChart(rounds) {
     // F-6: the chart plotted the raw nine-hole figure while the index used the
     // scaled one, so a player mixing nines and eighteens saw a saw-tooth that
     // was an artefact of the display rather than of their golf.
-    const diffs = counting.map(r => roundDifferential(r, AppState.handicapIndex));
+    const diffs = counting.map(r => r.diff);
 
     // Destroy previous chart instance
     if (_trendChart) { _trendChart.destroy(); _trendChart = null; }

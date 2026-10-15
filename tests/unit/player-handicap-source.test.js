@@ -105,15 +105,15 @@ describe('F-1 getPlayerHandicap is where "index not established" has to be born'
         getDocMock.mockResolvedValue(snap({ displayName: 'New Golfer' }));
         const hi = await getPlayerHandicap('new-golfer');
         // Keperra Old (9): slope 121, rating 34, par 36.
-        expect(calculateDailyHandicap(hi, 121, 34, 36, 9)).toBeNull();
+        expect(calculateDailyHandicap(hi, 121, 34, 36, 9, 'men')).toBeNull();
         // and the old behaviour is what a plus-2 looked like:
-        expect(calculateDailyHandicap(0, 121, 34, 36, 9)).toBe(-2);
+        expect(calculateDailyHandicap(0, 121, 34, 36, 9, 'men')).toBe(-2);
     });
 
     it('a null Daily Handicap makes the round unscorable, with a reason to show', async () => {
         getDocMock.mockResolvedValue(snap({ displayName: 'New Golfer' }));
         const hi = await getPlayerHandicap('new-golfer');
-        const dh = calculateDailyHandicap(hi, 121, 34, 36, 9);
+        const dh = calculateDailyHandicap(hi, 121, 34, 36, 9, 'men');
         expect(scoringUnavailableReason([4, 6, 7, 1, 8, 9, 2, 3, 5], dh)).toBeTruthy();
         // Before the fix dh was -2, scoringUnavailableReason returned null, and
         // every scoring surface proceeded as if the index were known:

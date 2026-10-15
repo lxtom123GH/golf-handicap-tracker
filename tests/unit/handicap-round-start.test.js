@@ -1,3 +1,4 @@
+import { setPlayerHandicapCategory } from '../../src/handicap-category.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -65,10 +66,27 @@ const group = (uid, name = uid, extra = {}) => ({
 });
 
 describe('on-course round-start handicap resolution', () => {
+    it('uses each other player’s explicit category rather than the host’s category', async () => {
+        const other = group('other', 'Test Other');
+        setPlayerHandicapCategory(other, 'women');
+        mocks.appState.liveRoundGroups = [group('host-uid'), other];
+        mocks.oncourse.getPlayerHandicap.mockResolvedValue(20);
+        const start = bindStartRound(); await start();
+        expect(mocks.calculateDailyHandicap).toHaveBeenCalledWith(20,113,72,72,18,'men');
+        expect(mocks.calculateDailyHandicap).toHaveBeenCalledWith(20,113,72,72,18,'women');
+        expect(Object.hasOwn(other, 'handicapCategory')).toBe(false);
+    });
+    it('does not borrow the host category for an unspecified other player', async () => {
+        mocks.appState.liveRoundGroups = [group('host-uid'), group('other')];
+        mocks.oncourse.getPlayerHandicap.mockResolvedValue(20);
+        const start = bindStartRound(); await start();
+        expect(mocks.calculateDailyHandicap).toHaveBeenCalledWith(20,113,72,72,18,null);
+    });
+
     beforeEach(() => {
         document.body.className = '';
         document.body.innerHTML = `
-            <div id="oncourse-setup"></div>
+            <select id="oc-handicap-category"><option value="men">Men / boys</option></select><div id="oncourse-setup"></div>
             <div id="oncourse-hub"></div>
         `;
         mocks.ui.btnOcStart = document.createElement('button');
@@ -160,7 +178,7 @@ describe('on-course round-start handicap resolution', () => {
         const startRound = bindStartRound();
         await startRound();
 
-        expect(mocks.calculateDailyHandicap).toHaveBeenCalledWith(12.4, 113, 72, 72, 18);
+        expect(mocks.calculateDailyHandicap).toHaveBeenCalledWith(12.4, 113, 72, 72, 18, 'men');
         expect(mocks.mutateList).toHaveBeenCalledWith('liveRoundGroups', expect.any(Function));
         expect(mocks.appState.liveRoundGroups[0]).toMatchObject({
             handicapIndex: 12.4,

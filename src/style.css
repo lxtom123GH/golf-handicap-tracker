@@ -3454,3 +3454,9 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     cursor: pointer;
     pointer-events: auto;
 }
+
+/* Nine-hole source rows stay distinct from the completed pair used by the index. */
+.round-nine-status { display: block; font-size: 0.8rem; max-width: 18rem; white-space: normal; }
+
+#oc-handicap-category-help, #entry-handicap-category-help { margin-top: 8px; }
+.player-category-input { max-width: 100%; min-height: 44px; }

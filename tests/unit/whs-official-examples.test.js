@@ -34,21 +34,19 @@ const twentyAt = diff => roundsFromDiffs(Array(20).fill(diff));
 // https://www.usga.org/content/usga/home-page/handicapping/roh/Content/rules/5%202a%20For%20Fewer%20Than%2020%20Scores.htm
 
 // Scope: this does NOT certify Australian jurisdiction compatibility. Current
-// GA2026 section3H p11 adds a consistency factor absent from this app; section
+// GA2026 section3H p11 adds the consistency factor now included by this app; section
 // 5F(vii) p23 combines two nines, unlike the USGA expected-nine approach below.
 // A single matching example does not establish 0.52*HI+1.2 as the official
 // expected-score algorithm. Missing-HI doubling also remains unverified.
 // PCC is intentionally not exercised or changed. src/ is untouched.
 describe('Official worked examples — limited conformance, not certification', () => {
-  it('A: HI14 expected nine rounds to8.5; played7.2 yields15.7', () => {
-    const expected = expectedNineDifferential(14.0);
-    expect(Math.round(expected * 10) / 10).toBe(8.5);
-    expect(Math.round((7.2 + expected) * 10) / 10).toBe(15.7);
+  it('A: the USGA expected-nine example is deliberately not the Australian method', () => {
+    expect(expectedNineDifferential(14)).toBeNull();
   });
 
   it('B: historical GA daily example HI15.2/slope124/rating72/par70 ->17', () => {
     // Historical 2020 convention, not the complete current GA2026 formula.
-    expect(calculateDailyHandicap(15.2, 124, 72, 70)).toBe(17);
+    expect(calculateDailyHandicap(15.2, 124, 72, 70, 18, 'men')).toBe(17);
   });
 
   it('C: plus2 gives strokes only on SI17 and18', () => {

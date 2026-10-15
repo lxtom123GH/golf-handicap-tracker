@@ -354,7 +354,7 @@ describe('F-9 the saved round is not scored against a fabricated stroke index', 
         expect(lastSetDoc.data.totalStableford).toBeNull();
         expect(lastSetDoc.data.adjustedGross).toBe(45);
         expect(lastSetDoc.data.notCounting).toBe(true);
-        expect(String(lastSetDoc.data.notCountingReason)).toMatch(/handicap index/i);
+        expect(String(lastSetDoc.data.notCountingReason)).toMatch(/No Daily Handicap is available/i);
     });
 });
 
