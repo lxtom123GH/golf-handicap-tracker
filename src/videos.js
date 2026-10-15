@@ -272,7 +272,10 @@ function bindAnnotations(row, player, v) {
     });
 }
 
-function analysisErrorCopy(error) {
+function analysisErrorCopy(error, video) {
+    if (error?.code === 'functions/failed-precondition' && video.bytes > 19 * 1024 * 1024) {
+        return 'This clip is too large for AI analysis (19 MB maximum). Trim it, then upload the smaller clip and request analysis.';
+    }
     // Codes only: callable messages can contain arbitrary service diagnostics.
     const messages = {
         'functions/unauthenticated': 'Sign in again, then reopen this video to request analysis.',
@@ -313,7 +316,7 @@ function bindAiAnalysis(row, v) {
             render(res.data || {});
         } catch (e) {
             console.error('[Videos] AI analysis failed:', e);
-            out.textContent = analysisErrorCopy(e);
+            out.textContent = analysisErrorCopy(e, v);
         } finally {
             btn.disabled = false;
         }
