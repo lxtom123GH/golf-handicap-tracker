@@ -1,0 +1,50 @@
+{
+  "axeVersion": "4.13.0",
+  "screens": [
+    {
+      "screen": "nonadmin-feed",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "tab-practice",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": 2
+        }
+      ]
+    },
+    {
+      "screen": "tab-insights",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "tab-feed",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "#btn-oc-finish",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "#btn-oc-finish-close,#btn-oc-save-whs",
+      "violations": [],
+      "incomplete": []
+    }
+  ]
+}

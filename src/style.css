@@ -20,11 +20,12 @@
     --bg-color: #f4f7f6;
     --card-bg: #ffffff;
     --text-main: #2d3436;
-    --text-muted: #636e72;
+    --text-muted: #475569;
+    --success-readable: #166534;
     --border-color: #dfe6e9;
     --used-color: #e8f5e9;
     --used-border: #4caf50;
-    --danger: #ff7675;
+    --danger: #991b1b;
 }
 
 * {
@@ -181,6 +182,12 @@ body {
 .branding p {
     color: rgba(255, 255, 255, 0.8);
     font-size: 1rem;
+}
+
+#tab-coach .branding p,
+#tab-admin .branding p,
+#tab-feed .branding p {
+    color: #ffffff;
 }
 
 .index-display {
@@ -428,7 +435,7 @@ body {
 }
 
 .whs-record-table tr.round-not-counting > td:not(.col-action) {
-    opacity: 0.5;
+    /* Keep the semantic exclusion cues without fading legible scores. */
     text-decoration: line-through;
 }
 
@@ -574,12 +581,39 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    overflow-y: auto;
+    padding-block: 24px 64px;
 }
 
 .auth-card {
-    width: 100%;
+    width: calc(100% - 40px);
     max-width: 400px;
     margin: 20px;
+    flex-shrink: 0;
+}
+
+/* Keep tall registration cards scrollable instead of centring the top
+   outside the viewport when text is enlarged or the keyboard is open. */
+@media (max-height: 760px) {
+    .auth-overlay {
+        align-items: flex-start;
+    }
+}
+
+#feed-search-input {
+    min-width: 0;
+}
+
+#tab-feed .card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    /* A span-2 child otherwise creates a second implicit grid track. */
+    #tab-feed .card {
+        grid-column: 1 / -1;
+    }
 }
 
 .auth-card p {
@@ -666,7 +700,6 @@ body {
 
 /* Non-counting rounds styling */
 .not-counting-score {
-    opacity: 0.6;
     background-color: #f8f9fa;
 }
 
@@ -684,13 +717,11 @@ body {
 /* ======================================= */
 
 .tab-btn {
-    /* One row always. Icon-over-label (BL-OC2): equal-width slots (flex-basis
-       0) truncated to "HAN…" on a phone with 6+ tabs — basis auto lets each
-       tab keep its label's natural width and share only the leftover space
-       (all 9 labels total ~330px at this size, under a 360px phone).
-       min-width 0 keeps ellipsis as the last resort on very narrow screens. */
-    flex: 1 1 auto;
-    min-width: 0;
+    /* Keep one row and natural label widths. The existing horizontally
+       scrollable container handles enlarged text rather than truncating
+       every destination when the user doubles their font size. */
+    flex: 1 0 auto;
+    min-width: min-content;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1573,9 +1604,8 @@ body.play-mode.round-active #tab-oncourse {
 
 /* Emulator builds only: the SDK's fixed warning bar must not sit on the
    bottom chips (never rendered in production). */
-body.play-mode .firebase-emulator-warning {
+.firebase-emulator-warning {
     pointer-events: none;
-    opacity: 0.6;
 }
 
 body.play-mode.round-active #explainer-stats,
