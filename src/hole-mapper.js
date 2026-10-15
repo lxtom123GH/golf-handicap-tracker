@@ -258,6 +258,7 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
     const listeners = new AbortController();
     const on = { signal: listeners.signal };
     let destroyed = false;
+    let saveAttempt = 0;
     const frame = makeFrame([hole.tee.lat, hole.tee.lon], [hole.green.centre.lat, hole.green.centre.lon]);
 
     // Fit: the imagery extent when the hole has it, else a tee-to-green box.
@@ -627,6 +628,8 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
                 if (status) status.textContent = 'No area is ready to save. Join the last point to the first to close an area, then choose Save.';
                 return;
             }
+            const attempt = ++saveAttempt;
+            const ownsStatus = () => !destroyed && attempt === saveAttempt;
             try {
                 const { AppState } = await import('./state.js');
                 const { db } = await import('./firebase-config.js');
@@ -647,13 +650,14 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
                 const write = setDoc(doc(db, 'users', uid, 'holeTraces', `${slug}-${Number(holeNumber)}`), payload);
                 // The status line is shared with the next mount: a closed
                 // mapper must not write into another hole's status.
-                if (status && !destroyed) status.textContent = `${payload.features.features.length} map area(s) queued. Reconnect to finish syncing.`;
-                write.catch((err) => {
-                    const el = document.getElementById('mapper-status');
-                    if (el && !destroyed) el.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');
+                if (status && ownsStatus()) status.textContent = `${payload.features.features.length} map area(s) queued. Waiting for confirmation; if offline, reconnect to finish syncing.`;
+                write.then(() => {
+                    if (status && ownsStatus()) status.textContent = `saved ${payload.features.features.length} feature(s).`;
+                }).catch((err) => {
+                    if (status && ownsStatus()) status.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');
                 });
             } catch (err) {
-                if (status && !destroyed) status.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');
+                if (status && ownsStatus()) status.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');
             }
         }, on);
     }
