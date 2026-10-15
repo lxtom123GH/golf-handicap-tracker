@@ -2,27 +2,10 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { writeFile } from 'node:fs/promises';
-import { seedPreapprovedEmail, throwawayEmail } from './helpers/emulator.js';
+import { registerAndVerifySignup, throwawayEmail } from './helpers/emulator.js';
 import { COURSE_DATA } from '../../src/course-data.js';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-
-async function verifyAuthEmulatorEmail(email, password) {
-    const host = `127.0.0.1:${process.env.EMU_AUTH_PORT || 9099}`;
-    const signedIn = await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-api-key`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
-        body: JSON.stringify({ email, password, returnSecureToken: true }),
-    });
-    if (!signedIn.ok) throw new Error(`Auth emulator sign-in failed: ${signedIn.status} ${await signedIn.text()}`);
-    const { localId } = await signedIn.json();
-    const verified = await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:update?key=fake-api-key`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
-        body: JSON.stringify({ localId, emailVerified: true }),
-    });
-    if (!verified.ok) throw new Error(`Auth emulator verification failed: ${verified.status} ${await verified.text()}`);
-}
 
 async function audit(page, screen, reports) {
     const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
@@ -62,16 +45,12 @@ test('axe: sign-in, home, history, round start, scorecard and settings', async (
     await audit(page, 'sign-in', reports);
 
     const email = throwawayEmail('rendered-a11y');
-    await seedPreapprovedEmail(email);
     await page.locator('#btn-register').click();
     await page.locator('#auth-name').fill('Axe Audit');
     await page.locator('#auth-email').fill(email);
     await page.locator('#auth-password').fill('e2e-password-1');
-    await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
-    await verifyAuthEmulatorEmail(email, 'e2e-password-1');
-    await page.locator('#btn-check-email').click();
-    await expect(page.locator('#main-app')).toBeVisible({ timeout: 20_000 });
+    // Use the shared feature fixture; registration.spec.js owns invite promotion.
+    await registerAndVerifySignup(page, email);
 
     // Choose the screen explicitly; the new context and account have no saved tab.
     await page.locator('.tab-btn[data-target="tab-whs"]').click();
