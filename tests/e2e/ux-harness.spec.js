@@ -11,6 +11,7 @@ test.beforeAll(async () => {
 });
 
 async function capture(page, testInfo, name) {
+    await expect(page.locator('#app-loading-cloak')).toBeHidden();
     const screenshot = await page.screenshot({ fullPage: true });
     const outputDir = fileURLToPath(new URL('../../docs/ux-harness-screenshots/', import.meta.url));
     mkdirSync(outputDir, { recursive: true });
@@ -70,5 +71,7 @@ test('admin demo view', async ({ page }, testInfo) => {
     await expect(page.locator('#tab-btn-admin')).toBeVisible();
     await page.locator('#tab-btn-admin').click();
     await expect(page.locator('#tab-admin')).toBeVisible();
+    await expect(page.locator('#admin-users-list tr')).toHaveCount(4);
+    await expect(page.locator('#admin-emails-list')).toBeEmpty();
     await capture(page, testInfo, 'admin');
 });
