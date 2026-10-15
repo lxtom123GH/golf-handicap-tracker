@@ -58,7 +58,7 @@ The account bootstrap uses fixed demo-only Auth IDs, not real accounts. It inter
 
 ## Reproduction
 
-1. In a fresh credential-free checkout, install the locked dependencies and configure the pinned Chrome Headless Shell 155.0.8059.39. Keep all demo/loopback/deny-external guards.
+1. In a fresh credential-free checkout, run `npm ci` and `npx playwright install chromium`. The harness resolves the locked `axe-core` dependency directly; no `AXE_CORE_PATH` is needed. Use the same Playwright-installed Chromium on both sides (or the same explicit `GOLDEN_CHROME_EXECUTABLE`). Keep all demo/loopback/deny-external guards. The historical run below used Chrome Headless Shell 155.0.8059.39.
 2. Run the same visual fixture harness once with the baseline stylesheet and once with this stylesheet through `node scripts/run-e2e-isolated.mjs --config playwright.visual.config.js`. Keep the two `style-evidence` directories separately. No production account, real user data or preview is required.
 3. Run `node tests/visual/compare-selfcheck.mjs`, then `node tests/visual/compare-results.mjs BEFORE AFTER comparison.json`. The latter fails if screenshot sets, pixel content, dimensions or any recorded computed-style arrays differ.
 4. Run the unit suite. Review the full comparison ledger rather than a selected screenshot or percentage alone.
