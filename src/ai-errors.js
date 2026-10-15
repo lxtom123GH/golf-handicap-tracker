@@ -1,22 +1,15 @@
-/**
- * ai-errors.js — what to tell the player when an AI callable fails.
- *
- * Most AI failures get the caller's own friendly fallback. Two are the
- * player's actual situation and must be shown as-is instead: an account still
- * awaiting approval (permission-denied, from functions/approval.js) and the
- * daily AI limit (resource-exhausted). Both arrive from httpsCallable as
- * FirebaseError with code 'functions/<code>' and the server's message.
- */
-const PASS_THROUGH = new Set(['functions/permission-denied', 'functions/resource-exhausted']);
+/** Explain AI failures without displaying arbitrary backend diagnostics. */
+const APPROVAL_MESSAGE = 'Your account is awaiting approval. AI features unlock once an admin approves it.';
 
-/**
- * @param {unknown} err the rejection from an httpsCallable
- * @param {string} fallback message for every other failure
- * @returns {string}
- */
 export function aiErrorMessage(err, fallback) {
-    if (err && PASS_THROUGH.has(err.code) && typeof err.message === 'string' && err.message) {
-        return err.message;
+    if (err?.code === 'functions/permission-denied' && err.message) {
+        // Only this known server response establishes that approval is the cause.
+        return err.message === APPROVAL_MESSAGE
+            ? `${APPROVAL_MESSAGE} Ask the app administrator to approve your account.`
+            : 'This account cannot use that AI feature. Ask the app administrator for help.';
+    }
+    if (err?.code === 'functions/resource-exhausted') {
+        return 'Daily AI limit reached. Try again tomorrow.';
     }
     return fallback;
 }

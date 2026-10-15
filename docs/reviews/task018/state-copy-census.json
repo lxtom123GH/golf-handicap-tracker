@@ -1,0 +1,1200 @@
+{
+  "method": "Lexical review candidates from index.html and all src/**/*.js; excludes standalone comments and console calls. Includes dynamic snippets and internal strings; not an AST proof of every runtime state.",
+  "entries": [
+    {
+      "path": "index.html",
+      "line": 24,
+      "source": "<div id=\"app-loading-cloak\""
+    },
+    {
+      "path": "index.html",
+      "line": 64,
+      "source": "<div id=\"offline-banner\" class=\"hidden\" role=\"status\""
+    },
+    {
+      "path": "index.html",
+      "line": 66,
+      "source": "\ud83d\udcf5 You're offline. Keep this app open and reconnect to sync. Avoid reloading during your round."
+    },
+    {
+      "path": "index.html",
+      "line": 333,
+      "source": "<option value=\"\">No preference</option>"
+    },
+    {
+      "path": "index.html",
+      "line": 409,
+      "source": "<div id=\"practice-state-loading\" class=\"card hidden\" style=\"text-align: center; padding: 40px;\">"
+    },
+    {
+      "path": "index.html",
+      "line": 413,
+      "source": "<p style=\"font-weight: 600; color: var(--text-muted);\">Creating your practice plan\u2026 Please wait.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 480,
+      "source": "<option value=\"\">-- No Coach Selected --</option>"
+    },
+    {
+      "path": "index.html",
+      "line": 499,
+      "source": "No practice sessions yet. Pick a drill above and save one."
+    },
+    {
+      "path": "index.html",
+      "line": 757,
+      "source": "placeholder=\"or add a guest by name (no account needed)\" style=\"flex:1; margin:0;\" aria-label=\"Guest name (no account needed)\">"
+    },
+    {
+      "path": "index.html",
+      "line": 771,
+      "source": "<option value=\"\">-- No Competition Linked --</option>"
+    },
+    {
+      "path": "index.html",
+      "line": 783,
+      "source": "<option value=\"\">-- No Side Game --</option>"
+    },
+    {
+      "path": "index.html",
+      "line": 1412,
+      "source": "\u26a0\ufe0f Cloud sync failed. Round saved locally for now."
+    },
+    {
+      "path": "index.html",
+      "line": 1515,
+      "source": "Golfers you mark a card for who have no account. Their daily handicap is remembered and"
+    },
+    {
+      "path": "index.html",
+      "line": 1908,
+      "source": "<p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 1910,
+      "source": "<div id=\"loading-state\" class=\"empty-state\">"
+    },
+    {
+      "path": "index.html",
+      "line": 1911,
+      "source": "<p>Loading your scoring record\u2026 Please wait.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 2052,
+      "source": "of every green, no hero shots, take your medicine from trouble."
+    },
+    {
+      "path": "index.html",
+      "line": 2055,
+      "source": "<strong>No Flag Golf</strong> (Adam Young): the flag doesn't exist \u2014 centre of every green."
+    },
+    {
+      "path": "index.html",
+      "line": 2138,
+      "source": "<p style=\"color:#94a3b8; font-size:0.85rem;\">Loading players you can add\u2026 Please wait.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 2246,
+      "source": "<div class=\"empty-state\" style=\"padding: 10px; font-size: 0.9rem;\">No custom rules added yet. Add a rule above, or continue with standard scoring.</div>"
+    },
+    {
+      "path": "index.html",
+      "line": 2357,
+      "source": "<p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 2419,
+      "source": "<p style=\"color:#94a3b8;\">Loading your players\u2026 Please wait.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 2521,
+      "source": "<p style=\"color:#94a3b8;\">Loading shot patterns\u2026 Please wait.</p>"
+    },
+    {
+      "path": "index.html",
+      "line": 2697,
+      "source": "<p style=\"color:#94a3b8;\">Loading people you follow\u2026 Please wait.</p>"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 14,
+      "source": "if (usersList) usersList.innerHTML = '<tr><td colspan=\"6\">Loading accounts\u2026 Please wait.</td></tr>';"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 50,
+      "source": "if (usersList) usersList.innerHTML = '<tr><td colspan=\"6\" style=\"color:#ef4444;\">Could not load accounts. Check your connection, then reopen Admin.</td></tr>';"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 82,
+      "source": "emailsList.innerHTML = '<tr><td>Loading approved email addresses\u2026 Please wait.</td></tr>';"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 97,
+      "source": "emailsList.innerHTML = '<tr><td>Could not load approved email addresses. Check your connection, then reopen Admin.</td></tr>';"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 106,
+      "source": "alert(\"Could not update account approval. Reopen Admin to check its current status before trying again.\");"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 116,
+      "source": "alert(\"Could not update the coach role. Reopen Admin to check its current status before trying again.\");"
+    },
+    {
+      "path": "src/admin.js",
+      "line": 127,
+      "source": "alert(\"Could not update the video allowance. Reopen Admin to check its current value before trying again.\");"
+    },
+    {
+      "path": "src/ai-errors.js",
+      "line": 12,
+      "source": "return 'Daily AI limit reached. Try again tomorrow.';"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 40,
+      "source": "<div id=\"ai-loading\" class=\"hidden\" style=\"padding:40px;text-align:center;\">"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 42,
+      "source": "<p style=\"color:#64748b;font-size:0.95rem;\">Analysing your stats\u2026 Please wait. You can close this window while you wait.</p>"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 134,
+      "source": "document.getElementById('ai-loading').classList.remove('hidden');"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 142,
+      "source": "if (subtitleEl) subtitleEl.textContent = 'Powered by Gemini \u2014 Analysing your data...';"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 171,
+      "source": "else trend = 'STABLE (no significant change)';"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 212,
+      "source": "prompt += pracSummary.length ? pracSummary.slice(0, 6).join(', ') : 'No drills logged yet.';"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 224,
+      "source": "const rawText = response.data.answer || 'No advice was returned. Choose Regenerate to try again.';"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 227,
+      "source": "document.getElementById('ai-loading').classList.add('hidden');"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 234,
+      "source": "document.getElementById('ai-loading').classList.add('hidden');"
+    },
+    {
+      "path": "src/ai.js",
+      "line": 236,
+      "source": "document.getElementById('ai-error-msg').textContent = aiErrorMessage(e, 'Could not create the advice. Check your connection, then choose Regenerate to try again.');"
+    },
+    {
+      "path": "src/analytics.js",
+      "line": 21,
+      "source": "dispEl.innerHTML = '<p style=\"color:#94a3b8;\">Analysing shot history\u2026 Please wait.</p>';"
+    },
+    {
+      "path": "src/analytics.js",
+      "line": 38,
+      "source": "dispEl.innerHTML = '<p style=\"color:#ef4444;\">Could not load shot patterns. Check your connection, then reopen this player.</p>';"
+    },
+    {
+      "path": "src/analytics.js",
+      "line": 60,
+      "source": "dispEl.innerHTML = filterBar + '<p style=\"color:#94a3b8;\">No detailed shots match these filters. Try All and All time, or record shots in Detailed mode.</p>';"
+    },
+    {
+      "path": "src/analytics.js",
+      "line": 161,
+      "source": "${routine.deltaPct > 0 ? `\u2014 the routine is worth <strong>+${routine.deltaPct}%</strong> on-target.` : '\u2014 no measurable difference yet.'}"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 93,
+      "source": "const banner = document.getElementById('offline-banner');"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 96,
+      "source": "window.addEventListener('offline', syncBanner);"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 231,
+      "source": "holeGrid.innerHTML = \"<em>Hole-by-hole not available for custom courses. Use Total Stableford or Manual AGS.</em>\";"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 305,
+      "source": "holeGrid.innerHTML = \"<em>Hole details are unavailable for this course. Choose Manual AGS to enter your adjusted gross score.</em>\";"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 415,
+      "source": "? `No dated index on record, so this card uses your current index: ${current.toFixed(1)}`"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 419,
+      "source": "? \"Couldn't look up your index on that date (offline?). It retries when you reconnect; Manual AGS still saves.\""
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 421,
+      "source": ": 'No Handicap Index on record here for that date, so only Manual AGS can save this card.')"
+    },
+    {
+      "path": "src/app-v4.js",
+      "line": 587,
+      "source": "alert(\"Failed to log round. Ensure fields are filled.\");"
+    },
+    {
+      "path": "src/auth-google.js",
+      "line": 110,
+      "source": "return 'The Google sign-in window was closed before it finished. Try again when ready.';"
+    },
+    {
+      "path": "src/auth-google.js",
+      "line": 114,
+      "source": "case 'auth/network-request-failed':"
+    },
+    {
+      "path": "src/auth-google.js",
+      "line": 115,
+      "source": "return 'No connection. Check your network and try again.';"
+    },
+    {
+      "path": "src/auth-google.js",
+      "line": 123,
+      "source": "return 'Google sign-in did not finish. Sign in with email and password, or try again.';"
+    },
+    {
+      "path": "src/auth-google.js",
+      "line": 208,
+      "source": "return { ok: false, code: 'auth/no-pending-credential', message: 'Nothing to link.' };"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 9,
+      "source": "return 'Check your email address, then try again.';"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 14,
+      "source": "return 'Check your email and password, then try again. If you have forgotten your password, choose Forgot password.';"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 16,
+      "source": "return 'Could not create the account with that email. Try signing in, or choose Forgot password.';"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 18,
+      "source": "return 'Choose a stronger password with at least 6 characters, then try again.';"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 20,
+      "source": "return 'Too many requests. Wait a few minutes, then try again.';"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 21,
+      "source": "case 'auth/network-request-failed':"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 22,
+      "source": "return 'Could not reach the sign-in service. Check your connection, then try again.';"
+    },
+    {
+      "path": "src/auth-messages.js",
+      "line": 26,
+      "source": "return 'Could not complete that request. Please try again. If it keeps happening, ask the app administrator for help.';"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 264,
+      "source": "feedback.textContent = 'We have not seen a verified email yet. Open the link in your inbox, then try again.';"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 270,
+      "source": "feedback.textContent = 'Could not check your email status. Check your connection and try again.';"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 295,
+      "source": "feedback.textContent = 'Could not send the verification email. Check your connection and try again.';"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 485,
+      "source": "const cloak = document.getElementById('app-loading-cloak');"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 497,
+      "source": "const cloak = document.getElementById('app-loading-cloak');"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 505,
+      "source": "const cloak = document.getElementById('app-loading-cloak');"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 518,
+      "source": "UI.authError.textContent = \"Couldn't verify your account. Please retry.\";"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 521,
+      "source": "const cloak = document.getElementById('app-loading-cloak');"
+    },
+    {
+      "path": "src/auth-v2.js",
+      "line": 533,
+      "source": "const cloak = document.getElementById('app-loading-cloak');"
+    },
+    {
+      "path": "src/bag-settings.js",
+      "line": 40,
+      "source": ": \"\u26a0\ufe0f Couldn't save on this device: your bag will reset when the app reloads.\";"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 61,
+      "source": "alert(`No coach is registered with the email ${email}. `"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 75,
+      "source": "alert(userErrorMessage(e, 'Could not add the coach. Check your connection, then try again.'));"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 84,
+      "source": "list.innerHTML = '<li>Loading your coaches\u2026 Please wait.</li>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 90,
+      "source": "list.innerHTML = '<li>No coaches added yet. Enter your coach\u2019s email address above to add them.</li>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 102,
+      "source": "list.innerHTML = '<li>Could not load your coaches. Check your connection, then close and reopen Manage My Coaches.</li>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 116,
+      "source": "alert(userErrorMessage(e, 'Could not remove the coach. Reopen Manage My Coaches to check the list before trying again.'));"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 180,
+      "source": "if (msgEl) { msgEl.textContent = userErrorMessage(e, 'Could not assign the drill. Keep your notes here and try again.'); msgEl.style.color = '#ef4444'; }"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 189,
+      "source": "if (rosterEl) rosterEl.innerHTML = '<p style=\"color:#64748b;\">Refreshing your players\u2026 Please wait.</p>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 244,
+      "source": "rosterEl.innerHTML = '<p style=\"color:#94a3b8;\">No players are linked to you yet. Ask a player to add your email address through Manage My Coaches.</p>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 315,
+      "source": "alert('Could not release this player. Please try again.');"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 413,
+      "source": "el.innerHTML = '<p style=\"color:#94a3b8;\">Loading assigned drills\u2026 Please wait.</p>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 420,
+      "source": "el.innerHTML = '<p style=\"color:#94a3b8;\">No drills assigned yet. Use Assign Drill above to set the first one.</p>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 461,
+      "source": "el.innerHTML = '<p style=\"color:#ef4444;\">Could not load drill results. Check your connection, then reopen this player.</p>';"
+    },
+    {
+      "path": "src/coach.js",
+      "line": 471,
+      "source": "notesEl.innerHTML = '<p class=\"empty-msg\">No notes yet. Write a note below, then choose Save Note.</p>';"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 58,
+      "source": "alert('Could not update the competition. Check your connection, then try again.');"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 100,
+      "source": "alert('Could not delete the competition. Check your connection and confirm it is still listed before trying again.');"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 134,
+      "source": "alert('Failed to delete round.');"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 166,
+      "source": "UI.ocLinkComp.innerHTML = '<option value=\"\">-- No Competition Linked --</option>';"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 225,
+      "source": "syncCreatorActions(); // hides archive/delete when nothing is active"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 272,
+      "source": "rulesSummaryEl.textContent = \"No custom rules.\";"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 569,
+      "source": "rulesListEl.innerHTML = '<div class=\"empty-state\" style=\"padding: 10px; font-size: 0.9rem;\">No custom rules added yet. Add a rule above, or continue with standard scoring.</div>';"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 660,
+      "source": "alert(\"Failed to create competition. Check console for details.\");"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 788,
+      "source": "alert(\"Failed to log round.\");"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 832,
+      "source": "listEl.innerHTML = '<p style=\"color:#94a3b8; font-size:0.85rem;\">No other approved players are available. Ask the app administrator to approve their accounts, then reopen this list.</p>';"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 836,
+      "source": "listEl.innerHTML = '<p style=\"color:#ef4444; font-size:0.85rem;\">Failed to load players.</p>';"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 857,
+      "source": "UI.compRegularsList.innerHTML = '<p style=\"color:#94a3b8; font-size:0.85rem;\">No approved players found. Ask the app administrator to approve the players, then reopen this list.</p>';"
+    },
+    {
+      "path": "src/competitions.js",
+      "line": 862,
+      "source": "UI.compRegularsList.innerHTML = '<p style=\"color:#ef4444; font-size:0.85rem;\">Failed to load players.</p>';"
+    },
+    {
+      "path": "src/finish-holes.js",
+      "line": 42,
+      "source": "return 'Nine holes off an 18-hole tee: there is no nine-hole Course Rating for it, so this round is saved but not counted in your index.';"
+    },
+    {
+      "path": "src/gps-capture.js",
+      "line": 102,
+      "source": "if (!best) return finish('refused', null, 'no usable fix inside the window');"
+    },
+    {
+      "path": "src/guests.js",
+      "line": 66,
+      "source": "if (!name) throw new InputMessage('Enter a name for the guest, then try again.');"
+    },
+    {
+      "path": "src/guests.js",
+      "line": 67,
+      "source": "if (name.length > 60) throw new InputMessage('Use a guest name of 60 characters or fewer, then try again.');"
+    },
+    {
+      "path": "src/hole-mapper.js",
+      "line": 158,
+      "source": "if (!action) return { ok: false, reason: 'nothing-to-undo' };"
+    },
+    {
+      "path": "src/hole-mapper.js",
+      "line": 627,
+      "source": "if (status) status.textContent = 'No area is ready to save. Join the last point to the first to close an area, then choose Save.';"
+    },
+    {
+      "path": "src/hole-mapper.js",
+      "line": 650,
+      "source": "if (status && !destroyed) status.textContent = `${payload.features.features.length} map area(s) queued. Reconnect to finish syncing.`;"
+    },
+    {
+      "path": "src/hole-mapper.js",
+      "line": 653,
+      "source": "if (el && !destroyed) el.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');"
+    },
+    {
+      "path": "src/hole-mapper.js",
+      "line": 656,
+      "source": "if (status && !destroyed) status.textContent = userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.');"
+    },
+    {
+      "path": "src/hole-overlay.js",
+      "line": 817,
+      "source": "if (ly < 4) ly = Math.min(cssH - h - 4, ty + (measure.live ? 40 : R + 10)); // no room above: below"
+    },
+    {
+      "path": "src/hole-overlay.js",
+      "line": 911,
+      "source": "try { canvas.setPointerCapture?.(e.pointerId); } catch { /* synthetic ids (tests) have no active pointer */ }"
+    },
+    {
+      "path": "src/insights.js",
+      "line": 396,
+      "source": "if (!g) return null; // no score yet \u2014 nothing to contradict"
+    },
+    {
+      "path": "src/last-setup.js",
+      "line": 112,
+      "source": "if (!opt) continue; // no longer pickable (a deleted guest, a friend gone)"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 78,
+      "source": "say(userErrorMessage(err, 'Could not add that guest. Check your connection, then try Add guest again.'));"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 104,
+      "source": "list.innerHTML = '<li style=\"color:var(--text-muted); font-size:0.9rem;\">No guests yet. Add one on the On Course tab when you start a round.</li>';"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 119,
+      "source": "say('Could not load your guests. Check your connection, then reopen Settings.');"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 136,
+      "source": "say(`Could not delete ${name}. Reopen Settings to check the list before trying again.`);"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 326,
+      "source": "m.refreshShotWizard(); // D31: no re-mount"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 837,
+      "source": "if (ok === false) import('./score-input.js').then(m => m.showToast(\"Couldn't keep the screen awake \u2014 GPS stops if it locks.\"));"
+    },
+    {
+      "path": "src/modules/event-binders.js",
+      "line": 895,
+      "source": "if (confirm(\"This round was already sent to save. Leave it? It and its shots are kept (nothing is deleted).\")) {"
+    },
+    {
+      "path": "src/modules/hole-plan-card.js",
+      "line": 140,
+      "source": "setStatus('Could not load this course map. Check your connection, then choose the course again.');"
+    },
+    {
+      "path": "src/modules/hole-plan-card.js",
+      "line": 146,
+      "source": "ctl?.clear('intended'); // D29 review: clear(mode) needs the mode (a bare clear() cleared nothing)"
+    },
+    {
+      "path": "src/modules/insights-render.js",
+      "line": 41,
+      "source": "parts.push(`No caps applied \u2014 you're within 3.0 of your Low HI.`);"
+    },
+    {
+      "path": "src/modules/insights-render.js",
+      "line": 127,
+      "source": ": (c.topMiss ? 'misses ' + escapeHtml(c.topMiss) : 'no miss bias');"
+    },
+    {
+      "path": "src/modules/insights-render.js",
+      "line": 141,
+      "source": "out.innerHTML = '<p style=\"color:#ef4444;\">Could not load shot history. Check your connection, then reopen Insights.</p>';"
+    },
+    {
+      "path": "src/modules/intent-render.js",
+      "line": 136,
+      "source": "canvas.className = 'intent-canvas'; // sizing lives in style.css (no inline style, Sydney D-02)"
+    },
+    {
+      "path": "src/modules/play-mode.js",
+      "line": 268,
+      "source": "}).catch(() => { /* no map: no defaults */ });"
+    },
+    {
+      "path": "src/modules/score-input.js",
+      "line": 768,
+      "source": "_gpsReadoutNote = 'GPS is rough (\u00b1' + Math.round(fix.accuracyM) + ' m) \u2014 no map to correct it on';"
+    },
+    {
+      "path": "src/modules/score-input.js",
+      "line": 809,
+      "source": "_gpsReadoutNote = d.fix ? `GPS refused: ${Math.round(d.fix.accuracyM)} m` : 'GPS refused: no fix';"
+    },
+    {
+      "path": "src/modules/score-input.js",
+      "line": 1465,
+      "source": "showToast('That shot can no longer be undone here \u2014 edit it from the hole review');"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 409,
+      "source": "<span class=\"oc-card-gir\">${girNow === true ? 'GIR \u2713' : (girNow === false ? 'no GIR' : '')}</span>"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 779,
+      "source": "btnFIR.classList.toggle('hidden', editorPar <= 3); // C25: no fairway on a par 3"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 856,
+      "source": "} catch { /* storage unavailable: the toggle still works for this page */ }"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 862,
+      "source": "try { wasOn = localStorage.getItem(GPS_ON_KEY) === '1'; } catch { /* no storage */ }"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 947,
+      "source": "else if (err.code === 2) msg = \"GPS Position Unavailable\";"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1069,
+      "source": "if (!hole?.green?.centre) return; // no mapped green: nothing to learn from"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1273,
+      "source": "let _hintCache = null; // { strategy, biasText } | 'loading' | 'none'"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1279,
+      "source": "if (_hintCache === 'loading') return;"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1282,
+      "source": "_hintCache = 'loading';"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1400,
+      "source": "? \"No speech was heard. Tap the mic and try speaking again.\""
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1401,
+      "source": ": \"Voice input is unavailable. Enter your score with the buttons instead.\";"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1442,
+      "source": "return aiErrorMessage(e, \"AI rules advice is unavailable. Check the Rules of Golf or ask the competition committee.\");"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1473,
+      "source": "alert(\"Could not start recording. Please ensure microphone permissions are granted.\");"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1575,
+      "source": "uploadBtn.innerHTML = \"\u231b Uploading...\";"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1608,
+      "source": "alert(\"Could not upload the diary. Check your connection, then record it again before uploading.\");"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 1660,
+      "source": "&& !confirm(`No score entered for hole ${AppState.currentHole} \u2014 ${AppState.currentHole >= (AppState.currentRoundHoles || 9) ? 'finish' : 'move on'} anyway?`)) {"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 2115,
+      "source": "? '\ud83d\udc2f Clean Tiger-5 round \u2014 no doubles, par-5 bogeys or three-putts!'"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 2163,
+      "source": "`${p.name || 'a playing partner'}'s card could not be sent for approval`,"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 2354,
+      "source": "if (resultsDiv) resultsDiv.innerHTML = \"<p>No scores are available for this analysis. Close this window and check your scoring record.</p>\";"
+    },
+    {
+      "path": "src/oncourse.js",
+      "line": 2496,
+      "source": "const msg = aiErrorMessage(error, 'The Game Master is unavailable. Focus on your averages above!');"
+    },
+    {
+      "path": "src/overlay-wake-lock.js",
+      "line": 25,
+      "source": "} catch (_) { /* unavailable or denied: distances still work */ }"
+    },
+    {
+      "path": "src/pending-rounds.js",
+      "line": 91,
+      "source": "if (!pending?.id) throw new InputMessage('No card is selected. Choose a card, then try again.');"
+    },
+    {
+      "path": "src/pending-rounds.js",
+      "line": 169,
+      "source": "const no = document.createElement('button');"
+    },
+    {
+      "path": "src/pending-rounds.js",
+      "line": 183,
+      "source": "alert(userErrorMessage(err, 'Could not finish approving that card. Check your scoring record before trying Approve again.'));"
+    },
+    {
+      "path": "src/persistence.js",
+      "line": 175,
+      "source": "alert(\"Your phone's storage is full, so this round can no longer be saved automatically. Finish and save the round, or free up space.\");"
+    },
+    {
+      "path": "src/play-mode.js",
+      "line": 144,
+      "source": "if (!(Number(gross) > 0)) return false; // an unplayed (or cleared) hole has no GIR"
+    },
+    {
+      "path": "src/practice.js",
+      "line": 232,
+      "source": "alert(\"Failed to save practice record.\");"
+    },
+    {
+      "path": "src/practice.js",
+      "line": 459,
+      "source": "UI.practiceDashboardResults.innerHTML = '<p class=\"empty-text\">No practice sessions recorded yet. Choose a drill on Practice, then save a session.</p>';"
+    },
+    {
+      "path": "src/practice.js",
+      "line": 471,
+      "source": "UI.practiceDashboardResults.innerHTML = `<p class=\"empty-text\">No records logged for <strong>${DRILL_TEMPLATES[viewDrillId].name}</strong> yet. Choose this drill on Practice, then save a session.</p>`;"
+    },
+    {
+      "path": "src/practice.js",
+      "line": 574,
+      "source": "coachSelect.innerHTML = '<option value=\"\">-- No Coach Selected --</option>';"
+    },
+    {
+      "path": "src/practice.js",
+      "line": 613,
+      "source": "alert(\"Failed to update coach.\");"
+    },
+    {
+      "path": "src/round-validity.js",
+      "line": 37,
+      "source": "if (/stroke index/i.test(stored)) return 'this tee has no stroke index, so the score isn\u2019t capped';"
+    },
+    {
+      "path": "src/services/audioService.js",
+      "line": 83,
+      "source": "if (!this.mediaRecorder) return reject(new Error(\"No active recorder\"));"
+    },
+    {
+      "path": "src/services/audioService.js",
+      "line": 128,
+      "source": "setTimeout(() => reject(new Error(\"Upload timed out. Please check your connection and try again.\")), 30000)"
+    },
+    {
+      "path": "src/settings-account.js",
+      "line": 72,
+      "source": "msg.textContent = 'Sending\u2026';"
+    },
+    {
+      "path": "src/settings-account.js",
+      "line": 76,
+      "source": ": { ok: false, message: 'This account has no email address. Ask the app administrator for help.' };"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 54,
+      "source": "return \"This tee publishes no stroke index, so side games can't be settled \u2014 gross scores only.\";"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 94,
+      "source": "const unavailable = sideGameUnavailableReason(players, strokeIndex);"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 95,
+      "source": "if (unavailable) return { perPlayer, log, carried: 0, unavailable };"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 116,
+      "source": "return { perPlayer, log, carried: carry, unavailable: null };"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 132,
+      "source": "const unavailable = sideGameUnavailableReason([p1, p2], strokeIndex);"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 133,
+      "source": "if (unavailable) {"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 134,
+      "source": "return { leaderUid: null, up: 0, thru: 0, closed: false, statusText: unavailable, unavailable };"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 151,
+      "source": "if (thru === 0) statusText = 'No holes completed yet';"
+    },
+    {
+      "path": "src/side-games.js",
+      "line": 156,
+      "source": "return { leaderUid: leader ? leader.uid : null, up, thru, closed, statusText, unavailable: null };"
+    },
+    {
+      "path": "src/social.js",
+      "line": 40,
+      "source": "resultsEl.textContent = 'No players found. Check the name and try another search.';"
+    },
+    {
+      "path": "src/social.js",
+      "line": 65,
+      "source": "e.target.textContent = 'Failed \u2014 retry';"
+    },
+    {
+      "path": "src/social.js",
+      "line": 74,
+      "source": "resultsEl.textContent = 'Error searching. Try again.';"
+    },
+    {
+      "path": "src/social.js",
+      "line": 275,
+      "source": "feedEl.innerHTML = '<p style=\"color:#94a3b8;\">Loading recent activity\u2026 Please wait.</p>';"
+    },
+    {
+      "path": "src/social.js",
+      "line": 313,
+      "source": "if (feedEl) feedEl.innerHTML = '<p style=\"color:#ef4444;\">Could not load recent activity. Try again later; if it keeps happening, ask the app administrator for help.</p>';"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 32,
+      "source": "hint: 'Ball in play, fat side of the green, no hero shots. Out of position? Take your medicine.',"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 39,
+      "source": "'No Flag Golf (Young)': {"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 49,
+      "source": "par5: 'Same routine, no extra thinking over the ball because it\\'s a par 5.'"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 52,
+      "source": "hint: 'Play within yourself: take what the course gives, play comfortable, no big numbers.',"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 53,
+      "source": "par5: 'Score low by not scoring high \u2014 nothing fancy, avoid the blow-up.'"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 56,
+      "source": "hint: 'Avoid the card-wreckers: no doubles, no three-putts. Boring is winning.',"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 57,
+      "source": "par5: 'Tiger rule #1: NO bogeys on par 5s. Protect this hole.'"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 60,
+      "source": "hint: 'Play to YOUR par \u2014 a 5 on a hard par 4 is a win. Chase nothing.',"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 128,
+      "source": "text.textContent = '\ud83e\udded No strategy period active \u2014 last one ended';"
+    },
+    {
+      "path": "src/strategy.js",
+      "line": 143,
+      "source": "listEl.innerHTML = '<p style=\"color:#94a3b8;\">No strategy periods yet \u2014 start one below and every round from that date counts toward it.</p>';"
+    },
+    {
+      "path": "src/tempo.js",
+      "line": 110,
+      "source": "const offlineCtx = new OfflineAudioContext(1, 44100 * vTotalDuration, 44100);"
+    },
+    {
+      "path": "src/tempo.js",
+      "line": 111,
+      "source": "if (delayTime >= 3) { buildTick(offlineCtx, delayTime - 3); buildTick(offlineCtx, delayTime - 2); buildTick(offlineCtx, delayTime - 1); }"
+    },
+    {
+      "path": "src/tempo.js",
+      "line": 112,
+      "source": "buildTone(offlineCtx, vibe, vDelay, 0, 1); buildTone(offlineCtx, vibe, vDelay + vBackswing, 0, 2); buildTone(offlineCtx, vibe, vImpactTime, 0, 3);"
+    },
+    {
+      "path": "src/tempo.js",
+      "line": 114,
+      "source": "const renderedBuffer = await offlineCtx.startRendering();"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 56,
+      "source": "loadingState: document.getElementById('loading-state'),"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 464,
+      "source": "alert(\"Could not play this audio diary. Check your connection and try again. If it is still unavailable, ask the app administrator for help.\");"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 571,
+      "source": "alert(aiErrorMessage(err, \"Could not create the AI briefing. Check your connection, then try the briefing button again.\"));"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 631,
+      "source": "UI.ocAddedPlayersList.innerHTML = '<li style=\"color:var(--text-muted); padding:10px;\">No players added yet. Choose a player or add a guest above.</li>';"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 846,
+      "source": "const stateLoading = document.getElementById('practice-state-loading');"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 849,
+      "source": "if (stateLoading) stateLoading.classList.toggle('hidden', state !== 'loading');"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 951,
+      "source": "setPracticeState('loading');"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 1008,
+      "source": "setPracticeState('loading');"
+    },
+    {
+      "path": "src/ui.js",
+      "line": 1029,
+      "source": "errorEl.textContent = aiErrorMessage(err, 'Could not create your practice plan. Check your connection, then try generating it again.');"
+    },
+    {
+      "path": "src/update-watch.js",
+      "line": 197,
+      "source": "if (win.navigator && win.navigator.onLine === false) { say('You are offline. Try again when connected.'); return; }"
+    },
+    {
+      "path": "src/update-watch.js",
+      "line": 206,
+      "source": "say('Could not reach the server. Try again shortly.');"
+    },
+    {
+      "path": "src/user-messages.js",
+      "line": 5,
+      "source": "export function userErrorMessage(error, fallback = 'Could not complete this action. Please try again.') {"
+    },
+    {
+      "path": "src/user-messages.js",
+      "line": 16,
+      "source": "case 'unavailable':"
+    },
+    {
+      "path": "src/user-messages.js",
+      "line": 17,
+      "source": "case 'functions/unavailable':"
+    },
+    {
+      "path": "src/user-messages.js",
+      "line": 18,
+      "source": "case 'auth/network-request-failed':"
+    },
+    {
+      "path": "src/user-messages.js",
+      "line": 20,
+      "source": "return 'Could not reach the service. Check your connection, then try again.';"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 53,
+      "source": "if (!file.type.startsWith('video/')) throw new InputMessage('That file is not a video. Choose a video file, then try again.');"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 99,
+      "source": "container.innerHTML = '<p style=\"color:#94a3b8;\">Loading swing videos\u2026 Please wait.</p>';"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 105,
+      "source": "? 'No swing videos yet. Choose a video above, then select Upload video.'"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 106,
+      "source": ": 'No swing videos yet. Ask the player to upload one on their Practice tab.'}</p>`;"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 151,
+      "source": ".catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'This video could not be opened. Check your connection and reopen the library.', style: 'color:#ef4444;' })); });"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 174,
+      "source": "showToast('Could not delete the video. Check your connection, then try Delete again.');"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 181,
+      "source": "container.innerHTML = '<p style=\"color:#ef4444;\">Could not load videos. Check your connection, then reload when you are not playing a round.</p>';"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 270,
+      "source": "showToast('Could not save your drawn lines. Keep this video open and try Save again.');"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 294,
+      "source": "out.textContent = '\ud83e\udd16 Analysing your swing\u2026 (this can take up to a minute)';"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 302,
+      "source": "out.textContent = aiErrorMessage(e, 'Could not analyse this video. Check your connection, then choose AI analysis again.');"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 375,
+      "source": "showToast('Could not load one of the videos. Check your connection, then choose the videos again.');"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 433,
+      "source": "if (status) status.textContent = `Uploading\u2026 ${pct}%`;"
+    },
+    {
+      "path": "src/videos.js",
+      "line": 444,
+      "source": "if (status) status.textContent = userErrorMessage(e, 'Could not upload this video. Check your connection, then choose Upload video again.');"
+    },
+    {
+      "path": "src/wakelock.js",
+      "line": 16,
+      "source": "} catch { /* storage unavailable: the toggle still works for this page */ }"
+    },
+    {
+      "path": "src/wakelock.js",
+      "line": 146,
+      "source": "if (!wantOn && !isWakeLockEnabled) { // already off (the re-apply failed)"
+    },
+    {
+      "path": "src/wakelock.js",
+      "line": 156,
+      "source": "alert(\"Wake Lock not supported or failed to activate. Keep your screen on manually.\");"
+    },
+    {
+      "path": "src/whs.js",
+      "line": 151,
+      "source": "return \"This tee publishes no stroke index, so Stableford can't be scored \u2014 gross scores only, and this round won't count toward your index.\";"
+    },
+    {
+      "path": "src/whs.js",
+      "line": 154,
+      "source": "return \"Your Handicap Index isn't established yet, so there's no Daily Handicap to score against \u2014 gross scores only. Set your index on the Handicap tab, or enter a Daily Handicap at Start Round.\";"
+    },
+    {
+      "path": "src/whs.js",
+      "line": 459,
+      "source": "if (UI.loadingState) UI.loadingState.classList.remove('hidden');"
+    },
+    {
+      "path": "src/whs.js",
+      "line": 466,
+      "source": "if (UI.loadingState) UI.loadingState.classList.add('hidden');"
+    },
+    {
+      "path": "src/whs.js",
+      "line": 504,
+      "source": "if (UI.loadingState) UI.loadingState.classList.add('hidden');"
+    },
+    {
+      "path": "src/whs.js",
+      "line": 750,
+      "source": "alert(\"Couldn't save your Handicap Index. Check your connection and try again.\");"
+    },
+    {
+      "path": "src/wizard-flow.js",
+      "line": 36,
+      "source": "if (hasIntended) return { plan: 'Save plan', log: `Log shot ${n} \u00b7 no actual` };"
+    },
+    {
+      "path": "src/wizard-flow.js",
+      "line": 37,
+      "source": "return { plan: null, log: `Log shot ${n} \u00b7 no line` };"
+    },
+    {
+      "path": "src/wizard-flow.js",
+      "line": 42,
+      "source": "if (flightUnseen) return 'Finish from GPS \u00b7 no actual line to draw';"
+    }
+  ]
+}

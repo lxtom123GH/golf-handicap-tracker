@@ -1,3 +1,4 @@
+import { InputMessage } from './user-messages.js';
 // ==========================================
 // guests.js — golfers who play with you but have no account
 // ==========================================
@@ -62,11 +63,11 @@ export function newGuestId() {
  */
 export async function createGuest(displayName) {
     const name = String(displayName || '').trim();
-    if (!name) throw new Error('A guest needs a name.');
-    if (name.length > 60) throw new Error('That name is too long (60 characters max).');
+    if (!name) throw new InputMessage('Enter a name for the guest, then try again.');
+    if (name.length > 60) throw new InputMessage('Use a guest name of 60 characters or fewer, then try again.');
 
     const ownerUid = auth.currentUser?.uid;
-    if (!ownerUid) throw new Error('Sign in before adding a guest.');
+    if (!ownerUid) throw new InputMessage('Sign in before adding a guest.');
 
     const uid = newGuestId();
     await setDoc(doc(db, 'guests', uid), {
