@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     seedUxHarnessFixtures, UX_HARNESS_PASSWORD, UX_HARNESS_PERSONAS,
 } from './helpers/emulator.js';
@@ -9,17 +10,9 @@ test.beforeAll(async () => {
     await seedUxHarnessFixtures();
 });
 
-test.beforeEach(async ({ page }) => {
-    await page.route('http://127.0.0.1:5001/**', (route) => route.fulfill({
-        status: 503,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: { status: 'UNAVAILABLE', message: 'AI is disabled in the UX demo harness.' } }),
-    }));
-});
-
 async function capture(page, testInfo, name) {
     const screenshot = await page.screenshot({ fullPage: true });
-    const outputDir = join(process.cwd(), 'docs', 'ux-harness-screenshots');
+    const outputDir = fileURLToPath(new URL('../../docs/ux-harness-screenshots/', import.meta.url));
     mkdirSync(outputDir, { recursive: true });
     writeFileSync(join(outputDir, `${testInfo.project.name}-${name}.png`), screenshot);
     await testInfo.attach(`ux-${name}`, {
@@ -47,6 +40,8 @@ test('pending demo account view', async ({ page }, testInfo) => {
     await expect(page.locator('#auth-pending')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('#auth-pending-heading')).toHaveText('Account Pending');
     await expect(page.locator('#auth-pending-message')).toContainText('waiting for admin approval');
+    await expect(page.locator('#btn-check-email')).toBeHidden();
+    await expect(page.locator('#btn-resend-verification')).toBeHidden();
     await expect(page.locator('#main-app')).toBeHidden();
     await capture(page, testInfo, 'pending');
 });

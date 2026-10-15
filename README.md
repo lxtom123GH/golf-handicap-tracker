@@ -39,12 +39,9 @@ Stores granular tracking data for live rounds.
 
 ## Local UX harness
 
-Run the demo-only UX views from Git Bash:
+Run the demo-only UX views from the repository root in PowerShell or Git Bash:
 
 ```sh
-mkdir -p "$HOME/golf-harness-tmp"
-export TMP="$HOME/golf-harness-tmp"
-export TEMP="$TMP"
 npm run ux:harness
 ```
 
@@ -52,9 +49,22 @@ The command starts isolated Auth and Firestore emulators on private ports,
 builds the app for `demo-golf-tracker`, and seeds synthetic player, pending,
 coach, and admin accounts. It checks the signed-out view too. Playwright runs
 both phone and iPhone SE layouts, writes synthetic screenshots to
-`docs/ux-harness-screenshots/`, and stubs the Functions emulator so the demo cannot
-call paid AI. It uses the existing fixed demo project and loopback guards.
+`docs/ux-harness-screenshots/`. This opt-in suite has its own Playwright config
+and is excluded from `npm run test:e2e`, so its fixed accounts do not affect
+the shared browser journeys. No Functions emulator is started; the offline
+demo project and existing network guards prevent production AI calls.
 The pending persona has a verified email and is waiting for admin approval.
+
+Use your shell's existing temporary directory settings. If the default private ports are occupied,
+choose a free range using `E2E_PORT_BASE` (1024–55000); the runner adds 8080 for
+Firestore, 9099 for Auth, and 4300 for the preview. For example, in PowerShell:
+
+```powershell
+$env:E2E_PORT_BASE = '47000'
+npm run ux:harness
+```
+
+Or in Git Bash: `E2E_PORT_BASE=47000 npm run ux:harness`.
 
 ---
 

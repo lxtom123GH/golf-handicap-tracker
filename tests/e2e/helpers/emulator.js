@@ -100,7 +100,6 @@ export async function seedUxHarnessFixtures() {
         });
         if (!verified.ok) throw new Error(`Failed to verify demo auth account: ${verified.status}`);
 
-        if (persona.approved) await writeDocFields(`preapproved_emails/${encodeURIComponent(persona.email)}`, { addedAt: new Date() });
         await writeDocFields(`users/${result.localId}`, {
             uid: result.localId,
             email: persona.email,
