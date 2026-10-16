@@ -369,6 +369,7 @@ async function syncShotLineOverlay() {
     const physical = teeData.physicalHoles?.[AppState.currentHole - 1] || AppState.currentHole;
     const hole = course?.holes?.[physical] || null;
     _overlayHole = hole; // S12 A3: cached so the bag row can measure d
+    document.getElementById('oncourse-wizard')?.classList.toggle('map-unavailable', !hole);
     // S12 B1: the draw-mode chrome follows the mount.
     document.getElementById('btn-line-draw')?.classList.toggle('hidden', _drawMode || !hole);
     document.getElementById('btn-line-done')?.classList.toggle('hidden', !_drawMode);
@@ -387,6 +388,7 @@ async function syncShotLineOverlay() {
     // full-screen — drop back to the normal wizard rather than dock the
     // club row and Log over nothing.
     if (!hole && _drawMode) applyDrawModeChrome(false);
+    refreshWizardFlow(); // The fallback caption follows the resolved hole, not the saved preference.
     if (!hole) return;
     const d = AppState.currentShotData;
     // S3: the plan for this hole — ONE getDoc per hole per round (no
@@ -853,7 +855,8 @@ function flowState() {
 export function refreshWizardFlow() {
     const s = flowState();
     const step = document.getElementById('wizard-step');
-    if (step) step.textContent = wizardStepText(s);
+    if (step) step.textContent = wizardStepText({ ...s,
+        hasMap: !document.getElementById('oncourse-wizard')?.classList.contains('map-unavailable') });
     const btns = shotButtons(s);
     const plan = document.getElementById('btn-save-plan');
     const log = document.getElementById('btn-save-shot-final');
