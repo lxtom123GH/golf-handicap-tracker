@@ -47,6 +47,8 @@ const KEPERRA_FIRST_TEE = { latitude: -27.4136, longitude: 152.9465 };
 
 export default defineConfig({
     testDir: 'tests/e2e',
+    // Opt-in screenshots seed fixed personas; keep them out of shared journeys.
+    testIgnore: '**/ux-harness.spec.js',
     globalSetup: './tests/e2e/helpers/install-webkit.js',
     timeout: 60_000,
     expect: { timeout: 10_000 },
