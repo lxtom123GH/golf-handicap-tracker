@@ -30,6 +30,7 @@ import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardAct
 import { bindAddPlayer, bindCompQuickAdd, bindSetupToggles, bindCourseSelect, bindStartRound, bindGlobalRoundActions, bindOcSubNav, bindShotWizard, discardRound } from './modules/event-binders.js';
 import { writeRoundBackup, markRoundBackupUnsynced, hasRoundBackup, markRoundSaved } from './persistence.js';
 import { isGuestId } from './guests.js';
+import { fr, trackWrite } from './diagnostics/recorder.js';
 import { proposeRound } from './pending-rounds.js';
 import { localToday, parseLocalDate } from './dates.js';
 import { scoredHoles, defaultHolesPlayed, holesMismatchText, nineOnEighteenReason, tooFewForEighteenReason, unplayedNetParPoints } from './finish-holes.js';
@@ -932,6 +933,7 @@ function toggleGPS(rememberChoice = true, { quiet = false } = {}) {
             },
             (err) => {
                 console.error("GPS Error:", err);
+                fr('gps_err', { code: String(err?.code ?? ''), quiet, hole: AppState.currentHole }); // never throws
                 // S10: cold phones produce spurious POSITION_UNAVAILABLE errors
                 // (the same reason the timeout is now 15 s). A transient code 2
                 // right after working fixes is ignored — killing the watcher
@@ -2169,7 +2171,7 @@ async function saveRoundToDatabase() {
             }
 
             if (isSelf || isMyGuest || canWriteForOthers) {
-                setDoc(doc(db, "whs_rounds", docId), payload)
+                trackWrite(isSelf ? 'round' : 'round-other', setDoc(doc(db, "whs_rounds", docId), payload))
                     .catch(cloudErr => noteCloudRejection(
                         isSelf ? 'your round'
                             : `${p.name || (isMyGuest ? 'your guest' : 'a playing partner')}'s round`,
