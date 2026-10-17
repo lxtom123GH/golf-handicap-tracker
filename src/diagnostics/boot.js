@@ -23,11 +23,14 @@ export function bootFlightRecorder() {
                     if (uploader) { uploader.stop('signed-out'); uploader = null; }
                     if (cloudTimer) { clearTimeout(cloudTimer); cloudTimer = null; }
                     currentUid = uid;
-                    noteAccount(uid).catch(() => {});
+                    // Account isolation must be CONFIRMED before any upload can
+                    // start (a shared phone must never upload another account's
+                    // journal). Awaited here, off every play path.
+                    const isolated = noteAccount(uid).catch(() => false);
                     if (!uid) return;
-                    cloudTimer = setTimeout(() => {
+                    cloudTimer = setTimeout(async () => {
                         cloudTimer = null;
-                        if (currentUid !== uid) return;
+                        if (currentUid !== uid || (await isolated) !== true) return;
                         import('./cloud-upload.js')
                             .then(m => m.startCloudUpload(uid))
                             .then(up => { if (currentUid === uid) uploader = up; else up?.stop('signed-out'); })

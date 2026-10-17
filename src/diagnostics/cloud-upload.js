@@ -63,15 +63,24 @@ export function createCloudUploader(o) {
     try { const a = JSON.parse(storage?.getItem(ACKED_KEY) || '[]'); if (Array.isArray(a)) acked = a.filter(x => typeof x === 'string').slice(-CLOUD_CAPS.ACKED_MAX); } catch { acked = []; }
 
     const stop = reason => { dead = true; st.state = 'off'; st.reason = reason; pending = []; if (iv) { clearInterval(iv); iv = null; } fr('upload', { status: 'off', code: reason }); };
+    // The daily cap fails CLOSED: an unreadable counter counts as exhausted,
+    // and a write that cannot reserve its slot (verified by read-back) is not sent.
     const dayCount = () => {
         try {
-            const d = JSON.parse(storage?.getItem(DAY_KEY) || 'null');
+            if (!storage) return Infinity;
+            const d = JSON.parse(storage.getItem(DAY_KEY) || 'null');
             const today = new Date(now()).toISOString().slice(0, 10);
             return d && d.day === today ? Number(d.n) || 0 : 0;
-        } catch { return 0; }
+        } catch { return Infinity; }
     };
-    const bumpDay = () => {
-        try { storage?.setItem(DAY_KEY, JSON.stringify({ day: new Date(now()).toISOString().slice(0, 10), n: dayCount() + 1 })); } catch { /* ignore */ }
+    const reserveDay = () => {
+        try {
+            const n = dayCount() + 1;
+            if (!Number.isFinite(n)) return false;
+            const v = JSON.stringify({ day: new Date(now()).toISOString().slice(0, 10), n });
+            storage.setItem(DAY_KEY, v);
+            return storage.getItem(DAY_KEY) === v;
+        } catch { return false; }
     };
     const markAcked = id => {
         acked.push(id);
@@ -110,7 +119,7 @@ export function createCloudUploader(o) {
                 if (dayCount() >= CLOUD_CAPS.DAY_WRITES) { stop('day-cap'); return; }
                 const data = chunkDoc(b, o.toTimestamp);
                 if (!data) { pending.shift(); continue; }
-                bumpDay();
+                if (!reserveDay()) { stop('day-cap'); return; }
                 let timer;
                 const timeout = new Promise((_, rej) => { timer = setTimeout(() => rej(Object.assign(new Error('unacked'), { code: 'unacked' })), CLOUD_CAPS.ACK_TIMEOUT_MS); });
                 try {

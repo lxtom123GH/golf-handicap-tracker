@@ -78,11 +78,15 @@ function parseKey(k) {
 }
 
 function txDone(tx) {
-    return new Promise((resolve, reject) => {
+    const p = new Promise((resolve, reject) => {
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error || new Error('tx error'));
         tx.onabort = () => reject(tx.error || new Error('tx abort'));
     });
+    // Always observed: on an early exit the caller may never await it, and a
+    // failed transaction must not become an unhandled rejection.
+    p.catch(() => {});
+    return p;
 }
 function reqP(req) {
     return new Promise((resolve, reject) => {
@@ -228,6 +232,7 @@ export function createRecorder(opts = {}) {
     let seq = 0;
     let queue = [];
     let recent = [];
+    let failedTail = []; // events no store accepted (exported as 'failed')
     let timer = null;
     let flushing = null;
     let faults = 0;
@@ -336,7 +341,9 @@ export function createRecorder(opts = {}) {
                             try { cb(b); } catch { /* listener faults never reach play */ }
                         }
                     } else {
-                        counters.failed += events.length; // still in the memory window
+                        counters.failed += events.length;
+                        failedTail.push(...events);
+                        if (failedTail.length > CAPS.WINDOW_EVENTS) failedTail = failedTail.slice(-CAPS.WINDOW_EVENTS);
                     }
                 }
             } catch {
@@ -379,8 +386,9 @@ export function createRecorder(opts = {}) {
             const batches = stored.map(b => ({ sid: b.sid, seq: b.seq, build: b.build, status: 'committed', events: clean(b.events) }));
             const storedCount = batches.reduce((s, b) => s + b.events.length, 0);
             if (queue.length) batches.push({ sid, seq: null, build, status: 'queued', events: clean(queue) });
-            // When storage failed, the memory window is the only record.
-            if (!stored.length && counters.failed) batches.push({ sid, seq: null, build, status: 'failed', events: clean(recent) });
+            // Events no store accepted (even after earlier commits) are kept
+            // only in memory; export them once, marked failed.
+            if (failedTail.length) batches.push({ sid, seq: null, build, status: 'failed', events: clean(failedTail) });
             const all = batches.flatMap(b => b.events);
             const times = all.map(e => e.t);
             return {
@@ -396,12 +404,16 @@ export function createRecorder(opts = {}) {
         }
     }
 
+    /** Returns true only when every store confirmed the clear. */
     async function clearAll() {
         queue = [];
         recent = [];
-        try { storage?.setItem(CLEARED_KEY, String(now())); } catch { /* ignore */ }
-        for (const b of backends) { try { await b.clear(); } catch { /* ignore */ } }
+        failedTail = [];
+        let ok = true;
+        try { storage?.setItem(CLEARED_KEY, String(now())); } catch { ok = false; }
+        for (const b of backends) { try { await b.clear(); } catch { ok = false; } }
         counters.committed = 0; counters.failed = 0;
+        return ok;
     }
 
     function setEnabled(on) {

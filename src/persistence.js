@@ -79,10 +79,17 @@ export function pruneRoundBackups(keep = MAX_ROUND_BACKUPS) {
 export function writeRoundBackup(backup) {
     pruneRoundBackups(MAX_ROUND_BACKUPS - 1);
     const key = `${BACKUP_PREFIX}${Date.now()}`;
+    let json;
     try {
-        localStorage.setItem(key, JSON.stringify(backup));
+        json = JSON.stringify(backup);
+        localStorage.setItem(key, json);
         return key;
     } catch (e) {
+        // A backup outranks diagnostics: give back the flight recorder's
+        // fallback copy (if any) and retry once.
+        if (json !== undefined && releaseRecorderStorage()) {
+            try { localStorage.setItem(key, json); return key; } catch { /* still full */ }
+        }
         // A backup that cannot be written must never break the save it backs up.
         console.warn("[Persistence] Round backup not written:", e);
         return null;

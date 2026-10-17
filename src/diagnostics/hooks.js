@@ -78,7 +78,7 @@ export function makeStateTap(record = fr) {
                     record('round_start', {
                         round: typeof nv === 'string' ? nv : undefined,
                         course: courseSlugFor(AppState.currentRoundCourseName) || undefined,
-                        tee: AppState.currentRoundTee, holes: AppState.currentRoundHoles,
+                        holes: AppState.currentRoundHoles,
                         hole: AppState.currentHole,
                     });
                 } else {
@@ -106,20 +106,25 @@ async function acctTag(uid) {
  * account's journal so it cannot be exported or uploaded as this one's.
  * Only a local hash tag is kept, never the UID itself.
  */
+// Returns true ONLY when the stored journal is confirmed to belong to this
+// account (tag matched, or a switch was cleared successfully and the new tag
+// saved). The cloud uploader starts only after a true result.
 export async function noteAccount(uid, rec = recorder(), storage = globalThis.localStorage) {
     try {
-        if (!uid || !rec) { fr('auth', { state: 'out' }); return; }
-        if (!globalThis.crypto?.subtle) return;
+        if (!uid || !rec) { fr('auth', { state: 'out' }); return false; }
+        if (!globalThis.crypto?.subtle || !storage) return false;
         const tag = await acctTag(uid);
-        const prev = storage?.getItem(OWNER_KEY);
+        const prev = storage.getItem(OWNER_KEY);
         if (prev && prev !== tag) {
-            await rec.clearAll();
+            const cleared = await rec.clearAll();
             fr('auth', { state: 'switch' });
+            if (cleared !== true) return false;
         } else {
             fr('auth', { state: 'in' });
         }
-        storage?.setItem(OWNER_KEY, tag);
-    } catch { /* ignore */ }
+        storage.setItem(OWNER_KEY, tag);
+        return storage.getItem(OWNER_KEY) === tag;
+    } catch { return false; }
 }
 
 let _started = false;
