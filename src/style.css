@@ -3464,3 +3464,8 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     order: 3;
     flex-basis: 100%;
 }
+
+/* Queensland imagery no-warranty notice (imagery-notice.js): collapsed by default. */
+.imagery-notice { display: inline; }
+.imagery-notice summary { display: inline; cursor: pointer; text-decoration: underline; }
+.imagery-notice[open] .imagery-notice-text { display: block; margin-top: 2px; }

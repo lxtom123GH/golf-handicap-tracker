@@ -8,6 +8,7 @@ import { collection, doc, setDoc, updateDoc, deleteDoc, getDocs, query, where, l
 import { courseSlugFor, loadCourseOverlay, mountHoleOverlay, curveCarryM } from "../hole-overlay.js";
 import { loadHole, getLastGpsFix, onGpsFix, isGpsWatchActive, collectGpsBiasSample } from "../oncourse.js";
 import { COURSE_DATA } from "../course-data.js";
+import { appendImageryNotice } from "../imagery-notice.js";
 // S4: toFrame converts the GPS fix into the mounted overlay's hole frame;
 // S10: fromFrame is its inverse — a dragged marker back to lat/lon.
 import { toFrame, fromFrame } from "../geo.js";
@@ -489,6 +490,8 @@ async function syncShotLineOverlay() {
         link.rel = 'noopener';
         link.textContent = 'Licence';
         attr.appendChild(link);
+        // Queensland imagery: licence, source and required no-warranty notice.
+        appendImageryNotice(attr, list);
     }
     const startMode = d.lineIntended && !d.lineActual && !d.flightUnseen ? 'actual' : 'intended';
     // S12 A2: ONE start point per shot, chosen here in priority order —
