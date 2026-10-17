@@ -863,8 +863,14 @@ export function bindStartRound() {
             // instead of demanding a "Track my shot" tap.
             // One-tap logging (Map first on the play map) logs on the map
             // itself: no wizard over it.
+            // If the one-tap check itself fails, fall back to the wizard: a
+            // Detailed round must never start with no way to log a shot.
             if (AppState.currentTrackingMode === 'detailed') {
-                import('./score-input.js').then(m => { if (!m.quickLogWanted()) m.startNewShotInput(); });
+                import('./score-input.js').then(m => {
+                    let quick = false;
+                    try { quick = !!m.quickLogWanted(); } catch (e) { console.warn('One-tap logging check failed; opening the shot wizard', e); }
+                    if (!quick) m.startNewShotInput();
+                }).catch(e => console.warn('Could not open the first shot', e));
             }
         };
 

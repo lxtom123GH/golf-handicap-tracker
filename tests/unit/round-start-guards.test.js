@@ -28,6 +28,11 @@ const mocks = vi.hoisted(() => ({
         loadHole: vi.fn(),
         startGpsForRound: vi.fn(),
     },
+    scoreInput: {
+        quickLogWanted: vi.fn(() => false),
+        startNewShotInput: vi.fn(),
+        showToast: vi.fn(),
+    },
 }));
 
 vi.mock('../../src/state.js', () => ({ AppState: mocks.appState, mutateList: mocks.mutateList }));
@@ -52,6 +57,7 @@ vi.mock('../../src/shot-entry.js', () => ({
     shotEntryVisibility: vi.fn(),
 }));
 vi.mock('../../src/modules/card-render.js', () => ({ renderHoleJumper: vi.fn() }));
+vi.mock('../../src/modules/score-input.js', () => mocks.scoreInput);
 
 import { bindStartRound, rememberRoundSetup, updateDhPreview } from '../../src/modules/event-binders.js';
 import { isGuestId as guestIds } from '../../src/guests.js';
@@ -94,6 +100,35 @@ beforeEach(() => {
     mocks.calculateDailyHandicap.mockImplementation((hi) => (hi === null ? null : 11));
     globalThis.alert = vi.fn();
     localStorage.clear();
+    mocks.scoreInput.quickLogWanted.mockReset();
+    mocks.scoreInput.quickLogWanted.mockImplementation(() => false);
+    mocks.scoreInput.startNewShotInput.mockReset();
+});
+
+// A Detailed round opens the first shot unless one-tap logging owns the
+// map; a failure in that check must still leave a way to log (CI on #12
+// hit an unhandled rejection here when the check threw).
+describe('Start Round opens the first shot in a Detailed round', () => {
+    it('opens the shot wizard when one-tap logging is off', async () => {
+        await bindStartRound()();
+        await vi.waitFor(() => expect(mocks.scoreInput.startNewShotInput).toHaveBeenCalledTimes(1));
+    });
+
+    it('leaves the wizard closed when one-tap logging is on', async () => {
+        mocks.scoreInput.quickLogWanted.mockImplementation(() => true);
+        await bindStartRound()();
+        await vi.waitFor(() => expect(mocks.scoreInput.quickLogWanted).toHaveBeenCalled());
+        await new Promise(r => setTimeout(r, 0));
+        expect(mocks.scoreInput.startNewShotInput).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the wizard when the one-tap check throws', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        mocks.scoreInput.quickLogWanted.mockImplementation(() => { throw new TypeError('no pref'); });
+        await bindStartRound()();
+        await vi.waitFor(() => expect(mocks.scoreInput.startNewShotInput).toHaveBeenCalledTimes(1));
+        warn.mockRestore();
+    });
 });
 
 describe('Start Round runs one at a time', () => {
