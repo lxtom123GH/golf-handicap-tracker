@@ -1,0 +1,1192 @@
+[
+  {
+    "state": "rail",
+    "rows": [
+      {
+        "id": "oc-gps-widget",
+        "classes": "gps-pill",
+        "text": "3401m\n                    \u00b7\n                    F 3390m\n                    \u00b7\n                    B 3412m\n                    from you",
+        "width": 60,
+        "height": 68.296875,
+        "left": 8,
+        "right": 68,
+        "viewport": 412
+      },
+      {
+        "id": "btn-play-view",
+        "classes": "play-chip play-round",
+        "text": "\ud83c\udfafShot",
+        "width": 48,
+        "height": 48,
+        "left": 14,
+        "right": 62,
+        "viewport": 412
+      },
+      {
+        "id": "btn-oc-score-sheet",
+        "classes": "play-only play-chip oc-sheet-handle",
+        "text": "\ud83d\udcca",
+        "width": 48,
+        "height": 48,
+        "left": 14,
+        "right": 62,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "btn-grid-minus",
+        "text": "\u2212",
+        "width": 52,
+        "height": 52,
+        "left": 346,
+        "right": 398,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "btn-grid-plus",
+        "text": "+",
+        "width": 52,
+        "height": 52,
+        "left": 346,
+        "right": 398,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "mini-stat mini-fw ",
+        "text": "\ud83c\udf3f FW",
+        "width": 52,
+        "height": 44,
+        "left": 346,
+        "right": 398,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "putt-minus",
+        "text": "\u2212",
+        "width": 52,
+        "height": 30,
+        "left": 346,
+        "right": 398,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "putt-plus",
+        "text": "+",
+        "width": 52,
+        "height": 30,
+        "left": 346,
+        "right": 398,
+        "viewport": 412
+      },
+      {
+        "id": "btn-oc-prev-hole",
+        "classes": "btn btn-secondary oc-thumb-prev",
+        "text": "\u2190\n                            Prev",
+        "width": 89.140625,
+        "height": 52,
+        "left": 8,
+        "right": 97.140625,
+        "viewport": 412
+      },
+      {
+        "id": "btn-oc-next-hole",
+        "classes": "btn btn-primary oc-thumb-next",
+        "text": "Next Hole \u2192",
+        "width": 147.640625,
+        "height": 52,
+        "left": 256.359375,
+        "right": 404,
+        "viewport": 412
+      }
+    ],
+    "axe": {
+      "violations": [
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#oc-gps-widget"
+              ],
+              "checks": [
+                {
+                  "message": "Text inside the element is not included in the accessible name",
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast-enhanced",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".map-view-chip"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "10.2pt (13.6px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-hole-display"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-strip-dot"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-par-display"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-strip-gps"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-middle"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because it's partially obscured by another element",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "15.0pt (20px)",
+                    "fontWeight": "bold",
+                    "messageKey": "elmPartiallyObscured",
+                    "expectedContrastRatio": "3:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-fb:nth-child(3)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-front"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-fb:nth-child(5)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-back"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-distance-mode"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "6.6pt (8.8px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-play-view > .play-chip-lbl"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "6.8pt (9px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-total"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "6.8pt (9px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-num"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "6.8pt (9px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-grossonly"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "6.8pt (9px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-score-value"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "22.8pt (30.4px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "3:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".mini-fw"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.3pt (11px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-putts-val"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "9.0pt (12px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-score-sheet"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "state": "sheet",
+    "rows": [
+      {
+        "id": "oc-gps-widget",
+        "classes": "gps-pill",
+        "text": "3401m\n                    \u00b7\n                    F 3390m\n                    \u00b7\n                    B 3412m\n                    from you",
+        "width": 60,
+        "height": 68.296875,
+        "left": 8,
+        "right": 68,
+        "viewport": 412
+      },
+      {
+        "id": "btn-oc-score-sheet",
+        "classes": "play-only play-chip oc-sheet-handle",
+        "text": "\u2715",
+        "width": 48,
+        "height": 48,
+        "left": 14,
+        "right": 62,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "btn-grid-minus",
+        "text": "\u2212",
+        "width": 56,
+        "height": 56,
+        "left": 213,
+        "right": 269,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "btn-grid-plus",
+        "text": "+",
+        "width": 56,
+        "height": 56,
+        "left": 333,
+        "right": 389,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "mini-stat mini-fw ",
+        "text": "\ud83c\udf3f FW",
+        "width": 118.796875,
+        "height": 32,
+        "left": 91,
+        "right": 209.796875,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "putt-minus",
+        "text": "\u2212",
+        "width": 25.34375,
+        "height": 26,
+        "left": 228.796875,
+        "right": 254.140625,
+        "viewport": 412
+      },
+      {
+        "id": "",
+        "classes": "putt-plus",
+        "text": "+",
+        "width": 25.34375,
+        "height": 26,
+        "left": 354.65625,
+        "right": 380,
+        "viewport": 412
+      },
+      {
+        "id": "btn-oc-prev-hole",
+        "classes": "btn btn-secondary oc-thumb-prev",
+        "text": "\u2190\n                            Prev",
+        "width": 89.140625,
+        "height": 52,
+        "left": 8,
+        "right": 97.140625,
+        "viewport": 412
+      },
+      {
+        "id": "btn-oc-next-hole",
+        "classes": "btn btn-primary oc-thumb-next",
+        "text": "Next Hole \u2192",
+        "width": 147.640625,
+        "height": 52,
+        "left": 256.359375,
+        "right": 404,
+        "viewport": 412
+      }
+    ],
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast-enhanced",
+          "nodes": [
+            {
+              "target": [
+                "#oc-scoring-notice"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 6.83 (foreground color: #92400e, background color: #fffbeb, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#92400e",
+                    "bgColor": "#fffbeb",
+                    "contrastRatio": 6.83,
+                    "fontSize": "9.0pt (12px)",
+                    "fontWeight": "normal",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#oc-gps-widget"
+              ],
+              "checks": [
+                {
+                  "message": "Text inside the element is not included in the accessible name",
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast-enhanced",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-score-sheet"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".map-view-chip"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "10.2pt (13.6px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-hole-display"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-strip-dot"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-par-display"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-strip-gps"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-middle"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because it's partially obscured by another element",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "15.0pt (20px)",
+                    "fontWeight": "bold",
+                    "messageKey": "elmPartiallyObscured",
+                    "expectedContrastRatio": "3:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-fb:nth-child(3)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-front"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-fb:nth-child(5)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-back"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "8.4pt (11.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#gps-distance-mode"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "6.6pt (8.8px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-score-sheet"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-name"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "11.4pt (15.2px)",
+                    "fontWeight": "bold",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-total"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "10.2pt (13.6px)",
+                    "fontWeight": "normal",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-num"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "normal",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-score-label"
+              ],
+              "checks": [
+                {
+                  "message": "Element's background color could not be determined because element contains an image node",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "10.8pt (14.4px)",
+                    "fontWeight": "normal",
+                    "messageKey": "imgNode",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-score-value"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "24.0pt (32px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "3:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-score-sheet"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

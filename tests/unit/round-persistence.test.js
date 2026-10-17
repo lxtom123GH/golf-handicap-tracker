@@ -50,6 +50,7 @@ function startRound(hole = 1, holes = 9) {
     AppState.currentUser = { uid: 'u1' };
     AppState.currentCoursePars = [4, 4, 3, 4, 5, 4, 3, 5, 4];
     AppState.currentRoundHoles = holes;
+    AppState.currentRoundStartHole = 1;
     AppState.liveRoundGroups = [{ uid: 'u1', name: 'Alex', scores: {}, compStats: {}, simpleStats: {} }];
     AppState.currentHole = hole;
     AppState.activeRoundId = 'round_1000';
@@ -76,6 +77,13 @@ describe('F-13 score taps reach localStorage', () => {
 
         expect(AppState.liveRoundGroups[0].scores[1]).toBe(1);
         expect(snapshot().liveRoundGroups[0].scores[1]).toBe(1);
+    });
+
+    it('persists a late-start hole order so a resumed round keeps its route', () => {
+        startRound(8, 9);
+        AppState.currentRoundStartHole = 8;
+        saveRoundState();
+        expect(snapshot()).toMatchObject({ currentHole: 8, currentRoundHoles: 9, currentRoundStartHole: 8 });
     });
 
     it('persists a stroke removed with the − button', () => {

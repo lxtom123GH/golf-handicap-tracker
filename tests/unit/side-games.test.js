@@ -98,3 +98,52 @@ describe('computeNassau (net, 2 players)', () => {
         expect(r.overall.leaderUid).toBeNull(); // 9 wins each → overall halved
     });
 });
+
+describe('late start (round started on the 9th): side games follow play order', () => {
+    const SI18 = Array.from({ length: 18 }, (_, i) => i + 1);
+    const order = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 1, 2, 3, 4, 5, 6, 7, 8];
+
+    it('skins settle holes 9-11 as they are played, before hole 1 is scored', () => {
+        const a = player('a', 'Alice', 0, { 9: 4, 10: 4, 11: 3 });
+        const b = player('b', 'Bob', 0, { 9: 4, 10: 5, 11: 4 });
+        const r = computeSkins([a, b], 18, SI18, 18, order);
+        // H9 tied -> carry; H10 Alice 2 skins; H11 Alice 1 skin
+        expect(r.perPlayer.a).toBe(3);
+        expect(r.log.map(l => l.hole)).toEqual([9, 10, 11]);
+        expect(r.carried).toBe(0);
+    });
+
+    it('a skin carried off 18 is won on hole 1, the next hole played', () => {
+        const scores = {};
+        for (let h = 9; h <= 17; h++) scores[h] = 4;
+        const a = player('a', 'Alice', 0, { ...scores, 18: 5, 1: 3 });
+        const b = player('b', 'Bob', 0, { ...scores, 18: 5, 1: 4 });
+        const r = computeSkins([a, b], 18, SI18, 18, order);
+        expect(r.perPlayer.a).toBe(11); // 10 carried (9..18) + hole 1
+        expect(r.log.at(-1)).toMatchObject({ hole: 1, winnerUid: 'a', value: 11 });
+    });
+
+    it('match play counts holes completed in play order', () => {
+        const a = player('a', 'Alice', 0, { 9: 3, 10: 4, 11: 4 });
+        const b = player('b', 'Bob', 0, { 9: 4, 10: 4, 11: 4 });
+        const r = computeMatchPlay(a, b, 18, SI18, 18, order);
+        expect(r.thru).toBe(3);
+        expect(r.statusText).toBe('Alice 1 UP thru 3');
+    });
+
+    it('nassau back bet runs 9-start order through its own window; overall uses play order', () => {
+        const a = player('a', 'Alice', 0, { 10: 3, 11: 4 });
+        const b = player('b', 'Bob', 0, { 10: 4, 11: 4 });
+        // hole 9 unplayed by both -> overall has 0 thru; back nine has 2
+        const r = computeNassau(a, b, 18, SI18, 18, order);
+        expect(r.back.thru).toBe(2);
+        expect(r.back.statusText).toBe('Alice 1 UP thru 2');
+        expect(r.overall.thru).toBe(0);
+    });
+
+    it('defaults to 1..N order when no order is given (unchanged behaviour)', () => {
+        const a = player('a', 'Alice', 0, { 9: 3, 10: 4 });
+        const b = player('b', 'Bob', 0, { 9: 4, 10: 4 });
+        expect(computeMatchPlay(a, b, 18, SI18).thru).toBe(0);
+    });
+});

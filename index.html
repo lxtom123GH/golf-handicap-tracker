@@ -358,7 +358,7 @@
                         style="width: 100%; padding: 18px; font-size: 1.1rem; font-weight: 700; border-radius: 12px; background: linear-gradient(135deg, #0f3460, #533483);">
                         ⚡ Generate Practice Plan
                     </button>
-                    <div id="practice-generate-error" class="hidden"
+                    <div id="practice-generate-error" class="hidden" role="alert"
                         style="margin-top: 14px; color: var(--danger); font-size: 0.9rem; font-weight: 600;"></div>
                 </div>
 
@@ -531,7 +531,34 @@
             </div>
 
             <!-- Keep the hole label, round options, and key actions within easy thumb reach. -->
-            <div id="oc-exit-bar" class="oc-strip hidden">
+            <button type="button" id="btn-play-settings" class="play-only play-chip play-round"
+                aria-label="On-course settings" aria-expanded="false" aria-controls="play-settings-sheet">⚙</button>
+            <div id="play-settings-scrim" class="play-settings-scrim hidden"></div>
+            <section id="play-settings-sheet" class="play-settings-sheet hidden" role="dialog" aria-modal="true"
+                aria-labelledby="play-settings-title">
+                <header class="play-settings-head">
+                    <h2 id="play-settings-title">On-course settings</h2>
+                    <button type="button" id="play-settings-close" class="play-settings-close" aria-label="Close settings">✕</button>
+                </header>
+                <label class="play-setting-entry" for="play-shot-entry">
+                    <span>Shot entry</span>
+                    <select id="play-shot-entry">
+                        <option value="both">Both — map and buttons</option>
+                        <option value="draw">Draw lines</option>
+                        <option value="buttons">Tap buttons</option>
+                        <option value="map">Map first</option>
+                    </select>
+                </label>
+                <button type="button" id="play-setting-gps" class="play-setting-toggle" role="switch" aria-checked="false">
+                    <span>GPS<small>Actual uses your location</small></span><strong>Off</strong>
+                </button>
+                <button type="button" id="play-setting-awake" class="play-setting-toggle" role="switch" aria-checked="false">
+                    <span>Keep screen awake</span><strong>Off</strong>
+                </button>
+                <button type="button" id="play-setting-rotate" class="play-setting-toggle" role="switch" aria-checked="false">
+                    <span>Rotate map<small>Tee at bottom, green at top</small></span><strong>Off</strong>
+                </button>
+            </section>            <div id="oc-exit-bar" class="oc-strip hidden">
                 <button type="button" id="btn-oc-hole-strip" class="oc-strip-hole" aria-expanded="false"
                     aria-controls="hole-jumper-container" title="Jump to a hole">
                     <span id="oc-hole-display">Hole 1</span><span class="oc-strip-dot">·</span><span
@@ -632,6 +659,18 @@
                     <button type="button" id="btn-round-18" class="oc-roundtype-btn"
                         style="flex:1; padding:12px; border:2px solid #cbd5e1; border-radius:8px; background:white; font-weight:700; cursor:pointer; color:#64748b;">18
                         Holes</button>
+                </div>
+
+                <div class="form-group" id="oc-start-hole-group">
+                    <label for="oc-start-hole">Start on hole…</label>
+                    <select id="oc-start-hole" class="form-control">
+                        <option value="1">Hole 1</option><option value="2">Hole 2</option>
+                        <option value="3">Hole 3</option><option value="4">Hole 4</option>
+                        <option value="5">Hole 5</option><option value="6">Hole 6</option>
+                        <option value="7">Hole 7</option><option value="8">Hole 8</option>
+                        <option value="9">Hole 9</option>
+                    </select>
+                    <small>Next follows the course and wraps to the first hole when needed.</small>
                 </div>
 
                 <!-- Round Date picker -->
@@ -798,6 +837,8 @@
                     <div id="play-slot-gps" class="play-slot"></div>
                     <button type="button" id="btn-play-view" class="play-chip play-round"
                         aria-label="Switch between shot view and whole-hole view">🎯<span class="play-chip-lbl">Shot</span></button>
+                    <button type="button" id="btn-play-hole" class="play-chip" aria-label="Jump to hole 1"
+                        aria-expanded="false" aria-controls="hole-jumper-container">Hole 1 ▾</button>
                     <div id="play-slot-group" class="play-slot"></div>
                     <div id="play-clubs" class="play-clubs" role="group" aria-label="Club for the next shot">
                         <button type="button" class="pc-arr" id="btn-pc-up" aria-label="Longer club">▲</button>
@@ -808,6 +849,19 @@
                         <div id="pc-sug" class="pc-sug" aria-live="polite"></div>
                     </div>
                     <div id="play-slot-track" class="play-slot"></div>
+                </div>
+                <!-- Map-first shot entry includes on-course quick controls
+                     in a Detailed round logs the shot on the map (body.play-quick). Arm Plan or
+                     Actual, then drag; with good GPS Actual is one tap. play-mode.js. -->
+                <div id="play-quick-hint" class="play-only play-quick-hint" aria-live="polite">
+                    <span class="pq-l1"></span><span class="pq-l2"></span>
+                </div>
+                <div id="play-quick" class="play-only play-quick" role="group" aria-label="Log this shot on the map">
+                    <button type="button" id="btn-quick-plan" class="play-chip pq-chip pq-plan" aria-pressed="false"
+                        aria-label="Plan: then drag the line you mean to hit"><span class="pq-ico" aria-hidden="true">✎</span>Plan<small>intended line</small></button>
+                    <button type="button" id="btn-quick-actual" class="play-chip pq-chip pq-actual" aria-pressed="false"
+                        aria-label="Actual: then drag where the shot finished"><span class="pq-ico" aria-hidden="true">⛳</span>Actual<small class="pq-sub">draw it</small></button>
+                    <button type="button" id="btn-quick-undo" class="play-chip pq-chip pq-undo" aria-label="Undo the last line">↶ Undo</button>
                 </div>
                 <!-- Score entry first: it is what the thumb comes here for. -->
                 <!-- Handicap entries use gross scores; Stableford points are not used for the index. -->
@@ -834,13 +888,14 @@
                 <!-- GPS Widget -->
                 <!-- The GPS pill shows centre, front, and back distances; tapping opens the larger view. -->
                 <div id="oc-gps-widget" class="gps-pill hidden" role="button" tabindex="0"
-                    aria-label="Open big GPS numbers" aria-haspopup="dialog" aria-controls="big-numbers-view">
+                    aria-haspopup="dialog" aria-controls="big-numbers-view">
                     <span class="gps-pill-main"><span id="gps-middle">--</span></span>
                     <span class="gps-pill-sep" aria-hidden="true">·</span>
                     <span class="gps-pill-fb">F <span id="gps-front">--</span></span>
                     <span class="gps-pill-sep" aria-hidden="true">·</span>
                     <span class="gps-pill-fb">B <span id="gps-back">--</span></span>
                     <span id="gps-distance-mode" class="gps-pill-mode">fixed</span>
+                    <span class="gps-action-label">Open big GPS numbers</span>
                 </div>
                 <!-- Opens the larger GPS view and starts GPS when the distance pill is hidden. -->
                 <button type="button" id="btn-big-numbers" class="btn btn-secondary big-numbers-button"
@@ -1595,10 +1650,10 @@
                 </label>
                 <select id="shot-entry-select"
                     style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border-color); font-size:0.95rem; background:#fff;">
-                    <option value="both">Both — map and buttons (default)</option>
+                    <option value="both">Both — map and buttons</option>
                     <option value="draw">Draw lines</option>
                     <option value="buttons">Tap buttons</option>
-                    <option value="map">Map first — full-screen map every shot</option>
+                    <option value="map">Map first — full-screen map every shot (default)</option>
                 </select>
 
             </div>
@@ -2595,7 +2650,7 @@
                     <h2>Registered Users</h2>
                     <p class="section-desc">Toggle approval status to grant or revoke app access.</p>
                     <div style="overflow-x: auto;">
-                        <table class="leaderboard-table" style="width: 100%;">
+                        <table class="leaderboard-table admin-users-table" style="width: 100%;">
                             <thead>
                                 <tr>
                                     <th>Display Name</th>
@@ -2603,6 +2658,7 @@
                                     <th>Role</th>
                                     <th>Approved?</th>
                                     <th>Coach?</th>
+                                    <th>Video quota (MB)</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-users-list"></tbody>

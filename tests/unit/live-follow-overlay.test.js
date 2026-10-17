@@ -37,6 +37,30 @@ function mount(opts) {
 afterEach(() => { ctl?.destroy(); ctl = null; });
 
 describe('Map first live follow', () => {
+    it('quick logging keeps both lines at the shot start when the GPS marker moves', () => {
+        const onChange = vi.fn();
+        const curves = { intended: [[0, 0], [0, 170]], actual: [[0, 0], [4, 150]] };
+        const canvas = mount({ anchorFirst: true, curves, mode: 'actual', onChange });
+        const [lat, lon] = fromFrame(ctl.frame, [3, 120]);
+        ctl.setStartMarker({ lat, lon, quality: 'accepted', draggable: false });
+        expect(canvas.dataset.start).toBe('0,0');
+        expect(ctl.getCurves()).toMatchObject(curves);
+        // GPS is not a completed draw, even while Actual is armed.
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('wizard GPS capture still reanchors both stored lines', () => {
+        const onChange = vi.fn();
+        mount({ curves: { intended: [[0, 0], [0, 170]], actual: [[0, 0], [4, 150]] }, onChange });
+        const [lat, lon] = fromFrame(ctl.frame, [3, 120]);
+        ctl.setStartMarker({ lat, lon, quality: 'accepted', draggable: true });
+        for (const line of [ctl.getCurves().intended, ctl.getCurves().actual]) {
+            expect(line[0][0]).toBeCloseTo(3);
+            expect(line[0][1]).toBeCloseTo(120);
+        }
+        expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ anchorChanged: true }));
+    });
+
     it('with Rotate map OFF the shot view still re-centres on you (no rotation)', () => {
         const canvas = mount({ autoRotate: false });
         const mpp0 = ctl.metresPerPx();

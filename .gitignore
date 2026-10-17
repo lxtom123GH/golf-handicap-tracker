@@ -8,6 +8,7 @@ firebase-debug.log
 .DS_Store
 playwright-report/
 test-results/
+docs/ux-harness-screenshots/
 
 # @playwright/mcp interactive-driving output (traces/screenshots); the
 # .playwright-mcp.json config file is NOT ignored (trailing slash = dir only)

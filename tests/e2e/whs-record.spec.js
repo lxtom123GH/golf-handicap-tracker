@@ -84,10 +84,32 @@ test('the scoring record shows Date, Course, Score and Diff, aligned, on a phone
     await expect(diffCell).toBeVisible();
     await expect(diffCell).toContainText('15.9');
 
-    const h = await heads.nth(3).boundingBox();
-    const c = await diffCell.boundingBox();
-    expect(Math.abs(h.x - c.x)).toBeLessThan(2);
-    expect(Math.abs(h.width - c.width)).toBeLessThan(2);
+    // Read the header and the cell in ONE browser task, and poll until both
+    // have a box. Two separate boundingBox() round-trips raced the record on
+    // CI: the Diff cell's box came back null between them (main 0c5a0fc and
+    // PRs #1/#12/#17/#27), failing as a TypeError instead of a layout check.
+    // The reading carries the screen state so a real disappearance is named.
+    const readDiffColumn = () => page.evaluate(() => {
+        const box = el => {
+            if (!el) return null;
+            const r = el.getBoundingClientRect();
+            return r.width > 0 && r.height > 0 ? { x: r.x, width: r.width } : null;
+        };
+        const firstRow = document.querySelector('#history-tbody tr');
+        return {
+            h: box(document.querySelectorAll('.whs-record-table thead th')[3]),
+            c: box(firstRow ? firstRow.querySelectorAll('td')[3] : null),
+            tab: document.body.dataset.activeTab,
+            rows: document.querySelectorAll('#history-tbody tr').length,
+        };
+    });
+    let cols = await readDiffColumn();
+    await expect.poll(async () => {
+        cols = await readDiffColumn();
+        return cols.h && cols.c ? 'both boxed' : JSON.stringify(cols);
+    }, { timeout: 10_000 }).toBe('both boxed');
+    expect(Math.abs(cols.h.x - cols.c.x), JSON.stringify(cols)).toBeLessThan(2);
+    expect(Math.abs(cols.h.width - cols.c.width), JSON.stringify(cols)).toBeLessThan(2);
 
     // The ⋯ opens the row's actions sideways: never clipped by the scrolling
     // table wrapper, never past the screen edge.
