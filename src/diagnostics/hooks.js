@@ -14,6 +14,7 @@ export const GPS_MIN_MS = 3000;      // hard floor between GPS events
 export const GPS_EVERY_MS = 10000;   // normal cadence
 export const GPS_SESSION_MAX = 3000; // hard per-session GPS event cap
 const OWNER_KEY = 'golf.flightrec.acct';
+const UNOWNED = 'unowned';
 
 const guard = fn => (...a) => { try { fn(...a); } catch { /* never reaches the app */ } };
 
@@ -115,9 +116,15 @@ export async function noteAccount(uid, rec = recorder(), storage = globalThis.lo
         if (!globalThis.crypto?.subtle || !storage) return false;
         const tag = await acctTag(uid);
         const prev = storage.getItem(OWNER_KEY);
-        if (prev && prev !== tag) {
+        if (prev !== tag) {
+            // A missing tag, a different account's tag, or the UNOWNED marker
+            // left by a failed switch: the stored journal is not provably this
+            // account's, so it must be cleared before ownership is confirmed.
+            // Invalidate first, so a failed clear can never be approved later
+            // by the old owner's tag matching again (Codex review 2).
+            storage.setItem(OWNER_KEY, UNOWNED);
             const cleared = await rec.clearAll();
-            fr('auth', { state: 'switch' });
+            fr('auth', { state: prev ? 'switch' : 'in' });
             if (cleared !== true) return false;
         } else {
             fr('auth', { state: 'in' });

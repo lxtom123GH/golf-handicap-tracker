@@ -110,8 +110,10 @@ export function mountFlightRecorderCard(doc = document) {
         card.querySelector('.flightrec-clear').addEventListener('click', async () => {
             try {
                 if (!globalThis.confirm?.('Clear the diagnostics stored on this phone? Rounds are not affected.')) return;
-                await rec?.clearAll();
-                msg.textContent = 'Diagnostics cleared. Rounds were not touched.';
+                const ok = await rec?.clearAll();
+                msg.textContent = ok === true
+                    ? 'Diagnostics cleared. Rounds were not touched.'
+                    : 'Clearing could not be confirmed on this phone; some diagnostics may remain. Rounds were not touched.';
             } catch { msg.textContent = 'Could not clear diagnostics.'; }
             refresh();
         });

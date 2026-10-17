@@ -81,12 +81,13 @@ describe('state tap: ids and counts only', () => {
 describe('account switch on a shared phone clears the previous journal', () => {
     it('a different uid clears; the same uid keeps; only a hash tag is stored', async () => {
         const st = createStorage();
-        const rec = { clearAll: vi.fn(async () => {}) };
-        await noteAccount('uidA0000000000000000000000000', rec, st);
-        await noteAccount('uidA0000000000000000000000000', rec, st);
-        expect(rec.clearAll).not.toHaveBeenCalled();
-        await noteAccount('uidB0000000000000000000000000', rec, st);
+        const rec = { clearAll: vi.fn(async () => true) };
+        // First sign-in on this phone: an untagged journal is unowned, so it is cleared once.
+        expect(await noteAccount('uidA0000000000000000000000000', rec, st)).toBe(true);
+        expect(await noteAccount('uidA0000000000000000000000000', rec, st)).toBe(true);
         expect(rec.clearAll).toHaveBeenCalledTimes(1);
+        expect(await noteAccount('uidB0000000000000000000000000', rec, st)).toBe(true);
+        expect(rec.clearAll).toHaveBeenCalledTimes(2);
         expect(st.getItem('golf.flightrec.acct')).toMatch(/^[0-9a-f]{16}$/);
         expect(st.getItem('golf.flightrec.acct')).not.toContain('uidB');
     });
