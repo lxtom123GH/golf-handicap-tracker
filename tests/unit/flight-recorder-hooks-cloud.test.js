@@ -179,7 +179,7 @@ function rig({ cfg = { enabled: true, uid: UID }, write } = {}) {
     const rec = createRecorder({ backends: [be], storage: st, now: () => t, ...noTimer, sessionId: 'abcdefabcdef' });
     const config = { current: cfg };
     const writes = [];
-    const up = createCloudUploader({
+    const up = createCloudUploader({ isolation: () => 'confirmed',
         rec, storage: st, now: () => t, online: () => true,
         getConfig: vi.fn(async () => config.current),
         writeChunk: write || vi.fn(async (u, id, data) => { writes.push({ u, id, data }); }),
@@ -199,6 +199,15 @@ describe('cloud upload: eligibility and kill switch', () => {
         expect(r.writes).toHaveLength(0);
         expect(r.up.status()).toMatchObject({ state: 'off', reason: 'not-eligible' });
         expect(cloudStatusText(r.up.status())).toMatch(/off \(not enabled for this account\)/);
+    });
+
+    it('account isolation not confirmed: nothing is uploaded even when eligible', async () => {
+        const r = rig();
+        const up = createCloudUploader({ isolation: () => 'failed', rec: r.rec, storage: r.st, online: () => true, getConfig: async () => ({ enabled: true, uid: UID }), writeChunk: vi.fn(async () => {}) });
+        await up.start(UID);
+        await commitOne(r);
+        await up.tick();
+        expect(up.status()).toMatchObject({ state: 'off', reason: 'not-isolated' });
     });
 
     it('a config naming another uid, or enabled !== true, is not eligible', async () => {
@@ -233,7 +242,7 @@ describe('cloud upload: eligibility and kill switch', () => {
         await r.up.start(UID);
         await commitOne(r);
         await r.up.tick();
-        const up2 = createCloudUploader({ rec: r.rec, storage: r.st, online: () => true, getConfig: async () => ({ enabled: true, uid: UID }), writeChunk: vi.fn(async () => {}) });
+        const up2 = createCloudUploader({ isolation: () => 'confirmed', rec: r.rec, storage: r.st, online: () => true, getConfig: async () => ({ enabled: true, uid: UID }), writeChunk: vi.fn(async () => {}) });
         await up2.start(UID); // backlog scan finds the same committed batch
         await up2.tick();
         expect(r.writes).toHaveLength(1);

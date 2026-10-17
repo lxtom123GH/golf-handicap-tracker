@@ -85,7 +85,7 @@ describe('P2 the daily upload cap fails closed', () => {
         const be = { name: 'idb', async put(b, j) { rows.set(b.key, j); return {}; }, async keys() { return [...rows.keys()]; }, async get(k) { const v = rows.get(k); return v ? { key: k, ...JSON.parse(v) } : null; }, async list() { return []; }, async clear() {} };
         const rec = createRecorder({ backends: [be], storage: createStorage(), ...noTimer, sessionId: 'abcdefabcdef' });
         const writes = [];
-        const u = createCloudUploader({ rec, storage, online: () => true, getConfig: async () => ({ enabled: true, uid: 'U' }), writeChunk: async (a, id) => { writes.push(id); } });
+        const u = createCloudUploader({ isolation: () => 'confirmed', rec, storage, online: () => true, getConfig: async () => ({ enabled: true, uid: 'U' }), writeChunk: async (a, id) => { writes.push(id); } });
         return { rec, u, writes };
     }
     it('a counter that cannot be written stops uploads', async () => {

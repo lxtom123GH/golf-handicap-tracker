@@ -54,7 +54,7 @@ const CODES = new Set([
     // GPS PositionError codes and small DOMException numeric codes
     '0', '1', '2', '3', '11', '18', '19', '20', '22', '23',
     // cloud uploader reasons
-    'not-eligible', 'not-started', 'killed', 'unacked', 'refused', 'errors', 'session-cap', 'day-cap', 'fault', 'signed-out',
+    'not-eligible', 'not-started', 'killed', 'unacked', 'refused', 'errors', 'session-cap', 'day-cap', 'fault', 'signed-out', 'not-isolated',
 ]);
 const COURSES = new Set(['keperra', 'ashgrove', 'redcliffe', 'virginia']);
 const TABS = new Set(['tab-admin', 'tab-coach', 'tab-comp', 'tab-feed', 'tab-insights', 'tab-oncourse', 'tab-practice', 'tab-settings', 'tab-whs']);

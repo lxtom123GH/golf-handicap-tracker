@@ -2,7 +2,7 @@
 // Injected after #app-update-card with classes only (no new ids), so the
 // index.html id contract and style.css are untouched.
 
-import { recorder } from './recorder.js';
+import { recorder, getIsolation } from './recorder.js';
 
 const CARD_HTML = `
   <strong style="display:block; margin-bottom:4px;">🛰️ Diagnostics (flight recorder)</strong>
@@ -40,7 +40,10 @@ export async function exportDiagnostics(rec = recorder(), nav = globalThis.navig
     try {
         if (!rec) return { ok: false, msg: 'Diagnostics unavailable.' };
         await rec.flush().catch(() => {});
-        const snap = await rec.snapshot();
+        // Stored batches only when this account is confirmed as their owner.
+        const includeStored = getIsolation() === 'confirmed';
+        const snap = await rec.snapshot({ includeStored });
+        const scopeNote = includeStored ? '' : ' Only this session was included: older diagnostics on this phone could not be confirmed as yours.';
         const json = JSON.stringify(snap, null, 1);
         const name = exportFileName();
         let file = null;
@@ -51,7 +54,7 @@ export async function exportDiagnostics(rec = recorder(), nav = globalThis.navig
             if (can) {
                 try {
                     await nav.share({ files: [file], title: 'Golf diagnostics' });
-                    return { ok: true, msg: 'Shared. The diagnostics are still on this phone.' };
+                    return { ok: true, msg: 'Shared. The diagnostics are still on this phone.' + scopeNote };
                 } catch (e) {
                     if (e?.name === 'AbortError') return { ok: false, msg: 'Share cancelled. Nothing was deleted.' };
                     // fall through to download
@@ -65,7 +68,7 @@ export async function exportDiagnostics(rec = recorder(), nav = globalThis.navig
             a.href = url; a.download = name; a.rel = 'noopener';
             doc.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }, 30000);
-            return { ok: true, msg: `Download started (${name}). Check your downloads; nothing was deleted.` };
+            return { ok: true, msg: `Download started (${name}). Check your downloads; nothing was deleted.` + scopeNote };
         } catch {
             return { ok: false, msg: 'Export failed on this device. Nothing was deleted.' };
         }

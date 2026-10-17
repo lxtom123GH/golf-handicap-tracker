@@ -378,9 +378,27 @@ export function createRecorder(opts = {}) {
         return out;
     }
 
-    /** Sanitized snapshot for export. Never throws. */
-    async function snapshot() {
+    /**
+     * Sanitized snapshot for export. Never throws. With includeStored false
+     * (account isolation not confirmed) only THIS page session's in-memory
+     * events are included, never stored batches from earlier sessions.
+     */
+    async function snapshot({ includeStored = true } = {}) {
         try {
+            if (!includeStored) {
+                const clean = arr => arr.map(sanitizeEvent).filter(Boolean);
+                const events = clean(recent);
+                const times = events.map(e => e.t);
+                return {
+                    schema: SCHEMA, exportedAt: new Date(now()).toISOString(), exportBuild: build,
+                    scope: 'this-session-only',
+                    note: 'Older diagnostics on this phone could not be confirmed as this account\'s, so only this session is included.',
+                    status: status(), storedEvents: 0,
+                    retainedFrom: times.length ? Math.min(...times) : null,
+                    retainedTo: times.length ? Math.max(...times) : null,
+                    batches: [{ sid, seq: null, build, status: 'session', events }],
+                };
+            }
             const stored = await storedBatches();
             const clean = arr => arr.map(sanitizeEvent).filter(Boolean);
             const batches = stored.map(b => ({ sid: b.sid, seq: b.seq, build: b.build, status: 'committed', events: clean(b.events) }));
@@ -393,6 +411,7 @@ export function createRecorder(opts = {}) {
             const times = all.map(e => e.t);
             return {
                 schema: SCHEMA, exportedAt: new Date(now()).toISOString(), exportBuild: build,
+                scope: 'all-stored',
                 note: 'Diagnostics only: event types, codes, counts, accuracy, distances shown. No positions, names, emails, UIDs, notes or messages.',
                 status: status(), storedEvents: storedCount,
                 retainedFrom: times.length ? Math.min(...times) : null,
@@ -405,12 +424,17 @@ export function createRecorder(opts = {}) {
     }
 
     /** Returns true only when every store confirmed the clear. */
-    async function clearAll() {
-        queue = [];
-        recent = [];
-        failedTail = [];
+    // keepSession: clear the STORES only, keeping this page session's own
+    // in-memory events (used when an account signs in: what this page recorded
+    // is this session's, the stored journal may not be).
+    async function clearAll({ keepSession = false } = {}) {
         let ok = true;
-        try { storage?.setItem(CLEARED_KEY, String(now())); } catch { ok = false; }
+        if (!keepSession) {
+            queue = [];
+            recent = [];
+            failedTail = [];
+            try { storage?.setItem(CLEARED_KEY, String(now())); } catch { ok = false; }
+        }
         for (const b of backends) { try { await b.clear(); } catch { ok = false; } }
         counters.committed = 0; counters.failed = 0;
         return ok;
@@ -489,6 +513,13 @@ export function trackWrite(kind, promise) {
     return promise;
 }
 
+// Account isolation of the stored journal: 'pending' until the signed-in
+// account is confirmed as its owner (hooks.js noteAccount), then 'confirmed'
+// or 'failed'. Export and upload include stored batches only when confirmed.
+let _isolation = 'pending';
+export function setIsolation(state) { _isolation = state === 'confirmed' || state === 'failed' ? state : 'pending'; }
+export function getIsolation() { return _isolation; }
+
 /** For persistence.js: drop the recorder's localStorage copy. Never throws. */
 export function releaseRecorderStorage() {
     try {
@@ -501,4 +532,4 @@ export function releaseRecorderStorage() {
 }
 
 /** Test seam: drop the singleton. */
-export function _resetRecorderForTests() { _rec = null; _op = 0; }
+export function _resetRecorderForTests() { _rec = null; _op = 0; _isolation = 'pending'; }

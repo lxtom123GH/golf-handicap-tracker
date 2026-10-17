@@ -7,7 +7,10 @@ import { AppState } from '../state.js';
 import { onGpsFix } from '../oncourse.js';
 import { courseSlugFor } from '../hole-overlay.js';
 import { COURSE_DATA } from '../course-data.js';
-import { recorder, fr } from './recorder.js';
+import { recorder, fr, setIsolation, getIsolation } from './recorder.js';
+
+/** 'pending' | 'confirmed' | 'failed' (see recorder.js). */
+export const accountIsolation = () => getIsolation();
 import { errorFields, fileOf } from './sanitize.js';
 
 export const GPS_MIN_MS = 3000;      // hard floor between GPS events
@@ -111,6 +114,13 @@ async function acctTag(uid) {
 // account (tag matched, or a switch was cleared successfully and the new tag
 // saved). The cloud uploader starts only after a true result.
 export async function noteAccount(uid, rec = recorder(), storage = globalThis.localStorage) {
+    const ok = await noteAccountInner(uid, rec, storage);
+    setIsolation(ok ? 'confirmed' : (uid ? 'failed' : 'pending'));
+    return ok;
+}
+
+async function noteAccountInner(uid, rec, storage) {
+    setIsolation('pending');
     try {
         if (!uid || !rec) { fr('auth', { state: 'out' }); return false; }
         if (!globalThis.crypto?.subtle || !storage) return false;
@@ -123,7 +133,7 @@ export async function noteAccount(uid, rec = recorder(), storage = globalThis.lo
             // Invalidate first, so a failed clear can never be approved later
             // by the old owner's tag matching again (Codex review 2).
             storage.setItem(OWNER_KEY, UNOWNED);
-            const cleared = await rec.clearAll();
+            const cleared = await rec.clearAll({ keepSession: true });
             fr('auth', { state: prev ? 'switch' : 'in' });
             if (cleared !== true) return false;
         } else {

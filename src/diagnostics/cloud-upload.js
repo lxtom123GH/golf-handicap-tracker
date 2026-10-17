@@ -19,7 +19,7 @@
 //   write may still reach the server later; the rules decide it then.
 
 import { sanitizeEvent } from './sanitize.js';
-import { recorder, fr } from './recorder.js';
+import { recorder, fr, getIsolation } from './recorder.js';
 
 export const CLOUD_CAPS = Object.freeze({
     SESSION_CHUNKS: 300,
@@ -104,6 +104,9 @@ export function createCloudUploader(o) {
 
     async function tick() {
         if (busy || dead || !uid) return;
+        // Defence in depth: boot.js starts the uploader only after isolation
+        // is confirmed; re-check on every tick (an account switch resets it).
+        if ((o.isolation || getIsolation)() !== 'confirmed') { stop('not-isolated'); return; }
         busy = true;
         try {
             if (!online()) return;
@@ -167,7 +170,7 @@ export function createCloudUploader(o) {
 export function cloudStatusText(s) {
     if (!s) return 'Cloud upload: off.';
     if (s.state === 'on') return `Cloud upload: on (this account only) · ${s.sent} sent · ${s.pending} waiting`;
-    const why = { 'not-eligible': 'not enabled for this account', 'not-started': 'not signed in', killed: 'switched off remotely', unacked: 'paused, no server reply', refused: 'refused by server', errors: 'paused after errors', 'session-cap': 'limit reached', 'day-cap': 'daily limit reached', fault: 'stopped', 'signed-out': 'signed out' }[s.reason] || 'off';
+    const why = { 'not-eligible': 'not enabled for this account', 'not-started': 'not signed in', killed: 'switched off remotely', unacked: 'paused, no server reply', refused: 'refused by server', errors: 'paused after errors', 'session-cap': 'limit reached', 'day-cap': 'daily limit reached', fault: 'stopped', 'signed-out': 'signed out', 'not-isolated': 'account not confirmed' }[s.reason] || 'off';
     return `Cloud upload: off (${why}). Local recording is unaffected.`;
 }
 
