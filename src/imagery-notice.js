@@ -7,7 +7,11 @@
 // this module adds the licence link and the acknowledgement next to the map
 // wherever a course's attributions name the State of Queensland.
 
-export const QLD_IMAGERY_LICENCE_URL = 'https://creativecommons.org/licenses/by-sa/4.0/';
+// The service's item info states the licence as "Creative Commons Attribution-Share-Alike
+// licence (CC BY-SA)" with no version, so we label it exactly that and link the
+// service's own terms rather than asserting a version.
+export const QLD_IMAGERY_LICENCE_URL =
+    'https://spatial-img.information.qld.gov.au/arcgis/rest/services/Basemaps/LatestStateProgram_AllUsers/ImageServer/info/iteminfo';
 export const QLD_IMAGERY_SOURCE_URL =
     'https://www.data.qld.gov.au/dataset/queensland-imagery-latest-state-program-public-basemap-service';
 
@@ -40,7 +44,7 @@ export function appendImageryNotice(el, attributions) {
     if (!el || !usesQldImagery(attributions)) return null;
     const doc = el.ownerDocument;
     el.appendChild(doc.createTextNode(' · Imagery '));
-    el.appendChild(link(doc, QLD_IMAGERY_LICENCE_URL, 'CC BY-SA 4.0'));
+    el.appendChild(link(doc, QLD_IMAGERY_LICENCE_URL, 'CC BY-SA (terms)'));
     el.appendChild(doc.createTextNode(' · '));
     el.appendChild(link(doc, QLD_IMAGERY_SOURCE_URL, 'Source'));
     const details = doc.createElement('details');

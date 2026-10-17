@@ -14,7 +14,8 @@ describe('Queensland imagery notices', () => {
         const details = appendImageryNotice(el, ['© OpenStreetMap contributors', 'Includes material © State of Queensland (...)']);
         expect(details).not.toBeNull();
         expect(details.className).toBe('imagery-notice');
-        expect(el.textContent).toContain('CC BY-SA 4.0');
+        expect(el.textContent).toContain('CC BY-SA (terms)');
+        expect(el.textContent).not.toContain('4.0');
         expect(el.textContent).toContain(QLD_IMAGERY_NOTICE);
         expect(QLD_IMAGERY_NOTICE).toMatch(/^In consideration of the State of Queensland permitting use of this data/);
         expect(QLD_IMAGERY_NOTICE).toMatch(/relating to any use of the data\.$/);
@@ -35,7 +36,7 @@ describe('Queensland imagery notices', () => {
         expect(usesQldImagery(c.attributions)).toBe(true);
         const qld = c.attributions.find(a => /State of Queensland/.test(a));
         expect(qld).toContain('Includes material © State of Queensland (Department of Natural Resources and Mines, Manufacturing and Regional and Rural Development)');
-        expect(qld).toContain('© Planet Labs Netherlands B.V. reproduced under licence from Planet and Geoplex, all rights reserved');
+        expect(qld).toContain('© Planet Labs Netherlands B.V. reproduced under licence from Planet and Geoplex, all rights reserved, 2026.');
         if (slug === 'ashgrove') {
             const holes = Object.values(c.holes);
             expect(holes).toHaveLength(18);
