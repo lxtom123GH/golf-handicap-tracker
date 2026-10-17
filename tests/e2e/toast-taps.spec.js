@@ -5,13 +5,14 @@
 // the toast every Detailed golfer sees on every shot: "Shot N logged".
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup, pinLegacyShotEntry } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
 test('the shot-logged toast does not swallow taps', async ({ page }) => {
     const email = throwawayEmail('toast');
     await seedPreapprovedEmail(email);
+    await pinLegacyShotEntry(page);
     await page.goto('/');
     await page.locator('#btn-register').click();
     await page.locator('#auth-name').fill('Toast Tester');

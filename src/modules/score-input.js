@@ -1,5 +1,6 @@
 import { AppState, mutateList } from '../state.js';
-import { fairwayFromLie, derivedGir } from '../play-mode.js';
+import { fairwayFromLie, derivedGir, readPlayMode, physicalHoleFor } from '../play-mode.js';
+import { quickLogWanted as quickLogWantedFor } from '../quick-log.js';
 import { UI } from '../ui.js';
 import { renderBagButtons, shortClubLabel } from './card-render.js';
 import { showUndoCard, dismissUndoCard } from './undo-card.js';
@@ -918,39 +919,54 @@ export function saveShotPlan() {
     showToast(`Plan saved · hit the shot, then Track My Shot`);
 }
 
-export function startNewShotInput(forcedShotNum = null) {
-    // Glass chips PR 2: opening the next shot retires the last one's Undo —
-    // undoing shot N under shot N+1's wizard would renumber the hole.
-    dismissUndoCard();
-    // S11: a plan saved for this hole reopens at step 2 instead of starting
-    // a new shot — the golfer comes back to draw what happened.
-    if (!forcedShotNum) {
-        const pending = pendingPlannedShot();
-        if (pending) { loadExistingShotData(pending.id, { mapFirst: mapFirstWanted(), playDefaults: true }); return; }
-    }
-    const shotNum = forcedShotNum || (AppState.currentHoleShots?.length || 0) + 1;
+/**
+ * The fields every NEW shot starts with — the wizard's (startNewShotInput)
+ * and one-tap logging's (quickLogShot), so both save the same document.
+ */
+function newShotData(shotNum) {
     // BL-DEC-01: snapshot the live GPS distance to the green centre at the
     // moment the shot is logged (fresh fixes only). Distance-bucketed
     // dispersion + Tiger-5 "bogey inside 150" both hang off this field.
     const fix = getLastGpsFix();
     // S10: positions now come from the hold-still capture, not a single fix —
     // the wizard opens immediately and the position resolves in the background.
-    AppState.currentShotData = {
+    const d = {
         hole: AppState.currentHole,
         shotNumber: shotNum,
         roundId: AppState.activeRoundId,
         timestamp: new Date().toISOString(),
         ...(fix && Number.isFinite(fix.distM) ? { distanceToPinM: fix.distM } : {})
     };
-    resetCurveUndo(); // D29: a new shot starts with an empty line history
     // Owner 2026-10-06 (Play mode): the club picked on the map's club strip
     // and the Routine chip pre-fill this shot — only the shot they were set
     // for (same round, hole and shot number); every field stays editable.
+    // One-tap logging: a Plan line drawn on the play map rides
+    // along too, so opening the wizard (Track) keeps it.
     const pre = AppState.nextShotDefaults;
     if (pre && pre.roundId === AppState.activeRoundId && pre.hole === AppState.currentHole && pre.shotNumber === shotNum) {
-        if (pre.club) AppState.currentShotData.club = pre.club;
-        if (pre.routinePre) AppState.currentShotData.routines = { pre: pre.routinePre };
+        if (pre.club) d.club = pre.club;
+        if (pre.routinePre) d.routines = { pre: pre.routinePre };
+        if (pre.plan?.lineIntended?.length >= 2 && pre.plan.lineFrame) {
+            d.lineIntended = pre.plan.lineIntended.map(p => ({ ...p }));
+            d.lineFrame = { ...pre.plan.lineFrame };
+        }
     }
+    return d;
+}
+
+export function startNewShotInput(forcedShotNum = null) {
+    // Opening the next shot retires the last shot's Undo —
+    // undoing shot N under shot N+1's wizard would renumber the hole.
+    dismissUndoCard();
+    // A plan saved for this hole reopens at step 2 instead of starting
+    // a new shot — the golfer comes back to draw what happened.
+    if (!forcedShotNum) {
+        const pending = pendingPlannedShot();
+        if (pending) { loadExistingShotData(pending.id, { mapFirst: mapFirstWanted(), playDefaults: true }); return; }
+    }
+    const shotNum = forcedShotNum || (AppState.currentHoleShots?.length || 0) + 1;
+    AppState.currentShotData = newShotData(shotNum);
+    resetCurveUndo(); // D29: a new shot starts with an empty line history
 
     _beginCapture();
 
@@ -1202,7 +1218,12 @@ export function setWizardActive(isActive) {
     }
 }
 
-export async function saveShotData() {
+/**
+ * Save the open shot. `quiet` (one-tap logging): no Undo card or toast —
+ * the play map's own Undo chip and hint line say it, and the card would sit
+ * over the map's chips. Everything else is identical.
+ */
+export async function saveShotData({ quiet = false } = {}) {
     if (!AppState.currentUser) return;
     // Owner feedback 2026-07-05: the app let multiple putts be marked Holed on
     // one hole — physically impossible. Guard NEW shots once a hole-out exists.
@@ -1238,9 +1259,12 @@ export async function saveShotData() {
     if (!payload.timestamp) payload.timestamp = new Date().toISOString();
     // Glass chips PR 2: what Undo must reverse for a NEW shot (null = no card).
     let undoInfo = null;
+    // One-tap logging: what was saved, for its Undo chip (null on refusal).
+    let savedId = null;
     try {
         if (AppState.currentShotData.id) {
             const shotId = AppState.currentShotData.id;
+            savedId = shotId;
             const idx = AppState.currentHoleShots.findIndex(s => s.id === shotId);
             const before = idx !== -1 ? AppState.currentHoleShots[idx] : null;
             // D30: the shot list changes through mutateList (D-03), so an
@@ -1300,6 +1324,7 @@ export async function saveShotData() {
             // doc(collection(...)) mints the id client-side, so the local record
             // is complete immediately and the write replays on reconnect.
             const shotRef = doc(collection(db, "shots"));
+            savedId = shotRef.id;
             mutateList('currentHoleShots', (list) => { list.push({ ...payload, id: shotRef.id }); });
             undoInfo = { shotId: shotRef.id, hole: AppState.currentHole, putt: false, girSet: false };
             const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
@@ -1354,7 +1379,9 @@ export async function saveShotData() {
         // Glass chips PR 2: a new, non-holed shot gets the 6 s Undo card.
         // Edits, logged plans and hole-outs (which auto-advance the hole)
         // keep the plain toast — there is nothing safe to undo in one tap.
-        if (undoInfo && !holed) {
+        if (quiet) {
+            dismissUndoCard();
+        } else if (undoInfo && !holed) {
             const carry = curveCarryM(toPairs(payload.lineActual));
             showUndoCard(undoCardText({
                 shotNumber: payload.shotNumber,
@@ -1383,9 +1410,11 @@ export async function saveShotData() {
             const nextBtn = document.getElementById('btn-oc-next-hole');
             if (nextBtn) setTimeout(() => nextBtn.click(), 600);
         }
+        return { shotId: savedId, undo: undoInfo, shotNumber: payload.shotNumber, holed };
     } catch (e) {
         showToast("Error saving shot.");
     }
+    return null;
 }
 
 /**
@@ -1476,6 +1505,142 @@ export function undoLoggedShot(u) {
     }
     removeShot(shot, u);
     showToast(`Shot ${u.shotNumber} undone`);
+}
+
+// ---- One-tap logging on the Map-first play map --------------------------
+// The play map's Plan / Actual / Undo chips log a shot without the wizard.
+// The shot is built like startNewShotInput builds one (newShotData) and is
+// saved by saveShotData — the wizard's own save path, so the document, the
+// stroke/putt/FW/GIR bookkeeping and the Undo card are the same.
+
+/** One-tap logging is on for this round (src/quick-log.js decides). */
+export function quickLogWanted() {
+    let playMode = 'on';
+    try { playMode = readPlayMode(window.localStorage); } catch { /* storage blocked: the default */ }
+    return quickLogWantedFor({
+        shotEntry: shotEntryVisibility(AppState.shotEntry).pref,
+        playMode,
+        trackingMode: AppState.currentTrackingMode,
+        courseSlug: courseSlugFor(AppState.currentRoundCourseName),
+    });
+}
+
+/**
+ * One-tap logging is on AND this hole has a map, so the play map really
+ * mounts and owns the shot. A mapped course can still have unmapped holes
+ * (and the file can fail to load offline): there the round screen and the
+ * shot wizard are used, so callers that skip the wizard for one-tap logging
+ * must ask this, not quickLogWanted().
+ */
+export async function quickLogReady() {
+    if (!quickLogWanted()) return false;
+    const name = AppState.currentRoundCourseName;
+    const course = await loadCourseOverlay(courseSlugFor(name));
+    const teeData = COURSE_DATA[name]?.[AppState.currentRoundTee] || {};
+    return !!course?.holes?.[physicalHoleFor(teeData, AppState.currentHole)];
+}
+
+const r1 = (v) => Math.round(v * 10) / 10;
+
+/**
+ * Log the next shot from the play map. actual/intended are [x, y] pairs in
+ * the hole frame; `finishFix` (a GPS fix) marks a one-tap Actual: the fix is
+ * where THIS shot finished, the start stays at startXY (tee / last finish).
+ * Returns saveShotData's {shotId, undo, shotNumber} or null.
+ */
+export async function quickLogShot({ actual, intended = null, frame, slug, physical, club = null, startXY = null, greenXY = null, finishFix = null } = {}) {
+    if (!AppState.currentUser || !AppState.activeRoundId || !frame) return null;
+    if (!Array.isArray(actual) || actual.length < 2) return null;
+    // An open wizard owns AppState.currentShotData: never write under it.
+    if (document.body.classList.contains('active-wizard-mode')) return null;
+    dismissUndoCard();
+    // A plan saved from the wizard for this hole is the shot being logged.
+    const pending = pendingPlannedShot();
+    const d = pending ? { ...pending } : newShotData((AppState.currentHoleShots?.length || 0) + 1);
+    if (club) d.club = club;
+    if (Array.isArray(intended) && intended.length >= 2) d.lineIntended = toObjs(intended);
+    d.lineActual = toObjs(actual);
+    d.lineFrame = { origin: { lat: frame.origin[0], lon: frame.origin[1] }, bearing: frame.bearing, courseSlug: slug, physicalHole: physical };
+    // The distance this shot was played from: the start, not the
+    // GPS; the GPS marks the finish position.
+    if (Array.isArray(startXY) && Array.isArray(greenXY)) {
+        d.distanceToPinM = Math.round(Math.hypot(greenXY[0] - startXY[0], greenXY[1] - startXY[1]));
+    }
+    if (finishFix) {
+        // Same fields as a hold-still fix classified as this shot's finish.
+        const end = actual[actual.length - 1];
+        if (Array.isArray(startXY)) d.startXY = { x: r1(startXY[0]), y: r1(startXY[1]) };
+        d.finishPos = { lat: finishFix.lat, lon: finishFix.lon, accuracyM: Math.round(finishFix.accuracyM), at: finishFix.at };
+        d.finishXY = { x: r1(end[0]), y: r1(end[1]) };
+        d.gpsCapture = {
+            state: 'accepted', accuracyM: Math.round(finishFix.accuracyM),
+            fixCount: { usable: 1, ignored: 0 }, elapsedMs: 0, platform: platformOf(), role: 'finish',
+        };
+    }
+    applyDerivedShape(d);
+    resetCurveUndo();
+    AppState.currentShotData = d;
+    return saveShotData({ quiet: true });
+}
+
+/** Write a patch to a logged shot (local first, then Firestore, never awaited). */
+function patchLoggedShot(shotId, patch) {
+    mutateList('currentHoleShots', (list) => {
+        const i = list.findIndex(s => s.id === shotId);
+        if (i !== -1) list[i] = { ...list[i], ...patch };
+    });
+    updateDoc(doc(db, 'shots', shotId), patch)
+        .catch(e => console.warn('[quick] shot patch not acked (offline or denied):', e?.code || e));
+}
+
+const NUDGE_FIELDS = ['lineActual', 'finishXY', 'finishPos', 'gpsCapture', 'derived', 'startLine', 'shape', 'missPattern'];
+
+/**
+ * The nudge window after a one-tap Actual: the golfer dragged the line to
+ * where the ball really is. Moves the finish (a deliberate placement: ±3 m,
+ * marked adjusted, as a dragged start marker is). Returns the fields as they
+ * were, for Undo; null if the shot is gone.
+ */
+export function quickNudgeShot(shotId, actual, frame) {
+    const shot = (AppState.currentHoleShots || []).find(s => s.id === shotId);
+    if (!shot || !Array.isArray(actual) || actual.length < 2) return null;
+    const end = actual[actual.length - 1];
+    const next = { ...shot, lineActual: toObjs(actual), finishXY: { x: r1(end[0]), y: r1(end[1]) } };
+    if (shot.finishPos && frame) {
+        const [lat, lon] = fromFrame(frame, end);
+        next.finishPos = { ...shot.finishPos, lat, lon, accuracyM: 3 };
+    }
+    if (shot.gpsCapture) next.gpsCapture = { ...shot.gpsCapture, accuracyM: 3, adjusted: true };
+    applyDerivedShape(next);
+    const prev = {};
+    const patch = {};
+    for (const k of NUDGE_FIELDS) {
+        if (next[k] === undefined) continue;
+        prev[k] = shot[k] === undefined ? null : shot[k];
+        patch[k] = next[k];
+    }
+    patchLoggedShot(shotId, patch);
+    return prev;
+}
+
+/**
+ * The play map's Undo chip, one entry from src/quick-log.js's stack: a
+ * logged shot comes off exactly as the Undo card takes it off; a nudge puts
+ * the line back. A plan never left the phone, so there is nothing to undo here.
+ */
+export function quickUndo(entry) {
+    if (!entry || !AppState.currentUser) return;
+    if (entry.kind === 'nudge') {
+        if ((AppState.currentHoleShots || []).some(s => s.id === entry.shotId)) patchLoggedShot(entry.shotId, entry.prev || {});
+        return;
+    }
+    if (entry.kind !== 'shot') return;
+    if (entry.undo) { undoLoggedShot({ ...entry.undo, shotNumber: entry.shotNumber ?? entry.undo.shotNumber }); return; }
+    // A logged wizard plan (no undo record): take the shot off the hole.
+    const shot = (AppState.currentHoleShots || []).find(s => s.id === entry.shotId);
+    if (!shot) { showToast('That shot can no longer be undone here — edit it from the hole review'); return; }
+    removeShot(shot);
+    showToast(`Shot ${shot.shotNumber} undone`);
 }
 
 export async function deleteShotData() {
