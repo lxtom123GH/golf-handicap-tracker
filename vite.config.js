@@ -37,8 +37,20 @@ const versionJson = () => ({
     }
 });
 
+// Only generated same-origin build assets; no API responses or user data.
+export const offlineShellManifest = () => ({
+    name: 'golf-offline-shell-manifest',
+    generateBundle(_options, bundle) {
+        const assets = Object.keys(bundle)
+            .filter(name => /^assets\/[\w.-]+\.(?:js|css)$/.test(name))
+            .sort().map(name => `/${name}`);
+        if (!assets.length) throw new Error('No JavaScript/CSS assets for the offline shell');
+        this.emitFile({ type: 'asset', fileName: 'offline-shell.json', source: JSON.stringify(assets) });
+    }
+});
+
 export default defineConfig({
-    plugins: [versionJson()],
+    plugins: [versionJson(), offlineShellManifest()],
     define: {
         __APP_VERSION__: JSON.stringify(`v${pkg.version}`),
         __BUILD_STAMP__: JSON.stringify(stamp),
