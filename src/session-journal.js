@@ -249,3 +249,79 @@ export function clearJournal() {
 /** The Settings card registers here to refresh its count after a write. */
 export function onJournalFlush(fn) { _onFlush = typeof fn === 'function' ? fn : null; }
 
+function slug(name) {
+    return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || null;
+}
+
+function buildId() {
+    try {
+        // eslint-disable-next-line no-undef
+        const v = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : null;
+        // eslint-disable-next-line no-undef
+        const c = typeof __BUILD_COMMIT__ !== 'undefined' ? __BUILD_COMMIT__ : null;
+        if (v || c) return [v, c].filter(Boolean).join('+');
+        return document.querySelector('meta[name="application-version"]')?.getAttribute('content') || 'unknown';
+    } catch { return 'unknown'; }
+}
+
+function platform() {
+    try {
+        const ua = navigator.userAgent || '';
+        if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+        if (/Android/.test(ua)) return 'Android';
+        return 'other';
+    } catch { return 'unknown'; }
+}
+
+function onStateChange(e) {
+    try {
+        const { property, oldValue, newValue } = e.detail || {};
+        if (property === 'currentHole') {
+            _ctx.hole = Number(newValue) || null;
+            record('hole', { from: Number(oldValue) || null, to: _ctx.hole });
+        } else if (property === 'activeRoundId') {
+            _ctx.roundId = newValue ? scrubString(newValue) : null;
+            if (newValue && !oldValue) record('round-start', { roundId: _ctx.roundId, course: _ctx.course, hole: _ctx.hole });
+            else if (!newValue && oldValue) { record('round-end', { roundId: scrubString(oldValue), hole: _ctx.hole }); flushJournal(); }
+            else record('round-switch', { roundId: _ctx.roundId });
+        } else if (property === 'currentRoundCourseName') {
+            _ctx.course = slug(newValue);
+            if (_ctx.course) record('course', { course: _ctx.course });
+        }
+    } catch { /* never */ }
+}
+
+function fileLine(filename, line) {
+    const base = String(filename || '').split(/[\\/]/).pop().split('?')[0];
+    return base ? `${base}:${line || 0}` : null;
+}
+
+/** Window listeners + session header. Idempotent, never throws. */
+export function installJournal() {
+    try {
+        if (_installed || typeof window === 'undefined') return;
+        _installed = true;
+        _ctx.build = buildId();
+        record('session', { build: _ctx.build, platform: platform(), online: navigator.onLine !== false });
+        window.addEventListener('online', () => record('online'));
+        window.addEventListener('offline', () => record('offline'));
+        window.addEventListener('error', (ev) => {
+            try { record('error', { msg: ev?.message, at: fileLine(ev?.filename, ev?.lineno) }); } catch { /* never */ }
+        });
+        window.addEventListener('unhandledrejection', (ev) => {
+            try {
+                const r = ev?.reason;
+                record('rejection', { msg: r?.message ?? (typeof r === 'string' ? r : String(r)), code: r?.code, errName: r?.name });
+            } catch { /* never */ }
+        });
+        window.addEventListener('stateChange', onStateChange);
+        window.addEventListener('pagehide', () => flushJournal());
+        document.addEventListener('visibilitychange', () => {
+            try {
+                record(document.visibilityState === 'hidden' ? 'hidden' : 'visible');
+                if (document.visibilityState === 'hidden') flushJournal();
+            } catch { /* never */ }
+        });
+    } catch { /* never */ }
+}
+
