@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup, pinLegacyShotEntry } from './helpers/emulator.js';
 
 test('West nine: physical hole 19 has three live big numbers that fit the phone', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'desktop', 'journey uses the phone projects’ mocked GPS');
     await page.context().setGeolocation({ latitude: -27.4086, longitude: 152.9530, accuracy: 6 });
     const email = throwawayEmail('big-numbers');
     await seedPreapprovedEmail(email);
+    await pinLegacyShotEntry(page);
     const courseLoaded = page.waitForResponse(response => response.url().endsWith('/courses/keperra.json') && response.ok());
     await page.goto('/');
     await page.locator('#btn-register').click();

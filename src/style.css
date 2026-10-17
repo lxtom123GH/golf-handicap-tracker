@@ -1599,6 +1599,131 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
     line-height: 1;
 }
 
+body.play-mode.round-active #btn-play-settings {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    z-index: 45;
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+}
+
+.play-settings-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    background: rgba(0, 0, 0, 0.24);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.play-settings-sheet {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 64px);
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(360px, calc(100vw - 16px));
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 20px;
+    background: rgba(8, 12, 18, 0.92);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+}
+
+.play-settings-head,
+.play-setting-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.play-settings-head h2 {
+    font-size: 1.05rem;
+}
+
+.play-settings-close {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 17px;
+}
+
+.play-setting-entry,
+.play-setting-toggle {
+    min-height: 48px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    text-align: left;
+}
+
+.play-setting-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.play-setting-entry select {
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: #fff;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.play-setting-toggle {
+    width: 100%;
+    min-height: 52px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.play-setting-toggle span {
+    display: flex;
+    flex-direction: column;
+    font-weight: 700;
+}
+
+.play-setting-toggle small {
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.78;
+}
+
+.play-setting-toggle strong {
+    min-width: 48px;
+    color: #cbd5e1;
+    text-align: right;
+}
+
+.play-setting-toggle[aria-checked="true"] strong {
+    color: #86efac;
+}
+
 .play-chip-lbl {
     font-size: 9px;
     font-weight: 800;
@@ -1632,12 +1757,23 @@ body.play-mode.round-active .oc-strip {
     padding: 0 2px 0 4px;
     gap: 0;
     border-radius: 22px;
-    max-width: calc(100vw - 136px);
+    max-width: calc(100vw - 164px);
 }
 
 body.play-mode.round-active .oc-strip-hole {
     min-height: 44px;
     font-size: 0.95rem;
+}
+
+body.play-mode.round-active #oc-hole-display,
+body.play-mode.round-active .oc-strip-dot {
+    display: none;
+}
+
+body.play-mode.round-active .oc-strip-hole {
+    min-width: 48px;
+    padding-right: 4px;
+    padding-left: 4px;
 }
 
 body.play-mode.round-active .oc-strip-more {
@@ -1690,9 +1826,23 @@ body.play-mode.round-active #oncourse-hub > * {
 }
 
 /* ---- Left rail ------------------------------------------------------------ */
-body.play-mode.round-active .play-rail-left {
+body.play-mode.round-active #btn-play-hole {
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: calc(env(safe-area-inset-left, 0px) + 8px);
+    z-index: 45;
+    display: inline-flex;
+    min-width: 104px;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    white-space: nowrap;
+}
+
+body.play-mode.round-active .play-rail-left {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 64px);
     left: calc(env(safe-area-inset-left, 0px) + 8px);
     z-index: 30;
     display: flex;
@@ -1889,6 +2039,170 @@ body.play-mode.round-active.play-detailed .play-clubs {
     letter-spacing: 0.04em;
     color: #fde047;
     min-height: 10px;
+}
+
+/* ---- One-tap logging on the play map -----------------------------------
+   body.play-quick: Map first shot entry in a Detailed round. Right rail:
+   Plan / Actual / Undo just above the bottom bar (your score card moves up
+   above them); left: the club strip shrinks to the one likely club, at the
+   bottom. Glass, every chip at least 44 px, all in the lower 60 %. */
+body.play-mode.round-active.play-quick {
+    --pq-rail-h: 162px;
+}
+
+body.play-mode.round-active.play-quick .play-quick {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 84px;
+}
+
+.play-quick .pq-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 50px;
+    min-height: 0;
+    padding: 2px 4px;
+    border-radius: 18px;
+    line-height: 1.1;
+    font-size: 0.95rem;
+}
+
+.play-quick .pq-chip small {
+    font-size: 9px;
+    font-weight: 700;
+    opacity: 0.9;
+    white-space: nowrap;
+}
+
+.play-quick .pq-ico {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.play-quick .pq-actual {
+    height: 56px;
+}
+
+.play-quick .pq-undo {
+    height: 44px;
+    font-size: 0.85rem;
+}
+
+.play-quick .pq-undo:disabled {
+    opacity: 0.45;
+}
+
+/* Armed: the chip takes its line's colour (plan blue, actual orange). */
+.play-quick .pq-plan.on {
+    background: rgba(37, 99, 235, 0.95);
+    border-color: #93c5fd;
+}
+
+.play-quick .pq-actual.on {
+    background: rgba(234, 88, 12, 0.95);
+    border-color: #fdba74;
+}
+
+body.play-mode.round-active.play-quick:not(.play-sheet-open) #oc-score-sheet {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 82px + var(--pq-rail-h));
+}
+
+/* Where this shot starts and what to do next: under the hole strip, between
+   the left rail and the mini-map. Taps fall through to the map. */
+body.play-mode.round-active.play-quick #play-quick-hint {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    left: calc(env(safe-area-inset-left, 0px) + 76px);
+    right: calc(env(safe-area-inset-right, 0px) + 86px);
+    z-index: 29;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(8, 12, 18, 0.66);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    pointer-events: none;
+}
+
+.play-quick-hint .pq-l2 {
+    color: #fde047;
+}
+
+body.play-mode.round-active.play-quick.play-sheet-open .play-quick,
+body.play-mode.round-active.play-quick.play-sheet-open .play-quick-hint {
+    visibility: hidden;
+}
+
+/* The club: ▲ next-longer / the pick + 'likely' / ▼ next-shorter. */
+body.play-mode.round-active.play-quick .play-clubs {
+    position: fixed;
+    left: calc(env(safe-area-inset-left, 0px) + 8px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+    width: 72px;
+    gap: 4px;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-club:not(.sel) {
+    display: none;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-arr {
+    width: 64px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+    order: 0;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-arr::after {
+    inset: 0;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-arr small {
+    font-size: 10px;
+    font-weight: 800;
+    opacity: 0.85;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-club.sel {
+    width: 64px;
+    height: 58px;
+    font-size: 20px;
+    order: 1;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-sug {
+    order: 2;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #facc15;
+    color: #111;
+    font-size: 9px;
+    letter-spacing: 0;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-sug:empty {
+    display: none;
+}
+
+body.play-mode.round-active.play-quick .play-clubs #btn-pc-down {
+    order: 3;
 }
 
 /* Track: under the strip, a short label ("Track" / "Log 2"). */

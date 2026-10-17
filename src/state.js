@@ -39,6 +39,7 @@ const initialState = {
     currentCoursePars: [],
     liveRoundGroups: [], // Array of { uid, name, scores:{}, compStats:{}, simpleStats:{} }
     currentHole: 1,
+    currentRoundStartHole: 1,
     bigNumbersOpen: false, // transient UI only; never part of PERSIST_FIELDS
     currentShotData: {},
     currentLiveCompId: null,

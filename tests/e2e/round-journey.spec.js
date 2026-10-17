@@ -11,7 +11,7 @@
 // injected. If this passes, a first-time user can play a hole.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup, pinLegacyShotEntry } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
@@ -29,6 +29,7 @@ const PASSWORD = 'e2e-password-1';
 async function registerFreshUser(page) {
     const email = throwawayEmail();
     await seedPreapprovedEmail(email);
+    await pinLegacyShotEntry(page);
     await page.goto('/');
     await page.locator('#btn-register').click();
     await page.locator('#auth-name').fill('E2E Golfer');

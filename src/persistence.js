@@ -19,6 +19,7 @@ const PERSIST_FIELDS = [
     'currentCoursePars',
     'liveRoundGroups',
     'currentHole',
+    'currentRoundStartHole',
     'currentShotData',
     'currentLiveCompId',
     'currentLiveCompRules',
@@ -249,6 +250,7 @@ export function forgetRoundInMemory() {
         AppState.liveRoundGroups = [];
         AppState.currentHoleShots = [];
         AppState.currentHole = 1;
+        AppState.currentRoundStartHole = 1;
     } finally {
         _forgettingInMemory = false;
     }

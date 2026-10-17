@@ -26,7 +26,7 @@ import { greenTargetsFromPlayer } from './green-targets.js';
 import { initBigNumbersView, updateBigNumbersView, closeBigNumbersView } from './big-numbers.js';
 
 import { updateLiveLeaderboard, renderDetailedReview, renderBagButtons, renderHoleJumper } from './modules/card-render.js';
-import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast, refreshTrackButtonLabel } from './modules/score-input.js';
+import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast, refreshTrackButtonLabel, quickLogWanted, quickLogReady } from './modules/score-input.js';
 import { bindAddPlayer, bindCompQuickAdd, bindSetupToggles, bindCourseSelect, bindStartRound, bindGlobalRoundActions, bindOcSubNav, bindShotWizard, discardRound } from './modules/event-binders.js';
 import { writeRoundBackup, markRoundBackupUnsynced, hasRoundBackup, markRoundSaved } from './persistence.js';
 import { isGuestId } from './guests.js';
@@ -34,6 +34,7 @@ import { fr, trackWrite } from './diagnostics/recorder.js';
 import { proposeRound } from './pending-rounds.js';
 import { localToday, parseLocalDate } from './dates.js';
 import { scoredHoles, defaultHolesPlayed, holesMismatchText, nineOnEighteenReason, tooFewForEighteenReason, unplayedNetParPoints } from './finish-holes.js';
+import { holeOrder, holePosition, nextHole, previousHole } from './round-hole-order.js';
 
 
 /**
@@ -202,6 +203,7 @@ export function endRoundCleanup() {
     AppState.gpsBias = null;
     AppState.gpsBiasSamples = [];
     AppState.currentHole = 1;
+    AppState.currentRoundStartHole = 1;
     AppState.currentLiveCompId = null;
     AppState.currentLiveCompRules = [];
     AppState.currentHoleShots = [];
@@ -378,10 +380,10 @@ export function loadHole() {
             nameRow.className = 'oc-card-head';
 
             // Calculate cumulative score (gross)
-            let totalSoFar = 0;
-            for (let h = 1; h < AppState.currentHole; h++) {
-                totalSoFar += (p.scores[h] || 0);
-            }
+            const playedOrder = holeOrder(AppState.currentRoundHoles || 9, AppState.currentRoundStartHole || 1);
+            const currentPosition = playedOrder.indexOf(AppState.currentHole);
+            const holesThroughCurrent = playedOrder.slice(0, currentPosition + 1);
+            let totalSoFar = holesThroughCurrent.slice(0, -1).reduce((total, h) => total + (p.scores[h] || 0), 0);
             const holeScore = p.scores[AppState.currentHole] || 0;
 
             // Running stableford beside gross (owner feedback 2026-07-05).
@@ -392,7 +394,7 @@ export function loadHole() {
             let ptsSoFar = 0;
             const siList = blockedReason ? null : holeStrokeIndex;
             if (siList) {
-                for (let h = 1; h <= AppState.currentHole; h++) {
+                for (const h of holesThroughCurrent) {
                     const g = p.scores[h] || 0;
                     const hp = AppState.currentCoursePars[h - 1];
                     if (g > 0 && hp && siList[h - 1]) {
@@ -1627,9 +1629,12 @@ async function uploadRecordedDiary() {
 export function syncHoleNavLabels() {
     const prev = document.getElementById('btn-oc-prev-hole');
     const next = document.getElementById('btn-oc-next-hole');
-    if (prev) prev.disabled = AppState.currentHole <= 1;
+    const total = AppState.currentRoundHoles || 9;
+    const start = AppState.currentRoundStartHole || 1;
+    const position = holePosition(AppState.currentHole, total, start);
+    if (prev) prev.disabled = position <= 0;
     if (next) {
-        const last = AppState.currentHole >= (AppState.currentRoundHoles || 9);
+        const last = position === total - 1;
         next.textContent = last ? 'Finish ✓' : 'Next Hole →';
         next.classList.toggle('oc-thumb-finish', last);
     }
@@ -1642,8 +1647,9 @@ export function bindHoleNav() {
     if (btnPrev) {
         btnPrev.replaceWith(btnPrev.cloneNode(true));
         document.getElementById('btn-oc-prev-hole').addEventListener('click', () => {
-            if (AppState.currentHole > 1) {
-                AppState.currentHole--;
+            const previous = previousHole(AppState.currentHole, AppState.currentRoundHoles || 9, AppState.currentRoundStartHole || 1);
+            if (previous !== null) {
+                AppState.currentHole = previous;
                 loadHole();
             }
         });
@@ -1656,19 +1662,33 @@ export function bindHoleNav() {
             // with no score and only notice holes later when the pars stopped
             // matching. One gentle confirm, only when NOBODY has a score.
             const anyScore = AppState.liveRoundGroups.some(p => (p.scores?.[AppState.currentHole] || 0) > 0);
+            const following = nextHole(AppState.currentHole, AppState.currentRoundHoles || 9, AppState.currentRoundStartHole || 1);
             if (!anyScore && AppState.liveRoundGroups.length > 0
-                && !confirm(`No score entered for hole ${AppState.currentHole} — ${AppState.currentHole >= (AppState.currentRoundHoles || 9) ? 'finish' : 'move on'} anyway?`)) {
+                && !confirm(`No score entered for hole ${AppState.currentHole} — ${following === null ? 'finish' : 'move on'} anyway?`)) {
                 return;
             }
-            if (AppState.currentHole < (AppState.currentRoundHoles || 9)) {
-                AppState.currentHole++;
+            if (following !== null) {
+                AppState.currentHole = following;
                 loadHole();
                 // Owner feedback 2026-07-05: in a Detailed round, arriving on a
                 // fresh hole means the next tap is always "track my shot" — do
                 // it for them. Revisiting a hole with shots stays quiet.
-                if (AppState.currentTrackingMode === 'detailed'
-                    && !(AppState.currentHoleShots && AppState.currentHoleShots.length)) {
-                    startNewShotInput();
+                // One-tap logging (Map first on the play map): the map IS the
+                // shot screen, so no wizard pops up over it.
+                // An unmapped hole on a mapped course has no play map: open
+                // the wizard there too, once the course file says so.
+                const freshHole = () => !(AppState.currentHoleShots && AppState.currentHoleShots.length);
+                if (AppState.currentTrackingMode === 'detailed' && freshHole()) {
+                    let quick = false;
+                    try { quick = quickLogWanted(); } catch { quick = false; }
+                    if (!quick) startNewShotInput();
+                    else {
+                        const hole = AppState.currentHole;
+                        Promise.resolve().then(() => quickLogReady()).then(ready => {
+                            if (!ready && AppState.currentHole === hole && freshHole()
+                                && !document.body.classList.contains('active-wizard-mode')) startNewShotInput();
+                        }).catch(() => {});
+                    }
                 }
             } else {
                 openFinishModal();
@@ -1687,6 +1707,7 @@ export function bindHoleNav() {
         document.getElementById('btn-oc-hole-strip').addEventListener('click', (e) => {
             const open = jumper.classList.toggle('hidden') === false;
             e.currentTarget.setAttribute('aria-expanded', String(open));
+            document.getElementById('btn-play-hole')?.setAttribute('aria-expanded', String(open));
         });
     }
     const more = document.getElementById('btn-oc-more');
@@ -1786,6 +1807,7 @@ export function jumpToHole(holeIndex) {
     // Fold the jumper again: it was opened from the strip for this one pick.
     document.getElementById('hole-jumper-container')?.classList.add('hidden');
     document.getElementById('btn-oc-hole-strip')?.setAttribute('aria-expanded', 'false');
+    document.getElementById('btn-play-hole')?.setAttribute('aria-expanded', 'false');
     // Scroll hub back to top
     const hub = document.getElementById('oncourse-hub');
     if (hub) hub.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2006,6 +2028,8 @@ async function saveRoundToDatabase() {
                 || tooFewForEighteenReason(pHoles, played.length);
             if (notCountingReason && p.uid === AppState.currentUser?.uid) scoringNote = notCountingReason;
 
+            // The route can wrap at a late start, but score keys remain the
+            // course-hole numbers used by this tee's par and stroke-index rows.
             for (const h in p.scores) {
                 const gross = p.scores[h];
                 totalGross += gross;
