@@ -133,8 +133,8 @@ describe('Settings card and export', () => {
     });
 
     it('statusText distinguishes saved, waiting, failed, memory-only and self-disabled', () => {
-        expect(statusText({ enabled: true, storage: 'idb', committed: 5, queued: 2, failed: 0, dropped: 0, evicted: 0 })).toBe('On · 5 saved · 2 waiting · saved on this phone');
-        expect(statusText({ enabled: true, storage: 'memory', committed: 0, queued: 0, failed: 3, dropped: 1, evicted: 0 })).toMatch(/NOT saved.*3 could not be saved.*1 skipped/);
+        expect(statusText({ enabled: true, storage: 'idb', committed: 5, queued: 2, failed: 0, dropped: 0, evicted: 0 })).toBe('On · 5 saved · 2 waiting · storing on this phone');
+        expect(statusText({ enabled: true, storage: 'memory', committed: 0, queued: 0, failed: 3, dropped: 1, evicted: 0 })).toMatch(/NOT being saved.*3 could not be saved.*1 skipped/);
         expect(statusText({ enabled: true, disabledReason: 'recorder-faults' })).toMatch(/stopped itself/);
         expect(statusText({ enabled: false })).toBe('Diagnostics off.');
     });

@@ -115,6 +115,43 @@ describe('queued -> committed -> failed are distinct', () => {
     });
 });
 
+describe('flush scheduling', () => {
+    it('an empty flush (e.g. pagehide with nothing queued) does not wedge later flushes', async () => {
+        const be = memBackend();
+        const r = createRecorder({ backends: [be], storage: createStorage() });
+        await r.flush();
+        r.record('hole', { hole: 1 });
+        await r.flush();
+        expect(r.status().committed).toBe(1);
+    });
+    it('the real timer flushes queued events after FLUSH_MS', async () => {
+        vi.useFakeTimers();
+        try {
+            const r = createRecorder({ backends: [memBackend()], storage: createStorage() });
+            await r.flush();
+            r.record('hole', { hole: 1 });
+            await vi.advanceTimersByTimeAsync(CAPS.FLUSH_MS + 10);
+            expect(r.status()).toMatchObject({ committed: 1, queued: 0 });
+        } finally { vi.useRealTimers(); }
+    });
+});
+
+describe('reload: flushed vs unflushed tail', () => {
+    it('a reload recovers committed batches only; the unflushed tail is honestly absent', async () => {
+        const be = memBackend();
+        const st = createStorage();
+        const a = createRecorder({ backends: [be], storage: st, ...noTimer, sessionId: 'aaaaaaaaaaaa' });
+        a.record('hole', { hole: 1 });
+        await a.flush();
+        a.record('hole', { hole: 2 }); // still queued when the page dies
+        expect(a.status()).toMatchObject({ committed: 1, queued: 1 });
+        const b = createRecorder({ backends: [be], storage: st, ...noTimer, sessionId: 'bbbbbbbbbbbb' }); // the reloaded page
+        const snap = await b.snapshot();
+        expect(snap.batches.map(x => [x.sid, x.status, x.events.map(e => e.hole)])).toEqual([['aaaaaaaaaaaa', 'committed', [1]]]);
+        expect(snap.storedEvents).toBe(1);
+    });
+});
+
 describe('localStorage fallback: small budget, own key only', () => {
     it('stays under LOCAL_BYTES by evicting its own oldest batches', async () => {
         const st = createStorage();

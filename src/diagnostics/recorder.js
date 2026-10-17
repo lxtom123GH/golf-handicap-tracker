@@ -301,9 +301,13 @@ export function createRecorder(opts = {}) {
         try { return Number(storage?.getItem(CLEARED_KEY)) || 0; } catch { return 0; }
     }
 
+    // The in-flight promise is published BEFORE it can settle and cleared by
+    // identity afterwards: an empty flush that completes synchronously must
+    // not leave a settled promise behind that wedges every later flush.
     async function flush() {
         if (flushing) return flushing;
-        flushing = (async () => {
+        const p = (async () => {
+            await null; // always yield once, so `flushing` is set before the body runs
             try {
                 while (queue.length && !disabledReason) {
                     const clearedAt = readClearedAt();
@@ -337,11 +341,11 @@ export function createRecorder(opts = {}) {
                 }
             } catch {
                 fault('flush');
-            } finally {
-                flushing = null;
             }
         })();
-        return flushing;
+        flushing = p;
+        p.then(() => { if (flushing === p) flushing = null; });
+        return p;
     }
 
     function storageName() {

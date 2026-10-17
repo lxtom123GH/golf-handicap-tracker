@@ -22,7 +22,7 @@ export function statusText(s) {
     if (!s) return 'Diagnostics unavailable on this device.';
     if (s.disabledReason) return `Recorder stopped itself (${s.disabledReason}); the app is unaffected.`;
     if (!s.enabled) return 'Diagnostics off.';
-    const where = s.storage === 'idb' ? 'saved on this phone' : s.storage === 'local' ? 'saved on this phone (small backup store)' : 'NOT saved - kept in memory only';
+    const where = s.storage === 'idb' ? 'storing on this phone' : s.storage === 'local' ? 'storing on this phone (small backup store)' : 'NOT being saved - memory only';
     const parts = [`On · ${s.committed} saved · ${s.queued} waiting · ${where}`];
     if (s.failed) parts.push(`${s.failed} could not be saved`);
     if (s.dropped) parts.push(`${s.dropped} skipped (limits)`);
