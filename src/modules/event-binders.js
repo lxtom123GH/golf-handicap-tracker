@@ -410,7 +410,7 @@ export function bindSetupToggles() {
             UI.btnModeSimple.style.color = 'black';
             UI.btnModeDetailed.classList.remove('active');
             UI.btnModeDetailed.style.background = 'transparent';
-            UI.btnModeDetailed.style.color = '#64748b';
+            UI.btnModeDetailed.style.color = '#475569';
             if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Simple: fairway, GIR, putts per hole";
             import('../oncourse.js').then(m => m.updateModeVisibility());
         });
@@ -421,7 +421,7 @@ export function bindSetupToggles() {
             UI.btnModeDetailed.style.color = 'black';
             UI.btnModeSimple.classList.remove('active');
             UI.btnModeSimple.style.background = 'transparent';
-            UI.btnModeSimple.style.color = '#64748b';
+            UI.btnModeSimple.style.color = '#475569';
             if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Detailed: Tracking ball flight, start line, curve, & outcomes";
             import('../oncourse.js').then(m => m.updateModeVisibility());
         });

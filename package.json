@@ -20,6 +20,7 @@
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@firebase/rules-unit-testing": "^5.0.0",
     "@playwright/test": "^1.61.1",
     "axe-core": "4.13.0",
