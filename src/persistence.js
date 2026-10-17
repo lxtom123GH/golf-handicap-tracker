@@ -4,6 +4,7 @@
 // ==========================================
 import { AppState } from './state.js';
 import { loadHole, resumeGpsIfWasOn } from './oncourse.js';
+import { releaseRecorderStorage } from './diagnostics/recorder.js';
 
 const GOLF_APP_STATE_KEY = 'golf_round_state';
 
@@ -167,6 +168,15 @@ export function saveRoundState() {
         localStorage.setItem(GOLF_APP_STATE_KEY, payload);
     } catch (e) {
         console.warn("[Persistence] Round state write failed; pruning backups and retrying.", e);
+        // The flight recorder's small fallback copy is given up first, before
+        // any round backup is pruned. It only exists when IndexedDB failed.
+        if (releaseRecorderStorage()) {
+            try {
+                localStorage.setItem(GOLF_APP_STATE_KEY, payload);
+                console.log("[Persistence] Round state saved after releasing diagnostics storage.");
+                return;
+            } catch { /* still full: prune backups below */ }
+        }
         pruneRoundBackups(0);
         try {
             localStorage.setItem(GOLF_APP_STATE_KEY, payload);

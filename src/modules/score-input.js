@@ -19,6 +19,7 @@ import { createCapture, GPS_POLICY } from "../gps-capture.js";
 // S1 Part A geometry: derive startLine/shape/missPattern from the swipes.
 import { classifyCurve, missPatternFrom } from "../shot-shape.js";
 import { shotEntryVisibility } from "../shot-entry.js";
+import { trackWrite } from "../diagnostics/recorder.js";
 // S11: the step line, button labels and captions are pure functions of the shot.
 import { wizardStepText, shotButtons, modeCaption, trackButtonLabel, loggedToast, undoCardText } from "../wizard-flow.js";
 
@@ -1348,7 +1349,7 @@ export async function saveShotData() {
 
                 loadHole();
             }
-            setDoc(shotRef, payload).catch(e => console.error("Shot failed to sync:", e));
+            trackWrite('shot', setDoc(shotRef, payload)).catch(e => console.error("Shot failed to sync:", e));
         }
         const holed = payload.puttControl === 'Holed';
         // Glass chips PR 2: a new, non-holed shot gets the 6 s Undo card.
