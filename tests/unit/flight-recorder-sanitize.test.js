@@ -78,7 +78,7 @@ describe('sanitizeEvent: allowlist only', () => {
 
     it('accepts the real values the app produces', () => {
         expect(sanitizeEvent({ t: T, k: 'round_start', round: 'round_1760000000000', course: 'ashgrove', tee: 'Blue', holes: 18, hole: 10 }))
-            .toEqual({ t: T, k: 'round_start', round: 'round_1760000000000', course: 'ashgrove', tee: 'Blue', holes: 18, hole: 10 });
+            .toEqual({ t: T, k: 'round_start', round: 'round_1760000000000', course: 'ashgrove', holes: 18, hole: 10 }); // tee is not an allowlisted field
         expect(sanitizeEvent({ t: T, k: 'write', kind: 'round', op: 3, status: 'rejected', code: 'permission-denied', ms: 812 }).code).toBe('permission-denied');
         expect(sanitizeEvent({ t: T, k: 'boot', build: 'v7.0.0+63ad26b32f6330da973fac0582d03e7b89f93c04' }).build).toBe('v7.0.0+63ad26b32f6330da973fac0582d03e7b89f93c04');
     });
@@ -88,9 +88,9 @@ describe('errorFields: structure only, never the message', () => {
     it('keeps name, code and the top frame basename without query', () => {
         const e = new TypeError('Cannot read alex@example.com token=' + JWT);
         e.code = 'firestore/unavailable';
-        e.stack = `TypeError: Cannot read alex@example.com\n    at f (https://golf.example/assets/index-Ab12.js?v=${JWT}#x:12:34)\n    at g (https://golf.example/assets/other.js:1:2)`;
+        e.stack = `TypeError: Cannot read alex@example.com\n    at f (https://golf.example/assets/index-Ab12CdEf.js?v=${JWT}#x:12:34)\n    at g (https://golf.example/assets/other.js:1:2)`;
         const f = errorFields(e);
-        expect(f).toEqual({ name: 'TypeError', code: 'firestore/unavailable', src: 'index-Ab12.js', line: 12, col: 34 });
+        expect(f).toEqual({ name: 'TypeError', code: 'firestore/unavailable', src: 'index-Ab12CdEf.js', line: 12, col: 34 });
         expect(JSON.stringify(f)).not.toContain('alex');
     });
 
@@ -114,12 +114,13 @@ describe('errorFields: structure only, never the message', () => {
         expect(errorFields(42)).toEqual({ name: 'Primitive' });
         const evil = {}; Object.defineProperty(evil, 'name', { get() { throw new Error('x'); } });
         Object.defineProperty(evil, 'stack', { get() { throw new Error('x'); } });
-        expect(errorFields(evil)).toEqual({ name: 'Unknown' });
-        expect(errorFields({ name: 'has spaces and alex@example.com' }).name).toBe('Unknown');
+        expect(errorFields(evil)).toEqual({ name: 'Other' });
+        expect(errorFields({ name: 'has spaces and alex@example.com' }).name).toBe('Other');
     });
 
     it('fileOf strips path, query, fragment and userinfo', () => {
-        expect(fileOf('https://u:p@h.example/a/b/c.js?x=1#y')).toBe('c.js');
+        expect(fileOf('https://u:p@h.example/a/b/index-ByBMoM4s.js?x=1#y')).toBe('index-ByBMoM4s.js');
+        expect(fileOf('https://h.example/a/alex.js')).toBeUndefined(); // not a generated asset name
         expect(fileOf('https://h.example/a/?token=abc')).toBeUndefined();
         expect(fileOf(42)).toBeUndefined();
     });

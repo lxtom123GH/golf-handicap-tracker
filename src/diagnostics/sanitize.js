@@ -30,12 +30,34 @@ const ENUMS = {
     state: new Set(['in', 'out', 'switch', 'denied', 'unavailable', 'timeout', 'other']),
 };
 
-const ID_RE = /^[A-Za-z0-9_.:-]{1,24}$/;          // round_<ms>, op ids; too short for a UID/token
-const CODE_RE = /^[A-Za-z0-9][A-Za-z0-9/_.-]{0,47}$/; // 'permission-denied', 'firestore/unavailable'
-const NAME_RE = /^[A-Za-z][A-Za-z0-9]{0,39}$/;      // 'TypeError', 'FirebaseError'
-const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;        // course slug, tab id
-const TEE_RE = /^[A-Za-z][A-Za-z ]{0,15}$/;         // 'Blue', 'White Ladies' (fixed course data)
-const FILE_RE = /^[A-Za-z0-9_.-]{1,64}$/;           // basename only: 'index-abc123.js'
+// Value ALLOWLISTS (Codex review 1, P1): a pattern such as "short letters"
+// lets short private values through ('Alex', 'John Smith'), so every string
+// field is either a known value or a strict generated-identifier format.
+const ROUND_RE = /^round_\d{13}$/;                  // round_<Date.now()>
+const FILE_RE = /^[a-z][a-z0-9-]{0,40}-[A-Za-z0-9_-]{8}\.js$/; // Vite asset 'index-ByBMoM4s.js'
+const FILE_NAMES = new Set(['sw.js', 'index.html']);
+const ERROR_NAMES = new Set([
+    'Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'EvalError', 'URIError',
+    'AggregateError', 'FirebaseError', 'DOMException', 'QuotaExceededError', 'AbortError',
+    'NotAllowedError', 'SecurityError', 'NetworkError', 'TimeoutError', 'InvalidStateError',
+    'NotFoundError', 'DataError', 'UnknownError', 'VersionError', 'ConstraintError',
+    'TransactionInactiveError', 'NotSupportedError', 'ChunkLoadError',
+    // recorder sentinels
+    'Other', 'Unknown', 'Nullish', 'String', 'Primitive', 'NoErrorObject',
+]);
+const FIRESTORE_CODES = ['cancelled', 'unknown', 'invalid-argument', 'deadline-exceeded', 'not-found',
+    'already-exists', 'permission-denied', 'resource-exhausted', 'failed-precondition', 'aborted',
+    'out-of-range', 'unimplemented', 'internal', 'unavailable', 'data-loss', 'unauthenticated'];
+const CODES = new Set([
+    ...FIRESTORE_CODES, ...FIRESTORE_CODES.map(c => `firestore/${c}`), ...FIRESTORE_CODES.map(c => `functions/${c}`),
+    'auth/network-request-failed', 'auth/user-token-expired', 'auth/internal-error',
+    // GPS PositionError codes and small DOMException numeric codes
+    '0', '1', '2', '3', '11', '18', '19', '20', '22', '23',
+    // cloud uploader reasons
+    'not-eligible', 'not-started', 'killed', 'unacked', 'refused', 'errors', 'session-cap', 'day-cap', 'fault', 'signed-out',
+]);
+const COURSES = new Set(['keperra', 'ashgrove', 'redcliffe', 'virginia']);
+const TABS = new Set(['tab-admin', 'tab-coach', 'tab-comp', 'tab-feed', 'tab-insights', 'tab-oncourse', 'tab-practice', 'tab-settings', 'tab-whs']);
 const BUILD_RE = /^(?:v?\d{1,3}\.\d{1,3}\.\d{1,3}|dev)\+(?:[0-9a-f]{40}|unknown|local)$|^unknown$/; // 'v7.0.0+<40-hex>'
 // A run of 20+ letters/digits with no separator looks like a UID, push id or
 // token; no allowlisted field legitimately carries one (build has its own regex).
@@ -45,7 +67,9 @@ const LONG_RUN_RE = /[A-Za-z0-9]{20,}/;
 const int = (min, max) => v => (typeof v === 'number' && Number.isFinite(v)) ? Math.min(max, Math.max(min, Math.round(v))) : undefined;
 const num1 = (min, max) => v => (typeof v === 'number' && Number.isFinite(v)) ? Math.round(Math.min(max, Math.max(min, v)) * 10) / 10 : undefined;
 const bool = v => (typeof v === 'boolean' ? v : undefined);
-const re = (rx, max) => v => (typeof v === 'string' && v.length <= max && rx.test(v) && !LONG_RUN_RE.test(v)) ? v : undefined;
+const re = (rx, max) => v => (typeof v === 'string' && v.length <= max && rx.test(v)) ? v : undefined;
+const oneOf = set => v => (typeof v === 'string' && v.length <= 48 && set.has(v)) ? v : undefined;
+const fileName = v => (typeof v === 'string' && v.length <= 64 && (FILE_NAMES.has(v) || (FILE_RE.test(v) && !LONG_RUN_RE.test(v)))) ? v : undefined;
 const buildRe = v => (typeof v === 'string' && v.length <= 64 && BUILD_RE.test(v)) ? v : undefined;
 const en = set => v => (typeof v === 'string' && set.has(v)) ? v : undefined;
 const distOrNull = v => (v === null ? null : int(0, 2000)(v));
@@ -60,9 +84,9 @@ export const FIELDS = {
     online: bool, standalone: bool, persisted: bool, quiet: bool, cause: bool,
     status: en(ENUMS.status), kind: en(ENUMS.kind), vis: en(ENUMS.vis),
     plat: en(ENUMS.plat), storage: en(ENUMS.storage), sw: en(ENUMS.sw), state: en(ENUMS.state),
-    round: v => (typeof v === 'string' && /^round_\d{10,16}$/.test(v)) ? v : re(ID_RE, 24)(v), code: re(CODE_RE, 48), name: re(NAME_RE, 40),
-    course: re(SLUG_RE, 40), tab: re(SLUG_RE, 40), tee: re(TEE_RE, 16),
-    src: re(FILE_RE, 64), build: buildRe,
+    round: re(ROUND_RE, 19), code: oneOf(CODES), name: oneOf(ERROR_NAMES),
+    course: oneOf(COURSES), tab: oneOf(TABS),
+    src: fileName, build: buildRe,
     // Recorder self-report counters (no payload, just numbers).
     dropped: int(0, 1e9), evicted: int(0, 1e9), failed: int(0, 1e9), committed: int(0, 1e9),
 };
@@ -110,7 +134,7 @@ export function fileOf(url) {
         if (typeof url !== 'string' || !url) return undefined;
         const s = url.slice(0, 2048).split(/[?#]/)[0];
         const base = s.slice(s.lastIndexOf('/') + 1);
-        return FILE_RE.test(base) ? base : undefined;
+        return fileName(base);
     } catch { return undefined; }
 }
 
@@ -134,10 +158,9 @@ export function errorFields(err) {
         try { stack = err.stack; } catch { /* throwing getter */ }
         try { cause = err.cause; } catch { /* throwing getter */ }
         try { errors = err.errors; } catch { /* throwing getter */ }
-        if (typeof name === 'string' && NAME_RE.test(name)) out.name = name;
-        else out.name = 'Unknown';
-        if (typeof code === 'string' && CODE_RE.test(code)) out.code = code;
-        else if (typeof code === 'number' && Number.isFinite(code)) out.code = String(Math.round(code));
+        out.name = (typeof name === 'string' && ERROR_NAMES.has(name)) ? name : 'Other';
+        if (typeof code === 'string' && CODES.has(code)) out.code = code;
+        else if (typeof code === 'number' && CODES.has(String(code))) out.code = String(code);
         if (typeof stack === 'string') {
             const lines = stack.slice(0, 4096).split('\n').slice(0, 8);
             for (const l of lines) {
