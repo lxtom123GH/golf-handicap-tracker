@@ -1,0 +1,589 @@
+{
+  "tokens": {
+    "--space-8": "8px",
+    "--space-10": "10px",
+    "--radius-8": "8px",
+    "--radius-12": "12px",
+    "--text-085": "0.85rem",
+    "--text-090": "0.9rem",
+    "--text-100": "1rem"
+  },
+  "replacements": [
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 84
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 93
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 102
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 107
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 123
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 127
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 150
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 159
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 183
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 190
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 201
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 222
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 229
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 269
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 280
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 314
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 345
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 400
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 483
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 510
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 593
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 604
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 619
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 642
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 657
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 664
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 676
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 821
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 847
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 874
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 880
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 894
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 899
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 923
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 1024
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 1103
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1128
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 1145
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1191
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 1205
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 1235
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 1244
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1270
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1291
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 1319
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 1330
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 1349
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 1380
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 1387
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 1421
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 1434
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 1444
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 1448
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1457
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 1481
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1663
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1677
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 1898
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 1908
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 1910
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1946
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 1960
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2156
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2221
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 2223
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 2231
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 2233
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2244
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 2301
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2309
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 2327
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 2342
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 2403
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 2590
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2599
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 2653
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 2696
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 2728
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2791
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 2838
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 2845
+    },
+    {
+      "property": "border-radius",
+      "value": "8px",
+      "token": "--radius-8",
+      "line": 2849
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2865
+    },
+    {
+      "property": "gap",
+      "value": "8px",
+      "token": "--space-8",
+      "line": 2903
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 2964
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 3121
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 3254
+    },
+    {
+      "property": "font-size",
+      "value": "0.85rem",
+      "token": "--text-085",
+      "line": 3273
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 3310
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 3324
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 3335
+    },
+    {
+      "property": "border-radius",
+      "value": "12px",
+      "token": "--radius-12",
+      "line": 3339
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 3342
+    },
+    {
+      "property": "font-size",
+      "value": "0.9rem",
+      "token": "--text-090",
+      "line": 3350
+    },
+    {
+      "property": "gap",
+      "value": "10px",
+      "token": "--space-10",
+      "line": 3384
+    },
+    {
+      "property": "font-size",
+      "value": "1rem",
+      "token": "--text-100",
+      "line": 3415
+    }
+  ]
+}

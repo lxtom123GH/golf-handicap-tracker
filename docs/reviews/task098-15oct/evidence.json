@@ -1,0 +1,112 @@
+{
+  "mainCommit": "a43d7e5",
+  "before": {
+    "variant": "no-online-reload-first",
+    "controlled": true,
+    "cloakCleared": false,
+    "score": null,
+    "cachedBuildAssets": [
+      "/assets/quick-start-CC1X2J0j.js",
+      "/assets/play-mode-CEhILULo.js"
+    ],
+    "failedBuildRequests": [
+      {
+        "path": "/assets/index-DZrQ8vPk.css",
+        "error": "net::ERR_FAILED"
+      },
+      {
+        "path": "/assets/index-BodaJGqe.js",
+        "error": "net::ERR_FAILED"
+      }
+    ]
+  },
+  "after": [
+    {
+      "device": "phone",
+      "variant": "no-online-reload-first",
+      "controlled": true,
+      "cloakCleared": true,
+      "score": "4",
+      "cachedBuildAssets": [
+        "/assets/index-DZrQ8vPk.css",
+        "/assets/play-mode-BcHI0tZS.js",
+        "/assets/hole-mapper-CHb-7nWm.js",
+        "/assets/quick-start-BxkCu3TM.js",
+        "/assets/index-BP7y8BUl.js"
+      ],
+      "failedBuildRequests": [],
+      "assertedWhileOffline": true
+    },
+    {
+      "device": "phone",
+      "variant": "online-reload-first",
+      "controlled": true,
+      "cloakCleared": true,
+      "score": "4",
+      "cachedBuildAssets": [
+        "/assets/index-DZrQ8vPk.css",
+        "/assets/play-mode-BcHI0tZS.js",
+        "/assets/quick-start-BxkCu3TM.js",
+        "/assets/hole-mapper-CHb-7nWm.js",
+        "/assets/index-BP7y8BUl.js"
+      ],
+      "failedBuildRequests": [],
+      "assertedWhileOffline": true
+    },
+    {
+      "device": "iphone-se",
+      "variant": "no-online-reload-first",
+      "controlled": true,
+      "cloakCleared": true,
+      "score": "4",
+      "cachedBuildAssets": [
+        "/assets/index-DZrQ8vPk.css",
+        "/assets/play-mode-BcHI0tZS.js",
+        "/assets/hole-mapper-CHb-7nWm.js",
+        "/assets/quick-start-BxkCu3TM.js",
+        "/assets/index-BP7y8BUl.js"
+      ],
+      "failedBuildRequests": [],
+      "assertedWhileOffline": true
+    },
+    {
+      "device": "iphone-se",
+      "variant": "online-reload-first",
+      "controlled": true,
+      "cloakCleared": true,
+      "score": "4",
+      "cachedBuildAssets": [
+        "/assets/index-DZrQ8vPk.css",
+        "/assets/play-mode-BcHI0tZS.js",
+        "/assets/hole-mapper-CHb-7nWm.js",
+        "/assets/quick-start-BxkCu3TM.js",
+        "/assets/index-BP7y8BUl.js"
+      ],
+      "failedBuildRequests": [],
+      "assertedWhileOffline": true
+    }
+  ],
+  "scoreMutation": {
+    "brokenBehavior": "score 0 while offline; restores 4 on the online event",
+    "oldReconnectBeforeAssertion": "passed",
+    "newOfflineAssertion": "failed: expected 4, received 0",
+    "temporarySpecsRemoved": true
+  },
+  "fallbackBefore": {
+    "worker": "3554f9e",
+    "js": "activated",
+    "css": "activated",
+    "expected": "redundant",
+    "testsFailed": 2
+  },
+  "fallbackAfter": {
+    "js": "redundant",
+    "css": "redundant",
+    "oldShellPreserved": true,
+    "oldAssetMimePreserved": true,
+    "devices": [
+      "phone",
+      "iphone-se"
+    ]
+  }
+}

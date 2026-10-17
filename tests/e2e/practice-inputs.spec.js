@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup, findDocs, writeDocFields, readDoc } from './helpers/emulator.js';
 import { createRequire } from 'node:module';
 
 const { normalizePracticeInputs } = createRequire(import.meta.url)('../../functions/lib/practice-inputs.js');
+let email;
 
 test.beforeEach(async ({ page }) => {
-    const email = throwawayEmail('practice-inputs');
+    email = throwawayEmail('practice-inputs');
     await seedPreapprovedEmail(email);
     await page.goto('/');
     await page.locator('#btn-register').click();
@@ -38,7 +39,7 @@ async function mockPlan(page, respond) {
         try {
             // Exercise production validation; only the billable model result is scripted.
             normalizePracticeInputs(sent.at(-1));
-            response = respond(sent.length);
+            response = await respond(sent.length);
         } catch (error) {
             response = { error: { status: 'INVALID_ARGUMENT', message: error.message } };
         }
@@ -101,4 +102,65 @@ test('a cached active plan explains that the newly submitted preferences were ig
     await expect(page.locator('#practice-preferences-notice')).toBeVisible();
     await expect(page.locator('#practice-preferences-notice')).toContainText('preferences were not applied');
     await expect(page.locator('#practice-preferences-notice')).toContainText('New Drill');
+});
+
+test('service failures show safe actions and clear on a successful retry', async ({ page }) => {
+    const uncertain = "We couldn't confirm whether your plan was created. Reload this page to check for an active plan before generating again.";
+    const failures = [
+        ['PERMISSION_DENIED', 'Your account is awaiting approval. Ask an admin to approve it before using AI features.'],
+        ['RESOURCE_EXHAUSTED', "You've reached today's limit across AI features. Try again tomorrow."],
+        ['UNAUTHENTICATED', 'Your session has ended. Sign in again to generate a practice plan.'],
+        ['INTERNAL', uncertain],
+        ['INVALID_ARGUMENT', uncertain],
+    ];
+    let release;
+    const pending = new Promise(resolve => { release = resolve; });
+    const sent = await mockPlan(page, async attempt => {
+        if (attempt <= failures.length) {
+            return { error: { status: failures[attempt - 1][0], message: 'private backend trace <img src=x>' } };
+        }
+        await pending;
+        return { result: plan };
+    });
+    const error = page.locator('#practice-generate-error');
+    const button = page.locator('#btn-generate-practice');
+    await expect(error).toBeHidden();
+    for (const [, message] of failures) {
+        await button.click();
+        await expect(error).toBeVisible();
+        await expect(error).toHaveText(message);
+        await expect(error).toHaveAttribute('role', 'alert');
+        await expect(button).toBeEnabled();
+        await expect(error.locator('img')).toHaveCount(0);
+    }
+    await button.click();
+    await expect(page.locator('#practice-state-loading')).toBeVisible();
+    await expect(button).toBeDisabled();
+    await expect(error).toBeHidden();
+    release();
+    await expect(page.locator('#practice-state-active')).toBeVisible();
+    await expect(page.locator('#practice-steps-list')).toContainText(plan.steps[0]);
+    await expect(error).toBeHidden();
+    expect(sent).toHaveLength(failures.length + 1);
+});
+
+test('reload recovers the stored plan after a lost generation response', async ({ page }) => {
+    const [user] = await findDocs('users', 'email', email);
+    const path = `users/${user._id}/practice_plans/active`;
+    const stored = { status: 'active', drillId: plan.drillId, drill: plan, completedSteps: [0] };
+    const sent = await mockPlan(page, async () => {
+        // Simulate a committed server write followed by a lost callable response.
+        await writeDocFields(path, stored);
+        return { error: { status: 'DEADLINE_EXCEEDED', message: 'private timeout detail' } };
+    });
+    await page.locator('#btn-generate-practice').click();
+    await expect(page.locator('#practice-generate-error')).toContainText('Reload this page');
+    expect(await readDoc(path)).toEqual(stored);
+    await page.reload();
+    await page.locator('.tab-btn[data-target="tab-practice"]').click();
+    await expect(page.locator('#practice-state-active')).toBeVisible();
+    await expect(page.locator('#practice-steps-list')).toContainText(plan.steps[0]);
+    await expect(page.locator('.practice-step input').first()).toBeChecked();
+    await expect(page.locator('#practice-generate-error')).toBeHidden();
+    expect(sent).toHaveLength(1);
 });
