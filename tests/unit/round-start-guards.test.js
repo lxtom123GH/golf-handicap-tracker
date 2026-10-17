@@ -29,7 +29,7 @@ const mocks = vi.hoisted(() => ({
         startGpsForRound: vi.fn(),
     },
     scoreInput: {
-        quickLogWanted: vi.fn(() => false),
+        quickLogReady: vi.fn(async () => false),
         startNewShotInput: vi.fn(),
         showToast: vi.fn(),
     },
@@ -100,8 +100,8 @@ beforeEach(() => {
     mocks.calculateDailyHandicap.mockImplementation((hi) => (hi === null ? null : 11));
     globalThis.alert = vi.fn();
     localStorage.clear();
-    mocks.scoreInput.quickLogWanted.mockReset();
-    mocks.scoreInput.quickLogWanted.mockImplementation(() => false);
+    mocks.scoreInput.quickLogReady.mockReset();
+    mocks.scoreInput.quickLogReady.mockImplementation(async () => false);
     mocks.scoreInput.startNewShotInput.mockReset();
 });
 
@@ -115,16 +115,22 @@ describe('Start Round opens the first shot in a Detailed round', () => {
     });
 
     it('leaves the wizard closed when one-tap logging is on', async () => {
-        mocks.scoreInput.quickLogWanted.mockImplementation(() => true);
+        mocks.scoreInput.quickLogReady.mockImplementation(async () => true);
         await bindStartRound()();
-        await vi.waitFor(() => expect(mocks.scoreInput.quickLogWanted).toHaveBeenCalled());
+        await vi.waitFor(() => expect(mocks.scoreInput.quickLogReady).toHaveBeenCalled());
         await new Promise(r => setTimeout(r, 0));
         expect(mocks.scoreInput.startNewShotInput).not.toHaveBeenCalled();
     });
 
+    it('opens the wizard when one-tap is on but this hole has no map', async () => {
+        mocks.scoreInput.quickLogReady.mockImplementation(async () => false);
+        await bindStartRound()();
+        await vi.waitFor(() => expect(mocks.scoreInput.startNewShotInput).toHaveBeenCalledTimes(1));
+    });
+
     it('falls back to the wizard when the one-tap check throws', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        mocks.scoreInput.quickLogWanted.mockImplementation(() => { throw new TypeError('no pref'); });
+        mocks.scoreInput.quickLogReady.mockImplementation(async () => { throw new TypeError('no pref'); });
         await bindStartRound()();
         await vi.waitFor(() => expect(mocks.scoreInput.startNewShotInput).toHaveBeenCalledTimes(1));
         warn.mockRestore();

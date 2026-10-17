@@ -26,7 +26,7 @@ import { greenTargetsFromPlayer } from './green-targets.js';
 import { initBigNumbersView, updateBigNumbersView, closeBigNumbersView } from './big-numbers.js';
 
 import { updateLiveLeaderboard, renderDetailedReview, renderBagButtons, renderHoleJumper } from './modules/card-render.js';
-import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast, refreshTrackButtonLabel, quickLogWanted } from './modules/score-input.js';
+import { startNewShotInput, loadExistingShotData, syncShotWizardUI, setWizardActive, saveShotData, deleteShotData, showToast, refreshTrackButtonLabel, quickLogWanted, quickLogReady } from './modules/score-input.js';
 import { bindAddPlayer, bindCompQuickAdd, bindSetupToggles, bindCourseSelect, bindStartRound, bindGlobalRoundActions, bindOcSubNav, bindShotWizard, discardRound } from './modules/event-binders.js';
 import { writeRoundBackup, markRoundBackupUnsynced, hasRoundBackup, markRoundSaved } from './persistence.js';
 import { isGuestId } from './guests.js';
@@ -1673,9 +1673,20 @@ export function bindHoleNav() {
                 // it for them. Revisiting a hole with shots stays quiet.
                 // One-tap logging (Map first on the play map): the map IS the
                 // shot screen, so no wizard pops up over it.
-                if (AppState.currentTrackingMode === 'detailed' && !quickLogWanted()
-                    && !(AppState.currentHoleShots && AppState.currentHoleShots.length)) {
-                    startNewShotInput();
+                // An unmapped hole on a mapped course has no play map: open
+                // the wizard there too, once the course file says so.
+                const freshHole = () => !(AppState.currentHoleShots && AppState.currentHoleShots.length);
+                if (AppState.currentTrackingMode === 'detailed' && freshHole()) {
+                    let quick = false;
+                    try { quick = quickLogWanted(); } catch { quick = false; }
+                    if (!quick) startNewShotInput();
+                    else {
+                        const hole = AppState.currentHole;
+                        Promise.resolve().then(() => quickLogReady()).then(ready => {
+                            if (!ready && AppState.currentHole === hole && freshHole()
+                                && !document.body.classList.contains('active-wizard-mode')) startNewShotInput();
+                        }).catch(() => {});
+                    }
                 }
             } else {
                 openFinishModal();

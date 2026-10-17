@@ -866,9 +866,11 @@ export function bindStartRound() {
             // If the one-tap check itself fails, fall back to the wizard: a
             // Detailed round must never start with no way to log a shot.
             if (AppState.currentTrackingMode === 'detailed') {
-                import('./score-input.js').then(m => {
+                // A hole with no map has no play map either (mapless-shot
+                // spec): one-tap logging only skips the wizard where it is ready.
+                import('./score-input.js').then(async m => {
                     let quick = false;
-                    try { quick = !!m.quickLogWanted(); } catch (e) { console.warn('One-tap logging check failed; opening the shot wizard', e); }
+                    try { quick = !!(await m.quickLogReady()); } catch (e) { console.warn('One-tap logging check failed; opening the shot wizard', e); }
                     if (!quick) m.startNewShotInput();
                 }).catch(e => console.warn('Could not open the first shot', e));
             }

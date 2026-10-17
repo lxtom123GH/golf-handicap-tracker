@@ -44,7 +44,8 @@ vi.mock('../../src/hole-overlay.js', () => ({
 }));
 
 import { AppState } from '../../src/state.js';
-import { quickLogShot, quickNudgeShot, quickUndo, quickLogWanted, setWizardActive } from '../../src/modules/score-input.js';
+import { quickLogShot, quickNudgeShot, quickUndo, quickLogWanted, quickLogReady, setWizardActive } from '../../src/modules/score-input.js';
+import { loadCourseOverlay } from '../../src/hole-overlay.js';
 
 const ROOT = path.resolve(__dirname, '../..');
 const HTML = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -181,5 +182,26 @@ describe('quickLogWanted (live AppState)', () => {
         AppState.shotEntry = 'map';
         AppState.currentTrackingMode = 'simple';
         expect(quickLogWanted()).toBe(false);
+    });
+});
+
+// CI on #12 (mapless-shot.spec): a mapped course with an unmapped hole has
+// no play map, so the round must still open the wizard there.
+describe('quickLogReady (one-tap logging AND a map for this hole)', () => {
+    it('is true only when the course file has this hole', async () => {
+        AppState.currentHole = 3;
+        loadCourseOverlay.mockResolvedValueOnce({ holes: { 3: { tee: {}, green: {} } } });
+        expect(await quickLogReady()).toBe(true);
+        loadCourseOverlay.mockResolvedValueOnce({ holes: { 4: { tee: {}, green: {} } } });
+        expect(await quickLogReady()).toBe(false);
+    });
+
+    it('is false when the course file is missing (offline) or one-tap is off', async () => {
+        AppState.currentHole = 3;
+        loadCourseOverlay.mockResolvedValueOnce(null);
+        expect(await quickLogReady()).toBe(false);
+        AppState.shotEntry = 'both';
+        loadCourseOverlay.mockResolvedValueOnce({ holes: { 3: {} } });
+        expect(await quickLogReady()).toBe(false);
     });
 });

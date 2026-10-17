@@ -1,5 +1,5 @@
 import { AppState, mutateList } from '../state.js';
-import { fairwayFromLie, derivedGir, readPlayMode } from '../play-mode.js';
+import { fairwayFromLie, derivedGir, readPlayMode, physicalHoleFor } from '../play-mode.js';
 import { quickLogWanted as quickLogWantedFor } from '../quick-log.js';
 import { UI } from '../ui.js';
 import { renderBagButtons, shortClubLabel } from './card-render.js';
@@ -1520,6 +1520,21 @@ export function quickLogWanted() {
         trackingMode: AppState.currentTrackingMode,
         courseSlug: courseSlugFor(AppState.currentRoundCourseName),
     });
+}
+
+/**
+ * One-tap logging is on AND this hole has a map, so the play map really
+ * mounts and owns the shot. A mapped course can still have unmapped holes
+ * (and the file can fail to load offline): there the round screen and the
+ * shot wizard are used, so callers that skip the wizard for one-tap logging
+ * must ask this, not quickLogWanted().
+ */
+export async function quickLogReady() {
+    if (!quickLogWanted()) return false;
+    const name = AppState.currentRoundCourseName;
+    const course = await loadCourseOverlay(courseSlugFor(name));
+    const teeData = COURSE_DATA[name]?.[AppState.currentRoundTee] || {};
+    return !!course?.holes?.[physicalHoleFor(teeData, AppState.currentHole)];
 }
 
 const r1 = (v) => Math.round(v * 10) / 10;
