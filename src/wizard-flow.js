@@ -11,9 +11,10 @@
 /**
  * The three-step header line. S12 A1: it now says WHICH shot — the step
  * number was never the question on course; "shot 2 or 3?" was.
- * @param {{hasIntended:boolean, hasActual:boolean, flightUnseen:boolean, shotNumber?:number}} s
+ * @param {{hasIntended:boolean, hasActual:boolean, flightUnseen:boolean, shotNumber?:number, hasMap?:boolean}} s
  */
 export function wizardStepText(s) {
+    if (s?.hasMap === false) return 'No map for this hole yet - pick the club and result';
     const n = Number(s?.shotNumber) || 1;
     const hasIntended = !!s?.hasIntended, hasActual = !!s?.hasActual, unseen = !!s?.flightUnseen;
     if (hasActual || unseen) return `Shot ${n} · check the buttons, then log it`;

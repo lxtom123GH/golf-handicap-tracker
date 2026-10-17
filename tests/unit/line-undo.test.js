@@ -63,6 +63,9 @@ const LINE_A = [[0, 0], [0, 120]];
 const LINE_B = [[0, 0], [5, 200]];
 
 beforeEach(() => {
+    // Pin the 'both' layout for tests that exercise the map-and-grids controls;
+    // Map first's own Undo case sets 'map' explicitly below.
+    AppState.shotEntry = 'both';
     const doc = new DOMParser().parseFromString(HTML, 'text/html');
     document.body.innerHTML = doc.getElementById('oncourse-wizard').outerHTML;
     h.mounts.length = 0;
