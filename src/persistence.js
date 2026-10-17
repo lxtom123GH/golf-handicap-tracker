@@ -4,7 +4,7 @@
 // ==========================================
 import { AppState } from './state.js';
 import { loadHole, resumeGpsIfWasOn } from './oncourse.js';
-import { record as journal } from './session-journal.js';
+import { record as journal, releaseJournalStorage } from './session-journal.js';
 
 const GOLF_APP_STATE_KEY = 'golf_round_state';
 
@@ -168,6 +168,15 @@ export function saveRoundState() {
         localStorage.setItem(GOLF_APP_STATE_KEY, payload);
     } catch (e) {
         console.warn("[Persistence] Round state write failed; pruning backups and retrying.", e);
+        // The diagnostics journal gives its space back FIRST: round backups
+        // are never pruned because of journal bytes.
+        if (releaseJournalStorage()) {
+            try {
+                localStorage.setItem(GOLF_APP_STATE_KEY, payload);
+                console.log("[Persistence] Round state saved after releasing the diagnostics journal.");
+                return;
+            } catch { /* still full: prune stale backups below */ }
+        }
         pruneRoundBackups(0);
         try {
             localStorage.setItem(GOLF_APP_STATE_KEY, payload);

@@ -41,16 +41,18 @@ function redact(value, includePositions) {
 export function buildJournalExport({ includePositions = false } = {}) {
     try {
         const snap = journalSnapshot();
-        return redact({
+        // The fixed disclosure is our own constant text: added after redaction
+        // so the length cap on recorded prose does not truncate it.
+        const out = redact({
             format: 'golf-journal',
             version: 1,
             exportedAt: new Date().toISOString(),
             includesPositions: !!includePositions,
-            disclosure: JOURNAL_DISCLOSURE,
             header: snap.header,
             degraded: snap.degraded,
             entries: snap.entries,
         }, !!includePositions);
+        return { ...out, disclosure: JOURNAL_DISCLOSURE };
     } catch (e) {
         return { format: 'golf-journal', version: 1, error: 'export failed', entries: [] };
     }
@@ -150,7 +152,17 @@ export function mountJournalCard() {
 
         const enabled = card.querySelector('.journal-enabled');
         enabled.checked = isJournalEnabled();
-        enabled.addEventListener('change', () => { setJournalEnabled(enabled.checked); refreshJournalCard(); });
+        enabled.addEventListener('change', () => {
+            const res = setJournalEnabled(enabled.checked);
+            // Truthful UI: the box shows what is actually in effect now.
+            enabled.checked = !!res?.enabled;
+            refreshJournalCard();
+            if (res && !res.persisted) {
+                say(card, res.enabled
+                    ? 'Recording on for now, but this choice was not saved on this phone.'
+                    : 'Recording is off now, but this choice was not saved on this phone: it will be on again after the app restarts.');
+            }
+        });
         card.querySelector('.journal-export').addEventListener('click', () => download(card));
         card.querySelector('.journal-copy').addEventListener('click', () => copy(card));
         card.querySelector('.journal-clear').addEventListener('click', () => {

@@ -24,7 +24,11 @@ export const JOURNAL_MAX_ENTRIES = 500;
 export const JOURNAL_MAX_BYTES = 200 * 1024;
 const FLUSH_DELAY_MS = 800;
 const GPS_FIX_EVERY_MS = 60000;
-const MAX_STR = 200;
+const MAX_STR = 120;
+const KIND_RE = /^[a-z][a-z0-9-]{0,31}$/;
+const CODE_RE = /^[A-Za-z0-9][A-Za-z0-9_/.-]{0,47}$/;
+const CODE_KEY_RE = /^(code|errName|codeName)$/;
+const URL_RE = /\b([a-z][a-z0-9+.-]*:\/\/)([^\s/?#]*@)?([^\s/?#]*)([^\s?#]*)(\?[^\s#]*)?(#\S*)?/gi;
 
 const GPS_CODES = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' };
 const SECRET_KEY_RE = /uid|email|token|password|apikey|api_key|secret|displayname|^name$|^key$/i;
@@ -39,6 +43,9 @@ let _lastFixLog = { at: 0, bucket: null };
 const _ctx = { build: null, roundId: null, course: null, hole: null };
 let _installed = false;
 let _onFlush = null;          // the Settings card's refresh, if mounted
+// Runtime preference: takes effect at once, whether or not it could be saved.
+let _runtimeEnabled = null;   // null = follow the stored preference
+let _prefPersisted = true;
 
 /** Read-only view of the journal health (`journal.degraded`). */
 export const journal = {
@@ -55,9 +62,14 @@ function load() {
     _entries = [];
     try {
         const raw = storage()?.getItem(JOURNAL_KEY);
-        if (raw) {
+        // Never parse something far over budget (corrupt or tampered).
+        if (raw && raw.length > JOURNAL_MAX_BYTES * 2) {
+            storage()?.removeItem(JOURNAL_KEY);
+        } else if (raw) {
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) _entries = parsed.slice(-JOURNAL_MAX_ENTRIES);
+            // Re-validate every hydrated entry against the schema: storage
+            // is not trusted, and an older build may have written other shapes.
+            if (Array.isArray(parsed)) _entries = parsed.slice(-JOURNAL_MAX_ENTRIES).map(validEntry).filter(Boolean);
         }
     } catch (e) {
         markDegraded(e);
@@ -82,20 +94,76 @@ function markDegraded(e) {
 
 /** True unless the player turned "Record play diagnostics" off. */
 export function isJournalEnabled() {
+    if (_runtimeEnabled !== null) return _runtimeEnabled;
     try { return storage()?.getItem(JOURNAL_PREF_KEY) !== '0'; } catch { return true; }
 }
 
+/**
+ * Applies the choice immediately (in memory) and then tries to save it.
+ * Returns { enabled, persisted } so the UI can say when it was not saved.
+ */
 export function setJournalEnabled(on) {
-    try { storage()?.setItem(JOURNAL_PREF_KEY, on ? '1' : '0'); } catch { /* pref stays default */ }
+    _runtimeEnabled = !!on;
+    _prefPersisted = false;
+    try {
+        const st = storage();
+        if (st) { st.setItem(JOURNAL_PREF_KEY, on ? '1' : '0'); _prefPersisted = true; }
+    } catch { /* runtime flag still holds for this session */ }
+    if (!on && _flushTimer) { try { clearTimeout(_flushTimer); } catch { /* ignore */ } _flushTimer = null; }
+    return { enabled: _runtimeEnabled, persisted: _prefPersisted };
+}
+
+export function journalPrefStatus() {
+    return { enabled: isJournalEnabled(), persisted: _prefPersisted };
+}
+
+/**
+ * Called by persistence.js when the ROUND state write hits the quota: drop
+ * the journal's stored copy and stop writing it this session, BEFORE any
+ * round backup is pruned. Entries stay in memory. Returns true when a stored
+ * copy existed and was removed. Never throws.
+ */
+export function releaseJournalStorage() {
+    try {
+        _memoryOnly = true;
+        _degraded = _degraded || { reason: 'storage full', error: 'released for the round', at: new Date().toISOString() };
+        const st = storage();
+        if (!st || st.getItem(JOURNAL_KEY) === null) return false;
+        st.removeItem(JOURNAL_KEY);
+        return true;
+    } catch { return false; }
+}
+
+function utf8Bytes(str) {
+    try { return new TextEncoder().encode(str).length; } catch { return str.length * 3; }
 }
 
 function clip(s) {
     const str = String(s ?? '');
-    return str.length > MAX_STR ? str.slice(0, MAX_STR) + '…' : str;
+    // Cut by code points so a surrogate pair is never split.
+    const cps = Array.from(str.length > MAX_STR * 4 ? str.slice(0, MAX_STR * 4) : str);
+    return cps.length > MAX_STR ? cps.slice(0, MAX_STR).join('') + '…' : cps.join('');
+}
+
+/** URLs keep scheme://host/path only: no userinfo, query or fragment. */
+function stripUrls(str) {
+    return str.replace(URL_RE, (_m, scheme, _user, host, path) => `${scheme}${host}${path}`);
 }
 
 export function scrubString(s) {
-    return clip(s).replace(EMAIL_RE, '[email]').replace(TOKEN_RE, '[redacted]');
+    let str = String(s ?? '');
+    if (str.length > 4096) str = str.slice(0, 4096); // bound regex work
+    return clip(stripUrls(str).replace(EMAIL_RE, '[email]').replace(TOKEN_RE, '[redacted]'));
+}
+
+/** Schema check for one entry (new or hydrated). Returns a clean copy or null. */
+function validEntry(e) {
+    try {
+        if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
+        if (typeof e.t !== 'string' || !/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(e.t)) return null;
+        if (typeof e.k !== 'string' || !KIND_RE.test(e.k)) return null;
+        return { t: e.t, k: e.k, ...cleanFields(e) };
+    } catch { return null; }
 }
 
 /** Keep primitives only; drop secret-looking keys; scrub strings. */
@@ -107,7 +175,11 @@ function cleanFields(fields) {
         if (v == null) continue;
         if (typeof v === 'number') { if (Number.isFinite(v)) out[k] = v; }
         else if (typeof v === 'boolean') out[k] = v;
-        else if (typeof v === 'string') out[k] = scrubString(v);
+        else if (typeof v === 'string') {
+            // Code-like fields are allowlisted, never free text.
+            if (CODE_KEY_RE.test(k)) { if (CODE_RE.test(v)) out[k] = v; }
+            else out[k] = scrubString(v);
+        }
     }
     return out;
 }
@@ -115,7 +187,7 @@ function cleanFields(fields) {
 function trimToBudget(list) {
     while (list.length > JOURNAL_MAX_ENTRIES) list.shift();
     let json = JSON.stringify(list);
-    while (json.length > JOURNAL_MAX_BYTES && list.length > 1) {
+    while (utf8Bytes(json) > JOURNAL_MAX_BYTES && list.length > 1) {
         list.splice(0, Math.max(1, Math.floor(list.length / 10)));
         json = JSON.stringify(list);
     }
@@ -149,7 +221,8 @@ function scheduleFlush() {
 export function record(kind, fields) {
     try {
         if (!isJournalEnabled()) return;
-        const entry = { t: new Date().toISOString(), k: String(kind), ...cleanFields(fields) };
+        const entry = validEntry({ ...cleanFields(fields), t: new Date().toISOString(), k: String(kind) });
+        if (!entry) return;
         const list = load();
         list.push(entry);
         if (list.length > JOURNAL_MAX_ENTRIES) list.splice(0, list.length - JOURNAL_MAX_ENTRIES);

@@ -182,7 +182,9 @@ describe('session journal — export', () => {
 
     it('redacts emails, tokens and secret keys; strips coordinates by default', async () => {
         // A legacy/tampered stored entry that bypassed record-time cleaning.
-        localStorage.setItem(KEY, JSON.stringify([{ t: 'x', k: 'legacy', uid: 'u9', userEmail: 'z@z.io', msg: 'from x@y.com', nested: { idToken: 'abc', lat: -27.1 } }]));
+        // (Entries failing the schema, e.g. t: 'x', are now discarded on load:
+        // session-journal-blocking.test.js.)
+        localStorage.setItem(KEY, JSON.stringify([{ t: '2026-10-17T00:00:00.000Z', k: 'legacy', uid: 'u9', userEmail: 'z@z.io', msg: 'from x@y.com', nested: { idToken: 'abc', lat: -27.1 } }]));
         const j = await fresh();
         j.installJournal();
         setState('activeRoundId', null, 'round_2');
