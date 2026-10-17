@@ -145,6 +145,12 @@
                     "queryScope": "COLLECTION_GROUP"
                 }
             ]
+        },
+        {
+            "collectionGroup": "diagnosticChunks",
+            "fieldPath": "expireAt",
+            "ttl": true,
+            "indexes": []
         }
     ]
 }
