@@ -140,12 +140,12 @@ describe('reload: flushed vs unflushed tail', () => {
     it('a reload recovers committed batches only; the unflushed tail is honestly absent', async () => {
         const be = memBackend();
         const st = createStorage();
-        const a = createRecorder({ backends: [be], storage: st, ...noTimer, sessionId: 'aaaaaaaaaaaa' });
+        const a = createRecorder({ backends: [be], storage: st, ...noTimer, sessionId: 'aaaaaaaaaaaa', owner: '0123456789abcdef' });
         a.record('hole', { hole: 1 });
         await a.flush();
         a.record('hole', { hole: 2 }); // still queued when the page dies
         expect(a.status()).toMatchObject({ committed: 1, queued: 1 });
-        const b = createRecorder({ backends: [be], storage: st, ...noTimer, sessionId: 'bbbbbbbbbbbb' }); // the reloaded page
+        const b = createRecorder({ backends: [be], storage: st, ...noTimer, sessionId: 'bbbbbbbbbbbb', owner: '0123456789abcdef' }); // the reloaded page
         const snap = await b.snapshot();
         expect(snap.batches.map(x => [x.sid, x.status, x.events.map(e => e.hole)])).toEqual([['aaaaaaaaaaaa', 'committed', [1]]]);
         expect(snap.storedEvents).toBe(1);
@@ -235,8 +235,8 @@ describe('clear, toggle and export', () => {
 
     it('export re-sanitizes stored data (tampered rows) and carries build provenance', async () => {
         const be = memBackend();
-        const r = createRecorder({ backends: [be], storage: createStorage(), ...noTimer, build: 'v7.0.0+' + 'b'.repeat(40) });
-        be.rows.set('000000000000001|aaaaaaaaaaaa|0|10|2', JSON.stringify({ sid: 'aaaaaaaaaaaa', seq: 0, build: 'v6.9.0+' + 'a'.repeat(40), t: 1, events: [
+        const r = createRecorder({ backends: [be], storage: createStorage(), ...noTimer, build: 'v7.0.0+' + 'b'.repeat(40), owner: '0123456789abcdef' });
+        be.rows.set('000000000000001|aaaaaaaaaaaa|0|10|2', JSON.stringify({ sid: 'aaaaaaaaaaaa', seq: 0, build: 'v6.9.0+' + 'a'.repeat(40), t: 1, acct: '0123456789abcdef', events: [
             { t: 1, k: 'gps', acc: 3, email: 'alex@example.com', lat: -27.4 }, { t: 2, k: 'note', msg: 'secret' },
         ] }));
         r.record('hole', { hole: 5 });

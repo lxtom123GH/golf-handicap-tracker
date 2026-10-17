@@ -176,7 +176,7 @@ function rig({ cfg = { enabled: true, uid: UID }, write } = {}) {
         async list() { return []; }, async clear() { rows.clear(); },
     };
     const st = createStorage();
-    const rec = createRecorder({ backends: [be], storage: st, now: () => t, ...noTimer, sessionId: 'abcdefabcdef' });
+    const rec = createRecorder({ backends: [be], storage: st, now: () => t, ...noTimer, sessionId: 'abcdefabcdef', owner: '0123456789abcdef' });
     const config = { current: cfg };
     const writes = [];
     const up = createCloudUploader({ isolation: () => 'confirmed',

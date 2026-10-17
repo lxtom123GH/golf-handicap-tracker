@@ -116,6 +116,10 @@ export function createCloudUploader(o) {
                 const key = pending[0];
                 const b = await rec.getBatch(key);
                 if (!b) { pending.shift(); continue; }
+                // Only batches stamped with this confirmed owner (never unowned
+                // or another account's) may leave the phone.
+                const ownerTag = typeof rec.owner === 'function' ? rec.owner() : null;
+                if (!ownerTag || b.acct !== ownerTag) { pending.shift(); continue; }
                 const id = chunkId(b);
                 if (acked.includes(id)) { pending.shift(); continue; }
                 if (b.seq >= CLOUD_CAPS.SESSION_CHUNKS || st.sent >= CLOUD_CAPS.SESSION_CHUNKS) { stop('session-cap'); return; }

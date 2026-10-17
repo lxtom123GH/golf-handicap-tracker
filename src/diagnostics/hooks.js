@@ -114,7 +114,10 @@ async function acctTag(uid) {
 // account (tag matched, or a switch was cleared successfully and the new tag
 // saved). The cloud uploader starts only after a true result.
 export async function noteAccount(uid, rec = recorder(), storage = globalThis.localStorage) {
-    const ok = await noteAccountInner(uid, rec, storage);
+    try { rec?.setOwner?.(null); } catch { /* ignore */ }
+    const tag = await noteAccountInner(uid, rec, storage);
+    const ok = typeof tag === 'string';
+    try { if (ok) rec?.setOwner?.(tag); } catch { /* ignore */ }
     setIsolation(ok ? 'confirmed' : (uid ? 'failed' : 'pending'));
     return ok;
 }
@@ -140,7 +143,7 @@ async function noteAccountInner(uid, rec, storage) {
             fr('auth', { state: 'in' });
         }
         storage.setItem(OWNER_KEY, tag);
-        return storage.getItem(OWNER_KEY) === tag;
+        return storage.getItem(OWNER_KEY) === tag ? tag : false;
     } catch { return false; }
 }
 

@@ -174,7 +174,8 @@ function parseBatch(v, key) {
         if (typeof v !== 'string' || v.length > CAPS.RECORD_BYTES) return null;
         const b = JSON.parse(v);
         if (!b || typeof b !== 'object' || !Array.isArray(b.events)) return null;
-        return { key: String(key), sid: String(b.sid || '').slice(0, 24), seq: Number(b.seq) || 0, build: String(b.build || 'unknown').slice(0, 64), t: Number(b.t) || 0, events: b.events.slice(0, CAPS.BATCH_EVENTS) };
+        const acct = typeof b.acct === 'string' && /^[0-9a-f]{16}$/.test(b.acct) ? b.acct : null;
+        return { key: String(key), sid: String(b.sid || '').slice(0, 24), seq: Number(b.seq) || 0, build: String(b.build || 'unknown').slice(0, 64), t: Number(b.t) || 0, acct, events: b.events.slice(0, CAPS.BATCH_EVENTS) };
     } catch { return null; }
 }
 
@@ -233,6 +234,10 @@ export function createRecorder(opts = {}) {
     let queue = [];
     let recent = [];
     let failedTail = []; // events no store accepted (exported as 'failed')
+    // Owner stamp (local hash tag, never the UID) put on every persisted batch
+    // while this account's ownership is CONFIRMED; null otherwise. Export and
+    // upload include only stored batches whose stamp matches (Codex review 4).
+    let ownerTag = typeof opts.owner === 'string' && /^[0-9a-f]{16}$/.test(opts.owner) ? opts.owner : null;
     let timer = null;
     let flushing = null;
     let faults = 0;
@@ -318,8 +323,8 @@ export function createRecorder(opts = {}) {
                     const clearedAt = readClearedAt();
                     const events = queue.splice(0, CAPS.BATCH_EVENTS).filter(e => e.t >= clearedAt);
                     if (!events.length) continue;
-                    const b = { sid, seq: seq++, build, t: events[0].t, events };
-                    let json = JSON.stringify({ v: 1, sid: b.sid, seq: b.seq, build: b.build, t: b.t, events });
+                    const b = { sid, seq: seq++, build, t: events[0].t, acct: ownerTag, events };
+                    let json = JSON.stringify({ v: 1, sid: b.sid, seq: b.seq, build: b.build, t: b.t, acct: b.acct, events });
                     if (json.length > CAPS.BATCH_BYTES) { drop('batch-bytes', events.length); continue; }
                     b.key = batchKey(b, json.length);
                     counters.flushes++;
@@ -399,7 +404,9 @@ export function createRecorder(opts = {}) {
                     batches: [{ sid, seq: null, build, status: 'session', events }],
                 };
             }
-            const stored = await storedBatches();
+            // Only batches stamped with the CONFIRMED owner; unowned or other
+            // accounts' batches are never exported.
+            const stored = ownerTag ? (await storedBatches()).filter(b => b.acct === ownerTag) : [];
             const clean = arr => arr.map(sanitizeEvent).filter(Boolean);
             const batches = stored.map(b => ({ sid: b.sid, seq: b.seq, build: b.build, status: 'committed', events: clean(b.events) }));
             const storedCount = batches.reduce((s, b) => s + b.events.length, 0);
@@ -474,7 +481,10 @@ export function createRecorder(opts = {}) {
         try { return await b.keys(); } catch { return []; }
     }
 
-    return { record, flush, status, snapshot, clearAll, setEnabled, releaseLocal, onCommitted, getBatch, storedKeys, parseKey, sessionId: sid, build };
+    function setOwner(tag) { ownerTag = typeof tag === 'string' && /^[0-9a-f]{16}$/.test(tag) ? tag : null; }
+    function owner() { return ownerTag; }
+
+    return { record, flush, status, snapshot, clearAll, setEnabled, releaseLocal, onCommitted, getBatch, storedKeys, parseKey, setOwner, owner, sessionId: sid, build };
 }
 
 // ---- the app's singleton ----------------------------------------------------

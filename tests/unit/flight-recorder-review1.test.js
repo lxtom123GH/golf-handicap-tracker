@@ -83,7 +83,7 @@ describe('P2 the daily upload cap fails closed', () => {
     function up(storage) {
         const rows = new Map();
         const be = { name: 'idb', async put(b, j) { rows.set(b.key, j); return {}; }, async keys() { return [...rows.keys()]; }, async get(k) { const v = rows.get(k); return v ? { key: k, ...JSON.parse(v) } : null; }, async list() { return []; }, async clear() {} };
-        const rec = createRecorder({ backends: [be], storage: createStorage(), ...noTimer, sessionId: 'abcdefabcdef' });
+        const rec = createRecorder({ backends: [be], storage: createStorage(), ...noTimer, sessionId: 'abcdefabcdef', owner: '0123456789abcdef' });
         const writes = [];
         const u = createCloudUploader({ isolation: () => 'confirmed', rec, storage, online: () => true, getConfig: async () => ({ enabled: true, uid: 'U' }), writeChunk: async (a, id) => { writes.push(id); } });
         return { rec, u, writes };
@@ -144,7 +144,7 @@ describe('P2 export keeps failed events after earlier commits', () => {
         let fail = false;
         const rows = new Map();
         const be = { name: 'idb', async put(b, j) { if (fail) throw new Error('down'); rows.set(b.key, j); return {}; }, async keys() { return [...rows.keys()]; }, async get(k) { return { key: k, ...JSON.parse(rows.get(k)) }; }, async list() { return [...rows.keys()].map(k => ({ key: k, ...JSON.parse(rows.get(k)) })); }, async clear() {} };
-        const r = createRecorder({ backends: [be], storage: createStorage(), ...noTimer });
+        const r = createRecorder({ backends: [be], storage: createStorage(), ...noTimer, owner: '0123456789abcdef' });
         r.record('hole', { hole: 1 }); await r.flush();
         fail = true;
         r.record('hole', { hole: 2 }); await r.flush();
