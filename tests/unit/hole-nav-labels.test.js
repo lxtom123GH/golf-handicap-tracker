@@ -11,6 +11,7 @@ beforeEach(() => {
     document.body.innerHTML = `
         <button id="btn-oc-prev-hole">← Prev</button>
         <button id="btn-oc-next-hole">Next Hole →</button>`;
+    AppState.currentRoundStartHole = 1;
 });
 
 const prev = () => document.getElementById('btn-oc-prev-hole');
@@ -42,6 +43,19 @@ it('the last hole says Finish ✓, and going back restores Next Hole', () => {
     syncHoleNavLabels();
     expect(next().textContent).toBe('Next Hole →');
     expect(next().classList.contains('oc-thumb-finish')).toBe(false);
+});
+
+it('wrap-order navigation marks the selected start as first and its predecessor as final', () => {
+    AppState.currentRoundHoles = 9;
+    AppState.currentRoundStartHole = 8;
+    AppState.currentHole = 8;
+    syncHoleNavLabels();
+    expect(prev().disabled).toBe(true);
+    expect(next().textContent).toBe('Next Hole →');
+    AppState.currentHole = 7;
+    syncHoleNavLabels();
+    expect(prev().disabled).toBe(false);
+    expect(next().textContent).toBe('Finish ✓');
 });
 
 it('a disabled Prev ignores the swipe\'s synthetic click', () => {

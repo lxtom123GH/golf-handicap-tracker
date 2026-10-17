@@ -85,6 +85,13 @@ service cloud.firestore {
     // 👤 USERS & PROFILES
     // =========================================================================
     
+    // Flight recorder upload switch. Owner-managed outside the app (IAM);
+    // the app may only read it, and only the one account it names.
+    match /diagnosticsConfig/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
     match /users/{userId} {
       // Keep each trace bounded here and validate coordinate geometry in the mapper/export path.
       match /holeTraces/{traceId} {
@@ -110,6 +117,47 @@ service cloud.firestore {
           && request.resource.data.note is string
           && request.resource.data.note.size() <= 200;
         allow delete: if isAuthenticated() && (request.auth.uid == userId || isCoachOf(userId));
+      }
+
+      // Flight recorder chunks (diagnostics only; see src/diagnostics/).
+      // Upload is single-account and server-switched: a chunk may be written
+      // only by the signed-in owner of this path, and only while the config
+      // doc diagnosticsConfig/upload names exactly that uid with
+      // enabled == true. No admin-role path, no other reader through the app.
+      // Turning the config off (or deleting it) refuses new chunks at once.
+      // Ids are `${sid}_${seq}`; a resend of identical data is allowed so an
+      // unacknowledged retry is idempotent; any other change is refused.
+      // expireAt drives the TTL policy (firestore.indexes.json fieldOverrides).
+      match /diagnosticChunks/{chunkId} {
+        function diagUploadAllowed() {
+          let cfg = get(/databases/$(database)/documents/diagnosticsConfig/upload).data;
+          return isAuthenticated()
+            && request.auth.uid == userId
+            && cfg.enabled == true
+            && cfg.uid == userId;
+        }
+        function validDiagChunk(d) {
+          return d.keys().hasOnly(['v', 'sid', 'seq', 'build', 'n', 'events', 'expireAt'])
+            && d.keys().hasAll(['v', 'sid', 'seq', 'build', 'n', 'events', 'expireAt'])
+            && d.v == 1
+            && d.sid is string && d.sid.matches('^[a-f0-9]{12}$')
+            && d.seq is int && d.seq >= 0 && d.seq < 300
+            && chunkId == d.sid + '_' + string(d.seq)
+            && d.build is string && d.build.size() <= 64
+            && d.n is int && d.n >= 0 && d.n <= 100
+            && d.events is string && d.events.size() <= 50000
+            && d.expireAt is timestamp
+            && d.expireAt > request.time
+            && d.expireAt < request.time + duration.value(31, 'd');
+        }
+        // Reads also need the config to name this account (Codex review 1):
+        // an account dropped from the config loses client read access too.
+        allow read: if isAuthenticated()
+          && request.auth.uid == userId
+          && get(/databases/$(database)/documents/diagnosticsConfig/upload).data.uid == userId;
+        allow create: if diagUploadAllowed() && validDiagChunk(request.resource.data);
+        allow update: if diagUploadAllowed() && request.resource.data == resource.data;
+        allow delete: if false;
       }
 
       // Keep private user fields available only to the owner, assigned coaches, and admins.

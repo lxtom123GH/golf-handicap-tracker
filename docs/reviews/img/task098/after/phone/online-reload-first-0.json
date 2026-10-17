@@ -1,0 +1,52 @@
+{
+  "variant": "online-reload-first",
+  "cloakCleared": true,
+  "score": "4",
+  "cacheBeforeReload": {
+    "controlled": true,
+    "entries": [
+      {
+        "name": "golf-app-v7.1.0-shell",
+        "paths": [
+          "/assets/hole-mapper-CWTUp-9h.js",
+          "/assets/index-Bjzlxkbw.js",
+          "/assets/index-ZJcMzzIP.css",
+          "/assets/play-mode-DvGwTiVw.js",
+          "/assets/quick-start-nJywhI8f.js",
+          "/manifest.json",
+          "/favicon.ico",
+          "/",
+          "/courses/keperra.json",
+          "/courses/ashgrove.json"
+        ],
+        "variants": [
+          {
+            "path": "/assets/hole-mapper-CWTUp-9h.js",
+            "origin": null,
+            "vary": "Origin"
+          },
+          {
+            "path": "/assets/index-Bjzlxkbw.js",
+            "origin": null,
+            "vary": "Origin"
+          },
+          {
+            "path": "/assets/index-ZJcMzzIP.css",
+            "origin": null,
+            "vary": "Origin"
+          },
+          {
+            "path": "/assets/play-mode-DvGwTiVw.js",
+            "origin": null,
+            "vary": "Origin"
+          },
+          {
+            "path": "/assets/quick-start-nJywhI8f.js",
+            "origin": null,
+            "vary": "Origin"
+          }
+        ]
+      }
+    ]
+  }
+}

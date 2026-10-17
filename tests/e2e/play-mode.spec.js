@@ -166,6 +166,9 @@ test('Play mode: a Simple round is a full-screen map with glass chips; score, sh
 
 test('Play mode: Detailed round — Track shot chip opens the wizard; GPS chip starts GPS', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'desktop', 'phone layouts only');
+    // Classic play map (shot entry 'both'): Map first logs on the map instead
+    // (one-tap-logging.spec.js), so this pins the layout it was written for.
+    await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
     await registerFreshUser(page, 'playdetail');
     await page.locator('.tab-btn[data-target="tab-oncourse"]').click();
     await page.locator('#btn-mode-detailed').click();
