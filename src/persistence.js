@@ -4,6 +4,7 @@
 // ==========================================
 import { AppState } from './state.js';
 import { loadHole, resumeGpsIfWasOn } from './oncourse.js';
+import { record as journal } from './session-journal.js';
 
 const GOLF_APP_STATE_KEY = 'golf_round_state';
 
@@ -172,6 +173,7 @@ export function saveRoundState() {
             localStorage.setItem(GOLF_APP_STATE_KEY, payload);
         } catch (e2) {
             console.error("[Persistence] Round state STILL not saved — device storage is full.", e2);
+            journal('state-save', { status: 'failed', code: e2?.name }); // never throws
             alert("Your phone's storage is full, so this round can no longer be saved automatically. Finish and save the round, or free up space.");
             return;
         }

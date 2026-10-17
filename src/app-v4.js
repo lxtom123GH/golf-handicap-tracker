@@ -80,6 +80,7 @@ import { initializeAppRouting } from './persistence.js';
 import { initWakeLock } from './wakelock.js';
 import { announcePendingUpdate, startUpdateWatch, bindCheckForUpdates } from './update-watch.js';
 import { initTermHints } from './term-hints.js';
+import { startJournal } from './session-journal-ui.js';
 
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -97,6 +98,7 @@ function bootstrapApplication() {
         syncBanner();
     } catch (e) { console.error("[Bootstrap] offline banner failed:", e); }
 
+    startJournal(); // test-mode play journal (local only); never throws
     // 1. Restore state first (Critical for routing)
     try { initializeAppRouting(); } catch (e) { console.error("[Bootstrap] initializeAppRouting failed:", e); }
     try { initTermHints(); } catch (e) { console.error("[Bootstrap] term hints failed:", e); }

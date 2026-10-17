@@ -18,6 +18,7 @@ import { computeMilestones, computeTiger5, holeStatsSanity, computePuttDiagnosti
 import { derivedGir, girOf, fairwayHit } from './play-mode.js';
 import { fetchCurrentWeather, bearingBetween, describeShot } from './weather.js';
 import { GPS_POLICY } from './gps-capture.js';
+import { recordGpsFix, recordGpsError, trackWrite } from './session-journal.js';
 // S5: GPS assist — the pure bias/snap maths and the overlay frame tools.
 import { estimateBias, applyBias, snapToPlayable } from './gps-bias.js';
 import { courseSlugFor, loadCourseOverlay } from './hole-overlay.js';
@@ -914,6 +915,7 @@ function toggleGPS(rememberChoice = true, { quiet = false } = {}) {
         gpsWatchId = navigator.geolocation.watchPosition(
             (pos) => {
                 const { latitude, longitude } = pos.coords;
+                recordGpsFix(pos.coords); // test-mode journal; never throws
                 // S4: accuracy rides through — the shot chain honours it.
                 // S10: speed + the fix's own timestamp ride too.
                 updateGPSDistances(latitude, longitude, pos.coords.accuracy, pos.coords.speed, pos.timestamp);
@@ -930,6 +932,7 @@ function toggleGPS(rememberChoice = true, { quiet = false } = {}) {
             },
             (err) => {
                 console.error("GPS Error:", err);
+                recordGpsError(err, { quiet }); // test-mode journal; never throws
                 // S10: cold phones produce spurious POSITION_UNAVAILABLE errors
                 // (the same reason the timeout is now 15 s). A transient code 2
                 // right after working fixes is ignored — killing the watcher
@@ -2145,7 +2148,7 @@ async function saveRoundToDatabase() {
             }
 
             if (isSelf || isMyGuest || canWriteForOthers) {
-                setDoc(doc(db, "whs_rounds", docId), payload)
+                trackWrite(isSelf ? 'round' : 'round-other', setDoc(doc(db, "whs_rounds", docId), payload))
                     .catch(cloudErr => noteCloudRejection(
                         isSelf ? 'your round'
                             : `${p.name || (isMyGuest ? 'your guest' : 'a playing partner')}'s round`,

@@ -16,6 +16,7 @@ import { toFrame, fromFrame } from "../geo.js";
 import { selectGhostShots } from "./ghost-lines.js";
 // S10: the hold-still capture policy (pure) gates what chains onto shots.
 import { createCapture, GPS_POLICY } from "../gps-capture.js";
+import { recordGpsCapture, trackWrite } from "../session-journal.js";
 // S1 Part A geometry: derive startLine/shape/missPattern from the swipes.
 import { classifyCurve, missPatternFrom } from "../shot-shape.js";
 import { shotEntryVisibility } from "../shot-entry.js";
@@ -805,6 +806,7 @@ function _beginCapture() {
     const finishWith = (d) => {
         clearInterval(tick);
         ctl.unsub();
+        recordGpsCapture(d); // test-mode journal; never throws
         _setRing(1, d.fix ? d.fix.accuracyM : null);
         const ring2 = document.getElementById('gps-lock-ring');
         if (ring2) ring2.classList.add('hidden');
@@ -1288,7 +1290,7 @@ export async function saveShotData() {
                 loadHole();
             }
             // F-11: fire-and-forget — see the comment on the new-shot branch.
-            updateDoc(doc(db, "shots", shotId), payload)
+            trackWrite('shot-edit', updateDoc(doc(db, "shots", shotId), payload))
                 .catch(e => console.error("Shot update failed to sync:", e));
         } else {
             // F-11: every local mutation happens BEFORE the write, and the write
@@ -1348,7 +1350,7 @@ export async function saveShotData() {
 
                 loadHole();
             }
-            setDoc(shotRef, payload).catch(e => console.error("Shot failed to sync:", e));
+            trackWrite('shot', setDoc(shotRef, payload)).catch(e => console.error("Shot failed to sync:", e));
         }
         const holed = payload.puttControl === 'Holed';
         // Glass chips PR 2: a new, non-holed shot gets the 6 s Undo card.
