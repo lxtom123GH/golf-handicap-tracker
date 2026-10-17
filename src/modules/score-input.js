@@ -17,6 +17,7 @@ import { selectGhostShots } from "./ghost-lines.js";
 import { createCapture, GPS_POLICY } from "../gps-capture.js";
 // S1 Part A geometry: derive startLine/shape/missPattern from the swipes.
 import { classifyCurve, missPatternFrom } from "../shot-shape.js";
+import { classifyCaptureRole, expectedStartXY } from "../shot-start.js";
 import { shotEntryVisibility } from "../shot-entry.js";
 // S11: the step line, button labels and captions are pure functions of the shot.
 import { wizardStepText, shotButtons, modeCaption, trackButtonLabel, loggedToast, undoCardText } from "../wizard-flow.js";
@@ -35,6 +36,10 @@ if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.
 // ([{x, y}] metres in the hole frame — Firestore rejects nested arrays) plus
 // lineFrame {origin, bearing, courseSlug, physicalHole}.
 let _lineCtl = null;
+// Which round/course/hole _lineCtl was mounted for: the controller outlives the
+// wizard, so a capture on the next hole must not use the last hole's frame.
+let _lineCtlHoleKey = null;
+const _holeKey = () => `${AppState.activeRoundId}|${AppState.currentRoundCourseName}|${AppState.currentHole}`;
 // Owner 2026-10-05: the Map first view follows live GPS (unsubscribe fn).
 let _liveFollowOff = null;
 // Codex P2 (pass 3): when the GPS watch last stopped. The cached fix lives
@@ -390,7 +395,6 @@ async function syncShotLineOverlay() {
     if (!hole && _drawMode) applyDrawModeChrome(false);
     refreshWizardFlow(); // The fallback caption follows the resolved hole, not the saved preference.
     if (!hole) return;
-    const d = AppState.currentShotData;
     // S3: the plan for this hole — ONE getDoc per hole per round (no
     // listener), cached by planId for the session. Offline the persistent
     // cache serves it; if the read fails, no plan and no error shown.
@@ -416,6 +420,8 @@ async function syncShotLineOverlay() {
         planLine = planCache.get(pid);
     }
     if (seq !== _mountSeq) return; // D31: superseded while the plan loaded
+    // A capture may have replaced the shot while the plan was loading.
+    const d = AppState.currentShotData;
     if (planLine && planLine.length >= 2) {
         d.planId = pid; // the shot records which plan it was scored against
     } else {
@@ -468,10 +474,12 @@ async function syncShotLineOverlay() {
             if (e.target.closest('#btn-line-use-plan')) {
                 const planLine = planCache.get(planIdFor(slug, physical));
                 if (planLine && _lineCtl) {
+                    const d = { ...AppState.currentShotData };
                     _lineCtl.setCurves({ intended: planLine });
                     d.lineIntended = toObjs(planLine);
                     const f = _lineCtl.frame;
                     d.lineFrame = { origin: { lat: f.origin[0], lon: f.origin[1] }, bearing: f.bearing, courseSlug: slug, physicalHole: physical };
+                    AppState.currentShotData = d;
                     setLineMode('intended');
                     lineReadout();
                 }
@@ -509,7 +517,7 @@ async function syncShotLineOverlay() {
         focus: { startXY: shotStart, shotNumber: d.shotNumber },
         // S12 A2: the anchor every curve starts from; green when measured.
         startXY: shotStart,
-        startMeasured: !!d.startXY,
+        startMeasured: !!d.startXY && d.gpsCapture?.role !== 'finish',
         // S12 C: opt-in auto-rotate — the shot view's up is anchor → green.
         // Map first (owner 2026-10-05, "like a GPS map"): target-up is the
         // default there unless the golfer turned Rotate map off in Settings.
@@ -540,6 +548,9 @@ async function syncShotLineOverlay() {
         deflectArmed: () => _deflectArmed,
         onDeflectPlaced: () => setDeflectArmed(false),
         onChange: ({ mode, points, frame, curves, anchorChanged }) => {
+            // GPS capture replaces the shot record without remounting the map.
+            // Read the live record so later strokes retain the captured position.
+            const d = { ...AppState.currentShotData };
             // S12 B1: Undo reverts to whatever this mode held before the stroke.
             if (!anchorChanged) {
                 _curveUndo.push({
@@ -556,9 +567,11 @@ async function syncShotLineOverlay() {
             d.lineActualDeflectAt = curves.deflectAt ?? null;
             d.lineFrame = { origin: { lat: frame.origin[0], lon: frame.origin[1] }, bearing: frame.bearing, courseSlug: slug, physicalHole: physical };
             if (d.lineActual) applyDerivedShape(d);
+            AppState.currentShotData = d;
             lineReadout();
         },
     });
+    _lineCtlHoleKey = _holeKey();
     _lineCtl.state ??= {};
     _lineCtl.state.ghosts = ghosts;
     _lineCtl.state.ghostMode = ghostMode;
@@ -695,15 +708,49 @@ function _setRing(pct, accuracyM) {
 
 /** S4 chain + S10 metadata, from a capture decision. */
 function _applyCapturedPositions(d) {
-    const shotData = AppState.currentShotData;
-    if (!shotData) return;
+    if (!AppState.currentShotData) return;
+    // The AppState proxy observes reference changes, so build a new shot
+    // record and publish it after applying the capture result.
+    const shotData = { ...AppState.currentShotData };
     const fix = d.fix;
-    if (fix) {
+    // A distant accepted fix may represent this shot's finish.
+    // A fix far from where this shot should start (tee / previous finish) is
+    // where THIS shot finished - see shot-start.js. Needs the frame; without
+    // If no expected start is available, keep the existing capture behavior.
+    const frame = _lineCtl?.frame && _lineCtlHoleKey === _holeKey() ? _lineCtl.frame : null;
+    let role = 'start';
+    let expected = null;
+    if (fix && frame) {
+        const prev = (AppState.currentHoleShots || []).filter(s => s.id !== shotData.id && s.hole === AppState.currentHole).slice(-1)[0] || null;
+        expected = expectedStartXY({ shotNumber: shotData.shotNumber, prevShot: prev });
+        const teeVertices = (_overlayHole?.features?.features || [])
+            .filter(f => f.properties?.golf === 'tee')
+            .flatMap(f => {
+                const g = f.geometry;
+                if (g?.type === 'Point') return [g.coordinates];
+                if (g?.type === 'Polygon') return g.coordinates.flat();
+                if (g?.type === 'MultiPolygon') return g.coordinates.flat(2);
+                return [];
+            });
+        role = classifyCaptureRole({ shotNumber: shotData.shotNumber,
+            fixXY: toFrame(frame, [fix.lat, fix.lon]), expectedStartXY: expected,
+            teeXY: teeVertices.map(([lon, lat]) => toFrame(frame, [lat, lon])) });
+    }
+    const r1 = (v) => Math.round(v * 10) / 10;
+    if (role === 'finish') {
+        const [x, y] = toFrame(frame, [fix.lat, fix.lon]);
+        delete shotData.startPos;
+        shotData.startXY = { x: r1(expected[0]), y: r1(expected[1]) };
+        shotData.finishPos = { lat: fix.lat, lon: fix.lon, accuracyM: Math.round(fix.accuracyM), at: fix.at };
+        shotData.finishXY = { x: r1(x), y: r1(y) };
+        _gpsReadoutNote = (shotData.shotNumber === 1 ? 'Start: tee' : 'Start: last shot') + ' · GPS = where this shot finished';
+        if (shotData.lineActual) applyDerivedShape(shotData);
+    } else if (fix) {
         shotData.startPos = { lat: fix.lat, lon: fix.lon, accuracyM: Math.round(fix.accuracyM), at: fix.at };
         // startXY (hole-frame metres) rides on the shot when a frame exists —
         // S4's field. The MARKER itself is geographic and survives a slow mount.
-        if (_lineCtl?.frame) {
-            const [x, y] = toFrame(_lineCtl.frame, [fix.lat, fix.lon]);
+        if (frame) {
+            const [x, y] = toFrame(frame, [fix.lat, fix.lon]);
             shotData.startXY = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
         }
     } else {
@@ -716,12 +763,14 @@ function _applyCapturedPositions(d) {
         fixCount: d.fixCount,
         elapsedMs: Math.round(d.elapsedMs),
         platform: platformOf(),
+        role,
     };
 
     // S4: the previous shot of this hole gets this fix as its measured finish
     // (only when it has none — a re-opened shot keeps its own). Fire-and-forget
     // write with .catch (F-11); the local array mutates through mutateList (D-03).
-    if (fix) {
+    // Not for a 'finish' fix: that point is THIS shot's finish, not the last one's.
+    if (fix && role === 'start') {
         const shots = AppState.currentHoleShots || [];
         const prev = shots[shots.length - 1];
         if (prev && prev.id && !prev.finishPos) {
@@ -758,7 +807,7 @@ function _applyCapturedPositions(d) {
 
     // S10: nudge an already-mounted overlay to draw the marker now (the
     // geographic marker also draws itself on every later mount).
-    if (fix && _lineCtl) {
+    if (fix && _lineCtl && role === 'start') {
         _lineCtl.setStartMarker({
             lat: fix.lat, lon: fix.lon,
             quality: d.state === 'lowConfidence' ? 'lowConfidence' : 'accepted',
@@ -772,6 +821,7 @@ function _applyCapturedPositions(d) {
     if (fix && !_lineCtl && d.state === 'lowConfidence') {
         _gpsReadoutNote = 'GPS is rough (±' + Math.round(fix.accuracyM) + ' m) — no map to correct it on';
     }
+    AppState.currentShotData = shotData;
     refreshShotWizard();
 }
 
