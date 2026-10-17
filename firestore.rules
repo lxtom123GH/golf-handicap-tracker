@@ -150,7 +150,11 @@ service cloud.firestore {
             && d.expireAt > request.time
             && d.expireAt < request.time + duration.value(31, 'd');
         }
-        allow read: if isAuthenticated() && request.auth.uid == userId;
+        // Reads also need the config to name this account (Codex review 1):
+        // an account dropped from the config loses client read access too.
+        allow read: if isAuthenticated()
+          && request.auth.uid == userId
+          && get(/databases/$(database)/documents/diagnosticsConfig/upload).data.uid == userId;
         allow create: if diagUploadAllowed() && validDiagChunk(request.resource.data);
         allow update: if diagUploadAllowed() && request.resource.data == resource.data;
         allow delete: if false;

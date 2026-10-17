@@ -124,6 +124,15 @@ describe('diagnosticChunks: wrong account, unauthenticated, cross-user', () => {
         await assertFails(testEnv.authenticatedContext(ADMIN).firestore().doc(PATH()).get());
         await assertFails(testEnv.authenticatedContext(OTHER).firestore().collection(`users/${ALEX}/diagnosticChunks`).get());
     });
+    it('an account dropped from the config loses read access to its own chunks', async () => {
+        await testEnv.withSecurityRulesDisabled(async (ctx) => { await ctx.firestore().doc(PATH()).set(chunk()); });
+        await assertSucceeds(testEnv.authenticatedContext(ALEX).firestore().doc(PATH()).get());
+        await setConfig({ enabled: true, uid: OTHER });
+        await assertFails(testEnv.authenticatedContext(ALEX).firestore().doc(PATH()).get());
+        await assertFails(testEnv.authenticatedContext(ALEX).firestore().collection(`users/${ALEX}/diagnosticChunks`).get());
+        await setConfig(null);
+        await assertFails(testEnv.authenticatedContext(ALEX).firestore().doc(PATH()).get());
+    });
     it('unauthenticated clients can neither read nor write', async () => {
         const db = testEnv.unauthenticatedContext().firestore();
         await assertFails(db.doc(PATH()).set(chunk()));
