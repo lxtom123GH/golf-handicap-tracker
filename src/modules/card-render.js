@@ -38,7 +38,9 @@ export function updateLiveLeaderboard() {
         for (const h of holeOrder(AppState.currentRoundHoles || 18, AppState.currentRoundStartHole || 1)) {
             const gross = p.scores[h];
             if (gross > 0) {
-                thru = h;
+                // Holes completed, not the course hole number: a late start
+                // that has played 9, 10, 11 is "thru 3".
+                thru += 1;
                 if (blocked) continue;
                 const hIdx = h - 1;
                 const hPar = AppState.currentCoursePars[hIdx] || 4;
@@ -106,9 +108,10 @@ function renderSideGamePanel(strokeIndex) {
     }
 
     let html = '';
+    const order = holeOrder(holes, AppState.currentRoundStartHole || 1);
 
     if (game === 'skins') {
-        const r = computeSkins(players, holes, strokeIndex);
+        const r = computeSkins(players, holes, strokeIndex, holes, order);
         const rows = players
             .map(p => ({ name: p.name, skins: r.perPlayer[p.uid] || 0 }))
             .sort((a, b) => b.skins - a.skins)
@@ -117,10 +120,10 @@ function renderSideGamePanel(strokeIndex) {
         const carry = r.carried > 0 ? `<div style="color:#f59e0b; font-size:0.85rem; margin-top:4px;">🔥 ${r.carried} skin${r.carried === 1 ? '' : 's'} carrying to the next hole</div>` : '';
         html = `<h3 style="margin:0 0 8px;">💰 Skins (net)</h3>${rows}${carry}`;
     } else if (game === 'matchplay' && players.length === 2) {
-        const r = computeMatchPlay(players[0], players[1], holes, strokeIndex);
+        const r = computeMatchPlay(players[0], players[1], holes, strokeIndex, holes, order);
         html = `<h3 style="margin:0 0 8px;">⚔️ Match Play (net)</h3><div style="font-weight:700; font-size:1.05rem;">${escapeHtml(r.statusText)}</div>`;
     } else if (game === 'nassau' && players.length === 2) {
-        const r = computeNassau(players[0], players[1], holes, strokeIndex);
+        const r = computeNassau(players[0], players[1], holes, strokeIndex, holes, order);
         const seg = (label, m) => m ? `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${label}</span><strong>${escapeHtml(m.statusText)}</strong></div>` : '';
         html = `<h3 style="margin:0 0 8px;">🎩 Nassau (net)</h3>${seg('Front 9', r.front)}${seg('Back 9', r.back)}${seg('Overall', r.overall)}`;
     } else {

@@ -438,7 +438,7 @@ describe('F-9 the live leaderboard does not disagree with the record', () => {
         expect(body.textContent).not.toMatch(/\b1[0-9]\b/);
     });
 
-    it('reports the latest hole in play order after a late start wraps', async () => {
+    it('reports holes completed (not the hole number) after a late start wraps', async () => {
         const AppState = await playNine({ course: 'Keperra - Old Course (9 holes)' });
         AppState.currentRoundStartHole = 8;
         AppState.currentHole = 1;
@@ -448,7 +448,7 @@ describe('F-9 the live leaderboard does not disagree with the record', () => {
 
         updateLiveLeaderboard();
 
-        expect(document.querySelector('#oc-leaderboard-tbody tr td:nth-child(3)').textContent).toBe('1');
+        expect(document.querySelector('#oc-leaderboard-tbody tr td:nth-child(3)').textContent).toBe('3');
     });
 });
 
