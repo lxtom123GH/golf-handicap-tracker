@@ -9,7 +9,7 @@ const frame = makeFrame([hole.tee.lat, hole.tee.lon], [hole.green.centre.lat, ho
 test('first shot at a forward tee remains a GPS start and saves that position', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'phone', 'requires mocked geolocation');
     const [latitude, longitude] = fromFrame(frame, [0, 30]);
-    await page.context().setGeolocation({ latitude, longitude, accuracy: 3 });
+    await page.context().setGeolocation({ latitude, longitude, accuracy: 30 });
     const email = throwawayEmail();
     await seedPreapprovedEmail(email);
     await page.goto('/');
@@ -23,8 +23,19 @@ test('first shot at a forward tee remains a GPS start and saves that position', 
     await page.locator('#btn-round-18').click();
     await page.locator('#oc-course-select').selectOption({ label: 'Ashgrove GC' });
     await page.locator('#btn-oc-start').click();
-    await expect(page.locator('#shot-line-canvas')).toBeVisible();
-    await page.context().setGeolocation({ latitude: latitude + 0.000001, longitude, accuracy: 3 });
+    await expect(page.locator('#shot-line-canvas')).toHaveAttribute('data-view-mode', 'shot');
+    await page.locator('#btn-wizard-cancel').click();
+    // Control fresh fixes on a new capture, after the hole frame is ready.
+    await page.clock.install();
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    await page.locator('#btn-oc-track-shot').click();
+    await expect(page.locator('#shot-line-canvas')).toHaveAttribute('data-view-mode', 'shot');
+    await page.context().setGeolocation({ latitude: latitude + 0.000001, longitude, accuracy: 6 });
+    await expect.poll(async () => {
+        await page.clock.runFor(150);
+        return page.locator('.gps-lock-acc').textContent();
+    }).toBe('\u00b16');
+    await page.context().setGeolocation({ latitude: latitude + 0.000002, longitude, accuracy: 3 });
     await expect(page.locator('#line-readout')).toContainText('Start from GPS', { timeout: 12_000 });
     await page.locator('#bag-buttons-grid button').first().click();
     await page.locator('#btn-save-shot-final').click();
