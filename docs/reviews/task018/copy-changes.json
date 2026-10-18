@@ -424,7 +424,13 @@
     "path": "index.html",
     "before": "<p>No rounds logged yet.</p>",
     "after": "<p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p>",
-    "occurrences": 2
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "<p>No rounds logged yet.</p>",
+    "after": "<p>No competition rounds logged yet. Use Log Round &amp; Calculate Points above to add one.</p>",
+    "occurrences": 1
   },
   {
     "path": "src/videos.js",

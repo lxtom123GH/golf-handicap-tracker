@@ -79,6 +79,7 @@ Source references and explicit substitutions; repeated uses share a row. The bra
 | src/hole-mapper.js | Save this trace to your holeTraces | Save the areas drawn on this hole |
 | src/hole-mapper.js | saved ${payload.features.features.length} feature(s) — syncs when online | ${payload.features.features.length} map area(s) queued. Reconnect to finish syncing. |
 | index.html | <p>No rounds logged yet.</p> | <p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p> |
+| index.html (competition Recent Rounds) | <p>No rounds logged yet.</p> | <p>No competition rounds logged yet. Use Log Round &amp; Calculate Points above to add one.</p> |
 | src/videos.js | container.innerHTML = '<p style="color:#94a3b8;">No swing videos yet.</p>'; | container.innerHTML = \`<p style="color:#94a3b8;">${canDelete                 ? 'No swing videos yet. Choose a video above, then select Upload video.'                 : 'No swing videos yet. Ask the player to upload one on their Practice tab.'}</p>\`; |
 | index.html | Saved to your official WHS record. | Saved to your scoring record in this app. |
 | index.html | You are logging this round to your official WHS profile. | This round is saved in this app. It does not submit a score to Golf Australia. |
