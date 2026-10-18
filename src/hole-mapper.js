@@ -26,6 +26,7 @@ import { createGestureTracker, clampGestureZoom } from "./gestures.js";
 // The EPSG:3857 inverse — the same maths S6 Part 1 uses to place the photo.
 import { mercatorToLonLat } from "./hole-overlay.js";
 import { golfTag } from "./golf-tags.js";
+import { appendImageryNotice } from './imagery-notice.js';
 
 export const MAPPER_KINDS = ['tee', 'fairway', 'green', 'bunker', 'water'];
 
@@ -291,7 +292,10 @@ export function mountHoleMapper({ canvas, hole, slug, holeNumber, attributions =
     }
     if (imagery && imagery.url) {
         const el = document.getElementById('mapper-attribution');
-        if (el) el.textContent = attributions.join(' · ');
+        if (el) {
+            el.textContent = attributions.join(' · ');
+            appendImageryNotice(el, attributions);
+        }
     }
 
     // Fit-space px (the S6 Part 1 maths), then a zoom/pan view on top.

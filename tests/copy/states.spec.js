@@ -64,7 +64,7 @@ test('actionable empty, loading, input-error, service-error and offline copy', a
     await capture('practice-loading');
     release();
     await expect(page.locator('#practice-generate-error')).toBeVisible();
-    await expect(page.locator('#practice-generate-error')).toHaveText('Could not create your practice plan. Check your connection, then try generating it again.');
+    await expect(page.locator('#practice-generate-error')).toHaveText("We couldn't confirm whether your plan was created. Reload this page to check for an active plan before generating again.");
     await expect(page.locator('#btn-generate-practice')).toBeEnabled();
     await expect(page.locator('body')).not.toContainText('SENSITIVE_DIAGNOSTIC');
     await capture('service-error');

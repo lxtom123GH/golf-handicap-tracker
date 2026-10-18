@@ -1,0 +1,473 @@
+[
+  {
+    "state": "form",
+    "rows": [
+      {
+        "id": "",
+        "classes": "btn-grid-minus",
+        "text": "\u2212",
+        "width": 56,
+        "height": 56,
+        "left": 170,
+        "right": 226,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "btn-grid-plus",
+        "text": "+",
+        "width": 56,
+        "height": 56,
+        "left": 290,
+        "right": 346,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "mini-stat mini-fw ",
+        "text": "\ud83c\udf3f FW",
+        "width": 87.421875,
+        "height": 32,
+        "left": 29,
+        "right": 116.421875,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "mini-stat mini-gir ",
+        "text": "\ud83d\udfe2 GIR",
+        "width": 87.4375,
+        "height": 32,
+        "left": 126.421875,
+        "right": 213.859375,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "putt-minus",
+        "text": "\u2212",
+        "width": 25.34375,
+        "height": 26,
+        "left": 232.859375,
+        "right": 258.203125,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "putt-plus",
+        "text": "+",
+        "width": 25.34375,
+        "height": 26,
+        "left": 311.65625,
+        "right": 337,
+        "viewport": 375
+      },
+      {
+        "id": "oc-gps-widget",
+        "classes": "gps-pill",
+        "text": "524m\n                    \u00b7\n                    F 526m\n                    \u00b7\n                    B 521m\n                    fixed",
+        "width": 313,
+        "height": 56.546875,
+        "left": 31,
+        "right": 344,
+        "viewport": 375
+      },
+      {
+        "id": "btn-play-gps",
+        "classes": "play-only play-chip play-round",
+        "text": "\ud83d\udce1GPS",
+        "width": 48,
+        "height": 48,
+        "left": 163.5,
+        "right": 211.5,
+        "viewport": 375
+      },
+      {
+        "id": "btn-oc-prev-hole",
+        "classes": "btn btn-secondary oc-thumb-prev",
+        "text": "\u2190\n                            Prev",
+        "width": 127,
+        "height": 66,
+        "left": 16,
+        "right": 143,
+        "viewport": 375
+      },
+      {
+        "id": "btn-oc-next-hole",
+        "classes": "btn btn-primary oc-thumb-next",
+        "text": "Next Hole \u2192",
+        "width": 206,
+        "height": 56,
+        "left": 153,
+        "right": 359,
+        "viewport": 375
+      }
+    ],
+    "axe": {
+      "violations": [
+        {
+          "id": "color-contrast-enhanced",
+          "nodes": [
+            {
+              "target": [
+                "#oc-exit-course-label"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 6.83 (foreground color: #c7cedc, background color: #1e3c72, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#c7cedc",
+                    "bgColor": "#1e3c72",
+                    "contrastRatio": 6.83,
+                    "fontSize": "9.0pt (12px)",
+                    "fontWeight": "normal",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-strip-gps"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 5.04 (foreground color: #38bdf8, background color: #1e3c72, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#38bdf8",
+                    "bgColor": "#1e3c72",
+                    "contrastRatio": 5.04,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#oc-scoring-notice"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 6.83 (foreground color: #92400e, background color: #fffbeb, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#92400e",
+                    "bgColor": "#fffbeb",
+                    "contrastRatio": 6.83,
+                    "fontSize": "10.2pt (13.6px)",
+                    "fontWeight": "normal",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".oc-card-total"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 4.75 (foreground color: #64748b, background color: #ffffff, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#64748b",
+                    "bgColor": "#ffffff",
+                    "contrastRatio": 4.75,
+                    "fontSize": "10.2pt (13.6px)",
+                    "fontWeight": "normal",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-play-gps > .play-chip-lbl"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 6.41 (foreground color: #ffffff, background color: #5c5f63, font size: 6.8pt (9px), font weight: bold). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#ffffff",
+                    "bgColor": "#5c5f63",
+                    "contrastRatio": 6.41,
+                    "fontSize": "6.8pt (9px)",
+                    "fontWeight": "bold",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#explainer-stats > summary"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 5.16 (foreground color: #2563eb, background color: #ffffff, font size: 10.2pt (13.6px), font weight: normal). Expected contrast ratio of 7:1",
+                  "data": {
+                    "fgColor": "#2563eb",
+                    "bgColor": "#ffffff",
+                    "contrastRatio": 5.16,
+                    "fontSize": "10.2pt (13.6px)",
+                    "fontWeight": "normal",
+                    "messageKey": null,
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "#oc-past-round-note"
+              ],
+              "checks": [
+                {
+                  "message": "Element has insufficient color contrast of 4.41 (foreground color: #64748b, background color: #f4f7f6, font size: 9.6pt (12.8px), font weight: normal). Expected contrast ratio of 4.5:1",
+                  "data": {
+                    "fgColor": "#64748b",
+                    "bgColor": "#f4f7f6",
+                    "contrastRatio": 4.41,
+                    "fontSize": "9.6pt (12.8px)",
+                    "fontWeight": "normal",
+                    "messageKey": null,
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#oc-gps-widget"
+              ],
+              "checks": [
+                {
+                  "message": "Text inside the element is not included in the accessible name",
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast-enhanced",
+          "nodes": [
+            {
+              "target": [
+                ".oc-strip-dot"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "fgColor": "#a5b1c7",
+                    "bgColor": "#1e3c72",
+                    "contrastRatio": 4.99,
+                    "fontSize": "13.2pt (17.6px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-sep[aria-hidden=\"true\"]:nth-child(2)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-sep[aria-hidden=\"true\"]:nth-child(4)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

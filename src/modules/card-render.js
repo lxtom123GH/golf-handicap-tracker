@@ -10,6 +10,7 @@ import { escapeHtml } from '../escape.js';
 import { STARTER_BAG, hasSavedBag } from '../bag.js';
 import { girOf, fairwayHit } from '../play-mode.js';
 import { computeSkins, computeMatchPlay, computeNassau, sideGameUnavailableReason } from '../side-games.js';
+import { holeOrder } from '../round-hole-order.js';
 
 /**
  * Task 3: Live Leaderboard Logic
@@ -34,10 +35,12 @@ export function updateLiveLeaderboard() {
         let pts = 0;
         let thru = 0;
         const blocked = scoringUnavailableReason(strokeIndex, p.dailyHandicap);
-        for (let h = 1; h <= AppState.currentRoundHoles; h++) {
+        for (const h of holeOrder(AppState.currentRoundHoles || 18, AppState.currentRoundStartHole || 1)) {
             const gross = p.scores[h];
             if (gross > 0) {
-                thru = h;
+                // Holes completed, not the course hole number: a late start
+                // that has played 9, 10, 11 is "thru 3".
+                thru += 1;
                 if (blocked) continue;
                 const hIdx = h - 1;
                 const hPar = AppState.currentCoursePars[hIdx] || 4;
@@ -105,9 +108,10 @@ function renderSideGamePanel(strokeIndex) {
     }
 
     let html = '';
+    const order = holeOrder(holes, AppState.currentRoundStartHole || 1);
 
     if (game === 'skins') {
-        const r = computeSkins(players, holes, strokeIndex);
+        const r = computeSkins(players, holes, strokeIndex, holes, order);
         const rows = players
             .map(p => ({ name: p.name, skins: r.perPlayer[p.uid] || 0 }))
             .sort((a, b) => b.skins - a.skins)
@@ -116,10 +120,10 @@ function renderSideGamePanel(strokeIndex) {
         const carry = r.carried > 0 ? `<div style="color:#f59e0b; font-size:0.85rem; margin-top:4px;">🔥 ${r.carried} skin${r.carried === 1 ? '' : 's'} carrying to the next hole</div>` : '';
         html = `<h3 style="margin:0 0 8px;">💰 Skins (net)</h3>${rows}${carry}`;
     } else if (game === 'matchplay' && players.length === 2) {
-        const r = computeMatchPlay(players[0], players[1], holes, strokeIndex);
+        const r = computeMatchPlay(players[0], players[1], holes, strokeIndex, holes, order);
         html = `<h3 style="margin:0 0 8px;">⚔️ Match Play (net)</h3><div style="font-weight:700; font-size:1.05rem;">${escapeHtml(r.statusText)}</div>`;
     } else if (game === 'nassau' && players.length === 2) {
-        const r = computeNassau(players[0], players[1], holes, strokeIndex);
+        const r = computeNassau(players[0], players[1], holes, strokeIndex, holes, order);
         const seg = (label, m) => m ? `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${label}</span><strong>${escapeHtml(m.statusText)}</strong></div>` : '';
         html = `<h3 style="margin:0 0 8px;">🎩 Nassau (net)</h3>${seg('Front 9', r.front)}${seg('Back 9', r.back)}${seg('Overall', r.overall)}`;
     } else {
@@ -426,13 +430,15 @@ export function renderHoleJumper() {
     const container = document.getElementById('hole-jumper-container');
     if (!container) return;
     const total = AppState.currentRoundHoles || 9;
+    const order = holeOrder(total, AppState.currentRoundStartHole || 1);
+    const activePosition = order.indexOf(AppState.currentHole);
     container.innerHTML = '';
     for (let i = 1; i <= total; i++) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = i;
         const isCurrent = i === AppState.currentHole;
-        const isDone = i < AppState.currentHole;
+        const isDone = order.indexOf(i) < activePosition;
         // S12 A4: 56 px snap cells — the strip is a swipe, cells land centred.
         const baseStyle = 'min-width:56px; height:56px; border-radius:50%; border:2px solid; font-weight:700; font-size:0.95rem; cursor:pointer; flex-shrink:0; scroll-snap-align:center;';
         if (isCurrent) {

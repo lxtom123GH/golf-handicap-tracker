@@ -835,6 +835,24 @@ window.addEventListener('stateChange', (e) => {
 
 let _activeDrillData = null; // cache the active drill in memory
 
+function practiceGenerationErrorMessage(error) {
+    const code = error?.code;
+    // Input rejection needs a correction, even when the service reason is unknown.
+    if (code === 'functions/invalid-argument') {
+        return 'The practice inputs were not accepted. Retype your goal using plain text (up to 120 characters), check the focus and session length, then try again.';
+    }
+    if (code === 'functions/permission-denied') {
+        return 'Your account is awaiting approval. Ask an admin to approve it before using AI features.';
+    }
+    if (code === 'functions/resource-exhausted') {
+        return "You've reached today's limit across AI features. Try again tomorrow.";
+    }
+    if (code === 'functions/unauthenticated') {
+        return 'Your session has ended. Sign in again to generate a practice plan.';
+    }
+    return "We couldn't confirm whether your plan was created. Reload this page to check for an active plan before generating again.";
+}
+
 /**
  * Toggles the visibility of practice module state containers.
  * @param {string} state - The state to show ('empty', 'active', 'loading').
@@ -969,6 +987,10 @@ export function bindPracticeCaddyUI() {
         } catch (err) {
             console.error("[Practice Caddy] Load active fail:", err);
             setPracticeState('empty');
+            if (errorEl) {
+                errorEl.textContent = "We couldn't check for a saved practice plan. Reload this page before generating again.";
+                errorEl.classList.remove('hidden');
+            }
         }
     };
 
@@ -1026,9 +1048,7 @@ export function bindPracticeCaddyUI() {
             console.error('[Practice Caddy] Generation error:', err);
             setPracticeState('empty');
             if (errorEl) {
-                errorEl.textContent = err?.code === 'functions/invalid-argument'
-                    ? 'The practice inputs were not accepted. Retype your goal using plain text (up to 120 characters), check the focus and session length, then try again.'
-                    : aiErrorMessage(err, 'Could not create your practice plan. Check your connection, then try generating it again.');
+                errorEl.textContent = practiceGenerationErrorMessage(err);
                 errorEl.classList.remove('hidden');
             }
         } finally {
