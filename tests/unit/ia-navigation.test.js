@@ -21,7 +21,9 @@ describe('BL-UX-19 information architecture', () => {
         // Its "Index vs Daily Handicap" explainer lives in "New to handicaps?" now.
         const newTo = document.getElementById('explainer-handicaps');
         expect(newTo.textContent).toMatch(/Index vs Daily Handicap/);
-        expect(newTo.textContent).toMatch(/Slope ÷ 113 \+ \(CR − Par\), then × 0\.93/);
+        expect(newTo.textContent).toMatch(/stroke allowance for the course/);
+        expect(newTo.textContent).toMatch(/tees and round length/);
+        expect(newTo.textContent).toMatch(/official lookup/);
         expect(handicap.querySelector('#history-tbody')).not.toBeNull();
         expect(handicap.querySelector('#handicap-chart')).not.toBeNull();
         expect(handicap.querySelector('#index-explainer')).not.toBeNull();

@@ -64,7 +64,8 @@ describe('BL-UX-20 first-encounter jargon hints', () => {
         expect(hintCss).toContain('position: fixed');
         expect(hintCss).toContain('.term-hint:not([open]) .term-hint-body');
         expect(hintCss).toContain('text-transform: none');
-        expect(hintCss).toContain('font-size: 0.9rem');
+        expect(hintCss).toContain('font-size: var(--text-090)');
+        expect(CSS).toContain('--text-090: 0.9rem;');
         expect(hintCss).toContain('max-height:');
         expect(hintCss).toContain('overflow-y: auto');
         expect(hintCss).toContain('visibility: hidden');

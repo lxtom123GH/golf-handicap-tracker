@@ -1,0 +1,22 @@
+{
+  "variant": "no-online-reload-first",
+  "cloakCleared": false,
+  "score": null,
+  "cacheBeforeReload": {
+    "controlled": true,
+    "entries": [
+      {
+        "name": "golf-app-v7.1.0-shell",
+        "paths": [
+          "/manifest.json",
+          "/",
+          "/favicon.ico",
+          "/courses/keperra.json",
+          "/assets/quick-start-DDSlr67B.js",
+          "/assets/play-mode-BJrWDFu_.js",
+          "/courses/ashgrove.json"
+        ]
+      }
+    ]
+  }
+}

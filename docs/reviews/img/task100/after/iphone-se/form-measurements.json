@@ -1,0 +1,313 @@
+[
+  {
+    "state": "form",
+    "rows": [
+      {
+        "id": "",
+        "classes": "btn-grid-minus",
+        "text": "\u2212",
+        "width": 56,
+        "height": 56,
+        "left": 170,
+        "right": 226,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "btn-grid-plus",
+        "text": "+",
+        "width": 56,
+        "height": 56,
+        "left": 290,
+        "right": 346,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "mini-stat mini-fw ",
+        "text": "\ud83c\udf3f FW",
+        "width": 48.5625,
+        "height": 46,
+        "left": 29,
+        "right": 77.5625,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "mini-stat mini-gir ",
+        "text": "\ud83d\udfe2 GIR",
+        "width": 48.578125,
+        "height": 46,
+        "left": 87.5625,
+        "right": 136.140625,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "putt-minus",
+        "text": "\u2212",
+        "width": 44,
+        "height": 44,
+        "left": 155.140625,
+        "right": 199.140625,
+        "viewport": 375
+      },
+      {
+        "id": "",
+        "classes": "putt-plus",
+        "text": "+",
+        "width": 44,
+        "height": 44,
+        "left": 293,
+        "right": 337,
+        "viewport": 375
+      },
+      {
+        "id": "oc-gps-widget",
+        "classes": "gps-pill",
+        "text": "524m\n                    \u00b7\n                    F 526m\n                    \u00b7\n                    B 521m\n                    fixed\n                    Open big GPS numbers",
+        "width": 313,
+        "height": 56.546875,
+        "left": 31,
+        "right": 344,
+        "viewport": 375
+      },
+      {
+        "id": "btn-play-gps",
+        "classes": "play-only play-chip play-round",
+        "text": "\ud83d\udce1GPS",
+        "width": 48,
+        "height": 48,
+        "left": 163.5,
+        "right": 211.5,
+        "viewport": 375
+      },
+      {
+        "id": "btn-oc-prev-hole",
+        "classes": "btn btn-secondary oc-thumb-prev",
+        "text": "\u2190\n                            Prev",
+        "width": 127,
+        "height": 66,
+        "left": 16,
+        "right": 143,
+        "viewport": 375
+      },
+      {
+        "id": "btn-oc-next-hole",
+        "classes": "btn btn-primary oc-thumb-next",
+        "text": "Next Hole \u2192",
+        "width": 206,
+        "height": 56,
+        "left": 153,
+        "right": 359,
+        "viewport": 375
+      }
+    ],
+    "axe": {
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast-enhanced",
+          "nodes": [
+            {
+              "target": [
+                ".oc-strip-dot"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "fgColor": "#a5b1c7",
+                    "bgColor": "#1e3c72",
+                    "contrastRatio": 4.99,
+                    "fontSize": "13.2pt (17.6px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "7:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": "Element content contains only non-text characters",
+                  "data": {
+                    "messageKey": "nonBmp"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-sep[aria-hidden=\"true\"]:nth-child(2)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            },
+            {
+              "target": [
+                ".gps-pill-sep[aria-hidden=\"true\"]:nth-child(4)"
+              ],
+              "checks": [
+                {
+                  "message": "Element content is too short to determine if it is actual text content",
+                  "data": {
+                    "contrastRatio": 0,
+                    "fontSize": "12.0pt (16px)",
+                    "fontWeight": "bold",
+                    "messageKey": "shortTextContent",
+                    "expectedContrastRatio": "4.5:1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "nodes": [
+            {
+              "target": [
+                "#btn-oc-more"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".btn-grid-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-minus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            },
+            {
+              "target": [
+                ".putt-plus"
+              ],
+              "checks": [
+                {
+                  "message": null,
+                  "data": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
