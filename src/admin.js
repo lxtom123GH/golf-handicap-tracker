@@ -11,7 +11,7 @@ window.refreshAdminDashboard = async () => {
     if (!window.currentUserIsAdmin) return;
 
     const usersList = document.getElementById('admin-users-list');
-    if (usersList) usersList.innerHTML = '<tr><td colspan="6">Loading users from Firestore...</td></tr>';
+    if (usersList) usersList.innerHTML = '<tr><td colspan="6">Loading accounts… Please wait.</td></tr>';
 
     try {
         const snap = await getDocs(collection(db, "users"));
@@ -51,7 +51,7 @@ window.refreshAdminDashboard = async () => {
         });
     } catch (e) {
         console.error("Admin dashboard fetch error:", e);
-        if (usersList) usersList.innerHTML = '<tr><td colspan="6" style="color:var(--danger);">Error: Failed to fetch users.</td></tr>';
+        if (usersList) usersList.innerHTML = '<tr><td colspan="6" style="color:var(--danger);">Could not load accounts. Check your connection, then reopen Admin.</td></tr>';
     }
 
     loadPreapprovedEmails();
@@ -83,7 +83,7 @@ export function bindAdminTools() {
 async function loadPreapprovedEmails() {
     const emailsList = document.getElementById('admin-emails-list');
     if (!emailsList) return;
-    emailsList.innerHTML = 'Loading...';
+    emailsList.innerHTML = '<tr><td>Loading approved email addresses… Please wait.</td></tr>';
     try {
         const snap = await getDocs(collection(db, "preapproved_emails"));
         if (emailsList) emailsList.innerHTML = '';
@@ -97,7 +97,9 @@ async function loadPreapprovedEmails() {
             `;
             emailsList.appendChild(tr);
         });
-    } catch (e) { }
+    } catch (e) {
+        emailsList.innerHTML = '<tr><td>Could not load approved email addresses. Check your connection, then reopen Admin.</td></tr>';
+    }
 }
 
 window.toggleUserApproval = async function (uid, isApproved) {
@@ -105,7 +107,7 @@ window.toggleUserApproval = async function (uid, isApproved) {
     try {
         await updateDoc(doc(db, "users", uid), { isApproved });
     } catch (e) {
-        alert("Failed to update approval status.");
+        alert("Could not update account approval. Reopen Admin to check its current status before trying again.");
         console.error(e);
     }
 };
@@ -115,7 +117,7 @@ window.toggleCoachRole = async function (uid, isCoach) {
     try {
         await updateDoc(doc(db, "users", uid), { isCoach });
     } catch (e) {
-        alert("Failed to update coach role.");
+        alert("Could not update the coach role. Reopen Admin to check its current status before trying again.");
         console.error(e);
     }
 };
@@ -126,7 +128,7 @@ window.setVideoQuota = async function (uid, mb) {
     try {
         await updateDoc(doc(db, "users", uid), { videoQuotaBytes: bytes });
     } catch (e) {
-        alert("Failed to update video quota.");
+        alert("Could not update the video allowance. Reopen Admin to check its current value before trying again.");
         console.error(e);
     }
 };

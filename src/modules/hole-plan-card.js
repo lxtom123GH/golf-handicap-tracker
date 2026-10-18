@@ -137,7 +137,7 @@ export function mountHolePlanCard(root, { authorRole, targetUid } = {}) {
             }
             if (nums.length) await loadHole();
         } catch (e) {
-            setStatus('course file failed to load');
+            setStatus('Could not load this course map. Check your connection, then choose the course again.');
         }
     });
     holeSel.addEventListener('change', loadHole);

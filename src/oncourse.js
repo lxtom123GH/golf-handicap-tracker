@@ -1396,11 +1396,13 @@ function initVoiceRules() {
         voiceSessionActive = false;
         clearTimeout(voiceHideTimer);
         if (event.error === 'not-allowed') {
-            // Permission was denied — reset so next tap re-triggers the browser prompt
+            // Reset for a later attempt; browser permission may still need changing.
             recognition = null;
-            UI.voiceStatus.textContent = "Mic access denied. Tap the mic again to retry.";
+            UI.voiceStatus.textContent = "Mic blocked. Allow it in browser settings, or ask the competition committee about your rules question.";
         } else {
-            UI.voiceStatus.textContent = "Error: " + event.error;
+            UI.voiceStatus.textContent = event.error === 'no-speech'
+                ? "No speech was heard. Tap the mic and try speaking again."
+                : "Voice rules advice is unavailable. Check the Rules of Golf or ask the competition committee.";
         }
         voiceHideTimer = setTimeout(() => {
             voiceHideTimer = null;
@@ -1441,7 +1443,7 @@ async function queryRulesAI(text) {
         return result.data.answer;
     } catch (e) {
         console.error("AI Rules Query Error:", e);
-        return aiErrorMessage(e, "Rules engine is currently unavailable. Please check the USGA handbook manually.");
+        return aiErrorMessage(e, "AI rules advice is unavailable. Check the Rules of Golf or ask the competition committee.");
     }
 }
 
@@ -1607,7 +1609,7 @@ async function uploadRecordedDiary() {
         }
     } catch (err) {
         console.error("Upload failed:", err);
-        alert(err.message || "Upload failed. Please try again.");
+        alert("Could not upload the diary. Check your connection, then record it again before uploading.");
         if (uploadBtn) {
             uploadBtn.disabled = false;
             uploadBtn.innerHTML = "📤 Upload Diary";
@@ -2375,7 +2377,7 @@ export async function runStatAnalysis() {
 
     const p = AppState.liveRoundGroups.find(x => x.uid === auth.currentUser?.uid);
     if (!p || !p.scores) {
-        if (resultsDiv) resultsDiv.innerHTML = "<p>No score data found for analysis.</p>";
+        if (resultsDiv) resultsDiv.innerHTML = "<p>No scores are available for this analysis. Close this window and check your scoring record.</p>";
         return;
     }
 

@@ -127,11 +127,18 @@ describe('shipping the Storage limits', () => {
 });
 
 describe('aiErrorMessage', () => {
-    it('shows the awaiting-approval and daily-limit messages as sent', () => {
+    it('explains awaiting approval and the daily limit with a next step', () => {
         expect(aiErrorMessage({ code: 'functions/permission-denied', message: PENDING_APPROVAL_MESSAGE }, 'x'))
-            .toBe(PENDING_APPROVAL_MESSAGE);
+            .toBe(`${PENDING_APPROVAL_MESSAGE} Ask the app administrator to approve your account.`);
         expect(aiErrorMessage({ code: 'functions/resource-exhausted', message: 'Daily AI limit reached' }, 'x'))
-            .toBe('Daily AI limit reached');
+            .toBe('Daily AI limit reached. Try again tomorrow.');
+    });
+
+    it('does not echo arbitrary service details under an allowed error code', () => {
+        for (const code of ['functions/permission-denied', 'functions/resource-exhausted']) {
+            expect(aiErrorMessage({ code, message: 'SENSITIVE_DIAGNOSTIC synthetic backend details' }, 'fallback'))
+                .not.toContain('SENSITIVE_DIAGNOSTIC');
+        }
     });
 
     it('falls back for anything else', () => {

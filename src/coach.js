@@ -1,3 +1,4 @@
+import { userErrorMessage } from './user-messages.js';
 // ==========================================
 // coach.js
 // Coach Portal & Player Management
@@ -69,7 +70,10 @@ export function bindCoachTools() {
                 await updateDoc(userRef, { coaches: arrayUnion(coachUid) });
                 emailInput.value = '';
                 loadMyCoaches();
-            } catch (e) { console.error("Add coach error", e); }
+            } catch (e) {
+                console.error("Add coach error", e);
+                alert(userErrorMessage(e, 'Could not add the coach. Check your connection, then try again.'));
+            }
         });
     }
 }
@@ -77,13 +81,13 @@ export function bindCoachTools() {
 async function loadMyCoaches() {
     const list = document.getElementById('my-coaches-list');
     if (!list || !AppState.currentUser) return;
-    list.innerHTML = 'Loading...';
+    list.innerHTML = '<li>Loading your coaches… Please wait.</li>';
     try {
         const userRef = doc(db, "users", AppState.currentUser.uid);
         const userDoc = await getDoc(userRef);
         const coaches = userDoc.exists() ? (userDoc.data().coaches || []) : [];
         if (coaches.length === 0) {
-            list.innerHTML = '<li>No coaches added yet.</li>';
+            list.innerHTML = '<li>No coaches added yet. Enter your coach’s email address above to add them.</li>';
             return;
         }
         list.innerHTML = '';
@@ -94,7 +98,9 @@ async function loadMyCoaches() {
             li.innerHTML = `<span>Coach UID: ${escapeHtml(cid)}</span> <button class="btn btn-danger btn-sm" onclick="removeCoach('${escapeHtml(cid)}')">Remove</button>`;
             list.appendChild(li);
         });
-    } catch (e) { }
+    } catch (e) {
+        list.innerHTML = '<li>Could not load your coaches. Check your connection, then close and reopen Manage My Coaches.</li>';
+    }
 }
 
 window.removeCoach = async function (cid) {
@@ -106,7 +112,9 @@ window.removeCoach = async function (cid) {
         coaches = coaches.filter(c => c !== cid);
         await updateDoc(userRef, { coaches: coaches });
         loadMyCoaches();
-    } catch (e) { }
+    } catch (e) {
+        alert(userErrorMessage(e, 'Could not remove the coach. Reopen Manage My Coaches to check the list before trying again.'));
+    }
 };
 
 export function bindCoachDashboard() {
@@ -169,7 +177,7 @@ export function bindCoachDashboard() {
                 document.getElementById('coach-drill-assign-name').value = '';
                 document.getElementById('coach-drill-assign-notes').value = '';
             } catch (e) {
-                if (msgEl) { msgEl.textContent = `❌ ${e.message}`; msgEl.style.color = '#ef4444'; }
+                if (msgEl) { msgEl.textContent = userErrorMessage(e, 'Could not assign the drill. Keep your notes here and try again.'); msgEl.style.color = '#ef4444'; }
             }
         });
     }
@@ -178,7 +186,7 @@ export function bindCoachDashboard() {
 
     window.refreshCoachDashboard = async () => {
         const rosterEl = document.getElementById('coach-roster-list');
-        if (rosterEl) rosterEl.innerHTML = '<p style="color:#64748b;">🔄 Syncing athlete roster...</p>';
+        if (rosterEl) rosterEl.innerHTML = '<p style="color:#64748b;">Refreshing your players… Please wait.</p>';
         await loadCoachRoster();
     };
 
@@ -233,7 +241,7 @@ export function bindCoachDashboard() {
         if (rosterCount) rosterCount.textContent = `${athletes.length} athlete${athletes.length !== 1 ? 's' : ''}`;
 
         if (!athletes.length) {
-            rosterEl.innerHTML = '<p style="color:#94a3b8;">No athletes are currently linked to your profile.</p>';
+            rosterEl.innerHTML = '<p style="color:#94a3b8;">No players are linked to you yet. Ask a player to add your email address through Manage My Coaches.</p>';
             return;
         }
 
@@ -402,14 +410,14 @@ export function bindCoachDashboard() {
 async function loadDrillImpact(athleteUid) {
     const el = document.getElementById('coach-drill-impact');
     if (!el) return;
-    el.innerHTML = '<p style="color:#94a3b8;">Loading drills…</p>';
+    el.innerHTML = '<p style="color:#94a3b8;">Loading assigned drills… Please wait.</p>';
     try {
         const [drillSnap, roundSnap] = await Promise.all([
             getDocs(query(collection(db, 'users', athleteUid, 'assignedDrills'), orderBy('assignedAt', 'desc'))),
             getDocs(query(collection(db, 'whs_rounds'), where('uid', '==', athleteUid)))
         ]);
         if (drillSnap.empty) {
-            el.innerHTML = '<p style="color:#94a3b8;">No drills assigned yet.</p>';
+            el.innerHTML = '<p style="color:#94a3b8;">No drills assigned yet. Use Assign Drill above to set the first one.</p>';
             return;
         }
         const rounds = roundSnap.docs.map(d => d.data());
@@ -450,7 +458,7 @@ async function loadDrillImpact(athleteUid) {
         });
     } catch (e) {
         console.error('[Coach] drill impact failed:', e);
-        el.innerHTML = '<p style="color:#ef4444;">Could not load drill impact.</p>';
+        el.innerHTML = '<p style="color:#ef4444;">Could not load drill results. Check your connection, then reopen this player.</p>';
     }
 }
 
@@ -460,7 +468,7 @@ async function loadCoachNotes(athleteUid) {
     const snap = await getDocs(query(collection(db, 'users', athleteUid, 'coachNotes'), orderBy('createdAt', 'desc'), limit(10)));
     notesEl.innerHTML = '';
     if (snap.empty) {
-        notesEl.innerHTML = '<p class="empty-msg">No notes yet.</p>';
+        notesEl.innerHTML = '<p class="empty-msg">No notes yet. Write a note below, then choose Save Note.</p>';
         return;
     }
     snap.forEach(d => {

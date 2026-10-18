@@ -18,7 +18,7 @@ const RANGES = [[0, 'All time'], [90, '90 days'], [30, '30 days']];
 export async function aggregateShotPatterns(uid) {
     const dispEl = document.getElementById('coach-shot-dispersion');
     if (!dispEl) return;
-    dispEl.innerHTML = '<p style="color:#94a3b8;">Analyzing shot history...</p>';
+    dispEl.innerHTML = '<p style="color:#94a3b8;">Analysing shot history… Please wait.</p>';
 
     try {
         // Fresh fetch on every dashboard open; the cache exists so filter
@@ -35,7 +35,7 @@ export async function aggregateShotPatterns(uid) {
         renderShotPatterns(uid, dispEl);
     } catch (e) {
         console.error("Aggregation error:", e);
-        dispEl.innerHTML = '<p style="color:#ef4444;">Failed to load analytics.</p>';
+        dispEl.innerHTML = '<p style="color:#ef4444;">Could not load shot patterns. Check your connection, then reopen this player.</p>';
     }
 }
 
@@ -57,7 +57,7 @@ function renderShotPatterns(uid, dispEl) {
             </div>`;
 
         if (!shots.length) {
-            dispEl.innerHTML = filterBar + '<p style="color:#94a3b8;">No detailed shot data for this filter.</p>';
+            dispEl.innerHTML = filterBar + '<p style="color:#94a3b8;">No detailed shots match these filters. Try All and All time, or record shots in Detailed mode.</p>';
             bindDispersionFilters(uid, dispEl);
             return;
         }

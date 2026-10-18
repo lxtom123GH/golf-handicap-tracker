@@ -1,3 +1,4 @@
+import { userErrorMessage } from '../user-messages.js';
 import { AppState, mutateList } from '../state.js';
 import { normaliseShotEntry, shotEntryVisibility } from "../shot-entry.js";
 import { UI } from '../ui.js';
@@ -74,7 +75,7 @@ export function bindAddGuest() {
             }
         } catch (err) {
             console.error('[Guests] could not add:', err);
-            say(err?.message || 'Could not add that guest.');
+            say(userErrorMessage(err, 'Could not add that guest. Check your connection, then try Add guest again.'));
         } finally {
             btn.disabled = false;
             btn.textContent = previous;
@@ -115,7 +116,7 @@ export function bindGuestManager() {
             }
         } catch (e) {
             console.warn('[Guests] list not rendered:', e);
-            say('Could not load your guests.');
+            say('Could not load your guests. Check your connection, then reopen Settings.');
         }
     }
 
@@ -132,7 +133,7 @@ export function bindGuestManager() {
             await render();
         } catch (err) {
             console.error('[Guests] delete failed:', err);
-            say(`Could not delete ${name}.`);
+            say(`Could not delete ${name}. Reopen Settings to check the list before trying again.`);
             btn.disabled = false;
         }
     });

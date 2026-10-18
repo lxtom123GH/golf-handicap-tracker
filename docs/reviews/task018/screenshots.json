@@ -1,0 +1,90 @@
+{
+  "base": "0c5a0fcc1dd4f8ee3ba36199fe2e3ff73685c6c7",
+  "syntheticOnly": true,
+  "screens": [
+    {
+      "path": "iphone-se/empty-coaches.png",
+      "width": 375,
+      "height": 2552,
+      "sha256": "885bb56af6013d7d5e630248aea58e80b0cf605041fd64add00612150481d4e0"
+    },
+    {
+      "path": "iphone-se/empty-practice-videos.png",
+      "width": 375,
+      "height": 3322,
+      "sha256": "118926a065a69e67e7c7c7490ce5bf80b1ddcad523e6893c37ee3583cdca42eb"
+    },
+    {
+      "path": "iphone-se/empty-rounds.png",
+      "width": 375,
+      "height": 2138,
+      "sha256": "7ac05179f47a23ccd27fb53f9cc6e7d79bb8ec25dd1e0a42d5bea050eeea7894"
+    },
+    {
+      "path": "iphone-se/input-correction.png",
+      "width": 375,
+      "height": 3366,
+      "sha256": "9002877f460e49f5319c81bc9d221450e6ecceb06597134ae97172a695e2bcd8"
+    },
+    {
+      "path": "iphone-se/offline.png",
+      "width": 375,
+      "height": 1300,
+      "sha256": "bac47fe1d6ed8a9b1685335bec2ae783d8d8c2d11711389e3014264a58970ce1"
+    },
+    {
+      "path": "iphone-se/practice-loading.png",
+      "width": 375,
+      "height": 2896,
+      "sha256": "af373f98e5985df917f390ca9d22355d111180e71fc12d4fd6be857c8899bcc8"
+    },
+    {
+      "path": "iphone-se/service-error.png",
+      "width": 375,
+      "height": 3449,
+      "sha256": "b3c8d05913baf98405707a12e86fcf02535c031c12722bb2412b689f3384a24b"
+    },
+    {
+      "path": "phone/empty-coaches.png",
+      "width": 412,
+      "height": 2552,
+      "sha256": "93e66d2770676bd7b8d85ddbe38be53a5b30d7b0b3023969913629b721d84f7c"
+    },
+    {
+      "path": "phone/empty-practice-videos.png",
+      "width": 412,
+      "height": 3322,
+      "sha256": "e55931d6107b02b1962d970725bb16035b8a9e342ab7e2e79b25d43668703272"
+    },
+    {
+      "path": "phone/empty-rounds.png",
+      "width": 412,
+      "height": 2138,
+      "sha256": "903581410097c48468c924a392b0ddc1141499be4d53f71870370741e890ad52"
+    },
+    {
+      "path": "phone/input-correction.png",
+      "width": 412,
+      "height": 3366,
+      "sha256": "fe138a730c024f788da7e918a10464ab4f533f8914fcfff7d509136926230f6d"
+    },
+    {
+      "path": "phone/offline.png",
+      "width": 412,
+      "height": 1300,
+      "sha256": "16ecc3660875adc62a6639af03f01b7ae73f6b6b622997e48466f1885be86ffa"
+    },
+    {
+      "path": "phone/practice-loading.png",
+      "width": 412,
+      "height": 2896,
+      "sha256": "807ab6f64ad91cab588bbbf2f8367d80916b0f83950bc29e5ff35a412ed3bac0"
+    },
+    {
+      "path": "phone/service-error.png",
+      "width": 412,
+      "height": 3426,
+      "sha256": "9b8c456f04bdef7d7573d67deabb57491e14d2403f03b4f61d65fc0975ed2ae6"
+    }
+  ]
+}

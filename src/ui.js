@@ -461,7 +461,7 @@ export async function playHistoricalAudio(url) {
         await audio.play();
     } catch (err) {
         console.error("[Audio] Historical playback failed:", err);
-        alert("Audio Diary could not be loaded. This might be due to a poor network connection or a deleted file.");
+        alert("Could not play this audio diary. Check your connection and try again. If it is still unavailable, ask the app administrator for help.");
         throw err;
     }
 }
@@ -568,7 +568,7 @@ export async function showAiBriefing(round, btn, roundRow) {
 
     } catch (err) {
         console.error("[AI Briefing] Error:", err);
-        alert(aiErrorMessage(err, "Could not generate AI briefing. Ensure your internet is connected."));
+        alert(aiErrorMessage(err, "Could not create the AI briefing. Check your connection, then try the briefing button again."));
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -628,7 +628,7 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
     UI.ocAddedPlayersList.innerHTML = '';
 
     if (groups.length === 0) {
-        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet</li>';
+        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet. Choose a player or add a guest above.</li>';
         return;
     }
 
@@ -835,23 +835,12 @@ window.addEventListener('stateChange', (e) => {
 
 let _activeDrillData = null; // cache the active drill in memory
 
-const PRACTICE_INPUT_ERRORS = new Set([
-    'practice inputs must be an object',
-    'focus must be a listed area',
-    'goal must be text',
-    'goal must not contain invisible or bidirectional control characters',
-    'goal must be a single line',
-    'goal must be at most 120 characters',
-    'minutes must be 15, 30, 45 or 60',
-]);
-
 function practiceGenerationErrorMessage(error) {
     const code = error?.code;
-    const message = typeof error?.message === 'string' ? error.message : '';
-
-    // These are the exact validation messages produced by our input normaliser.
-    // Never echo a different invalid-argument or arbitrary service message.
-    if (code === 'functions/invalid-argument' && PRACTICE_INPUT_ERRORS.has(message)) return message;
+    // Input rejection needs a correction, even when the service reason is unknown.
+    if (code === 'functions/invalid-argument') {
+        return 'The practice inputs were not accepted. Retype your goal using plain text (up to 120 characters), check the focus and session length, then try again.';
+    }
     if (code === 'functions/permission-denied') {
         return 'Your account is awaiting approval. Ask an admin to approve it before using AI features.';
     }

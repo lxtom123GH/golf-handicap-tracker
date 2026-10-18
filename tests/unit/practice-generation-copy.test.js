@@ -18,6 +18,8 @@ import { AppState } from '../../src/state.js';
 import { doc, getDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 
+const invalidInput = 'The practice inputs were not accepted. Retype your goal using plain text (up to 120 characters), check the focus and session length, then try again.';
+
 const uncertainOutcome = "We couldn't confirm whether your plan was created. Reload this page to check for an active plan before generating again.";
 
 async function loadEmptyCaddy() {
@@ -36,7 +38,7 @@ describe('Practice Caddy generation failure copy', () => {
 
     it.each([
         ['functions/invalid-argument', 'goal must not contain invisible or bidirectional control characters',
-            'goal must not contain invisible or bidirectional control characters'],
+            invalidInput],
         ['functions/permission-denied', 'private service detail',
             'Your account is awaiting approval. Ask an admin to approve it before using AI features.'],
         ['functions/resource-exhausted', 'private service detail',
@@ -45,8 +47,8 @@ describe('Practice Caddy generation failure copy', () => {
             'Your session has ended. Sign in again to generate a practice plan.'],
         ['functions/internal', 'private backend trace marker', uncertainOutcome],
         ['functions/unavailable', 'private network endpoint', uncertainOutcome],
-        ['functions/invalid-argument', 'private validation detail', uncertainOutcome],
-        ['functions/invalid-argument', 'goal must be text <img src=x onerror=alert(1)>', uncertainOutcome],
+        ['functions/invalid-argument', 'private validation detail', invalidInput],
+        ['functions/invalid-argument', 'goal must be text <img src=x onerror=alert(1)>', invalidInput],
         [undefined, 'private service detail', uncertainOutcome],
     ])('shows safe actionable copy for %s only after generation fails', async (code, rawMessage, expected) => {
         const fail = Object.assign(new Error(rawMessage), { code });
