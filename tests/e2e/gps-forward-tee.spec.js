@@ -6,8 +6,17 @@ import { seedPreapprovedEmail, throwawayEmail, registerAndVerifySignup } from '.
 const hole = JSON.parse(fs.readFileSync(new URL('../../public/courses/ashgrove.json', import.meta.url))).holes[1];
 const frame = makeFrame([hole.tee.lat, hole.tee.lon], [hole.green.centre.lat, hole.green.centre.lon]);
 
-test('first shot at a forward tee remains a GPS start and saves that position', async ({ page }, testInfo) => {
+test.use({ serviceWorkers: 'block' });
+for (const lateFrame of [false, true]) {
+test(`first forward-tee shot saves its GPS start (${lateFrame ? 'GPS first' : 'frame first'})`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'phone', 'requires mocked geolocation');
+    await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    if (lateFrame) await page.route('**/courses/ashgrove.json', async route => {
+        await gate;
+        await route.continue();
+    });
     const [latitude, longitude] = fromFrame(frame, [0, 30]);
     await page.context().setGeolocation({ latitude, longitude, accuracy: 30 });
     const email = throwawayEmail();
@@ -22,27 +31,39 @@ test('first shot at a forward tee remains a GPS start and saves that position', 
     await page.locator('#btn-mode-detailed').click();
     await page.locator('#btn-round-18').click();
     await page.locator('#oc-course-select').selectOption({ label: 'Ashgrove GC' });
-    await page.locator('#btn-oc-start').click();
-    await expect(page.locator('#shot-line-canvas')).toHaveAttribute('data-view-mode', 'shot');
-    await page.locator('#btn-wizard-cancel').click();
-    // Control fresh fixes on a new capture, after the hole frame is ready.
     await page.clock.install();
+    await page.locator('#btn-oc-start').click();
+    await expect(page.locator('#oncourse-wizard')).toBeVisible();
     await page.clock.pauseAt(new Date(Date.now() + 1000));
-    await page.locator('#btn-oc-track-shot').click();
-    await expect(page.locator('#shot-line-canvas')).toHaveAttribute('data-view-mode', 'shot');
+    if (!lateFrame) await expect(page.locator('#shot-line-canvas')).toHaveAttribute('data-view-mode', 'shot');
     await page.context().setGeolocation({ latitude: latitude + 0.000001, longitude, accuracy: 6 });
     await expect.poll(async () => {
         await page.clock.runFor(150);
         return page.locator('.gps-lock-acc').textContent();
     }).toBe('\u00b16');
     await page.context().setGeolocation({ latitude: latitude + 0.000002, longitude, accuracy: 3 });
+    await expect.poll(async () => {
+        await page.clock.runFor(150);
+        return page.locator('#gps-lock-ring').getAttribute('class');
+    }).toContain('hidden');
+    if (lateFrame) {
+        await expect(page.locator('#shot-line-canvas')).not.toHaveAttribute('data-view-mode', 'shot');
+        // Log while the course is still loading: saving must await the frame.
+        await page.locator('#bag-buttons-grid button').first().click();
+        await page.locator('#btn-save-shot-final').click();
+        release();
+    }
     await expect(page.locator('#line-readout')).toContainText('Start from GPS', { timeout: 12_000 });
-    await page.locator('#bag-buttons-grid button').first().click();
-    await page.locator('#btn-save-shot-final').click();
+    if (!lateFrame) {
+        await page.locator('#bag-buttons-grid button').first().click();
+        await page.locator('#btn-save-shot-final').click();
+    }
     await expect(page.getByRole('status').filter({ hasText: /logged/i }).first()).toBeVisible();
     const shot = await page.evaluate(() => JSON.parse(localStorage.getItem('golf_round_state')).currentHoleShots[0]);
+    await testInfo.attach('saved-forward-tee-shot', { body: JSON.stringify(shot), contentType: 'application/json' });
+    console.log('Saved forward-tee shot:', JSON.stringify({ startXY: shot.startXY, startPos: shot.startPos, finishXY: shot.finishXY, gpsCapture: shot.gpsCapture }));
     expect(shot.startXY.y).toBeCloseTo(30, 0);
     expect(shot.startPos.lat).toBeCloseTo(latitude, 5);
     expect(shot.finishXY).toBeUndefined();
-    console.log('Saved forward-tee shot:', JSON.stringify({ startXY: shot.startXY, startPos: shot.startPos, finishXY: shot.finishXY, gpsCapture: shot.gpsCapture }));
 });
+}

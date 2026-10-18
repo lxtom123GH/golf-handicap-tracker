@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const playwrightCli = require.resolve('@playwright/test/cli');
 console.log('\nRunning the full E2E matrix in one emulator process.\n');
-const result = spawnSync(process.execPath, [playwrightCli, 'test'], {
+const result = spawnSync(process.execPath, [playwrightCli, 'test'].concat(process.argv.slice(2)), {
     env: process.env,
     stdio: 'inherit',
 });

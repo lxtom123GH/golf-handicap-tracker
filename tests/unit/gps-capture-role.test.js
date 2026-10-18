@@ -62,6 +62,7 @@ const HTML = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const FRAME = { origin: [0, 0], bearing: 0 };
 const mounted = () => vi.waitFor(() => { if (!h.mounts.length) throw new Error('not mounted'); });
 const fire = (fix) => [...h.fixCbs].forEach(cb => cb(fix));
+let roundNumber = 0;
 /** Two good fixes at frame metres xy → the capture accepts at once. */
 function standAt(xy) {
     const [lat, lon] = fromFrame(FRAME, xy);
@@ -87,7 +88,7 @@ beforeEach(() => {
     AppState.currentCoursePars = [4, 4, 4];
     AppState.currentHole = 1;
     AppState.currentHoleShots = [];
-    AppState.activeRoundId = 'r1';
+    AppState.activeRoundId = `r${++roundNumber}`;
     AppState.shotEntry = 'map';
 });
 afterEach(() => { AppState.shotEntry = 'both'; setWizardActive(false); });
@@ -99,6 +100,7 @@ describe('GPS capture role — start or finish of this shot', () => {
         startNewShotInput();
         await vi.waitFor(() => expect(resolvePlan).toBeTypeOf('function'));
         standAt([0, 5]);
+        await vi.waitFor(() => expect(AppState.currentShotData.startXY).toEqual({ x: 0, y: 5 }));
         const captured = AppState.currentShotData;
         resolvePlan({ exists: () => true,
             data: () => ({ line: [{ x: 0, y: 0 }, { x: 0, y: 120 }] }) });
@@ -108,6 +110,27 @@ describe('GPS capture role — start or finish of this shot', () => {
             lat: captured.startPos.lat, lon: captured.startPos.lon,
         });
         expect(AppState.currentShotData.planId).toBeDefined();
+    });
+
+    it.each([30, 123])('derives positions when GPS at %s m arrives before the hole', async (y) => {
+        let release;
+        const course = new Promise(resolve => { release = resolve; });
+        loadCourseOverlay.mockImplementation(() => course);
+        try {
+            startNewShotInput();
+            standAt([0, y]);
+            expect(h.mounts).toHaveLength(0);
+            release({ holes: { 1: { tee: { lat: 0, lon: 0 },
+                green: { centre: { lat: 0.003, lon: 0 } } } } });
+            await mounted();
+            await vi.waitFor(() => expect(AppState.currentShotData.startXY)
+                .toEqual({ x: 0, y: y === 30 ? 30 : 0 }));
+            expect(AppState.currentShotData.gpsCapture.role).toBe(y === 30 ? 'start' : 'finish');
+            expect(AppState.currentShotData.finishXY).toEqual(y === 30 ? undefined : { x: 0, y });
+        } finally {
+            loadCourseOverlay.mockResolvedValue({ holes: { 1: { tee: { lat: 0, lon: 0 },
+                green: { centre: { lat: 0.003, lon: 0 } } } } });
+        }
     });
 
     it('keeps a plan selected after GPS replaces the shot record', async () => {
@@ -120,6 +143,24 @@ describe('GPS capture role — start or finish of this shot', () => {
         expect(AppState.currentShotData.finishXY).toEqual({ x: 0, y: 123 });
         expect(AppState.currentShotData.gpsCapture).toEqual(captured.gpsCapture);
         expect(AppState.currentShotData).not.toBe(captured);
+    });
+
+    it.each(['cancel', 'next hole'])('ignores a pending capture after %s', async (action) => {
+        let release;
+        const course = new Promise(resolve => { release = resolve; });
+        loadCourseOverlay.mockImplementationOnce(() => course).mockImplementationOnce(() => course);
+        startNewShotInput();
+        standAt([0, 30]);
+        if (action === 'cancel') setWizardActive(false);
+        else AppState.currentHole = 2;
+        const before = AppState.currentShotData;
+        release({ holes: { 1: { tee: { lat: 0, lon: 0 },
+            green: { centre: { lat: 0.003, lon: 0 } } } } });
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(AppState.currentShotData).toBe(before);
+        expect(AppState.currentShotData.startXY).toBeUndefined();
+        expect(AppState.currentShotData.startPos).toBeUndefined();
+        expect(h.updates).toEqual([]);
     });
 
     it.each([[0, 5], [0, 123]])('keeps curves drawn after a capture at [%s, %s] metres', async (x, y) => {
@@ -249,6 +290,7 @@ describe('GPS capture role — start or finish of this shot', () => {
         AppState.currentHoleShots = [];
         startNewShotInput();
         standAt([0, 123]);
+        await vi.waitFor(() => expect(AppState.currentShotData.startPos).toBeDefined());
         const d = AppState.currentShotData;
         expect(d.startPos).toBeDefined();
         // The last hole's frame is not used: no startXY in the wrong frame.

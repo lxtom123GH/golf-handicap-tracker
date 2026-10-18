@@ -10,9 +10,9 @@ import { courseSlugFor, loadCourseOverlay, mountHoleOverlay, curveCarryM } from 
 import { loadHole, getLastGpsFix, onGpsFix, isGpsWatchActive, collectGpsBiasSample } from "../oncourse.js";
 import { COURSE_DATA } from "../course-data.js";
 import { appendImageryNotice } from "../imagery-notice.js";
-// S4: toFrame converts the GPS fix into the mounted overlay's hole frame;
+// S4: toFrame converts the GPS fix into the hole's metric frame;
 // S10: fromFrame is its inverse — a dragged marker back to lat/lon.
-import { toFrame, fromFrame } from "../geo.js";
+import { toFrame, fromFrame, makeFrame } from "../geo.js";
 // S7: pure ghost selection (tee shots + same shot number, current round excluded).
 import { selectGhostShots } from "./ghost-lines.js";
 // S10: the hold-still capture policy (pure) gates what chains onto shots.
@@ -686,8 +686,12 @@ function platformOf() {
 // S10: a one-shot reason the readout shows when the capture refuses —
 // module-local, never persisted on the shot.
 let _gpsReadoutNote = null;
+let _captureEpoch = 0;
+let _pendingCapture = null;
 
 function _teardownCapture() {
+    ++_captureEpoch;
+    _pendingCapture = null;
     if (!_captureCtl) return;
     if (_captureCtl.unsub) _captureCtl.unsub();
     if (_captureCtl.tick) clearInterval(_captureCtl.tick);
@@ -711,8 +715,27 @@ function _setRing(pct, accuracyM) {
     if (label) label.textContent = accuracyM != null ? `±${Math.round(accuracyM)}` : '';
 }
 
+/** Geometry belongs to the hole, not to the asynchronously mounted canvas. */
+async function _resolveCapturedPositions(d) {
+    const epoch = _captureEpoch;
+    const key = _holeKey();
+    if (_lineCtl?.frame && _lineCtlHoleKey === key) {
+        _applyCapturedPositions(d, _lineCtl.frame, _overlayHole);
+        return;
+    }
+    const slug = courseSlugFor(AppState.currentRoundCourseName);
+    const teeData = COURSE_DATA[AppState.currentRoundCourseName]?.[AppState.currentRoundTee] || {};
+    const physical = physicalHoleFor(teeData, AppState.currentHole);
+    const course = slug ? await loadCourseOverlay(slug) : null;
+    if (epoch !== _captureEpoch || key !== _holeKey()) return;
+    const hole = course?.holes?.[physical];
+    const frame = hole ? makeFrame([hole.tee.lat, hole.tee.lon],
+        [hole.green.centre.lat, hole.green.centre.lon]) : null;
+    _applyCapturedPositions(d, frame, hole);
+}
+
 /** S4 chain + S10 metadata, from a capture decision. */
-function _applyCapturedPositions(d) {
+function _applyCapturedPositions(d, frame, hole) {
     if (!AppState.currentShotData) return;
     // The AppState proxy observes reference changes, so build a new shot
     // record and publish it after applying the capture result.
@@ -720,15 +743,14 @@ function _applyCapturedPositions(d) {
     const fix = d.fix;
     // A distant accepted fix may represent this shot's finish.
     // A fix far from where this shot should start (tee / previous finish) is
-    // where THIS shot finished - see shot-start.js. Needs the frame; without
-    // If no expected start is available, keep the existing capture behavior.
-    const frame = _lineCtl?.frame && _lineCtlHoleKey === _holeKey() ? _lineCtl.frame : null;
+    // where THIS shot finished - see shot-start.js. Unmapped holes retain
+    // the geographic fix when no frame or expected start is available.
     let role = 'start';
     let expected = null;
     if (fix && frame) {
         const prev = (AppState.currentHoleShots || []).filter(s => s.id !== shotData.id && s.hole === AppState.currentHole).slice(-1)[0] || null;
         expected = expectedStartXY({ shotNumber: shotData.shotNumber, prevShot: prev });
-        const teeVertices = (_overlayHole?.features?.features || [])
+        const teeVertices = (hole?.features?.features || [])
             .filter(f => f.properties?.golf === 'tee')
             .flatMap(f => {
                 const g = f.geometry;
@@ -812,7 +834,7 @@ function _applyCapturedPositions(d) {
 
     // S10: nudge an already-mounted overlay to draw the marker now (the
     // geographic marker also draws itself on every later mount).
-    if (fix && _lineCtl && role === 'start') {
+    if (fix && _lineCtl && _lineCtlHoleKey === _holeKey() && role === 'start') {
         _lineCtl.setStartMarker({
             lat: fix.lat, lon: fix.lon,
             quality: d.state === 'lowConfidence' ? 'lowConfidence' : 'accepted',
@@ -862,7 +884,7 @@ function _beginCapture() {
         if (ring2) ring2.classList.add('hidden');
         if (d.state === 'accepted' || d.state === 'lowConfidence') {
             _gpsReadoutNote = null;
-            _applyCapturedPositions(d);
+            _pendingCapture = _resolveCapturedPositions(d);
         } else if (d.state === 'preciseOff') {
             _gpsReadoutNote = 'Precise Location is off — Settings › Privacy › Location Services › Safari Websites';
         } else {
@@ -1066,6 +1088,7 @@ export function loadExistingShotData(shotId, { mapFirst = false, playDefaults = 
     dismissUndoCard();
     const existing = AppState.currentHoleShots.find(s => s.id === shotId);
     if (existing) {
+        _teardownCapture();
         AppState.currentShotData = { ...existing };
         resetCurveUndo(); // D29: this shot's Undo never reaches another shot's line
         // Codex P2 (2026-10-06): the map's club strip / Routine chip also
@@ -1260,6 +1283,7 @@ export function setWizardActive(isActive) {
     if (isActive) {
         document.body.classList.add('active-wizard-mode');
     } else {
+        _teardownCapture();
         document.body.classList.remove('active-wizard-mode');
         // Map first (Codex P3): Log, Save plan and Cancel all close through
         // here — draw mode, .map-first and the body class all reset, so the
@@ -1276,6 +1300,10 @@ export function setWizardActive(isActive) {
  */
 export async function saveShotData({ quiet = false } = {}) {
     if (!AppState.currentUser) return;
+    const epoch = _captureEpoch;
+    const key = _holeKey();
+    if (_pendingCapture) await _pendingCapture;
+    if (epoch !== _captureEpoch || key !== _holeKey() || !AppState.currentUser) return;
     // Owner feedback 2026-07-05: the app let multiple putts be marked Holed on
     // one hole — physically impossible. Guard NEW shots once a hole-out exists.
     if (!AppState.currentShotData.id
