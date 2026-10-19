@@ -1,0 +1,10 @@
+{
+  "sourceCommit": "0c5a0fcc1dd4f8ee3ba36199fe2e3ff73685c6c7",
+  "originalCssSha256": "9e4b059845bbe98ed2f0271ad71e525d24d683de2f4555e6552e991b628ac4e5",
+  "expandedCandidateCssSha256": "9e4b059845bbe98ed2f0271ad71e525d24d683de2f4555e6552e991b628ac4e5",
+  "candidateCssSha256": "fd2beb04afc5faf4df7023dfb41b6e9ef21ec9cf341aa51cf0592ebfbb5cf19e",
+  "byteIdenticalAfterExpandingNewTokens": true,
+  "newTokenCount": 7,
+  "replacementCount": 96,
+  "preExistingAppSourceTokenNameCollisions": []
+}

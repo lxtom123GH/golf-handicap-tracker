@@ -25,6 +25,18 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 describe('video AI analysis error copy', () => {
+    it('tells the owner to trim an uploaded clip over the analysis limit', async () => {
+        mocks.getDocs.mockResolvedValue({ empty: false, docs: [{ id: 'large-video', data: () => ({
+            uid: 'owner', path: 'videos/owner/large.mp4', bytes: 20 * 1024 * 1024,
+        }) }] });
+        mocks.call.mockRejectedValue({ code: 'functions/failed-precondition', message: 'PRIVATE_SERVICE_DETAIL' });
+        const { button, output } = await controls();
+        button.click();
+        await vi.waitFor(() => expect(button.disabled).toBe(false));
+        expect(output.textContent).toContain('19 MB');
+        expect(output.textContent).toMatch(/trim.*upload/i);
+        expect(output.textContent).not.toMatch(/connection|PRIVATE_SERVICE_DETAIL/);
+    });
     it.each([
         ['functions/unauthenticated', 'Sign in again'], ['functions/permission-denied', 'access'],
         ['functions/not-found', 'Refresh'], ['functions/resource-exhausted', 'midnight Brisbane time'],

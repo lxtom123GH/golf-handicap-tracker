@@ -85,7 +85,13 @@ function netFor(player, hole, strokeIndex, holes) {
  *   perPlayer: skins won by uid; log: [{hole, winnerUid|null, name, value}];
  *   carried: skins still riding on the next unplayed hole.
  */
-export function computeSkins(players, totalHoles, strokeIndex, holes = totalHoles) {
+/** Course-hole keys in play order; defaults to 1..totalHoles. */
+function playSequence(totalHoles, order) {
+    if (Array.isArray(order) && order.length) return order.map(Number);
+    return Array.from({ length: totalHoles }, (_, i) => i + 1);
+}
+
+export function computeSkins(players, totalHoles, strokeIndex, holes = totalHoles, order = null) {
     const perPlayer = {};
     players.forEach(p => { perPlayer[p.uid] = 0; });
     const log = [];
@@ -94,7 +100,9 @@ export function computeSkins(players, totalHoles, strokeIndex, holes = totalHole
     const unavailable = sideGameUnavailableReason(players, strokeIndex);
     if (unavailable) return { perPlayer, log, carried: 0, unavailable };
 
-    for (let h = 1; h <= totalHoles; h++) {
+    // Late starts (e.g. off the 9th) settle holes in the order they are
+    // PLAYED, so carryovers go to the right hole; scores stay course-keyed.
+    for (const h of playSequence(totalHoles, order)) {
         const nets = players.map(p => ({ p, net: netFor(p, h, strokeIndex, holes) }));
         if (nets.some(n => n.net === null)) break; // hole not fully played yet
 
@@ -124,7 +132,7 @@ export function computeSkins(players, totalHoles, strokeIndex, holes = totalHole
  *   statusText: string}} e.g. "Alice 2 UP thru 6", "All square thru 4",
  *   "Alice wins 3&2".
  */
-export function computeMatchPlay(p1, p2, totalHoles, strokeIndex, holes = totalHoles) {
+export function computeMatchPlay(p1, p2, totalHoles, strokeIndex, holes = totalHoles, order = null) {
     let diff = 0; // + means p1 up
     let thru = 0;
     let closed = false;
@@ -134,14 +142,16 @@ export function computeMatchPlay(p1, p2, totalHoles, strokeIndex, holes = totalH
         return { leaderUid: null, up: 0, thru: 0, closed: false, statusText: unavailable, unavailable };
     }
 
-    for (let h = 1; h <= totalHoles; h++) {
+    // `thru` counts holes completed in play order, not the course hole
+    // number, so a round started on the 9th reads "thru 3", not "thru 11".
+    for (const h of playSequence(totalHoles, order)) {
         const n1 = netFor(p1, h, strokeIndex, holes);
         const n2 = netFor(p2, h, strokeIndex, holes);
         if (n1 === null || n2 === null) break;
         if (n1 < n2) diff++;
         else if (n2 < n1) diff--;
-        thru = h;
-        const remaining = totalHoles - h;
+        thru += 1;
+        const remaining = totalHoles - thru;
         if (Math.abs(diff) > remaining) { closed = true; break; }
     }
 
@@ -163,7 +173,7 @@ export function computeMatchPlay(p1, p2, totalHoles, strokeIndex, holes = totalH
  * @returns {{front: Object, back: Object|null, overall: Object|null}} each a
  *   computeMatchPlay result.
  */
-export function computeNassau(p1, p2, totalHoles, strokeIndex, holes = totalHoles) {
+export function computeNassau(p1, p2, totalHoles, strokeIndex, holes = totalHoles, order = null) {
     // A segment is match play over a hole window; reuse computeMatchPlay by
     // slicing the players' scores into the window.
     const slice = (p, from, to) => {
@@ -181,10 +191,13 @@ export function computeNassau(p1, p2, totalHoles, strokeIndex, holes = totalHole
     // The sliced stroke index keeps its ORIGINAL 1..holes values, so the
     // allocation scale stays the round's — passing 9 here would re-wrap an
     // 18-hole chart at nine, which is F-2 in miniature.
-    const front = computeMatchPlay(slice(p1, 1, 9), slice(p2, 1, 9), 9, sliceSI(1, 9), holes);
+    // Each bet keeps its course-hole window but walks it in play order.
+    const seq = Array.isArray(order) && order.length ? order.map(Number) : null;
+    const window = (from, to) => seq ? seq.filter(h => h >= from && h <= to).map(h => h - from + 1) : null;
+    const front = computeMatchPlay(slice(p1, 1, 9), slice(p2, 1, 9), 9, sliceSI(1, 9), holes, window(1, 9));
     if (totalHoles < 18) return { front, back: null, overall: null };
 
-    const back = computeMatchPlay(slice(p1, 10, 18), slice(p2, 10, 18), 9, sliceSI(10, 18), holes);
-    const overall = computeMatchPlay(p1, p2, 18, strokeIndex, holes);
+    const back = computeMatchPlay(slice(p1, 10, 18), slice(p2, 10, 18), 9, sliceSI(10, 18), holes, window(10, 18));
+    const overall = computeMatchPlay(p1, p2, 18, strokeIndex, holes, seq);
     return { front, back, overall };
 }

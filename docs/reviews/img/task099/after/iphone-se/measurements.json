@@ -1,0 +1,12 @@
+{
+  "bounds": {
+    "left": 21,
+    "right": 181.5,
+    "viewport": 375,
+    "pageWidth": 375,
+    "scrollX": 0
+  },
+  "axe": {
+    "violations": []
+  }
+}

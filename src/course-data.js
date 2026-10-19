@@ -146,15 +146,18 @@ export const COURSE_DATA = {
         // tee) but only one par column, so which hole is the Red par 5 is not
         // confirmable there - Red is NOT added; enter it from the card. The
         // White tee is not on the club page: its 65/115 stays on the operator's
-        // scorecard authority only. No stroke index is published online; the
-        // SI arrays remain the operator's card. Ashgrove is an 18-hole course
+        // scorecard authority only. Blue stroke index (owner decision, Alex,
+        // 2026-10-17): the FIRST value of the Blue "Index" column on the club's
+        // hole pages, https://www.ashgrovegolf.com.au/course/hole-1 .. hole-18
+        // (read 2026-10-17; replaces the operator card's Blue SI). Saved rounds
+        // are not recalculated. White SI stays the operator's card. Ashgrove is an 18-hole course
         // (not 9 played twice - the brief's "9 holes" was wrong).
         "Blue (Men)": {
             rating: 67, slope: 124, par: 68,
-            source: "https://www.ashgrovegolf.com.au/our-club/course (read 2026-09-06; rating, slope, par, pars, lengths)",
+            source: "https://www.ashgrovegolf.com.au/our-club/course (read 2026-09-06; rating, slope, par, pars, lengths); stroke index: first Blue Index value per hole, https://www.ashgrovegolf.com.au/course/hole-N (read 2026-10-17)",
             pars: [4, 4, 3, 5, 4, 3, 4, 4, 3, 3, 4, 4, 3, 5, 4, 4, 3, 4],
             lengths: [428, 304, 183, 434, 290, 112, 242, 305, 139, 160, 332, 311, 186, 457, 347, 334, 128, 254],
-            strokeIndex: [1, 11, 7, 18, 14, 13, 17, 6, 15, 5, 9, 3, 2, 8, 10, 4, 12, 16],
+            strokeIndex: [1, 13, 8, 18, 12, 10, 17, 2, 15, 5, 6, 3, 7, 11, 9, 4, 14, 16],
             physicalHoles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         },
         "White (Men)": {

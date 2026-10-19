@@ -1,0 +1,16 @@
+{
+  "base": "a43d7e5533c92ad767b5b5f676abbbf2a701db87",
+  "originalCssSha256": "c05718a48c507bbadad184e18c225c75aa894b5f3d82a165aa6ec4d495938f31",
+  "expandedCandidateCssSha256": "c05718a48c507bbadad184e18c225c75aa894b5f3d82a165aa6ec4d495938f31",
+  "candidateCssSha256": "23d3ce89fb79b56142a8161198135ea76dc943b0f57f261fd5ce351e4e19a68f",
+  "byteIdenticalAfterExpandingNewTokens": true,
+  "uses": {
+    "--space-8": 19,
+    "--space-10": 10,
+    "--radius-8": 10,
+    "--radius-12": 13,
+    "--text-085": 13,
+    "--text-090": 17,
+    "--text-100": 14
+  }
+}
