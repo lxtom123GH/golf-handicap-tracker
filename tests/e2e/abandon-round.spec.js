@@ -11,13 +11,14 @@
 // enforced) and reads back with an admin REST query.
 
 import { test, expect } from '@playwright/test';
-import { seedPreapprovedEmail, throwawayEmail, findDocs, registerAndVerifySignup } from './helpers/emulator.js';
+import { seedPreapprovedEmail, throwawayEmail, findDocs, registerAndVerifySignup, pinLegacyShotEntry } from './helpers/emulator.js';
 
 const PASSWORD = 'e2e-password-1';
 
 async function registerFreshUser(page) {
     const email = throwawayEmail('abandon');
     await seedPreapprovedEmail(email);
+    await pinLegacyShotEntry(page);
     await page.goto('/');
     await page.locator('#btn-register').click();
     await page.locator('#auth-name').fill('Abandon Golfer');

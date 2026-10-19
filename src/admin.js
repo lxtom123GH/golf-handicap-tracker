@@ -11,7 +11,7 @@ window.refreshAdminDashboard = async () => {
     if (!window.currentUserIsAdmin) return;
 
     const usersList = document.getElementById('admin-users-list');
-    if (usersList) usersList.innerHTML = '<tr><td colspan="6">Loading users from Firestore...</td></tr>';
+    if (usersList) usersList.innerHTML = '<tr><td colspan="6">Loading accounts… Please wait.</td></tr>';
 
     try {
         const snap = await getDocs(collection(db, "users"));
@@ -19,27 +19,31 @@ window.refreshAdminDashboard = async () => {
         snap.forEach(d => {
             const data = d.data();
             const tr = document.createElement('tr');
+            const userLabel = escapeHtml(`${data.displayName || 'User'} (${data.email || d.id})`);
             tr.innerHTML = `
-                <td>${escapeHtml(data.displayName || 'N/A')}</td>
-                <td>${escapeHtml(data.email)}</td>
+                <td class="admin-user-name">${escapeHtml(data.displayName || 'N/A')}</td>
+                <td class="admin-user-email">${escapeHtml(data.email)}</td>
                 <td>${data.isAdmin ? 'Admin' : (data.isCoach ? 'Coach' : 'Player')}</td>
                 <td>
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
+                    <label class="toggle-switch admin-user-toggle">
+                        <span class="admin-user-field">Approved</span>
+                        <input type="checkbox" aria-label="Approved ${userLabel}" ${data.isApproved ? 'checked' : ''} onchange="toggleUserApproval('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
                 <td>
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${escapeHtml(d.id)}', this.checked)">
+                    <label class="toggle-switch admin-user-toggle">
+                        <span class="admin-user-field">Coach</span>
+                        <input type="checkbox" aria-label="Coach ${userLabel}" ${data.isCoach ? 'checked' : ''} onchange="toggleCoachRole('${escapeHtml(d.id)}', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
                 <td>
-                    <input type="number" min="0" step="100" aria-label="Video quota in MB"
+                    <label class="admin-user-quota"><span class="admin-user-field">Video quota (MB)</span>
+                    <input type="number" min="0" step="100" aria-label="Video quota (MB) for ${userLabel}"
                         value="${Number(data.videoQuotaBytes) > 0 ? Math.round(data.videoQuotaBytes / (1024 * 1024)) : 500}"
                         style="width:80px;"
-                        onchange="setVideoQuota('${escapeHtml(d.id)}', this.value)">
+                        onchange="setVideoQuota('${escapeHtml(d.id)}', this.value)"></label>
                     <div style="font-size:0.7rem; color:var(--text-muted);">${Math.round((Number(data.videoBytesUsed) || 0) / (1024 * 1024))} MB used</div>
                 </td>
             `;
@@ -47,7 +51,7 @@ window.refreshAdminDashboard = async () => {
         });
     } catch (e) {
         console.error("Admin dashboard fetch error:", e);
-        if (usersList) usersList.innerHTML = '<tr><td colspan="6" style="color:var(--danger);">Error: Failed to fetch users.</td></tr>';
+        if (usersList) usersList.innerHTML = '<tr><td colspan="6" style="color:var(--danger);">Could not load accounts. Check your connection, then reopen Admin.</td></tr>';
     }
 
     loadPreapprovedEmails();
@@ -79,7 +83,7 @@ export function bindAdminTools() {
 async function loadPreapprovedEmails() {
     const emailsList = document.getElementById('admin-emails-list');
     if (!emailsList) return;
-    emailsList.innerHTML = 'Loading...';
+    emailsList.innerHTML = '<tr><td>Loading approved email addresses… Please wait.</td></tr>';
     try {
         const snap = await getDocs(collection(db, "preapproved_emails"));
         if (emailsList) emailsList.innerHTML = '';
@@ -93,7 +97,9 @@ async function loadPreapprovedEmails() {
             `;
             emailsList.appendChild(tr);
         });
-    } catch (e) { }
+    } catch (e) {
+        emailsList.innerHTML = '<tr><td>Could not load approved email addresses. Check your connection, then reopen Admin.</td></tr>';
+    }
 }
 
 window.toggleUserApproval = async function (uid, isApproved) {
@@ -101,7 +107,7 @@ window.toggleUserApproval = async function (uid, isApproved) {
     try {
         await updateDoc(doc(db, "users", uid), { isApproved });
     } catch (e) {
-        alert("Failed to update approval status.");
+        alert("Could not update account approval. Reopen Admin to check its current status before trying again.");
         console.error(e);
     }
 };
@@ -111,7 +117,7 @@ window.toggleCoachRole = async function (uid, isCoach) {
     try {
         await updateDoc(doc(db, "users", uid), { isCoach });
     } catch (e) {
-        alert("Failed to update coach role.");
+        alert("Could not update the coach role. Reopen Admin to check its current status before trying again.");
         console.error(e);
     }
 };
@@ -122,7 +128,7 @@ window.setVideoQuota = async function (uid, mb) {
     try {
         await updateDoc(doc(db, "users", uid), { videoQuotaBytes: bytes });
     } catch (e) {
-        alert("Failed to update video quota.");
+        alert("Could not update the video allowance. Reopen Admin to check its current value before trying again.");
         console.error(e);
     }
 };

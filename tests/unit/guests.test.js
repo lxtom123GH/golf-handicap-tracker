@@ -80,13 +80,13 @@ describe('creating a guest', () => {
     });
 
     it('refuses a nameless guest rather than writing an unlabelled record', async () => {
-        await expect(createGuest('')).rejects.toThrow(/needs a name/i);
-        await expect(createGuest('   ')).rejects.toThrow(/needs a name/i);
+        await expect(createGuest('')).rejects.toThrow('Enter a name for the guest, then try again.');
+        await expect(createGuest('   ')).rejects.toThrow('Enter a name for the guest, then try again.');
         expect(setDocMock).not.toHaveBeenCalled();
     });
 
     it('refuses a name the rules would reject, before the round trip', async () => {
-        await expect(createGuest('x'.repeat(61))).rejects.toThrow(/too long/i);
+        await expect(createGuest('x'.repeat(61))).rejects.toThrow('Use a guest name of 60 characters or fewer, then try again.');
         expect(setDocMock).not.toHaveBeenCalled();
     });
 

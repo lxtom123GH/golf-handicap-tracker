@@ -80,6 +80,7 @@ import { initializeAppRouting } from './persistence.js';
 import { initWakeLock } from './wakelock.js';
 import { announcePendingUpdate, startUpdateWatch, bindCheckForUpdates } from './update-watch.js';
 import { initTermHints } from './term-hints.js';
+import { bootFlightRecorder } from './diagnostics/boot.js';
 
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -96,6 +97,10 @@ function bootstrapApplication() {
         window.addEventListener('offline', syncBanner);
         syncBanner();
     } catch (e) { console.error("[Bootstrap] offline banner failed:", e); }
+
+    // Flight recorder (local diagnostics, on by default). Before the restore,
+    // so a resumed round's state changes are recorded. Never throws.
+    try { bootFlightRecorder(); } catch (e) { /* the app runs without it */ }
 
     // 1. Restore state first (Critical for routing)
     try { initializeAppRouting(); } catch (e) { console.error("[Bootstrap] initializeAppRouting failed:", e); }
@@ -302,7 +307,7 @@ export function bindWHSForm() {
         function renderHoleGrid(teeData) {
             holeGrid.innerHTML = '';
             if (!teeData || !teeData.pars || teeData.pars.length === 0) {
-                holeGrid.innerHTML = "<em>No hole data available for this course.</em>";
+                holeGrid.innerHTML = "<em>Hole details are unavailable for this course. Choose Manual AGS to enter your adjusted gross score.</em>";
                 return;
             }
             // Switch hole grid to exactly the number of holes (9 or 18)

@@ -1,3 +1,4 @@
+import { authErrorMessage } from './auth-messages.js';
 /**
  * @file settings-account.js
  * @description Settings > Account (simplify 2026-10-07, E34). The card used to
@@ -72,7 +73,7 @@ export function bindSettingsPasswordReset({ button, msg, auth, request = request
         try {
             const result = email
                 ? await request(auth, email, { continueUrl: resetContinueUrl(origin) })
-                : { ok: false, message: 'No email on this account.' };
+                : { ok: false, message: 'This account has no email address. Ask the app administrator for help.' };
             // A different golfer signed in while this was in flight: don't
             // show them the last golfer's address (review P3, PR #241).
             if ((auth && auth.currentUser && auth.currentUser.email) !== email) {
@@ -83,7 +84,7 @@ export function bindSettingsPasswordReset({ button, msg, auth, request = request
             msg.textContent = result.message;
             msg.classList.add(result.ok ? 'settings-pw-ok' : 'settings-pw-err');
         } catch (e) {
-            msg.textContent = '❌ ' + ((e && e.message) || String(e));
+            msg.textContent = authErrorMessage(e);
             msg.classList.add('settings-pw-err');
         } finally {
             button.disabled = false;

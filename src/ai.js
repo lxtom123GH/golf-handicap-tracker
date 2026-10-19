@@ -1,3 +1,4 @@
+import { aiErrorMessage } from './ai-errors.js';
 // ==========================================
 // ai.js
 // AI Coach — Live Gemini Integration
@@ -38,7 +39,7 @@ export function bindAiGenerator() {
                     </div>
                     <div id="ai-loading" class="hidden" style="padding:40px;text-align:center;">
                         <div style="width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#8b5cf6;border-radius:50%;animation:ai-spin 0.8s linear infinite;margin:0 auto 16px;"></div>
-                        <p style="color:#64748b;font-size:0.95rem;">Gemini is analysing your stats...</p>
+                        <p style="color:#64748b;font-size:0.95rem;">Analysing your stats… Please wait. You can close this window while you wait.</p>
                     </div>
                     <div id="ai-response-area" class="hidden" style="flex:1;overflow-y:auto;padding:24px;">
                         <div id="ai-response-content" style="font-size:0.92rem;line-height:1.7;color:#1e293b;"></div>
@@ -220,7 +221,7 @@ export async function generateAIResponse(uid, role) {
         const askAiCoach = httpsCallable(functions, 'askAiCoach');
 
         const response = await askAiCoach({ prompt: prompt });
-        const rawText = response.data.answer || 'No response received.';
+        const rawText = response.data.answer || 'No advice was returned. Choose Regenerate to try again.';
         const html = markdownToHtml(rawText);
 
         document.getElementById('ai-loading').classList.add('hidden');
@@ -232,7 +233,7 @@ export async function generateAIResponse(uid, role) {
         console.error('Gemini API error:', e);
         document.getElementById('ai-loading').classList.add('hidden');
         document.getElementById('ai-error-area').classList.remove('hidden');
-        document.getElementById('ai-error-msg').textContent = `❌ ${e.message}`;
+        document.getElementById('ai-error-msg').textContent = aiErrorMessage(e, 'Could not create the advice. Check your connection, then choose Regenerate to try again.');
     } finally {
         document.getElementById('btn-regenerate-ai').disabled = false;
     }

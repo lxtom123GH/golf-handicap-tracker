@@ -1,0 +1,511 @@
+[
+  {
+    "path": "src/settings-account.js",
+    "before": "msg.textContent = '\u274c ' + ((e && e.message) || String(e));",
+    "after": "msg.textContent = authErrorMessage(e);"
+  },
+  {
+    "path": "src/settings-account.js",
+    "before": "'No email on this account.'",
+    "after": "'This account has no email address. Ask the app administrator for help.'"
+  },
+  {
+    "path": "src/ai.js",
+    "before": "document.getElementById('ai-error-msg').textContent = `\u274c ${e.message}`;",
+    "after": "document.getElementById('ai-error-msg').textContent = aiErrorMessage(e, 'Could not create the advice. Check your connection, then choose Regenerate to try again.');"
+  },
+  {
+    "path": "src/ui.js",
+    "before": "errorEl.textContent = `Error: ${err.message}`;",
+    "after": "errorEl.textContent = aiErrorMessage(err, 'Could not create your practice plan. Check your connection, then try generating it again.');"
+  },
+  {
+    "path": "src/coach.js",
+    "before": "msgEl.textContent = `\u274c ${e.message}`;",
+    "after": "msgEl.textContent = userErrorMessage(e, 'Could not assign the drill. Keep your notes here and try again.');"
+  },
+  {
+    "path": "src/hole-mapper.js",
+    "before": "`save refused: ${err.message || err}`",
+    "after": "userErrorMessage(err, 'Could not save this map. Keep it open, check your connection and try Save again.')"
+  },
+  {
+    "path": "src/hole-mapper.js",
+    "before": "throw new Error('not signed in')",
+    "after": "throw Object.assign(new Error('not signed in'), { code: 'unauthenticated' })"
+  },
+  {
+    "path": "src/oncourse.js",
+    "before": "alert(err.message || \"Upload failed. Please try again.\");",
+    "after": "alert(\"Could not upload the diary. Check your connection, then record it again before uploading.\");"
+  },
+  {
+    "path": "src/oncourse.js",
+    "before": "UI.voiceStatus.textContent = \"Error: \" + event.error;",
+    "after": "UI.voiceStatus.textContent = event.error === 'no-speech'\n                ? \"No speech was heard. Tap the mic and try speaking again.\"\n                : \"Voice input is unavailable. Enter your score with the buttons instead.\";"
+  },
+  {
+    "path": "src/videos.js",
+    "before": "throw new Error('Not signed in.')",
+    "after": "throw new InputMessage('Sign in, then choose your video again.')"
+  },
+  {
+    "path": "src/videos.js",
+    "before": "throw new Error('That file is not a video.')",
+    "after": "throw new InputMessage('That file is not a video. Choose a video file, then try again.')"
+  },
+  {
+    "path": "src/videos.js",
+    "before": "throw new Error(`Videos are capped",
+    "after": "throw new InputMessage(`Videos are capped"
+  },
+  {
+    "path": "src/videos.js",
+    "before": "throw new Error(`This would exceed",
+    "after": "throw new InputMessage(`This would exceed"
+  },
+  {
+    "path": "src/videos.js",
+    "before": "out.textContent = e.message || 'Analysis failed. Slow-mo clips under ~19 MB work best.';",
+    "after": "out.textContent = aiErrorMessage(e, 'Could not analyse this video. Check your connection, then choose AI analysis again.');"
+  },
+  {
+    "path": "src/videos.js",
+    "before": "if (status) status.textContent = e.message || 'Upload failed.';",
+    "after": "if (status) status.textContent = userErrorMessage(e, 'Could not upload this video. Check your connection, then choose Upload video again.');"
+  },
+  {
+    "path": "src/guests.js",
+    "before": "throw new Error('A guest needs a name.')",
+    "after": "throw new InputMessage('Enter a name for the guest, then try again.')"
+  },
+  {
+    "path": "src/guests.js",
+    "before": "throw new Error('That name is too long (60 characters max).')",
+    "after": "throw new InputMessage('Use a guest name of 60 characters or fewer, then try again.')"
+  },
+  {
+    "path": "src/guests.js",
+    "before": "throw new Error('Sign in before adding a guest.')",
+    "after": "throw new InputMessage('Sign in before adding a guest.')"
+  },
+  {
+    "path": "src/modules/event-binders.js",
+    "before": "say(err?.message || 'Could not add that guest.');",
+    "after": "say(userErrorMessage(err, 'Could not add that guest. Check your connection, then try Add guest again.'));"
+  },
+  {
+    "path": "src/pending-rounds.js",
+    "before": "throw new Error('Sign in to approve a card.')",
+    "after": "throw new InputMessage('Sign in to approve a card.')"
+  },
+  {
+    "path": "src/pending-rounds.js",
+    "before": "throw new Error('Nothing to approve.')",
+    "after": "throw new InputMessage('No card is selected. Choose a card, then try again.')"
+  },
+  {
+    "path": "src/pending-rounds.js",
+    "before": "throw new Error('That card is not yours to approve.')",
+    "after": "throw new InputMessage('That card belongs to another player. Choose a card addressed to you.')"
+  },
+  {
+    "path": "src/pending-rounds.js",
+    "before": "alert(err?.message || 'Could not approve that card.');",
+    "after": "alert(userErrorMessage(err, 'Could not finish approving that card. Check your scoring record before trying Approve again.'));"
+  },
+  {
+    "path": "index.html",
+    "before": "You're offline \u2014 scores are saved on this phone and will sync when signal returns.",
+    "after": "You're offline. Keep this app open and reconnect to sync. Avoid reloading during your round.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Loading WHS data...",
+    "after": "Loading your scoring record\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Your Caddy is thinking...",
+    "after": "Creating your practice plan\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Loading potential regulars...",
+    "after": "Loading players you can add\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Loading athlete roster...",
+    "after": "Loading your players\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Loading analytics...",
+    "after": "Loading shot patterns\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Loading...</p>",
+    "after": "Loading people you follow\u2026 Please wait.</p>",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "list.innerHTML = 'Loading...';",
+    "after": "list.innerHTML = '<li>Loading your coaches\u2026 Please wait.</li>';",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "No coaches added yet.",
+    "after": "No coaches added yet. Enter your coach\u2019s email address above to add them.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "No athletes are currently linked to your profile.",
+    "after": "No players are linked to you yet. Ask a player to add your email address through Manage My Coaches.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "\ud83d\udd04 Syncing athlete roster...",
+    "after": "Refreshing your players\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "Loading drills\u2026",
+    "after": "Loading assigned drills\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "No drills assigned yet.",
+    "after": "No drills assigned yet. Use Assign Drill above to set the first one.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "Could not load drill impact.",
+    "after": "Could not load drill results. Check your connection, then reopen this player.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/coach.js",
+    "before": "No notes yet.",
+    "after": "No notes yet. Write a note below, then choose Save Note.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "Loading videos\u2026",
+    "after": "Loading swing videos\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "Video file unavailable.",
+    "after": "This video could not be opened. Check your connection and reopen the library.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "Could not delete video.",
+    "after": "Could not delete the video. Check your connection, then try Delete again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "Could not load videos.",
+    "after": "Could not load videos. Check your connection, then reload when you are not playing a round.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "Could not save annotations.",
+    "after": "Could not save your drawn lines. Keep this video open and try Save again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "Could not load one of the videos.",
+    "after": "Could not load one of the videos. Check your connection, then choose the videos again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/ai.js",
+    "before": "Gemini is analysing your stats...",
+    "after": "Analysing your stats\u2026 Please wait. You can close this window while you wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/ai.js",
+    "before": "'No response received.'",
+    "after": "'No advice was returned. Choose Regenerate to try again.'",
+    "occurrences": 1
+  },
+  {
+    "path": "src/practice.js",
+    "before": "No practice records found.",
+    "after": "No practice sessions recorded yet. Choose a drill on Practice, then save a session.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/practice.js",
+    "before": "yet.</p>`;",
+    "after": "yet. Choose this drill on Practice, then save a session.</p>`;",
+    "occurrences": 1
+  },
+  {
+    "path": "src/social.js",
+    "before": "'No players found.'",
+    "after": "'No players found. Check the name and try another search.'",
+    "occurrences": 1
+  },
+  {
+    "path": "src/social.js",
+    "before": "Loading...</p>",
+    "after": "Loading recent activity\u2026 Please wait.</p>",
+    "occurrences": 1
+  },
+  {
+    "path": "src/social.js",
+    "before": "Error loading activity feed. Please try again later.",
+    "after": "Could not load recent activity. Try again later; if it keeps happening, ask the app administrator for help.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/analytics.js",
+    "before": "Analyzing shot history...",
+    "after": "Analysing shot history\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/analytics.js",
+    "before": "Failed to load analytics.",
+    "after": "Could not load shot patterns. Check your connection, then reopen this player.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/analytics.js",
+    "before": "No detailed shot data for this filter.",
+    "after": "No detailed shots match these filters. Try All and All time, or record shots in Detailed mode.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/admin.js",
+    "before": "Loading users from Firestore...",
+    "after": "Loading accounts\u2026 Please wait.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/admin.js",
+    "before": "Error: Failed to fetch users.",
+    "after": "Could not load accounts. Check your connection, then reopen Admin.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/admin.js",
+    "before": "emailsList.innerHTML = 'Loading...';",
+    "after": "emailsList.innerHTML = '<tr><td>Loading approved email addresses\u2026 Please wait.</td></tr>';",
+    "occurrences": 1
+  },
+  {
+    "path": "src/admin.js",
+    "before": "Failed to update approval status.",
+    "after": "Could not update account approval. Reopen Admin to check its current status before trying again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/admin.js",
+    "before": "Failed to update coach role.",
+    "after": "Could not update the coach role. Reopen Admin to check its current status before trying again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/admin.js",
+    "before": "Failed to update video quota.",
+    "after": "Could not update the video allowance. Reopen Admin to check its current value before trying again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/ui.js",
+    "before": "No players added yet</li>",
+    "after": "No players added yet. Choose a player or add a guest above.</li>",
+    "occurrences": 1
+  },
+  {
+    "path": "src/ui.js",
+    "before": "Audio Diary could not be loaded. This might be due to a poor network connection or a deleted file.",
+    "after": "Could not play this audio diary. Check your connection and try again. If it is still unavailable, ask the app administrator for help.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/ui.js",
+    "before": "Could not generate AI briefing. Ensure your internet is connected.",
+    "after": "Could not create the AI briefing. Check your connection, then try the briefing button again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/competitions.js",
+    "before": "Could not update the competition.",
+    "after": "Could not update the competition. Check your connection, then try again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/competitions.js",
+    "before": "Could not delete the competition.",
+    "after": "Could not delete the competition. Check your connection and confirm it is still listed before trying again.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/competitions.js",
+    "before": "No custom rules added yet.",
+    "after": "No custom rules added yet. Add a rule above, or continue with standard scoring.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/competitions.js",
+    "before": "No other approved players to invite yet.",
+    "after": "No other approved players are available. Ask the app administrator to approve their accounts, then reopen this list.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/competitions.js",
+    "before": "No approved players found.",
+    "after": "No approved players found. Ask the app administrator to approve the players, then reopen this list.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/modules/insights-render.js",
+    "before": "Could not load shot history.",
+    "after": "Could not load shot history. Check your connection, then reopen Insights.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/modules/event-binders.js",
+    "before": "Could not load your guests.",
+    "after": "Could not load your guests. Check your connection, then reopen Settings.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/app-v4.js",
+    "before": "No hole data available for this course.",
+    "after": "Hole details are unavailable for this course. Choose Manual AGS to enter your adjusted gross score.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/hole-mapper.js",
+    "before": "nothing to save: close a ring first",
+    "after": "No area is ready to save. Join the last point to the first to close an area, then choose Save.",
+    "occurrences": 1
+  },
+  {
+    "path": "src/hole-mapper.js",
+    "before": "Save this trace to your holeTraces",
+    "after": "Save the areas drawn on this hole",
+    "occurrences": 1
+  },
+  {
+    "path": "src/hole-mapper.js",
+    "before": "saved ${payload.features.features.length} feature(s) \u2014 syncs when online",
+    "after": "${payload.features.features.length} map area(s) queued. Reconnect to finish syncing.",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "<p>No rounds logged yet.</p>",
+    "after": "<p>No rounds logged yet. Start a round on On Course, or choose Log a past round.</p>",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "<p>No rounds logged yet.</p>",
+    "after": "<p>No competition rounds logged yet. Use Log Round &amp; Calculate Points above to add one.</p>",
+    "occurrences": 1
+  },
+  {
+    "path": "src/videos.js",
+    "before": "container.innerHTML = '<p style=\"color:#94a3b8;\">No swing videos yet.</p>';",
+    "after": "container.innerHTML = `<p style=\"color:#94a3b8;\">${canDelete\n                ? 'No swing videos yet. Choose a video above, then select Upload video.'\n                : 'No swing videos yet. Ask the player to upload one on their Practice tab.'}</p>`;",
+    "occurrences": 1
+  },
+  {
+    "path": "index.html",
+    "before": "Saved to your official WHS record.",
+    "after": "Saved to your scoring record in this app."
+  },
+  {
+    "path": "index.html",
+    "before": "You are logging this round to your official WHS profile.",
+    "after": "This round is saved in this app. It does not submit a score to Golf Australia."
+  },
+  {
+    "path": "index.html",
+    "before": "Log a round to start building your official WHS handicap.",
+    "after": "Log a round to start building your handicap estimate in this app."
+  },
+  {
+    "path": "index.html",
+    "before": "One bad round can't hurt it",
+    "after": "A new score can change which older scores count."
+  },
+  {
+    "path": "index.html",
+    "before": "36 means you played to your handicap.",
+    "after": "Nine net pars total 18 points; eighteen net pars total 36 points."
+  },
+  {
+    "path": "index.html",
+    "before": "Simplified Daily Handicap formula in introductory copy",
+    "after": "Daily Handicap explained for course, tees and round length; check official lookup before competition play."
+  },
+  {
+    "path": "index.html",
+    "before": "AGS abbreviation without an expanded definition in this explainer",
+    "after": "AGS means adjusted gross score; distinguish it from actual strokes."
+  },
+  {
+    "path": "src/coach.js",
+    "before": "Coach-list read rejection leaves Loading displayed",
+    "after": "Could not load your coaches. Check your connection, then close and reopen Manage My Coaches."
+  },
+  {
+    "path": "src/admin.js",
+    "before": "Approved-email read rejection leaves Loading displayed",
+    "after": "Could not load approved email addresses. Check your connection, then reopen Admin."
+  },
+  {
+    "path": "src/oncourse.js",
+    "before": "Mic access denied. Tap the mic again to retry.",
+    "after": "Mic blocked. Allow it in browser settings, or use the score buttons."
+  },
+  {
+    "path": "src/oncourse.js",
+    "before": "Rules engine is currently unavailable. Please check the USGA handbook manually.",
+    "after": "AI rules advice is unavailable. Check the Rules of Golf or ask the competition committee."
+  },
+  {
+    "path": "src/oncourse.js",
+    "before": "No score data found for analysis.",
+    "after": "No scores are available for this analysis. Close this window and check your scoring record."
+  },
+  {
+    "path": "src/modules/hole-plan-card.js",
+    "before": "course file failed to load",
+    "after": "Could not load this course map. Check your connection, then choose the course again."
+  },
+  {
+    "path": "src/modules/event-binders.js",
+    "before": "Could not delete ${name}.",
+    "after": "Could not delete ${name}. Reopen Settings to check the list before trying again."
+  }
+]

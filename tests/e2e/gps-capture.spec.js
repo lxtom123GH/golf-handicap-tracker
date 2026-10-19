@@ -20,6 +20,11 @@ import {
 } from './helpers/emulator.js';
 import { GPS_POLICY } from '../../src/gps-capture.js';
 
+// This spec covers map-and-grids controls; map-first behavior is covered separately.
+test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
+});
+
 const PASSWORD = 'e2e-password-1';
 const KEPERRA_TEE = { latitude: -27.4136, longitude: 152.9465 };
 // Ashgrove hole 1 tee (public/courses/ashgrove.json) — the drag test needs the

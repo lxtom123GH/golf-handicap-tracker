@@ -33,7 +33,7 @@ async function registerFreshUser(page) {
     return email;
 }
 
-test('mapper: tap 6 points as a green and 4 as water on Keperra 10, close, save — both land in holeTraces', async ({ page }, testInfo) => {
+test('mapper: tap 6 points as a green and 4 as water on Keperra 10, close, save — both land in holeTraces', async ({ page, context }, testInfo) => {
     test.skip(testInfo.project.name !== 'iphone-se', 'the mapper is a thumb UI; measured on the iphone-se project');
 
     const email = await registerFreshUser(page);
@@ -83,12 +83,21 @@ test('mapper: tap 6 points as a green and 4 as water on Keperra 10, close, save 
     await page.locator('#btn-mapper-close-ring').click();
     await expect(page.locator('#mapper-status')).toContainText('saved features 2/12');
 
-    // Save through the real UI. The write is NOT awaited (F-9/F-11 pattern:
-    // under the persistent local cache it resolves only on the server ack),
-    // so the status flips immediately and the doc reaches the emulator store
-    // asynchronously — poll the read-back.
+    // Confirm only after server acknowledgement, while leaving Save usable.
     await page.locator('#btn-mapper-save').click();
-    await expect(page.locator('#mapper-status')).toContainText('saved 2 feature');
+    await expect(page.locator('#mapper-status')).toHaveText('saved 2 feature(s).');
+    await page.screenshot({ path: testInfo.outputPath('mapper-online.png') });
+
+    // A second save made offline must remain pending until reconnection.
+    await context.setOffline(true);
+    await page.locator('#btn-mapper-save').click();
+    await expect(page.locator('#mapper-status')).toContainText('Waiting for confirmation');
+    await expect(page.locator('#mapper-status')).not.toContainText('saved');
+    await expect(page.locator('#btn-mapper-save')).toBeEnabled();
+    await page.screenshot({ path: testInfo.outputPath('mapper-offline.png') });
+    await context.setOffline(false);
+    await expect(page.locator('#mapper-status')).toHaveText('saved 2 feature(s).');
+    await page.screenshot({ path: testInfo.outputPath('mapper-reconnected.png') });
 
     // Read it back through the emulator: resolve the uid by email, then the
     // trace doc. The emulator persists between runs, so scope by user.

@@ -78,6 +78,18 @@ describe('Settings > Account card', () => {
         expect(msg.classList.contains('hidden')).toBe(true);
     });
 
+    it('does not expose a rejected service message and gives a next step', async () => {
+        const { button, msg } = card();
+        const request = vi.fn(async () => { throw new Error('SENSITIVE_DIAGNOSTIC synthetic backend details'); });
+        const auth = { currentUser: { email: 'test-player@example.invalid' } };
+        bindSettingsPasswordReset({ button, msg, auth, request });
+        button.click();
+        await vi.waitFor(() => expect(button.disabled).toBe(false));
+        expect(msg.textContent).not.toContain('SENSITIVE_DIAGNOSTIC');
+        expect(msg.textContent).toMatch(/try again|administrator/);
+        expect(msg.classList.contains('settings-pw-err')).toBe(true);
+    });
+
     it('hides the reset button for a Google-only account, shows it for a password one', () => {
         const { button } = card();
         expect(hasPasswordSignIn({ providerData: [{ providerId: 'google.com' }] })).toBe(false);

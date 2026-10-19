@@ -1,3 +1,5 @@
+import { InputMessage, userErrorMessage } from './user-messages.js';
+import { aiErrorMessage } from './ai-errors.js';
 // ==========================================
 // videos.js — swing-video upload, library & quotas (BL-VID-01, video plan P2)
 // ==========================================
@@ -47,13 +49,13 @@ async function bumpUsage(uid, deltaBytes) {
 /** Upload one video for the signed-in user. Returns the new doc id. */
 async function uploadVideo(file, { angle, note }, onProgress) {
     const uid = auth.currentUser?.uid;
-    if (!uid) throw new Error('Not signed in.');
-    if (!file.type.startsWith('video/')) throw new Error('That file is not a video.');
-    if (file.size >= MAX_FILE_BYTES) throw new Error(`Videos are capped at ${formatBytes(MAX_FILE_BYTES)} each — trim the clip first.`);
+    if (!uid) throw new InputMessage('Sign in, then choose your video again.');
+    if (!file.type.startsWith('video/')) throw new InputMessage('That file is not a video. Choose a video file, then try again.');
+    if (file.size >= MAX_FILE_BYTES) throw new InputMessage(`Videos are capped at ${formatBytes(MAX_FILE_BYTES)} each — trim the clip first.`);
 
     const { quota, used } = await quotaFor(uid);
     if (used + file.size > quota) {
-        throw new Error(`This would exceed your ${formatBytes(quota)} video allowance `
+        throw new InputMessage(`This would exceed your ${formatBytes(quota)} video allowance `
             + `(${formatBytes(used)} used). Delete an old video or ask the admin for more room.`);
     }
 
@@ -94,12 +96,14 @@ async function deleteVideo(v) {
  */
 export async function renderVideoLibrary(uid, container, { canDelete = false } = {}) {
     if (!container) return;
-    container.innerHTML = '<p style="color:var(--text-muted);">Loading videos…</p>';
+    container.innerHTML = '<p style="color:var(--text-muted);">Loading swing videos… Please wait.</p>';
     try {
         const q = query(collection(db, 'videos'), where('uid', '==', uid), orderBy('createdAt', 'desc'));
         const snap = await getDocs(q);
         if (snap.empty) {
-            container.innerHTML = '<p style="color:var(--text-muted);">No swing videos yet.</p>';
+            container.innerHTML = `<p style="color:var(--text-muted);">${canDelete
+                ? 'No swing videos yet. Choose a video above, then select Upload video.'
+                : 'No swing videos yet. Ask the player to upload one on their Practice tab.'}</p>`;
             return;
         }
         container.innerHTML = '';
@@ -144,7 +148,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
             const player = row.querySelector('video');
             getDownloadURL(storageRef(storage, v.path))
                 .then(url => { player.src = url; })
-                .catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'Video file unavailable.', style: 'color:var(--danger);' })); });
+                .catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'This video could not be opened. Check your connection and reopen the library.', style: 'color:var(--danger);' })); });
             row.querySelectorAll('.vid-rate').forEach(b => b.addEventListener('click', () => {
                 player.playbackRate = parseFloat(b.getAttribute('data-rate'));
                 row.querySelectorAll('.vid-rate').forEach(x => x.style.fontWeight = '400');
@@ -167,14 +171,14 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     showToast('Video deleted 🗑️');
                 } catch (e) {
                     console.error('[Videos] delete failed:', e);
-                    showToast('Could not delete video.');
+                    showToast('Could not delete the video. Check your connection, then try Delete again.');
                 }
             });
             container.appendChild(row);
         }
     } catch (e) {
         console.error('[Videos] library load failed:', e);
-        container.innerHTML = '<p style="color:var(--danger);">Could not load videos.</p>';
+        container.innerHTML = '<p style="color:var(--danger);">Could not load videos. Check your connection, then reload when you are not playing a round.</p>';
     }
 }
 
@@ -263,12 +267,15 @@ function bindAnnotations(row, player, v) {
             showToast('Annotations saved ✏️');
         } catch (e) {
             console.error('[Videos] annotation save failed:', e);
-            showToast('Could not save annotations.');
+            showToast('Could not save your drawn lines. Keep this video open and try Save again.');
         }
     });
 }
 
-function analysisErrorCopy(error) {
+function analysisErrorCopy(error, video) {
+    if (error?.code === 'functions/failed-precondition' && video.bytes > 19 * 1024 * 1024) {
+        return 'This clip is too large for AI analysis (19 MB maximum). Trim it, then upload the smaller clip and request analysis.';
+    }
     // Codes only: callable messages can contain arbitrary service diagnostics.
     const messages = {
         'functions/unauthenticated': 'Sign in again, then reopen this video to request analysis.',
@@ -309,7 +316,7 @@ function bindAiAnalysis(row, v) {
             render(res.data || {});
         } catch (e) {
             console.error('[Videos] AI analysis failed:', e);
-            out.textContent = analysisErrorCopy(e);
+            out.textContent = analysisErrorCopy(e, v);
         } finally {
             btn.disabled = false;
         }
@@ -382,7 +389,7 @@ function initCompare() {
             stage.classList.remove('hidden');
         } catch (e) {
             console.error('[Compare] load failed:', e);
-            showToast('Could not load one of the videos.');
+            showToast('Could not load one of the videos. Check your connection, then choose the videos again.');
         }
     });
 
@@ -451,7 +458,7 @@ export function initVideos() {
             refreshQuotaLine();
         } catch (e) {
             console.error('[Videos] upload failed:', e);
-            if (status) status.textContent = e.message || 'Upload failed.';
+            if (status) status.textContent = userErrorMessage(e, 'Could not upload this video. Check your connection, then choose Upload video again.');
         } finally {
             btn.disabled = false;
         }
