@@ -35,6 +35,7 @@ async function setup(page, holes) {
     await page.locator(`#btn-round-${holes}`).click();
     await page.locator('#oc-course-select').selectOption(holes === 9 ? 'Synthetic Nine' : 'Synthetic Eighteen');
     await page.locator('#oc-tee-select').selectOption('Fixture Tee');
+    await page.locator('#oc-handicap-category').selectOption('men');
     await page.locator('#oc-round-date').fill('2026-01-15');
 }
 test('synthetic nine: sign in, every hole, saved round and updated differential', async ({ page }, info) => {
@@ -74,12 +75,13 @@ test('synthetic nine: sign in, every hole, saved round and updated differential'
     await page.locator('.tab-btn[data-target="tab-whs"]').click();
     const row=page.locator('#history-tbody tr').filter({hasText:'Synthetic Nine'});
     await expect(row).toHaveCount(1);
-    // Existing app method on a fictional CR36/SR113/HI18 fixture: 6 + 10.56 = 16.6.
-    // This pins displayed behaviour, not GA/WHS certification (task029 owns that).
-    await expect(row.locator('td').nth(3)).toContainText('16.6');
+    await expect(row).toContainText('Pending another nine');
+    // Synthetic Australian component regression: (AGS42 - CR36) * 113 / SR113 = 6.0.
+    // A single nine stays pending; this is not published-example acceptance evidence.
+    await expect(row.locator('td').nth(3)).toContainText('6.0');
     await page.reload();
     await page.locator('.tab-btn[data-target="tab-whs"]').click();
-    await expect(row.locator('td').nth(3)).toContainText('16.6');
+    await expect(row.locator('td').nth(3)).toContainText('6.0');
 });
 test('eighteen-hole abandonment removes active state and creates no scored round', async ({page},info)=>{
     const email=await approved(page,info);
@@ -137,6 +139,7 @@ test('pending user cannot score; admin approval admits them after verification r
         await page.locator('#tab-btn-admin').click();
         const row=page.locator('#admin-users-list tr').filter({hasText:email});
         await expect(row).toHaveCount(1);
+    await expect(row).toContainText('Pending another nine');
         await row.locator('input[type="checkbox"]').first().check();
         await expect.poll(async()=>(await readDoc(`users/${user._id}`))?.isApproved).toBe(true);
         await pending.reload();await expect(pending.locator('#main-app')).toBeVisible();
