@@ -64,6 +64,9 @@ jobs:
     - name: Run Unit Tests (tests/unit + oncourse)
       run: npx vitest run tests/unit tests/oncourse.test.js
 
+    - name: Run published GA acceptance examples
+      run: npm run test:acceptance
+
     - name: Cache Firebase Emulators
       uses: actions/cache@v4
       with:

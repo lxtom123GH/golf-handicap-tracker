@@ -13,25 +13,13 @@ const examples = [
     [-5.35, -5.3], [-5.3501, -5.4], [-5.55, -5.5], [-5.5501, -5.6],
 ];
 
-describe('GA published decimal rounding examples', () => {
-    it.each(examples)('differential %s rounds to %s', (value, expected) => {
-        // Slope 113 and rating zero make the differential exactly the input.
-        expect(roundDifferential({ adjustedGross: value, rating: 0, slope: 113, holesPlayed: 18 })).toBe(expected);
-    });
-
+describe('Synthetic GA decimal arithmetic regressions', () => {
     it.each(examples)('retains %s through decimal score/rating subtraction', (value, expected) => {
         // Synthetic arithmetic fixture: the resulting differential is the GA
         // published value. Not a claim that GA published this scorecard.
         const adjustedGross = Number((72 + value).toFixed(4));
         expect(roundDifferential({ adjustedGross, rating: 72, slope: 113, holesPlayed: 18 })).toBe(expected);
     });
-
-    it.each([[0.5, 1], [0.501, 1], [10.5, 11], [10.501, 11], [20.5, 21],
-        [-0.5, 0], [-0.501, -1], [-1.5, -1], [-1.501, -2], [-2.5, -2], [-2.501, -3]])(
-        'applies GA §3H pp11–12 whole-handicap rounding %s -> %s', (value, expected) => {
-            expect(roundHandicap(value, 0)).toBe(expected);
-        }
-    );
 
     it('shows scratch without a negative-zero label', () => {
         expect(formatHandicap(-0.04)).toBe('0.0');

@@ -73,19 +73,19 @@ describe('F-4 calculateIndex signals "not established" distinctly', () => {
 describe('F-4 no index means no Daily Handicap, rather than scratch', () => {
     it('refuses to compute a Daily Handicap from a missing index', async () => {
         const { calculateDailyHandicap } = await import('../../src/whs.js');
-        expect(calculateDailyHandicap(null, 129, 72, 72)).toBeNull();
-        expect(calculateDailyHandicap(undefined, 129, 72, 72)).toBeNull();
-        expect(calculateDailyHandicap(NaN, 129, 72, 72)).toBeNull();
+        expect(calculateDailyHandicap(null, 129, 72, 72, 18, 'men')).toBeNull();
+        expect(calculateDailyHandicap(undefined, 129, 72, 72, 18, 'men')).toBeNull();
+        expect(calculateDailyHandicap(NaN, 129, 72, 72, 18, 'men')).toBeNull();
     });
 
     it('refuses when the tee has no slope to work from', async () => {
         const { calculateDailyHandicap } = await import('../../src/whs.js');
-        expect(calculateDailyHandicap(26.0, 0, 72, 72)).toBeNull();
+        expect(calculateDailyHandicap(26.0, 0, 72, 72, 18, 'men')).toBeNull();
     });
 
     it('still gives a real 26-marker their strokes', async () => {
         const { calculateDailyHandicap } = await import('../../src/whs.js');
-        expect(calculateDailyHandicap(26.0, 129, 72, 72)).toBe(28);
+        expect(calculateDailyHandicap(26.0, 129, 72, 72, 18, 'men')).toBe(28);
     });
 });
 

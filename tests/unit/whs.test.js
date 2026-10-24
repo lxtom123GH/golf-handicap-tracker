@@ -154,42 +154,18 @@ describe('WHS soft & hard caps against Low HI', () => {
     });
 });
 
-// 9-hole scaling (WHS 5.1b, 2024 — adopted by GA April 2024): a 9-hole score's
-// differential is computed against true 9-hole CR/SR, then an 18-hole
-// differential is formed by adding the expected differential for the unplayed
-// nine (0.52 × HI + 1.2), falling back to doubling when no HI exists yet.
-describe('9-hole score scaling (BL-UX-07)', () => {
-    // Keperra Old Blue nine: CR 35 / slope 126 (official GA chart). AGS 45
-    // → SD9 = (113/126) × 10 = 8.968…
-    const nine = (id) => ({ id, slope: 126, rating: 35, adjustedGross: 45, holesPlayed: 9 });
-
-    it('expectedNineDifferential follows 0.52×HI + 1.2', () => {
-        expect(expectedNineDifferential(10)).toBeCloseTo(6.4, 6);
-        expect(expectedNineDifferential(0)).toBeCloseTo(1.2, 6);
-        expect(expectedNineDifferential(null)).toBeNull();
+// GA Jan2026 §5F(vii): two played nines form one completed score.
+describe('Australian nine-hole pairing', () => {
+    const nine = id => ({id,slope:126,rating:35,adjustedGross:45,holesPlayed:9});
+    it('does not synthesize an unplayed half', () => expect(expectedNineDifferential(10)).toBeNull());
+    it.each([20,null])('six nines create three scores, independent of prior index %s', prior => {
+        const result=calculateIndex(['a','b','c','d','e','f'].map(nine),null,prior);
+        // Each component rounds to9.0; combined18.0; best1of3 minus2.
+        expect(result.index).toBe('16.0');expect(result.details.of).toBe(3);
     });
-
-    it('adds the expected nine when the player has a Handicap Index', () => {
-        // SD18 = 8.968… + (0.52×20 + 1.2 = 11.6) = 20.568… → 20.6
-        // Six nines (54 holes, the first-index minimum) → 6 scores → best 2
-        // averaged with −1.0 adjustment → 19.6
-        const rounds = ['a', 'b', 'c', 'd', 'e', 'f'].map(nine);
-        expect(calculateIndex(rounds, null, 20).index).toBe("19.6");
-    });
-
-    it('doubles the played nine when no Handicap Index exists yet', () => {
-        // SD18 = 2 × 8.968… = 17.936… → 17.9; six nines → best 2, −1.0 → 16.9
-        const rounds = ['a', 'b', 'c', 'd', 'e', 'f'].map(nine);
-        expect(calculateIndex(rounds, null, null).index).toBe("16.9");
-    });
-
-    it('leaves 18-hole rounds untouched by priorHI', () => {
-        const rounds = [
-            { id: 'a', slope: 113, rating: 72, adjustedGross: 82 },
-            { id: 'b', slope: 113, rating: 72, adjustedGross: 82 },
-            { id: 'c', slope: 113, rating: 72, adjustedGross: 82 }
-        ];
-        expect(calculateIndex(rounds, null, 20).index).toBe("8.0"); // 10 − 2.0
+    it('does not alter an eighteen based on a prior index', () => {
+        const rounds=['a','b','c'].map(id=>({id,slope:113,rating:72,adjustedGross:82}));
+        expect(calculateIndex(rounds,null,20).index).toBe('8.0');
     });
 });
 
@@ -197,24 +173,24 @@ describe('9-hole score scaling (BL-UX-07)', () => {
 describe('calculateDailyHandicap (Golf Australia)', () => {
     it('applies the GA 0.93 multiplier on a neutral course', () => {
         // HI 10.0, slope 113, CR == Par: 10 × 0.93 = 9.3 → 9.
-        expect(calculateDailyHandicap(10.0, 113, 72, 72)).toBe(9);
+        expect(calculateDailyHandicap(10.0, 113, 72, 72, 18, 'men')).toBe(9);
     });
 
     it('includes the (CR − Par) term', () => {
         // HI 20.0, slope 125, CR 74, par 72: (20×125/113 + 2) × 0.93 = 22.43… → 22.
-        expect(calculateDailyHandicap(20.0, 125, 74, 72)).toBe(22);
+        expect(calculateDailyHandicap(20.0, 125, 74, 72, 18, 'men')).toBe(22);
     });
 
     it('handles a plus handicap', () => {
         // HI −2.0, slope 113, CR == Par: −2 × 0.93 = −1.86 → −2.
-        expect(calculateDailyHandicap(-2.0, 113, 70, 70)).toBe(-2);
+        expect(calculateDailyHandicap(-2.0, 113, 70, 70, 18, 'men')).toBe(-2);
     });
 
     // F-4: a missing index is not scratch. Returning 0 handed a brand-new
     // player a Daily Handicap of 0 and no strokes for the whole round.
     it('returns null for missing inputs', () => {
-        expect(calculateDailyHandicap(undefined, 113, 72, 72)).toBeNull();
-        expect(calculateDailyHandicap(10, 0, 72, 72)).toBeNull();
+        expect(calculateDailyHandicap(undefined, 113, 72, 72, 18, 'men')).toBeNull();
+        expect(calculateDailyHandicap(10, 0, 72, 72, 18, 'men')).toBeNull();
     });
 });
 

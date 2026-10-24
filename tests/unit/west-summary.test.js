@@ -49,8 +49,8 @@ it('pins the West pars and nine-hole stroke chart without assuming JSON has scor
     expect(tee.strokeIndex).toEqual(si);
 });
 
-it('asserts the original 15.5 differential and the varied-score/index fixture explicitly', () => {
+it('asserts raw nine-hole components without inventing an unplayed half', () => {
     const round = { adjustedGross: 44, rating: 35, slope: 131, holesPlayed: 9 };
-    expect(roundDifferential(round, null)).toBe(15.5);
-    expect(roundDifferential({ ...round, adjustedGross: 47 }, 18)).toBe(20.9);
+    expect(roundDifferential(round, null)).toBe(7.8);
+    expect(roundDifferential({ ...round, adjustedGross: 47 }, 18)).toBe(10.4);
 });
