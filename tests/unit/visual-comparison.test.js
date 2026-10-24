@@ -57,10 +57,22 @@ it('rejects missing styles on both sides', () => {
     for (const dir of [f.before, f.after]) rmSync(join(dir, SCREENSHOTS[0].replace('.png', '-styles.json')));
     expect(f.run().status).toBe(1);
 });
-it('rejects empty computed-style evidence', () => {
+it.each(['[]', '{}', 'null', '"styles"'])(
+    'rejects matching empty or non-array computed-style evidence: %s', value => {
+        const f = fixture();
+        for (const dir of [f.before, f.after]) writeFileSync(join(dir, SCREENSHOTS[0].replace('.png', '-styles.json')), value);
+        const result = f.run();
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('Empty or invalid computed-style evidence');
+        expect(result.report).toBeNull();
+    });
+it.each(['before', 'after'])('rejects empty computed-style evidence on %s alone', side => {
     const f = fixture();
-    for (const dir of [f.before, f.after]) writeFileSync(join(dir, SCREENSHOTS[0].replace('.png', '-styles.json')), '[]');
-    expect(f.run().status).toBe(1);
+    writeFileSync(join(f[side], SCREENSHOTS[0].replace('.png', '-styles.json')), '[]');
+    const result = f.run();
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Empty or invalid computed-style evidence');
+    expect(result.report).toBeNull();
 });
 it('rejects an unfinished journey even with all files present', () => {
     const f = fixture(); rmSync(join(f.after, 'phone/capture-complete.json'));

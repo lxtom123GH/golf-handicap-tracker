@@ -100,14 +100,16 @@ describe('D31: an open shot repaints without re-mounting its map', () => {
     it('a GPS lock moves the marker and re-frames - one map, no re-mount', async () => {
         h.gpsOn = true;
         const at = Date.now();
-        h.lastFix = { lat: -27.399, lon: 153, accuracyM: 5, speedMps: 0, at, distM: 120 };
+        // Use a near-tee fix so this refresh assertion covers a start-role capture.
+        
+        h.lastFix = { lat: -27.39996, lon: 153, accuracyM: 5, speedMps: 0, at, distM: 120 };
         startNewShotInput(1);
         await mounted();
         await quiet();
         expect(h.mounts).toHaveLength(1);
         const ctl = h.mounts[0];
         // A second good fix: the hold-still capture converges and applies.
-        h.fixListeners.forEach(cb => cb({ lat: -27.399, lon: 153, accuracyM: 4, speedMps: 0, at: Date.now() }));
+        h.fixListeners.forEach(cb => cb({ lat: -27.39996, lon: 153, accuracyM: 4, speedMps: 0, at: Date.now() }));
         await quiet();
         expect(AppState.currentShotData.startPos).toBeTruthy();
         expect(ctl.setStartMarker).toHaveBeenCalled();

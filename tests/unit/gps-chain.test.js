@@ -146,6 +146,7 @@ describe('S10 GPS capture chain (startNewShotInput)', () => {
         expect(AppState.currentShotData.startPos).toBeUndefined();
         pushFix(10);            // seed-class fix lands (usable, waits)
         pushFix(6);             // second good fix → convergence → accepted
+        await vi.advanceTimersByTimeAsync(0); // resolve the absent hole geometry
         const d = AppState.currentShotData;
         expect(d.startPos.lat).toBeCloseTo(-27.4140, 8);
         expect(d.startPos.lon).toBeCloseTo(152.9470, 8);
@@ -209,12 +210,12 @@ describe('S10 GPS capture chain (startNewShotInput)', () => {
         expect(AppState.currentShotData.gpsCapture).toBeUndefined();
     });
 
-    it('a low-confidence capture (12-30 m) still chains, flagged lowConfidence', () => {
+    it('a low-confidence capture (12-30 m) still chains, flagged lowConfidence', async () => {
         mockedFix = { distM: 140, lat: -27.4140, lon: 152.9470, accuracyM: 25, at: Date.now() };
         startNewShotInput(2);
         pushFix(25);
         pushFix(20);
-        vi.advanceTimersByTime(4000); // window ends → lowConfidence decision
+        await vi.advanceTimersByTimeAsync(4000); // window ends → lowConfidence decision
         const d = AppState.currentShotData;
         expect(d.startPos).toBeDefined();
         expect(d.gpsCapture).toMatchObject({ state: 'lowConfidence', accuracyM: 20 });
@@ -236,7 +237,7 @@ describe('S10 GPS capture chain (startNewShotInput)', () => {
         expect(payloadCall[1].startPos.accuracyM).toBe(6); // preserve the best source accuracy
         expect(payloadCall[1].gpsCapture.state).toBe('accepted');
         expect(payloadCall[1].startLineManual).toBeUndefined();
-        // No overlay mounted in jsdom → no startXY, and that is allowed.
+        // No hole geometry is available in this fixture → no frame-relative position.
         expect(payloadCall[1].startXY).toBeUndefined();
     });
 });

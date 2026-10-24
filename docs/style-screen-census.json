@@ -1,0 +1,731 @@
+{
+  "sourceCommit": "0c5a0fcc1dd4f8ee3ba36199fe2e3ff73685c6c7",
+  "browser": "Chrome Headless Shell155.0.8059.39",
+  "viewportProfiles": {
+    "phone": {
+      "width": 412,
+      "height": 839
+    },
+    "iphone-se": {
+      "width": 375,
+      "height": 667,
+      "engine": "Chromium, not Safari"
+    }
+  },
+  "masks": [],
+  "sourceFixture": "tests/visual/vite.config.js and ux-fixtures.js",
+  "syntheticOnly": true,
+  "screenCount": 100,
+  "screens": [
+    {
+      "path": "iphone-se/admin-e-home.png",
+      "sha256": "9f2fcbe453058ff2013803c14625ca387522150e240e27182427aac4bc7de8e5",
+      "width": 375,
+      "height": 1300,
+      "bytes": 74244
+    },
+    {
+      "path": "iphone-se/admin-e-tab-admin.png",
+      "sha256": "e04469f83f84beccf1e4f143e58870c39ae003dbfe9959aeaa7aafb88361702c",
+      "width": 375,
+      "height": 1811,
+      "bytes": 125969
+    },
+    {
+      "path": "iphone-se/admin-e-tab-comp.png",
+      "sha256": "9fad2e66cb34ea46e20e45cf86b1ae6bd73d4575bfb2749b7923ec8a08cabfa1",
+      "width": 375,
+      "height": 711,
+      "bytes": 42236
+    },
+    {
+      "path": "iphone-se/admin-e-tab-feed.png",
+      "sha256": "a702438515ff0d482b238fbbf5b2b1ce827c3a64937b65941a43d7348b36ae82",
+      "width": 375,
+      "height": 801,
+      "bytes": 48267
+    },
+    {
+      "path": "iphone-se/admin-e-tab-insights.png",
+      "sha256": "fe2c5573aa8d26b37cf503254a9f64b7c4a8a1099cb2cf17278a6cea3dfc6fec",
+      "width": 375,
+      "height": 1680,
+      "bytes": 119185
+    },
+    {
+      "path": "iphone-se/admin-e-tab-oncourse.png",
+      "sha256": "9f2fcbe453058ff2013803c14625ca387522150e240e27182427aac4bc7de8e5",
+      "width": 375,
+      "height": 1300,
+      "bytes": 74244
+    },
+    {
+      "path": "iphone-se/admin-e-tab-practice.png",
+      "sha256": "9f3b6eb9b097668eef8b9d9e8fddab6b916575b67592959b02b06a6adb5e93e7",
+      "width": 375,
+      "height": 3296,
+      "bytes": 193276
+    },
+    {
+      "path": "iphone-se/admin-e-tab-settings.png",
+      "sha256": "445e44ced12a7704ba4b2c67731180355f42452167afc0888f80d74c67740dd4",
+      "width": 375,
+      "height": 3984,
+      "bytes": 248383
+    },
+    {
+      "path": "iphone-se/admin-e-tab-whs.png",
+      "sha256": "fa0b815e40f01479844411b8b4054b4b517b4776306b350b93a703e3d33e5302",
+      "width": 375,
+      "height": 2112,
+      "bytes": 150615
+    },
+    {
+      "path": "iphone-se/admin-pending-before-approval.png",
+      "sha256": "e04469f83f84beccf1e4f143e58870c39ae003dbfe9959aeaa7aafb88361702c",
+      "width": 375,
+      "height": 1811,
+      "bytes": 125969
+    },
+    {
+      "path": "iphone-se/auth-login.png",
+      "sha256": "48b110283eb65d0e2bf0ff09f83da034127eb96a3022d880572edbbf95ff0cdd",
+      "width": 375,
+      "height": 667,
+      "bytes": 35746
+    },
+    {
+      "path": "iphone-se/auth-register.png",
+      "sha256": "ab3479ee75f46ab737e8095c6c6b25fbf8d8b2bc7d785534f1ffee2d6c9b841b",
+      "width": 375,
+      "height": 667,
+      "bytes": 35592
+    },
+    {
+      "path": "iphone-se/coach-d-home.png",
+      "sha256": "d71f95734b68214838ca93e401a33c6d853101c15819113325866e4eca11bb8f",
+      "width": 375,
+      "height": 1300,
+      "bytes": 74523
+    },
+    {
+      "path": "iphone-se/coach-d-tab-coach.png",
+      "sha256": "68000e9f27a03d741e77c21e6feb8f7704a81dcec297dabaa04e14e128dedd6d",
+      "width": 375,
+      "height": 667,
+      "bytes": 43682
+    },
+    {
+      "path": "iphone-se/coach-d-tab-comp.png",
+      "sha256": "099deda33d6ce7952b3d2a7548cb0dbab1ab1dae51afee2ecba552b2e02cf3e5",
+      "width": 375,
+      "height": 711,
+      "bytes": 42547
+    },
+    {
+      "path": "iphone-se/coach-d-tab-feed.png",
+      "sha256": "1dcabac37dd7b9bd4e073b75afcb3f23dfa885e7e776714f7348a1f036988957",
+      "width": 375,
+      "height": 801,
+      "bytes": 48944
+    },
+    {
+      "path": "iphone-se/coach-d-tab-insights.png",
+      "sha256": "f5008528d5daea77e4fed1b018c6f390dd369efecc44a5a168062f9ebb63f8e3",
+      "width": 375,
+      "height": 1680,
+      "bytes": 119431
+    },
+    {
+      "path": "iphone-se/coach-d-tab-oncourse.png",
+      "sha256": "d71f95734b68214838ca93e401a33c6d853101c15819113325866e4eca11bb8f",
+      "width": 375,
+      "height": 1300,
+      "bytes": 74523
+    },
+    {
+      "path": "iphone-se/coach-d-tab-practice.png",
+      "sha256": "41fc03807f354611592f6ee540356c3f8b51b54b6e39412c1ce22e830da1d24f",
+      "width": 375,
+      "height": 3296,
+      "bytes": 193559
+    },
+    {
+      "path": "iphone-se/coach-d-tab-settings.png",
+      "sha256": "37ea9781fa14d4285f2bdcb4f6bf9ff4d27b2dfddc7d63bc3e037c8ac4891200",
+      "width": 375,
+      "height": 3984,
+      "bytes": 249297
+    },
+    {
+      "path": "iphone-se/coach-d-tab-whs.png",
+      "sha256": "1478159e52d7336c31bd014a95c4d82e07badcb3b4d1c3cb058795da9737ec8f",
+      "width": 375,
+      "height": 2112,
+      "bytes": 151632
+    },
+    {
+      "path": "iphone-se/new-player-excluded-round-reason.png",
+      "sha256": "da879a36fdbdd91beb16a7ca3ade18a23b2caeda3afe85983272d7c5ac20023b",
+      "width": 375,
+      "height": 1968,
+      "bytes": 131321
+    },
+    {
+      "path": "iphone-se/new-player-finish-summary.png",
+      "sha256": "4a88c023912ffd7cf237b6b2afb6e4e6f6dce043d4dfc7dc632b0bf7b8d7de53",
+      "width": 375,
+      "height": 667,
+      "bytes": 37781
+    },
+    {
+      "path": "iphone-se/new-player-hole-one-scored.png",
+      "sha256": "e8c05a509ab66bd2165fdc47a1089e53590c81da44249a28c971a098893bacfb",
+      "width": 375,
+      "height": 667,
+      "bytes": 49433
+    },
+    {
+      "path": "iphone-se/new-player-index-after-one-nine.png",
+      "sha256": "fe3850d21f9339b3adcc207dd17cc8e41021a89b7dc52411976524174729ae84",
+      "width": 375,
+      "height": 1798,
+      "bytes": 131183
+    },
+    {
+      "path": "iphone-se/new-player-nine-setup.png",
+      "sha256": "0be98bbe268da525edc55f95c664cc64d16418b697d85dbe18cba7503f997dee",
+      "width": 375,
+      "height": 1581,
+      "bytes": 103635
+    },
+    {
+      "path": "iphone-se/new-player-round-more.png",
+      "sha256": "34d5c3cfecd1b39bcc77a6a36ebcb4d1413ba2178d934357a6f703069e7c242e",
+      "width": 375,
+      "height": 667,
+      "bytes": 50092
+    },
+    {
+      "path": "iphone-se/new-player-round-saved.png",
+      "sha256": "ca4bc08985fd8cfd013db6ca30832e3ef4a76fb4e8ec480e7cdb30efdf493bc8",
+      "width": 375,
+      "height": 1137,
+      "bytes": 76173
+    },
+    {
+      "path": "iphone-se/pending-c-approved-but-still-pending.png",
+      "sha256": "96f6cd2fad16ca3828f1d285883ccebf29d7d0d7d72d2648cb88554026f03b4e",
+      "width": 375,
+      "height": 667,
+      "bytes": 23342
+    },
+    {
+      "path": "iphone-se/pending-c-approved.png",
+      "sha256": "782b6ee79251239d7ebf9796ffcf6fe940d57b62c0202cf6635668b7db64638e",
+      "width": 375,
+      "height": 1300,
+      "bytes": 73155
+    },
+    {
+      "path": "iphone-se/pending-c-home.png",
+      "sha256": "96f6cd2fad16ca3828f1d285883ccebf29d7d0d7d72d2648cb88554026f03b4e",
+      "width": 375,
+      "height": 667,
+      "bytes": 23342
+    },
+    {
+      "path": "iphone-se/player-a-handicap.png",
+      "sha256": "2628e481e7ba1b71d29281f3a052b907603a847f56859598b3ce0cbcb7f7ecac",
+      "width": 375,
+      "height": 3376,
+      "bytes": 280471
+    },
+    {
+      "path": "iphone-se/player-a-history-actions.png",
+      "sha256": "6807cf8e9b52dc215626a6fbd057e290dfe39aec3ed20855d9656a72d5110ad3",
+      "width": 375,
+      "height": 3546,
+      "bytes": 282551
+    },
+    {
+      "path": "iphone-se/player-a-home.png",
+      "sha256": "d03df33087e1563f4e1613069a851164816d830f4180eb7f72d4e9dc26f17cde",
+      "width": 375,
+      "height": 1300,
+      "bytes": 72862
+    },
+    {
+      "path": "iphone-se/player-a-log-past-round.png",
+      "sha256": "3ea1ee060db976bb6539d34217aebe5bd63e151829df452ca67453bda85a944a",
+      "width": 375,
+      "height": 1300,
+      "bytes": 65671
+    },
+    {
+      "path": "iphone-se/player-a-tab-comp.png",
+      "sha256": "583e0d4d100fca2fd2894002a42c927324e1136c27629b668693dd7498a59c96",
+      "width": 375,
+      "height": 711,
+      "bytes": 40899
+    },
+    {
+      "path": "iphone-se/player-a-tab-feed.png",
+      "sha256": "984c2f47f8bb595a0df9f6ee3d7edb2d6cb4cb3c9b079907cad6253ef1712597",
+      "width": 375,
+      "height": 801,
+      "bytes": 47448
+    },
+    {
+      "path": "iphone-se/player-a-tab-insights.png",
+      "sha256": "9424b3f51a58baa17111ce76274e4e4046e4acfc7b32dc8f92c0caba08dbf257",
+      "width": 375,
+      "height": 1680,
+      "bytes": 117724
+    },
+    {
+      "path": "iphone-se/player-a-tab-oncourse.png",
+      "sha256": "d03df33087e1563f4e1613069a851164816d830f4180eb7f72d4e9dc26f17cde",
+      "width": 375,
+      "height": 1300,
+      "bytes": 72862
+    },
+    {
+      "path": "iphone-se/player-a-tab-practice.png",
+      "sha256": "f36da24099efdedc498cf9d053ff6566b990eea1ac1581e05d636f91fbcb2224",
+      "width": 375,
+      "height": 3296,
+      "bytes": 191831
+    },
+    {
+      "path": "iphone-se/player-a-tab-settings.png",
+      "sha256": "39373cea579ecf2318e6efa944f967be44fed6ceafcbe576bb85361d501b698f",
+      "width": 375,
+      "height": 3959,
+      "bytes": 245826
+    },
+    {
+      "path": "iphone-se/player-a-tab-whs.png",
+      "sha256": "2628e481e7ba1b71d29281f3a052b907603a847f56859598b3ce0cbcb7f7ecac",
+      "width": 375,
+      "height": 3376,
+      "bytes": 280471
+    },
+    {
+      "path": "iphone-se/player-b-home.png",
+      "sha256": "1fe6835ca4fdb9a2247c1b1b55a53fc129dac7256906b83bfc9e11c4fb2dba78",
+      "width": 375,
+      "height": 1300,
+      "bytes": 72875
+    },
+    {
+      "path": "iphone-se/player-b-tab-comp.png",
+      "sha256": "096fe30465b2b9b58eb8aba7df3e5a58afcf02f2ecbc78a144af7a48484138fb",
+      "width": 375,
+      "height": 711,
+      "bytes": 40871
+    },
+    {
+      "path": "iphone-se/player-b-tab-feed.png",
+      "sha256": "34fa0750728ea4fd858eee13ad2dfb87dddde83cb29b57eedd0ae79fa5bc6c6a",
+      "width": 375,
+      "height": 801,
+      "bytes": 47421
+    },
+    {
+      "path": "iphone-se/player-b-tab-insights.png",
+      "sha256": "25c8849dfe62f2cfd20ca4236a24880b767cb2bbe6a487d2661ee369607323b8",
+      "width": 375,
+      "height": 1680,
+      "bytes": 117694
+    },
+    {
+      "path": "iphone-se/player-b-tab-oncourse.png",
+      "sha256": "1fe6835ca4fdb9a2247c1b1b55a53fc129dac7256906b83bfc9e11c4fb2dba78",
+      "width": 375,
+      "height": 1300,
+      "bytes": 72875
+    },
+    {
+      "path": "iphone-se/player-b-tab-practice.png",
+      "sha256": "dec71807c8f5b84592f9993f73a25df5abea55ca51995a5bf81bcddce2c59862",
+      "width": 375,
+      "height": 3296,
+      "bytes": 191800
+    },
+    {
+      "path": "iphone-se/player-b-tab-settings.png",
+      "sha256": "bc8fa49396cd91cee841914e882fa2dd52a5a97b56b4301629af99ec46199e06",
+      "width": 375,
+      "height": 3959,
+      "bytes": 245876
+    },
+    {
+      "path": "iphone-se/player-b-tab-whs.png",
+      "sha256": "ee299dce7cb683024b588c4611b667ed17386196d9c58c64f2f500bc3903b9aa",
+      "width": 375,
+      "height": 2112,
+      "bytes": 149928
+    },
+    {
+      "path": "phone/admin-e-home.png",
+      "sha256": "ff3d04cb225b71e4fec73c396e040c4566ac93dfd5130243927e93db035af357",
+      "width": 412,
+      "height": 1300,
+      "bytes": 75767
+    },
+    {
+      "path": "phone/admin-e-tab-admin.png",
+      "sha256": "b9bc90f47d9e6514e82cce7cdc2803eb603a3b656cfc6f54d76f1f6da52cea13",
+      "width": 412,
+      "height": 1545,
+      "bytes": 106279
+    },
+    {
+      "path": "phone/admin-e-tab-comp.png",
+      "sha256": "bc4cf7ba0292a985a2ffb10cad6feccc27e462d913330d514916fc30cd19679c",
+      "width": 412,
+      "height": 839,
+      "bytes": 42837
+    },
+    {
+      "path": "phone/admin-e-tab-feed.png",
+      "sha256": "6b1adbff550b7879a436f1428280ecbbc49021cdcd3f5b7b6e4beb4f57b552e2",
+      "width": 412,
+      "height": 839,
+      "bytes": 52038
+    },
+    {
+      "path": "phone/admin-e-tab-insights.png",
+      "sha256": "c6a9942a78bccf19c9836daf5961d43a89c84644556b6b8df839adb93efb147f",
+      "width": 412,
+      "height": 1611,
+      "bytes": 124204
+    },
+    {
+      "path": "phone/admin-e-tab-oncourse.png",
+      "sha256": "ff3d04cb225b71e4fec73c396e040c4566ac93dfd5130243927e93db035af357",
+      "width": 412,
+      "height": 1300,
+      "bytes": 75767
+    },
+    {
+      "path": "phone/admin-e-tab-practice.png",
+      "sha256": "6a05b83c3058fe93f0445ea5a2ecdbaa8452f0135ce68ab3266d574b4cf447c3",
+      "width": 412,
+      "height": 3296,
+      "bytes": 195884
+    },
+    {
+      "path": "phone/admin-e-tab-settings.png",
+      "sha256": "d52c664ad6db3732d18bacdd1b8a4054a010c555dbe0dda0a082323e0cec1bbb",
+      "width": 412,
+      "height": 3865,
+      "bytes": 249937
+    },
+    {
+      "path": "phone/admin-e-tab-whs.png",
+      "sha256": "f8abbda6130918fe9f6837e8705e57d1d4603e2852646f608138ea737e42e62e",
+      "width": 412,
+      "height": 2112,
+      "bytes": 157675
+    },
+    {
+      "path": "phone/admin-pending-before-approval.png",
+      "sha256": "b9bc90f47d9e6514e82cce7cdc2803eb603a3b656cfc6f54d76f1f6da52cea13",
+      "width": 412,
+      "height": 1545,
+      "bytes": 106279
+    },
+    {
+      "path": "phone/auth-login.png",
+      "sha256": "30b71e91828b7da4b2abef83e7782d69cf75369fefb0d55a2719d67594b3ec87",
+      "width": 412,
+      "height": 839,
+      "bytes": 37526
+    },
+    {
+      "path": "phone/auth-register.png",
+      "sha256": "2c0bc0bd835e79e87e0c678ad65ee0e01af7d07a0cd8db16d62c846c7c7f34fe",
+      "width": 412,
+      "height": 839,
+      "bytes": 38940
+    },
+    {
+      "path": "phone/coach-d-home.png",
+      "sha256": "32f6bed6a1018d9089bc375cbeee88da4e99d44b6032ab821dbae05cfd17fc40",
+      "width": 412,
+      "height": 1300,
+      "bytes": 76272
+    },
+    {
+      "path": "phone/coach-d-tab-coach.png",
+      "sha256": "709fff6e7f47148653d50977979c8fb37ac6fe826a189d71306bbd37b3858fe6",
+      "width": 412,
+      "height": 839,
+      "bytes": 45825
+    },
+    {
+      "path": "phone/coach-d-tab-comp.png",
+      "sha256": "c3d99a8cfd0c3dcf4a7bfcf8131525892d6b4c53f4d7acc083df62414367cf93",
+      "width": 412,
+      "height": 839,
+      "bytes": 43105
+    },
+    {
+      "path": "phone/coach-d-tab-feed.png",
+      "sha256": "fe54fbae824d1f6c79394cb61f8f0b53f4c0436c4a9f9f70f3c4a67213c0ec20",
+      "width": 412,
+      "height": 839,
+      "bytes": 52856
+    },
+    {
+      "path": "phone/coach-d-tab-insights.png",
+      "sha256": "6224d2622497a535c8779fc98bcd511726fb28a3b71e10d44e25a1e1eb9029b8",
+      "width": 412,
+      "height": 1611,
+      "bytes": 124539
+    },
+    {
+      "path": "phone/coach-d-tab-oncourse.png",
+      "sha256": "32f6bed6a1018d9089bc375cbeee88da4e99d44b6032ab821dbae05cfd17fc40",
+      "width": 412,
+      "height": 1300,
+      "bytes": 76272
+    },
+    {
+      "path": "phone/coach-d-tab-practice.png",
+      "sha256": "cb6a8076f40059b4358e223144367c790aa6595da11e620e070b551c4e6a5c45",
+      "width": 412,
+      "height": 3296,
+      "bytes": 196202
+    },
+    {
+      "path": "phone/coach-d-tab-settings.png",
+      "sha256": "fae5acbd49279ed1aea897eb053f64cf8d17987f27c93a62a722d80b919b850e",
+      "width": 412,
+      "height": 3865,
+      "bytes": 250956
+    },
+    {
+      "path": "phone/coach-d-tab-whs.png",
+      "sha256": "633722976da0714860975690b34ab846b621720f19065ec7e3e58f07bda62ec2",
+      "width": 412,
+      "height": 2112,
+      "bytes": 158367
+    },
+    {
+      "path": "phone/new-player-excluded-round-reason.png",
+      "sha256": "6ac0ee2fc7868d4d9406906489f7fc6beb16ddb562ca5e9565e222b2db80ffc7",
+      "width": 412,
+      "height": 1942,
+      "bytes": 137593
+    },
+    {
+      "path": "phone/new-player-finish-summary.png",
+      "sha256": "1d80d847481d828b8824cbe27d49cc2f1c73a89c820045b6c82c72f0fd13c78d",
+      "width": 412,
+      "height": 839,
+      "bytes": 48581
+    },
+    {
+      "path": "phone/new-player-hole-one-scored.png",
+      "sha256": "8f50177eecb6a6957f9ab634ed627f461c87d382b56702af79179fc29af7ea9a",
+      "width": 412,
+      "height": 839,
+      "bytes": 56929
+    },
+    {
+      "path": "phone/new-player-index-after-one-nine.png",
+      "sha256": "27569d4f9989f76b7ebf3016f943ba30958dc91ba18a053003098241364dbe26",
+      "width": 412,
+      "height": 1772,
+      "bytes": 126593
+    },
+    {
+      "path": "phone/new-player-nine-setup.png",
+      "sha256": "943a9c346f50bddac8a151d47f8e0f0a72676af0bd29b25a1dda8521f1bf2e9b",
+      "width": 412,
+      "height": 1581,
+      "bytes": 103225
+    },
+    {
+      "path": "phone/new-player-round-more.png",
+      "sha256": "e06342450307715502a7b92d5dde95f6be653d9e46d3e3a768ff1e2dc7be9b17",
+      "width": 412,
+      "height": 839,
+      "bytes": 60634
+    },
+    {
+      "path": "phone/new-player-round-saved.png",
+      "sha256": "6c662f9cd7fb7206604a32a812f29a5c88778e5af468894fc863f91c629050fe",
+      "width": 412,
+      "height": 1114,
+      "bytes": 74447
+    },
+    {
+      "path": "phone/pending-c-approved-but-still-pending.png",
+      "sha256": "940f26a0c27190549c27369ad40c110a9e572cc288d5707823ef09c7d77d8cce",
+      "width": 412,
+      "height": 839,
+      "bytes": 23742
+    },
+    {
+      "path": "phone/pending-c-approved.png",
+      "sha256": "d200e9d92cf4395dad092d85ad3a973455f0888aa87c2ff7a47f62a749fb2643",
+      "width": 412,
+      "height": 1300,
+      "bytes": 74992
+    },
+    {
+      "path": "phone/pending-c-home.png",
+      "sha256": "940f26a0c27190549c27369ad40c110a9e572cc288d5707823ef09c7d77d8cce",
+      "width": 412,
+      "height": 839,
+      "bytes": 23742
+    },
+    {
+      "path": "phone/player-a-handicap.png",
+      "sha256": "94a4be1df3a8d6c3e74cd065e3d9199103cd04cb921670c00dd860648abbf203",
+      "width": 412,
+      "height": 3376,
+      "bytes": 285123
+    },
+    {
+      "path": "phone/player-a-history-actions.png",
+      "sha256": "e295eaf472c4ec8607c63a43afb5a690f0660604ce2e807ff909e0ef0af68872",
+      "width": 412,
+      "height": 3546,
+      "bytes": 286510
+    },
+    {
+      "path": "phone/player-a-home.png",
+      "sha256": "13086f158f9a9050d956da72a8f07b1713b04fa74802aafea75ac448ce508758",
+      "width": 412,
+      "height": 1300,
+      "bytes": 74574
+    },
+    {
+      "path": "phone/player-a-log-past-round.png",
+      "sha256": "06a783d8807f713632a0246ee3d7a124aea66aa9ffbc47f22572e2475a821b6a",
+      "width": 412,
+      "height": 1300,
+      "bytes": 68885
+    },
+    {
+      "path": "phone/player-a-tab-comp.png",
+      "sha256": "b47c29559cabb3c7bd824313f948072d0720bba37b067d04b4cc013d05ee9ca7",
+      "width": 412,
+      "height": 839,
+      "bytes": 41531
+    },
+    {
+      "path": "phone/player-a-tab-feed.png",
+      "sha256": "28622f68c16d13252fa2164cdb49cbcd4abaef8970e499a2e1a73d69e95ff5fd",
+      "width": 412,
+      "height": 839,
+      "bytes": 51355
+    },
+    {
+      "path": "phone/player-a-tab-insights.png",
+      "sha256": "675c14306aba71c54d646a129234b7e6d67115e15d27ea3b3e7322eb84d56e1d",
+      "width": 412,
+      "height": 1611,
+      "bytes": 122937
+    },
+    {
+      "path": "phone/player-a-tab-oncourse.png",
+      "sha256": "13086f158f9a9050d956da72a8f07b1713b04fa74802aafea75ac448ce508758",
+      "width": 412,
+      "height": 1300,
+      "bytes": 74574
+    },
+    {
+      "path": "phone/player-a-tab-practice.png",
+      "sha256": "8dcd1a59fba734e4118a429fc15445dc512054b7ca7764298e49718286735be3",
+      "width": 412,
+      "height": 3296,
+      "bytes": 194466
+    },
+    {
+      "path": "phone/player-a-tab-settings.png",
+      "sha256": "4b8761bb014ab7049047d1d67820eefb0ebffa79e6dea66e63fbc272e926cfa2",
+      "width": 412,
+      "height": 3839,
+      "bytes": 248282
+    },
+    {
+      "path": "phone/player-a-tab-whs.png",
+      "sha256": "94a4be1df3a8d6c3e74cd065e3d9199103cd04cb921670c00dd860648abbf203",
+      "width": 412,
+      "height": 3376,
+      "bytes": 285123
+    },
+    {
+      "path": "phone/player-b-home.png",
+      "sha256": "a8692df23e9a8b77d4ff1ce220f714319782434571f37ad7946f761839ab8cfe",
+      "width": 412,
+      "height": 1300,
+      "bytes": 74545
+    },
+    {
+      "path": "phone/player-b-tab-comp.png",
+      "sha256": "bba869e50c78319ad5e4c02908f10dbdcd45cf5d6d3d15cf21a229b20b316aac",
+      "width": 412,
+      "height": 839,
+      "bytes": 41502
+    },
+    {
+      "path": "phone/player-b-tab-feed.png",
+      "sha256": "c3e2f8c71f3eed3bd085f39b32dde5526204773d8987a87859ef1bf96dea464c",
+      "width": 412,
+      "height": 839,
+      "bytes": 51328
+    },
+    {
+      "path": "phone/player-b-tab-insights.png",
+      "sha256": "afbc47831eea8af3d720a5591a08bcd466bcc751179ecaac6171012d2df1da76",
+      "width": 412,
+      "height": 1611,
+      "bytes": 122904
+    },
+    {
+      "path": "phone/player-b-tab-oncourse.png",
+      "sha256": "a8692df23e9a8b77d4ff1ce220f714319782434571f37ad7946f761839ab8cfe",
+      "width": 412,
+      "height": 1300,
+      "bytes": 74545
+    },
+    {
+      "path": "phone/player-b-tab-practice.png",
+      "sha256": "3a926d761b8e6b8bc65f81778ced1b7e28ef96a599eb63c71584a73a83303161",
+      "width": 412,
+      "height": 3296,
+      "bytes": 194437
+    },
+    {
+      "path": "phone/player-b-tab-settings.png",
+      "sha256": "83400bba42439634dc6adccbc9a497ad7186a97f78c36d561d847f25a9d6b87a",
+      "width": 412,
+      "height": 3839,
+      "bytes": 248407
+    },
+    {
+      "path": "phone/player-b-tab-whs.png",
+      "sha256": "78d9d26d7f82b69daea077defc01e4a5c955d205f61cc2452e3766dd773e4f01",
+      "width": 412,
+      "height": 2112,
+      "bytes": 156877
+    }
+  ],
+  "scope": "Every visible top-level tab for four admitted roles, pending account, login/register, and recorded round/history sheets. Not every possible dialog/data permutation or a WCAG certification.",
+  "fixtureHistory": {
+    "historic": 26,
+    "historicHoles": 18,
+    "separateJourneyHoles": 9,
+    "seededWhilePageUnloaded": true,
+    "fixedEmulatorIds": true,
+    "signupConformanceClaim": false
+  },
+  "renderReadiness": "Foreground page, fonts ready, scroll origin, populated chart pixels present and consecutive canvas images equal; no masking, repainting or replacement."
+}
