@@ -267,3 +267,37 @@ describe('daily handicap preview', () => {
         expect(document.getElementById('oc-dh-override').value).toBe('11');
     });
 });
+
+// PR #17 review, 13 Oct, P2 (issuecomment-6146051522): synthetic race regressions.
+describe('category refresh while starting a round', () => {
+    it.each([['women', 39], ['', null]])('ignores the old automatic preview when category becomes %s', async (category, expected) => {
+        document.body.insertAdjacentHTML('beforeend', '<select id="oc-handicap-category"><option value="men">Men</option><option value="women">Women</option><option value="">Unknown</option></select>');
+        mocks.calculateDailyHandicap.mockImplementation((hi, slope, rating, par, holes, c) => c === 'men' ? 37 : c === 'women' ? 39 : null);
+        mocks.oncourse.getPlayerHandicap.mockResolvedValue(40);
+        await updateDhPreview();
+        expect(document.getElementById('oc-dh-override').value).toBe('37');
+        document.getElementById('oc-handicap-category').value = category;
+        let release;
+        mocks.oncourse.getPlayerHandicap.mockImplementationOnce(() => new Promise(r => { release = r; }));
+        const pending = updateDhPreview();
+        await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+        await bindStartRound()();
+        expect(mocks.appState.liveRoundGroups[0].dailyHandicap).toBe(expected);
+        release(40); await pending;
+    });
+
+    it('preserves a genuine manual zero through pending and completed previews', async () => {
+        mocks.oncourse.getPlayerHandicap.mockResolvedValue(40);
+        await updateDhPreview();
+        const input = document.getElementById('oc-dh-override');
+        input.value = '0'; input.dispatchEvent(new Event('input'));
+        let release;
+        mocks.oncourse.getPlayerHandicap.mockImplementationOnce(() => new Promise(r => { release = r; }));
+        const pending = updateDhPreview();
+        await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+        await bindStartRound()();
+        expect(mocks.appState.liveRoundGroups[0].dailyHandicap).toBe(0);
+        release(40); await pending;
+        expect(input.value).toBe('0');
+    });
+});

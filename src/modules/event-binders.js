@@ -519,11 +519,26 @@ export function applyRoundTypeToCourseList() {
     }
 }
 
+// PR #17 P2: an automatic preview is not an explicit manual override.
+// Weak collections keep this setup-only state out of serialized round data.
+const automaticDhValues = new WeakMap();
+const boundDhInputs = new WeakSet();
+function manualDhValue(input) {
+    if (!input || input.value === '' || automaticDhValues.get(input) === input.value) return null;
+    const value = Number(input.value);
+    return Number.isFinite(value) ? value : null;
+}
+
 export async function updateDhPreview() {
     if (!AppState.currentUser) return;
     const courseName = document.getElementById('oc-course-select')?.value;
     const teeName = document.getElementById('oc-tee-select')?.value;
     const category = document.getElementById('oc-handicap-category')?.value;
+    const overrideInput = document.getElementById('oc-dh-override');
+    if (overrideInput && !boundDhInputs.has(overrideInput)) {
+        overrideInput.addEventListener('input', () => automaticDhValues.delete(overrideInput));
+        boundDhInputs.add(overrideInput);
+    }
     const ocModule = await import('../oncourse.js');
     const hi = await ocModule.getPlayerHandicap(AppState.currentUser.uid);
     // Codex P2 (quick start): a preview still waiting on the handicap lookup
@@ -540,14 +555,20 @@ export async function updateDhPreview() {
     const dh = par > 0 ? calculateDailyHandicap(hi, slope || 113, rating || 72, par, holesForPar(par), categoryForRating(category, teeName)) : null; // GA formula incl. ×0.93, halved over nine
     if (dh !== null) {
         if (dhValue) dhValue.textContent = dh;
-        if (dhOverride) dhOverride.value = dh;
+        if (dhOverride && manualDhValue(dhOverride) === null) {
+            dhOverride.value = String(dh);
+            automaticDhValues.set(dhOverride, dhOverride.value);
+        }
     } else {
         // No established Handicap Index, so no Daily Handicap (F-4). A dash,
         // not 0 — 0 is a scratch golfer's Daily Handicap, and showing it here
         // is how a 26-marker ended up receiving no strokes. The override box
         // stays empty so a player who knows their DH can type it in.
         if (dhValue) dhValue.textContent = '—';
-        if (dhOverride) dhOverride.value = '';
+        if (dhOverride && manualDhValue(dhOverride) === null) {
+            dhOverride.value = '';
+            automaticDhValues.delete(dhOverride);
+        }
     }
     ocModule.updateModeVisibility();
 }
@@ -771,8 +792,8 @@ export function bindStartRound() {
                         ? document.getElementById('oc-handicap-category')?.value : playerHandicapCategory(p), teeName)
                 );
                 if (p.uid === AppState.currentUser?.uid && dhOverrideEl) {
-                    const overrideVal = parseFloat(dhOverrideEl.value);
-                    if (Number.isFinite(overrideVal)) dailyHandicap = overrideVal;
+                    const overrideVal = manualDhValue(dhOverrideEl);
+                    if (overrideVal !== null) dailyHandicap = overrideVal;
                 }
                 // Owner 2026-09-20: the per-player setup override wins for
                 // that player, including guests who have no profile index.
