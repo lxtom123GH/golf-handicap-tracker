@@ -1,4 +1,5 @@
 import { playerHandicapCategory, categoryForRating } from '../handicap-category.js';
+import { userErrorMessage } from '../user-messages.js';
 import { AppState, mutateList } from '../state.js';
 import { normaliseShotEntry, shotEntryVisibility } from "../shot-entry.js";
 import { UI } from '../ui.js';
@@ -75,7 +76,7 @@ export function bindAddGuest() {
             }
         } catch (err) {
             console.error('[Guests] could not add:', err);
-            say(err?.message || 'Could not add that guest.');
+            say(userErrorMessage(err, 'Could not add that guest. Check your connection, then try Add guest again.'));
         } finally {
             btn.disabled = false;
             btn.textContent = previous;
@@ -116,7 +117,7 @@ export function bindGuestManager() {
             }
         } catch (e) {
             console.warn('[Guests] list not rendered:', e);
-            say('Could not load your guests.');
+            say('Could not load your guests. Check your connection, then reopen Settings.');
         }
     }
 
@@ -133,7 +134,7 @@ export function bindGuestManager() {
             await render();
         } catch (err) {
             console.error('[Guests] delete failed:', err);
-            say(`Could not delete ${name}.`);
+            say(`Could not delete ${name}. Reopen Settings to check the list before trying again.`);
             btn.disabled = false;
         }
     });
@@ -403,6 +404,21 @@ export function bindShotWizard() {
 }
 
 export function bindSetupToggles() {
+    const startHole = document.getElementById('oc-start-hole');
+    const renderStartHoleOptions = () => {
+        if (!startHole) return;
+        const old = parseInt(startHole.value, 10) || 1;
+        const total = AppState.currentRoundHoles === 18 ? 18 : 9;
+        startHole.replaceChildren(...Array.from({ length: total }, (_, index) => {
+            const hole = index + 1;
+            const option = document.createElement('option');
+            option.value = String(hole);
+            option.textContent = `Hole ${hole}`;
+            return option;
+        }));
+        startHole.value = String(Math.min(old, total));
+    };
+
     if (UI.btnModeSimple && UI.btnModeDetailed) {
         UI.btnModeSimple.addEventListener('click', () => {
             AppState.currentTrackingMode = 'simple';
@@ -411,7 +427,7 @@ export function bindSetupToggles() {
             UI.btnModeSimple.style.color = 'black';
             UI.btnModeDetailed.classList.remove('active');
             UI.btnModeDetailed.style.background = 'transparent';
-            UI.btnModeDetailed.style.color = '#64748b';
+            UI.btnModeDetailed.style.color = '#475569';
             if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Simple: fairway, GIR, putts per hole";
             import('../oncourse.js').then(m => m.updateModeVisibility());
         });
@@ -422,7 +438,7 @@ export function bindSetupToggles() {
             UI.btnModeDetailed.style.color = 'black';
             UI.btnModeSimple.classList.remove('active');
             UI.btnModeSimple.style.background = 'transparent';
-            UI.btnModeSimple.style.color = '#64748b';
+            UI.btnModeSimple.style.color = '#475569';
             if (UI.ocModeDesc) UI.ocModeDesc.textContent = "Detailed: Tracking ball flight, start line, curve, & outcomes";
             import('../oncourse.js').then(m => m.updateModeVisibility());
         });
@@ -438,6 +454,7 @@ export function bindSetupToggles() {
             UI.btnRound18.style.background = 'white';
             UI.btnRound18.style.color = '#64748b';
             applyRoundTypeToCourseList();
+            renderStartHoleOptions();
         });
         UI.btnRound18.addEventListener('click', () => {
             AppState.currentRoundHoles = 18;
@@ -448,11 +465,13 @@ export function bindSetupToggles() {
             UI.btnRound9.style.background = 'white';
             UI.btnRound9.style.color = '#64748b';
             applyRoundTypeToCourseList();
+            renderStartHoleOptions();
         });
         // Apply once at bind time: 9 Holes is the shipped default in the
         // markup, so an unfiltered list is what a player who never touches
         // the toggle sees.
         applyRoundTypeToCourseList();
+        renderStartHoleOptions();
     }
 }
 
@@ -736,6 +755,9 @@ export function bindStartRound() {
                 return;
             }
             const roundHoles = holesForPar(totalPar);
+            const requestedStartHole = parseInt(document.getElementById('oc-start-hole')?.value, 10);
+            const startHole = Number.isInteger(requestedStartHole) && requestedStartHole >= 1 && requestedStartHole <= roundHoles
+                ? requestedStartHole : 1;
             const dhOverrideEl = document.getElementById('oc-dh-override');
             const resolvedPlayers = [];
 
@@ -779,14 +801,15 @@ export function bindStartRound() {
 
             AppState.currentRoundDate = (dateInput && dateInput.value) ? dateInput.value : localToday();
 
-            AppState.currentHole = 1;
+            AppState.currentRoundHoles = roundHoles;
+            AppState.currentRoundStartHole = startHole;
+            AppState.currentHole = startHole;
             AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
 
             // F-2: the holes the Daily Handicap is computed for ARE the round's
             // holes. Derived from the par actually being played so the toggle,
             // the course record and the stroke chart cannot disagree.
-            AppState.currentRoundHoles = roundHoles;
             mutateList('liveRoundGroups', list => {
                 for (let i = 0; i < list.length; i++) {
                     const player = list[i];
@@ -846,8 +869,18 @@ export function bindStartRound() {
             // Owner feedback 2026-07-05: a Detailed round exists to track
             // shots — open the wizard for the first shot automatically
             // instead of demanding a "Track my shot" tap.
+            // One-tap logging (Map first on the play map) logs on the map
+            // itself: no wizard over it.
+            // If the one-tap check itself fails, fall back to the wizard: a
+            // Detailed round must never start with no way to log a shot.
             if (AppState.currentTrackingMode === 'detailed') {
-                import('./score-input.js').then(m => m.startNewShotInput());
+                // A hole with no map has no play map either (mapless-shot
+                // spec): one-tap logging only skips the wizard where it is ready.
+                import('./score-input.js').then(async m => {
+                    let quick = false;
+                    try { quick = !!(await m.quickLogReady()); } catch (e) { console.warn('One-tap logging check failed; opening the shot wizard', e); }
+                    if (!quick) m.startNewShotInput();
+                }).catch(e => console.warn('Could not open the first shot', e));
             }
         };
 

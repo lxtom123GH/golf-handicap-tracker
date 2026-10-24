@@ -467,7 +467,7 @@ export async function playHistoricalAudio(url) {
         await audio.play();
     } catch (err) {
         console.error("[Audio] Historical playback failed:", err);
-        alert("Audio Diary could not be loaded. This might be due to a poor network connection or a deleted file.");
+        alert("Could not play this audio diary. Check your connection and try again. If it is still unavailable, ask the app administrator for help.");
         throw err;
     }
 }
@@ -574,7 +574,7 @@ export async function showAiBriefing(round, btn, roundRow) {
 
     } catch (err) {
         console.error("[AI Briefing] Error:", err);
-        alert(aiErrorMessage(err, "Could not generate AI briefing. Ensure your internet is connected."));
+        alert(aiErrorMessage(err, "Could not create the AI briefing. Check your connection, then try the briefing button again."));
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -634,7 +634,7 @@ export function renderOcPlayersList(groups = AppState.liveRoundGroups) {
     UI.ocAddedPlayersList.innerHTML = '';
 
     if (groups.length === 0) {
-        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet</li>';
+        UI.ocAddedPlayersList.innerHTML = '<li style="color:var(--text-muted); padding:10px;">No players added yet. Choose a player or add a guest above.</li>';
         return;
     }
 
@@ -844,6 +844,24 @@ window.addEventListener('stateChange', (e) => {
 
 let _activeDrillData = null; // cache the active drill in memory
 
+function practiceGenerationErrorMessage(error) {
+    const code = error?.code;
+    // Input rejection needs a correction, even when the service reason is unknown.
+    if (code === 'functions/invalid-argument') {
+        return 'The practice inputs were not accepted. Retype your goal using plain text (up to 120 characters), check the focus and session length, then try again.';
+    }
+    if (code === 'functions/permission-denied') {
+        return 'Your account is awaiting approval. Ask an admin to approve it before using AI features.';
+    }
+    if (code === 'functions/resource-exhausted') {
+        return "You've reached today's limit across AI features. Try again tomorrow.";
+    }
+    if (code === 'functions/unauthenticated') {
+        return 'Your session has ended. Sign in again to generate a practice plan.';
+    }
+    return "We couldn't confirm whether your plan was created. Reload this page to check for an active plan before generating again.";
+}
+
 /**
  * Toggles the visibility of practice module state containers.
  * @param {string} state - The state to show ('empty', 'active', 'loading').
@@ -978,6 +996,10 @@ export function bindPracticeCaddyUI() {
         } catch (err) {
             console.error("[Practice Caddy] Load active fail:", err);
             setPracticeState('empty');
+            if (errorEl) {
+                errorEl.textContent = "We couldn't check for a saved practice plan. Reload this page before generating again.";
+                errorEl.classList.remove('hidden');
+            }
         }
     };
 
@@ -1035,7 +1057,7 @@ export function bindPracticeCaddyUI() {
             console.error('[Practice Caddy] Generation error:', err);
             setPracticeState('empty');
             if (errorEl) {
-                errorEl.textContent = `Error: ${err.message}`;
+                errorEl.textContent = practiceGenerationErrorMessage(err);
                 errorEl.classList.remove('hidden');
             }
         } finally {

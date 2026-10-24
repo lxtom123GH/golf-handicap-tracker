@@ -12,6 +12,14 @@
    ========================================== */
 
 :root {
+    /* Exact-value consolidation; task 017 keeps every computed value unchanged. */
+    --space-8: 8px;
+    --space-10: 10px;
+    --radius-8: 8px;
+    --radius-12: 12px;
+    --text-085: 0.85rem;
+    --text-090: 0.9rem;
+    --text-100: 1rem;
     --primary-color: #0b2e13;
     /* Deep Golf Green */
     --secondary-color: #1a5829;
@@ -20,11 +28,12 @@
     --bg-color: #f4f7f6;
     --card-bg: #ffffff;
     --text-main: #2d3436;
-    --text-muted: #636e72;
+    --text-muted: #475569;
+    --success-readable: #166534;
     --border-color: #dfe6e9;
     --used-color: #e8f5e9;
     --used-border: #4caf50;
-    --danger: #ff7675;
+    --danger: #991b1b;
 }
 
 * {
@@ -81,7 +90,7 @@ body {
     align-items: center;
     background-color: var(--card-bg);
     padding: 15px 20px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-color);
@@ -90,7 +99,7 @@ body {
 .player-selector {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
     font-weight: 600;
 }
 
@@ -99,12 +108,12 @@ body {
     border-radius: 4px;
     border: 1px solid var(--border-color);
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .btn-sm {
     padding: 8px 16px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 .hidden {
@@ -120,11 +129,11 @@ body {
     margin-bottom: 6px;
     background: white;
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 /* Dashboard Grid */
@@ -147,7 +156,7 @@ body {
 
 .section-desc {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     margin-bottom: 20px;
     margin-top: -15px;
 }
@@ -156,7 +165,7 @@ body {
 .header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     color: white;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     /* Slimmer banner: on a phone the old 30/40px padding + 30px margin burned
        ~2 thumb-heights of every tab before any content appeared. */
     padding: 18px 24px;
@@ -180,14 +189,20 @@ body {
 
 .branding p {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
+    font-size: var(--text-100);
+}
+
+#tab-coach .branding p,
+#tab-admin .branding p,
+#tab-feed .branding p {
+    color: #ffffff;
 }
 
 .index-display {
     background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 20px 40px;
     text-align: center;
     display: flex;
@@ -198,7 +213,7 @@ body {
 .index-label {
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     font-weight: 600;
     color: var(--accent-color);
 }
@@ -219,14 +234,14 @@ body {
 }
 
 .index-subtext {
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     color: rgba(255, 255, 255, 0.7);
 }
 
 /* Cards */
 .card {
     background-color: var(--card-bg);
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 30px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
     border: 1px solid var(--border-color);
@@ -266,7 +281,7 @@ body {
 
 .form-group label {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     margin-bottom: 8px;
     color: var(--text-main);
 }
@@ -277,7 +292,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--text-100);
     transition: all 0.3s ease;
 }
 
@@ -286,6 +301,11 @@ body {
     outline: none;
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 3px rgba(26, 88, 41, 0.1);
+}
+
+/* Keep guest entry out of iOS small-text focus zoom while pinch zoom is enabled. */
+#oc-guest-name {
+    font-size: 1rem;
 }
 
 .form-group small {
@@ -311,7 +331,7 @@ body {
     border-radius: 6px;
     font-family: inherit;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: var(--text-100);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -342,7 +362,7 @@ body {
     background: none;
     color: var(--danger);
     padding: 5px 10px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 /* D29 review: a disabled Undo (draw mode, nothing to undo) must look it. */
@@ -397,7 +417,7 @@ body {
     padding: 12px 15px;
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -428,7 +448,7 @@ body {
 }
 
 .whs-record-table tr.round-not-counting > td:not(.col-action) {
-    opacity: 0.5;
+    /* Keep the semantic exclusion cues without fading legible scores. */
     text-decoration: line-through;
 }
 
@@ -480,7 +500,7 @@ body {
     padding: 4px 6px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
@@ -507,7 +527,7 @@ body {
     color: white;
     font-size: 0.7rem;
     padding: 3px 6px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     font-weight: 600;
 }
 
@@ -574,12 +594,39 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    overflow-y: auto;
+    padding-block: 24px 64px;
 }
 
 .auth-card {
-    width: 100%;
+    width: calc(100% - 40px);
     max-width: 400px;
     margin: 20px;
+    flex-shrink: 0;
+}
+
+/* Keep tall registration cards scrollable instead of centring the top
+   outside the viewport when text is enlarged or the keyboard is open. */
+@media (max-height: 760px) {
+    .auth-overlay {
+        align-items: flex-start;
+    }
+}
+
+#feed-search-input {
+    min-width: 0;
+}
+
+#tab-feed .card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    /* A span-2 child otherwise creates a second implicit grid track. */
+    #tab-feed .card {
+        grid-column: 1 / -1;
+    }
 }
 
 .auth-card p {
@@ -590,7 +637,7 @@ body {
 .auth-buttons {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-10);
     margin-top: 20px;
 }
 
@@ -601,7 +648,7 @@ body {
     gap: 12px;
     margin: 18px 0 12px;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: var(--text-085);
 }
 
 .auth-divider::before,
@@ -616,7 +663,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--space-10);
     width: 100%;
     background: #ffffff;
     color: #3c4043;
@@ -639,7 +686,7 @@ body {
 .auth-switch {
     text-align: center;
     margin-top: 15px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 .auth-switch a {
@@ -654,26 +701,25 @@ body {
     padding: 10px;
     border-radius: 6px;
     margin-bottom: 15px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     border: 1px solid var(--danger);
 }
 
 .user-controls {
     display: flex;
     align-items: center;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 /* Non-counting rounds styling */
 .not-counting-score {
-    opacity: 0.6;
     background-color: #f8f9fa;
 }
 
 .status-badge {
     font-size: 0.7rem;
     padding: 3px 6px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     font-weight: 600;
     background-color: #e9ecef;
     color: var(--text-muted);
@@ -684,13 +730,11 @@ body {
 /* ======================================= */
 
 .tab-btn {
-    /* One row always. Icon-over-label (BL-OC2): equal-width slots (flex-basis
-       0) truncated to "HAN…" on a phone with 6+ tabs — basis auto lets each
-       tab keep its label's natural width and share only the leftover space
-       (all 9 labels total ~330px at this size, under a 360px phone).
-       min-width 0 keeps ellipsis as the last resort on very narrow screens. */
-    flex: 1 1 auto;
-    min-width: 0;
+    /* Keep one row and natural label widths. The existing horizontally
+       scrollable container handles enlarged text rather than truncating
+       every destination when the user doubles their font size. */
+    flex: 1 0 auto;
+    min-width: min-content;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -818,7 +862,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     background-color: #f1f5f9;
     color: var(--text-main);
     border: 2px solid #cbd5e1;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 20px 10px;
     font-size: 1.1rem;
     font-weight: 700;
@@ -844,7 +888,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     padding: 10px 4px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     font-weight: 700;
     text-align: center;
     cursor: pointer;
@@ -871,13 +915,13 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 .club-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr)) 76px;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 .club-chip {
     min-width: 0;
     min-height: 48px;
-    font-size: 1rem;
+    font-size: var(--text-100);
     line-height: 1.1;
     /* Custom long labels ("Long hybrid") wrap inside the cell, never past it. */
     white-space: normal;
@@ -891,12 +935,12 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 
 .club-all-btn {
     min-height: 48px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     border: 1px solid rgba(255, 255, 255, 0.18);
     background: rgba(8, 12, 18, 0.86);
     color: #fff;
     font-weight: 800;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -920,7 +964,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     gap: 6px;
     margin-top: 8px;
     padding: 8px;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     background: rgba(8, 12, 18, 0.86);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
@@ -1021,7 +1065,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     justify-content: space-between;
     background: #f8f9fa;
     padding: 10px 15px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     margin-bottom: 10px;
     border: 1px solid var(--border-color);
 }
@@ -1100,7 +1144,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
     }
 
     .header-content {
-        gap: 10px;
+        gap: var(--space-10);
     }
 
     .branding h1 {
@@ -1125,7 +1169,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 
     .user-controls {
         font-size: 0.8rem;
-        gap: 8px;
+        gap: var(--space-8);
     }
 
     .user-controls>span {
@@ -1142,7 +1186,7 @@ body[data-active-tab="tab-insights"] .tab-btn[data-target="tab-insights"] {
 
     .player-selector label {
         white-space: nowrap;
-        font-size: 0.85rem;
+        font-size: var(--text-085);
     }
 
     .player-selector select {
@@ -1188,7 +1232,7 @@ body.round-active #tab-oncourse {
     z-index: 100;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     min-height: 44px;
     padding: 0 8px 0 4px;
     background: #1e3c72;
@@ -1202,7 +1246,7 @@ body.round-active #tab-oncourse {
     min-height: 44px;
     padding: 0 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     background: transparent;
     color: white;
     font-weight: 800;
@@ -1226,14 +1270,14 @@ body.round-active #tab-oncourse {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.75rem;
-    opacity: 0.75;
+    opacity: 1;
 }
 
 .oc-strip-gps {
     font-family: 'Roboto Mono', monospace;
     font-weight: 800;
-    font-size: 1rem;
-    color: #38bdf8;
+    font-size: var(--text-100);
+    color: #bae6fd;
     white-space: nowrap;
 }
 
@@ -1241,7 +1285,7 @@ body.round-active #tab-oncourse {
     min-width: 44px;
     min-height: 44px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     background: transparent;
     color: white;
     font-size: 1.5rem;
@@ -1267,7 +1311,7 @@ body.round-active #tab-oncourse {
        sat off the right edge. Rows wrap; a button is never narrower than
        half the row. */
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-8);
     margin-bottom: 8px;
 }
 
@@ -1288,7 +1332,7 @@ body.round-active #tab-oncourse {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     flex-wrap: wrap;
 }
 .oc-finish-head h2 { margin-bottom: 0; border-bottom: none; }
@@ -1316,7 +1360,7 @@ body.round-active #tab-oncourse {
     bottom: 0;
     z-index: 90;
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     padding: 10px 0 4px;
     margin-top: 8px;
     background: var(--card-bg);
@@ -1327,7 +1371,7 @@ body.round-active #tab-oncourse {
     flex: 1;
     min-height: 56px;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .oc-thumb-next {
@@ -1346,7 +1390,7 @@ body.round-active #tab-oncourse {
 .compact-score-card .oc-score-label {
     flex: 1;
     text-align: left;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     font-weight: 600;
     color: #475569;
 }
@@ -1377,14 +1421,14 @@ body.round-active #tab-oncourse {
 }
 
 .oc-card-total {
-    font-size: 0.85rem;
-    color: #64748b;
+    font-size: var(--text-085);
+    color: #475569;
     font-weight: 600;
 }
 
 .oc-card-num {
     color: var(--primary-color);
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 /* The worked-out GIR: Play mode shows it; the normal card keeps its button. */
@@ -1417,8 +1461,10 @@ body.round-active #tab-oncourse {
 
 .oc-stats-row .mini-stat {
     flex: 1;
+    min-width: 44px;
+    min-height: 44px;
     padding: 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     border: 1px solid #e2e8f0;
     background: #f8fafc;
     font-size: 0.75rem;
@@ -1426,26 +1472,30 @@ body.round-active #tab-oncourse {
 }
 
 .oc-putts {
-    flex: 1.5;
+    flex: 1.5 0 154px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 4px 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     border: 1px solid #e2e8f0;
     background: #f8fafc;
 }
 
 .oc-putts button {
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
     border: none;
     background: none;
     font-weight: bold;
     padding: 4px 8px;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 
 .oc-putts-val {
-    font-size: 0.85rem;
+    white-space: nowrap;
+    font-size: var(--text-085);
     font-weight: 800;
     color: var(--primary-color);
 }
@@ -1454,7 +1504,7 @@ body.round-active #tab-oncourse {
    restyle them; identical values. */
 #hole-jumper-container {
     display: flex;
-    gap: 8px;
+    gap: var(--space-8);
     padding: 10px 16px;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
@@ -1478,7 +1528,7 @@ body.round-active #tab-oncourse {
     width: 100%;
     height: 60px;
     font-size: 1.2rem;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
 }
 
@@ -1560,6 +1610,131 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
     line-height: 1;
 }
 
+body.play-mode.round-active #btn-play-settings {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    z-index: 45;
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+}
+
+.play-settings-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    background: rgba(0, 0, 0, 0.24);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.play-settings-sheet {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 64px);
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(360px, calc(100vw - 16px));
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 20px;
+    background: rgba(8, 12, 18, 0.92);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+}
+
+.play-settings-head,
+.play-setting-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.play-settings-head h2 {
+    font-size: 1.05rem;
+}
+
+.play-settings-close {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 17px;
+}
+
+.play-setting-entry,
+.play-setting-toggle {
+    min-height: 48px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    text-align: left;
+}
+
+.play-setting-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.play-setting-entry select {
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: #fff;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.play-setting-toggle {
+    width: 100%;
+    min-height: 52px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.play-setting-toggle span {
+    display: flex;
+    flex-direction: column;
+    font-weight: 700;
+}
+
+.play-setting-toggle small {
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.78;
+}
+
+.play-setting-toggle strong {
+    min-width: 48px;
+    color: #cbd5e1;
+    text-align: right;
+}
+
+.play-setting-toggle[aria-checked="true"] strong {
+    color: #86efac;
+}
+
 .play-chip-lbl {
     font-size: 9px;
     font-weight: 800;
@@ -1573,9 +1748,8 @@ body.play-mode.round-active #tab-oncourse {
 
 /* Emulator builds only: the SDK's fixed warning bar must not sit on the
    bottom chips (never rendered in production). */
-body.play-mode .firebase-emulator-warning {
+.firebase-emulator-warning {
     pointer-events: none;
-    opacity: 0.6;
 }
 
 body.play-mode.round-active #explainer-stats,
@@ -1594,12 +1768,23 @@ body.play-mode.round-active .oc-strip {
     padding: 0 2px 0 4px;
     gap: 0;
     border-radius: 22px;
-    max-width: calc(100vw - 136px);
+    max-width: calc(100vw - 164px);
 }
 
 body.play-mode.round-active .oc-strip-hole {
     min-height: 44px;
     font-size: 0.95rem;
+}
+
+body.play-mode.round-active #oc-hole-display,
+body.play-mode.round-active .oc-strip-dot {
+    display: none;
+}
+
+body.play-mode.round-active .oc-strip-hole {
+    min-width: 48px;
+    padding-right: 4px;
+    padding-left: 4px;
 }
 
 body.play-mode.round-active .oc-strip-more {
@@ -1652,15 +1837,29 @@ body.play-mode.round-active #oncourse-hub > * {
 }
 
 /* ---- Left rail ------------------------------------------------------------ */
-body.play-mode.round-active .play-rail-left {
+body.play-mode.round-active #btn-play-hole {
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: calc(env(safe-area-inset-left, 0px) + 8px);
+    z-index: 45;
+    display: inline-flex;
+    min-width: 104px;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    white-space: nowrap;
+}
+
+body.play-mode.round-active .play-rail-left {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 64px);
     left: calc(env(safe-area-inset-left, 0px) + 8px);
     z-index: 30;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     width: 60px;
     pointer-events: none;
 }
@@ -1674,7 +1873,7 @@ body.play-mode.round-active .play-slot {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 body.play-mode.round-active .play-slot:empty {
@@ -1853,6 +2052,170 @@ body.play-mode.round-active.play-detailed .play-clubs {
     min-height: 10px;
 }
 
+/* ---- One-tap logging on the play map -----------------------------------
+   body.play-quick: Map first shot entry in a Detailed round. Right rail:
+   Plan / Actual / Undo just above the bottom bar (your score card moves up
+   above them); left: the club strip shrinks to the one likely club, at the
+   bottom. Glass, every chip at least 44 px, all in the lower 60 %. */
+body.play-mode.round-active.play-quick {
+    --pq-rail-h: 162px;
+}
+
+body.play-mode.round-active.play-quick .play-quick {
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 84px;
+}
+
+.play-quick .pq-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 50px;
+    min-height: 0;
+    padding: 2px 4px;
+    border-radius: 18px;
+    line-height: 1.1;
+    font-size: 0.95rem;
+}
+
+.play-quick .pq-chip small {
+    font-size: 9px;
+    font-weight: 700;
+    opacity: 0.9;
+    white-space: nowrap;
+}
+
+.play-quick .pq-ico {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.play-quick .pq-actual {
+    height: 56px;
+}
+
+.play-quick .pq-undo {
+    height: 44px;
+    font-size: 0.85rem;
+}
+
+.play-quick .pq-undo:disabled {
+    opacity: 0.45;
+}
+
+/* Armed: the chip takes its line's colour (plan blue, actual orange). */
+.play-quick .pq-plan.on {
+    background: rgba(37, 99, 235, 0.95);
+    border-color: #93c5fd;
+}
+
+.play-quick .pq-actual.on {
+    background: rgba(234, 88, 12, 0.95);
+    border-color: #fdba74;
+}
+
+body.play-mode.round-active.play-quick:not(.play-sheet-open) #oc-score-sheet {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 82px + var(--pq-rail-h));
+}
+
+/* Where this shot starts and what to do next: under the hole strip, between
+   the left rail and the mini-map. Taps fall through to the map. */
+body.play-mode.round-active.play-quick #play-quick-hint {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    left: calc(env(safe-area-inset-left, 0px) + 76px);
+    right: calc(env(safe-area-inset-right, 0px) + 86px);
+    z-index: 29;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(8, 12, 18, 0.66);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    pointer-events: none;
+}
+
+.play-quick-hint .pq-l2 {
+    color: #fde047;
+}
+
+body.play-mode.round-active.play-quick.play-sheet-open .play-quick,
+body.play-mode.round-active.play-quick.play-sheet-open .play-quick-hint {
+    visibility: hidden;
+}
+
+/* The club: ▲ next-longer / the pick + 'likely' / ▼ next-shorter. */
+body.play-mode.round-active.play-quick .play-clubs {
+    position: fixed;
+    left: calc(env(safe-area-inset-left, 0px) + 8px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+    width: 72px;
+    gap: 4px;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-club:not(.sel) {
+    display: none;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-arr {
+    width: 64px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+    order: 0;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-arr::after {
+    inset: 0;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-arr small {
+    font-size: 10px;
+    font-weight: 800;
+    opacity: 0.85;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-club.sel {
+    width: 64px;
+    height: 58px;
+    font-size: 20px;
+    order: 1;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-sug {
+    order: 2;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #facc15;
+    color: #111;
+    font-size: 9px;
+    letter-spacing: 0;
+}
+
+body.play-mode.round-active.play-quick .play-clubs .pc-sug:empty {
+    display: none;
+}
+
+body.play-mode.round-active.play-quick .play-clubs #btn-pc-down {
+    order: 3;
+}
+
 /* Track: under the strip, a short label ("Track" / "Log 2"). */
 body.play-mode.round-active #btn-oc-track-shot {
     width: 56px;
@@ -1895,7 +2258,7 @@ body.play-mode.round-active .oc-track-wrap {
 
 .oc-stats-row {
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     margin-top: 5px;
     align-items: center;
 }
@@ -1903,11 +2266,11 @@ body.play-mode.round-active .oc-track-wrap {
 /* ---- Right rail: your score card, stood up -------------------------------- */
 #oc-scoring-notice {
     background: #fffbeb;
-    color: #92400e;
+    color: #78350f;
     border: 1px solid #fde68a;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     padding: 10px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     margin-bottom: 10px;
 }
 
@@ -1919,7 +2282,7 @@ body.play-mode.round-active .oc-track-wrap {
 #oc-past-round-note {
     margin: 6px 0 0;
     font-size: 0.8rem;
-    color: #64748b;
+    color: #475569;
 }
 
 body.play-mode.round-active #oc-score-sheet {
@@ -1943,7 +2306,7 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     width: 64px;
     margin: 0;
     padding: 0;
@@ -1957,7 +2320,7 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
     order: 1;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin: 0;
 }
 
@@ -2085,7 +2448,7 @@ body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary
 
 body.play-mode.round-active:not(.play-sheet-open) .compact-score-card.is-primary .oc-putts button {
     width: 52px;
-    height: 30px;
+    height: 44px;
     padding: 0;
     border-radius: 15px;
     background: rgba(255, 255, 255, 0.1);
@@ -2153,7 +2516,7 @@ body.play-mode.round-active #oc-bottom-nav {
     z-index: 30;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin: 0;
     padding: 0;
     background: transparent;
@@ -2218,9 +2581,9 @@ body.play-mode.round-active #oc-leaderboard {
 .play-reach-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin-top: 12px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     font-weight: 600;
 }
 
@@ -2228,9 +2591,9 @@ body.play-mode.round-active #oc-leaderboard {
     width: 80px;
     min-height: 44px;
     padding: 0 8px;
-    font-size: 1rem;
+    font-size: var(--text-100);
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
 }
 
 /* Practice Last 5 (E36): the delete ✕ is a 44px thumb target. */
@@ -2241,7 +2604,7 @@ body.play-mode.round-active #oc-leaderboard {
 .map-first #bag-default-hint { display: none; }
 
 /* My Bag rows (E35): one line each, 44px tap height. */
-.bag-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.bag-row { display: flex; align-items: center; gap: var(--space-8); min-height: 44px; }
 .bag-row input { width: 22px; height: 22px; flex: none; }
 /* Save status under the bag; red when the device refused the write. */
 .bag-msg { margin: 8px 0 0; font-size: 0.88rem; color: #10b981; }
@@ -2298,7 +2661,7 @@ body.play-mode.round-active #oc-leaderboard {
     width: 100%;
     min-height: 55px;
     font-size: 1.15rem;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     font-weight: 800;
 }
 
@@ -2306,7 +2669,7 @@ body.play-mode.round-active #oc-leaderboard {
    canvas never slides under it (the S10 lock-ring lesson). */
 .wizard-footer {
     display: flex;
-    gap: 8px;
+    gap: var(--space-8);
     align-items: stretch;
     /* Was inline in index.html; moved here so .map-first can dock it. */
     position: sticky;
@@ -2324,7 +2687,7 @@ body.play-mode.round-active #oc-leaderboard {
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     flex: 1;
     width: auto;
-    font-size: 1rem;
+    font-size: var(--text-100);
     white-space: nowrap;
     padding-left: 8px;
     padding-right: 8px;
@@ -2339,7 +2702,7 @@ body.play-mode.round-active #oc-leaderboard {
 }
 
 .wizard-log-shot.secondary {
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 
 .wizard-log-shot {
@@ -2400,7 +2763,7 @@ body.active-wizard-mode #oncourse-wizard {
     padding: 15px;
     border-top: 1px solid #e2e8f0;
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     z-index: 2001;
 }
 
@@ -2587,7 +2950,7 @@ body.active-wizard-mode #oncourse-wizard {
 .oc-quick-start {
     background: #f0fdf4;
     border: 2px solid #16a34a;
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 12px 14px;
     margin: -6px 0 18px;
 }
@@ -2596,7 +2959,7 @@ body.active-wizard-mode #oncourse-wizard {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 .oc-quick-start-title {
@@ -2650,7 +3013,7 @@ body.active-wizard-mode #oncourse-wizard {
 /* New-golfer inline explainers (BL-NG-01) — native <details>, plain language */
 .explainer {
     margin-top: 10px;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     color: #475569;
 }
 
@@ -2693,7 +3056,7 @@ body.active-wizard-mode #oncourse-wizard {
     cursor: pointer;
     color: #2563eb;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     text-transform: none;
     white-space: nowrap;
     list-style: none;
@@ -2725,7 +3088,7 @@ body.active-wizard-mode #oncourse-wizard {
     background: #eff6ff;
     color: #334155;
     text-align: left;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     font-weight: 400;
     line-height: 1.5;
     text-transform: none;
@@ -2760,9 +3123,9 @@ body {
 
 /* ===================== S10: GPS capture ===================== */
 /* Strip accuracy colours (oncourse.js sets the class; no inline styles). */
-.oc-strip-gps.gps-acc-good { color: #10b981; }
-.oc-strip-gps.gps-acc-warn { color: #f59e0b; }
-.oc-strip-gps.gps-acc-bad { color: #ef4444; }
+.oc-strip-gps.gps-acc-good { color: #bbf7d0; }
+.oc-strip-gps.gps-acc-warn { color: #fef08a; }
+.oc-strip-gps.gps-acc-bad { color: #fecaca; }
 
 /* Sunlight view: state controls .hidden; dvh follows the phone's browser chrome. */
 .big-numbers-button { width: calc(100% - 30px); min-height: 44px; margin: 0 15px 12px; }
@@ -2788,7 +3151,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     line-height: 1.2;
 }
 .big-numbers-view header { font-size: 20px; }
@@ -2835,18 +3198,22 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 .gps-pill-main { font-size: 1.35rem; font-weight: 900; color: #7dd3fc; }
-.gps-pill-fb { font-size: 1rem; }
+.gps-pill-fb { font-size: var(--text-100); }
 .gps-pill-sep { opacity: 0.5; }
 .gps-pill-mode { font-size: 0.7rem; font-weight: 700; color: #cbd5e1; margin-left: 2px; }
+.gps-action-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Readable on the white form hub as well as over the course map. */
+#btn-play-gps { background: rgba(8, 12, 18, 0.8); }
+#explainer-stats > summary { color: #1e40af; }
 /* The pill is the opener while GPS runs; the text button covers GPS-off. */
 .gps-pill:not(.hidden) + .big-numbers-button { display: none; }
 /* Weather / plays-like + strategy hint, moved into the big view. */
 .big-extra { display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.3; }
-.big-plays-like { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.big-plays-like { display: flex; justify-content: center; gap: var(--space-10); flex-wrap: wrap; }
 .big-plays-like-value { font-weight: 800; color: #b45309; }
 .big-strategy-hint { color: #4338ca; font-weight: 600; }
 .big-numbers-view footer { font-size: 12px; }
-.big-numbers-view footer button { min-height: 44px; padding: 0 16px; font-size: 16px; background: #111; color: #fff; border: 0; border-radius: 8px; }
+.big-numbers-view footer button { min-height: 44px; padding: 0 16px; font-size: 16px; background: #111; color: #fff; border: 0; border-radius: var(--radius-8); }
 
 /* The hold-still ring in the wizard header: a 44 px SVG arc that fills over
    the 4 s window, the live accuracy in its centre, the instruction under it.
@@ -2862,7 +3229,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     top: -2px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     z-index: 5;
 }
 .gps-lock-ring.hidden { display: none; }
@@ -2900,7 +3267,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
    ========================================================================== */
 .mapper-pills {
     display: flex;
-    gap: 8px;
+    gap: var(--space-8);
     flex-wrap: wrap;
     margin-bottom: 10px;
 }
@@ -2961,7 +3328,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     display: flex;
     align-items: center;
     padding: 0 64px 0 12px;
-    font-size: 1rem;
+    font-size: var(--text-100);
 }
 .draw-mode .line-tools {
     position: fixed;
@@ -3118,7 +3485,7 @@ body:not([data-active-tab="tab-oncourse"]) #big-numbers-view { display: none; }
     min-height: 48px;
     height: 48px;
     padding: 0 6px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     white-space: normal;
     line-height: 1.1;
 }
@@ -3251,7 +3618,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     background: rgba(255, 255, 255, 0.95);
     color: #2563eb;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     cursor: pointer;
 }
 
@@ -3270,7 +3637,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     backdrop-filter: blur(8px);
     color: #fff;
     font-weight: 800;
-    font-size: 0.85rem;
+    font-size: var(--text-085);
     cursor: pointer;
 }
 
@@ -3307,7 +3674,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     color: #fff;
     padding: 10px 16px;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     text-align: center;
 }
 .round-save-toast {
@@ -3321,7 +3688,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     color: #fff;
     padding: 10px 16px;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     text-align: center;
 }
 .update-banner {
@@ -3332,14 +3699,14 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     z-index: 1001;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
     background: #fff;
     color: #0f172a;
     border: 1px solid var(--primary-color);
-    border-radius: 12px;
+    border-radius: var(--radius-12);
     padding: 10px 12px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-    font-size: 0.9rem;
+    font-size: var(--text-090);
 }
 .update-banner span { flex: 1; min-width: 0; }
 .update-banner .btn {
@@ -3347,7 +3714,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     margin: 0;
     min-height: 44px;
     padding: 8px 14px;
-    font-size: 0.9rem;
+    font-size: var(--text-090);
     flex: none;
 }
 
@@ -3381,7 +3748,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     z-index: 1002;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
     padding: 8px 8px 8px 16px;
     border-radius: 14px;
     background: rgba(8, 12, 18, 0.86);
@@ -3412,7 +3779,7 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
     background: #ffd60a;
     color: #000;
     font-weight: 800;
-    font-size: 1rem;
+    font-size: var(--text-100);
     cursor: pointer;
     pointer-events: auto;
 }
@@ -3422,3 +3789,35 @@ body.play-mode.round-active #footer-version { visibility: hidden; }
 
 #oc-handicap-category-help, #entry-handicap-category-help { margin-top: 8px; }
 .player-category-input { max-width: 100%; min-height: 44px; }
+/* Task 099: user-specific controls remain usable without sideways scrolling. */
+.admin-user-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.admin-user-toggle input { width: 20px; height: 20px; margin: 0; flex: none; }
+.admin-user-quota { display: flex; flex-direction: column; gap: 4px; }
+.admin-user-field { font-size: 0.8rem; font-weight: 700; }
+@media (max-width: 600px) {
+    #tab-admin .dashboard-grid > .card { min-width: 0; grid-column: 1 / -1; }
+    .admin-users-table, .admin-users-table tbody { display: block; width: 100%; }
+    .admin-users-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    #admin-users-list tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; padding: 14px 0; border-bottom: 1px solid #cbd5e1; }
+    #admin-users-list td { min-width: 0; overflow-wrap: anywhere; }
+    #admin-users-list td:nth-child(-n+3), #admin-users-list td:last-child { grid-column: 1 / -1; }
+    .admin-user-name { font-weight: 700; }
+    .admin-user-email { font-size: 0.85rem; }
+    .admin-user-toggle { display: flex; justify-content: space-between; }
+    .admin-user-quota { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+/* A mapless form has room for an in-flow GPS row; mapped canvas layout stays unchanged. */
+.map-unavailable #wizard-header { flex-wrap: wrap; gap: 10px; }
+.map-unavailable #gps-lock-ring {
+    position: relative;
+    inset: auto;
+    transform: none;
+    order: 3;
+    flex-basis: 100%;
+}
+
+/* Queensland imagery no-warranty notice (imagery-notice.js): collapsed by default. */
+.imagery-notice { display: inline; }
+.imagery-notice summary { display: inline; cursor: pointer; text-decoration: underline; }
+.imagery-notice[open] .imagery-notice-text { display: block; margin-top: 2px; }

@@ -1,3 +1,4 @@
+import { InputMessage, userErrorMessage } from './user-messages.js';
 // ==========================================
 // pending-rounds.js — marker-attested cards
 // ==========================================
@@ -86,9 +87,9 @@ export async function listPendingForMe() {
  */
 export async function approve(pending) {
     const uid = auth.currentUser?.uid;
-    if (!uid) throw new Error('Sign in to approve a card.');
-    if (!pending?.id) throw new Error('Nothing to approve.');
-    if (pending.playerUid !== uid) throw new Error('That card is not yours to approve.');
+    if (!uid) throw new InputMessage('Sign in to approve a card.');
+    if (!pending?.id) throw new InputMessage('No card is selected. Choose a card, then try again.');
+    if (pending.playerUid !== uid) throw new InputMessage('That card belongs to another player. Choose a card addressed to you.');
 
     const {
         id, playerUid, playerName, markerUid, markerName, status, proposedAt,
@@ -179,7 +180,7 @@ export async function renderPendingCards() {
                 console.error('[Pending] approve failed:', err);
                 yes.disabled = no.disabled = false;
                 yes.textContent = 'Approve';
-                alert(err?.message || 'Could not approve that card.');
+                alert(userErrorMessage(err, 'Could not finish approving that card. Check your scoring record before trying Approve again.'));
             }
         });
         no.addEventListener('click', async () => {

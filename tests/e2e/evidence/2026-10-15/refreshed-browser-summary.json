@@ -1,0 +1,12 @@
+{
+  "sourceCommit":"8ef7cb5",
+  "run":{"stats":{"startTime":"2026-10-15T09:53:57.234Z","duration":237764.011,"expected":21,"skipped":0,"unexpected":0,"flaky":0},"errors":[]},
+  "failures":[
+
+  ],
+  "accessibility":[
+    {"file":"rendered-a11y.spec.js","title":"axe: sign-in, home, history, round start, scorecard and settings","project":"phone","status":"expected","results":[{"status":"passed","duration":25817,"errors":[]}]},
+    {"file":"rendered-a11y.spec.js","title":"axe: sign-in, home, history, round start, scorecard and settings","project":"iphone-se","status":"expected","results":[{"status":"passed","duration":26294,"errors":[]}]},
+    {"file":"rendered-a11y.spec.js","title":"axe: sign-in, home, history, round start, scorecard and settings","project":"desktop","status":"expected","results":[{"status":"passed","duration":25756,"errors":[]}]}
+  ]
+}

@@ -31,6 +31,31 @@ describe('Practice Caddy cached preferences notice', () => {
         doc.mockImplementation((db, ...path) => path.join('/'));
     });
 
+    it('gives local input correction advice on invalid-argument and allows a corrected retry', async () => {
+        const call = vi.fn().mockRejectedValueOnce({
+            code: 'functions/invalid-argument', message: 'PRIVATE_SERVICE_DETAIL',
+        }).mockResolvedValueOnce({ data: { category: 'Putting', steps: ['A', 'B', 'C'] } });
+        httpsCallable.mockReturnValue(call);
+        bindPracticeCaddyUI();
+        const button = document.getElementById('btn-generate-practice');
+        const goal = document.getElementById('practice-goal');
+        const error = document.getElementById('practice-generate-error');
+        goal.value = 'Putts\u200b under 32';
+        button.click();
+        await vi.waitFor(() => expect(button.disabled).toBe(false));
+        expect(error.classList.contains('hidden')).toBe(false);
+        expect(error.textContent).toContain('Retype your goal');
+        expect(error.textContent).toContain('focus and session length');
+        expect(error.textContent).not.toMatch(/connection|PRIVATE_SERVICE_DETAIL/);
+        expect(goal.value).toBe('Putts\u200b under 32');
+        goal.value = 'Putts under 32';
+        button.click();
+        await vi.waitFor(() => expect(button.disabled).toBe(false));
+        expect(document.querySelectorAll('.practice-step')).toHaveLength(3);
+        expect(error.classList.contains('hidden')).toBe(true);
+        expect(call).toHaveBeenLastCalledWith({ focus: '', goal: 'Putts under 32' });
+    });
+
     it.each([true, false])('shows a notice only when preferences were ignored: %s', async preferencesIgnored => {
         httpsCallable.mockReturnValue(vi.fn().mockResolvedValue({ data: {
             source: 'cache', drillId: 'cached', category: 'Putting', steps: ['A', 'B', 'C'], preferencesIgnored,

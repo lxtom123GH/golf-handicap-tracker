@@ -139,7 +139,7 @@ function bindClubInsights() {
             }).join('');
         } catch (e) {
             console.error('[Insights] club tendencies failed:', e);
-            out.innerHTML = '<p style="color:#ef4444;">Could not load shot history.</p>';
+            out.innerHTML = '<p style="color:#ef4444;">Could not load shot history. Check your connection, then reopen Insights.</p>';
         } finally {
             btn.disabled = false;
         }

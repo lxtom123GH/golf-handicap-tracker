@@ -1,0 +1,29 @@
+[
+  {"project":"phone","viewport":{"width":412,"height":839},"reports":[
+    {"screen":"sign-in","editableControls":[],"violations":[]},
+    {"screen":"home","editableControls":[],"violations":[]},
+    {"screen":"history","editableControls":[],"violations":[]},
+    {"screen":"on-course round start","editableControls":[{"id":"oc-round-date","fontSize":16},{"id":"oc-course-select","fontSize":16},{"id":"oc-tee-select","fontSize":16},{"id":"oc-dh-override","fontSize":16},{"id":"oc-player-select","fontSize":16},{"id":"oc-guest-name","fontSize":16},{"id":"oc-link-comp","fontSize":16},{"id":"oc-side-game","fontSize":16}],"violations":[]},
+    {"screen":"on-course detailed toggle","editableControls":[{"id":"oc-round-date","fontSize":16},{"id":"oc-course-select","fontSize":16},{"id":"oc-tee-select","fontSize":16},{"id":"oc-dh-override","fontSize":16},{"id":"oc-player-select","fontSize":16},{"id":"oc-guest-name","fontSize":16},{"id":"oc-link-comp","fontSize":16},{"id":"oc-side-game","fontSize":16}],"violations":[]},
+    {"screen":"settings","editableControls":[],"violations":[]},
+    {"screen":"scorecard","editableControls":[],"violations":[]}
+  ]},
+  {"project":"iphone-se","viewport":{"width":375,"height":667},"reports":[
+    {"screen":"sign-in","editableControls":[],"violations":[]},
+    {"screen":"home","editableControls":[],"violations":[]},
+    {"screen":"history","editableControls":[],"violations":[]},
+    {"screen":"on-course round start","editableControls":[{"id":"oc-round-date","fontSize":16},{"id":"oc-course-select","fontSize":16},{"id":"oc-tee-select","fontSize":16},{"id":"oc-dh-override","fontSize":16},{"id":"oc-player-select","fontSize":16},{"id":"oc-guest-name","fontSize":16},{"id":"oc-link-comp","fontSize":16},{"id":"oc-side-game","fontSize":16}],"violations":[]},
+    {"screen":"on-course detailed toggle","editableControls":[{"id":"oc-round-date","fontSize":16},{"id":"oc-course-select","fontSize":16},{"id":"oc-tee-select","fontSize":16},{"id":"oc-dh-override","fontSize":16},{"id":"oc-player-select","fontSize":16},{"id":"oc-guest-name","fontSize":16},{"id":"oc-link-comp","fontSize":16},{"id":"oc-side-game","fontSize":16}],"violations":[]},
+    {"screen":"settings","editableControls":[],"violations":[]},
+    {"screen":"scorecard","editableControls":[],"violations":[]}
+  ]},
+  {"project":"desktop","viewport":{"width":1280,"height":720},"reports":[
+    {"screen":"sign-in","editableControls":[],"violations":[]},
+    {"screen":"home","editableControls":[],"violations":[]},
+    {"screen":"history","editableControls":[],"violations":[]},
+    {"screen":"on-course round start","editableControls":[{"id":"oc-round-date","fontSize":16},{"id":"oc-course-select","fontSize":16},{"id":"oc-tee-select","fontSize":16},{"id":"oc-dh-override","fontSize":16},{"id":"oc-player-select","fontSize":16},{"id":"oc-guest-name","fontSize":16},{"id":"oc-link-comp","fontSize":16},{"id":"oc-side-game","fontSize":16}],"violations":[]},
+    {"screen":"on-course detailed toggle","editableControls":[{"id":"oc-round-date","fontSize":16},{"id":"oc-course-select","fontSize":16},{"id":"oc-tee-select","fontSize":16},{"id":"oc-dh-override","fontSize":16},{"id":"oc-player-select","fontSize":16},{"id":"oc-guest-name","fontSize":16},{"id":"oc-link-comp","fontSize":16},{"id":"oc-side-game","fontSize":16}],"violations":[]},
+    {"screen":"settings","editableControls":[],"violations":[]},
+    {"screen":"scorecard","editableControls":[],"violations":[]}
+  ]}
+]

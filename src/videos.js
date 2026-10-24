@@ -1,3 +1,5 @@
+import { InputMessage, userErrorMessage } from './user-messages.js';
+import { aiErrorMessage } from './ai-errors.js';
 // ==========================================
 // videos.js — swing-video upload, library & quotas (BL-VID-01, video plan P2)
 // ==========================================
@@ -47,13 +49,13 @@ async function bumpUsage(uid, deltaBytes) {
 /** Upload one video for the signed-in user. Returns the new doc id. */
 async function uploadVideo(file, { angle, note }, onProgress) {
     const uid = auth.currentUser?.uid;
-    if (!uid) throw new Error('Not signed in.');
-    if (!file.type.startsWith('video/')) throw new Error('That file is not a video.');
-    if (file.size >= MAX_FILE_BYTES) throw new Error(`Videos are capped at ${formatBytes(MAX_FILE_BYTES)} each — trim the clip first.`);
+    if (!uid) throw new InputMessage('Sign in, then choose your video again.');
+    if (!file.type.startsWith('video/')) throw new InputMessage('That file is not a video. Choose a video file, then try again.');
+    if (file.size >= MAX_FILE_BYTES) throw new InputMessage(`Videos are capped at ${formatBytes(MAX_FILE_BYTES)} each — trim the clip first.`);
 
     const { quota, used } = await quotaFor(uid);
     if (used + file.size > quota) {
-        throw new Error(`This would exceed your ${formatBytes(quota)} video allowance `
+        throw new InputMessage(`This would exceed your ${formatBytes(quota)} video allowance `
             + `(${formatBytes(used)} used). Delete an old video or ask the admin for more room.`);
     }
 
@@ -94,12 +96,14 @@ async function deleteVideo(v) {
  */
 export async function renderVideoLibrary(uid, container, { canDelete = false } = {}) {
     if (!container) return;
-    container.innerHTML = '<p style="color:#94a3b8;">Loading videos…</p>';
+    container.innerHTML = '<p style="color:var(--text-muted);">Loading swing videos… Please wait.</p>';
     try {
         const q = query(collection(db, 'videos'), where('uid', '==', uid), orderBy('createdAt', 'desc'));
         const snap = await getDocs(q);
         if (snap.empty) {
-            container.innerHTML = '<p style="color:#94a3b8;">No swing videos yet.</p>';
+            container.innerHTML = `<p style="color:var(--text-muted);">${canDelete
+                ? 'No swing videos yet. Choose a video above, then select Upload video.'
+                : 'No swing videos yet. Ask the player to upload one on their Practice tab.'}</p>`;
             return;
         }
         container.innerHTML = '';
@@ -116,7 +120,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.85rem; flex-wrap:wrap; gap:6px;">
                     <span><strong class="vid-angle"></strong> <span class="vid-note" style="color:#64748b;"></span></span>
-                    <span style="color:#94a3b8;">${escapeHtml(when)} · ${formatBytes(v.bytes)}</span>
+                    <span style="color:var(--text-muted);">${escapeHtml(when)} · ${formatBytes(v.bytes)}</span>
                 </div>
                 <div style="display:flex; gap:6px; margin-top:6px; align-items:center; flex-wrap:wrap;">
                     <span style="font-size:0.75rem; color:#64748b;">Speed:</span>
@@ -128,15 +132,15 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     <button type="button" class="btn-text vid-step" data-dir="1" aria-label="Forward one frame" style="padding:2px 8px;">frame ▶</button>
                     <button type="button" class="btn-text vid-annotate" style="padding:2px 8px; color:#2563eb;">✏️ Annotate</button>
                     <button type="button" class="btn-text vid-ai" style="padding:2px 8px; color:#8b5cf6;">🤖 AI analysis</button>
-                    ${canDelete ? '<button type="button" class="btn-text vid-delete" aria-label="Delete video" style="margin-left:auto; color:#ef4444;">🗑️ Delete</button>' : ''}
+                    ${canDelete ? '<button type="button" class="btn-text vid-delete" aria-label="Delete video" style="margin-left:auto; color:var(--danger);">🗑️ Delete</button>' : ''}
                 </div>
-                <div class="vid-ai-result hidden"
+                <div class="vid-ai-result hidden" role="status" aria-live="polite" aria-atomic="true"
                     style="margin-top:8px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:10px 12px; font-size:0.85rem; white-space:pre-wrap;"></div>
                 <div class="vid-annotate-bar hidden" style="display:flex; gap:8px; margin-top:6px; align-items:center; font-size:0.8rem; color:#64748b;">
                     Drag on the video to draw lines.
                     <button type="button" class="btn-text vid-anno-undo" style="padding:2px 8px;">↩ Undo</button>
                     <button type="button" class="btn-text vid-anno-clear" style="padding:2px 8px;">Clear</button>
-                    <button type="button" class="btn-text vid-anno-save" style="padding:2px 8px; color:#10b981; font-weight:700;">💾 Save</button>
+                    <button type="button" class="btn-text vid-anno-save" style="padding:2px 8px; color:var(--success-readable); font-weight:700;">💾 Save</button>
                 </div>`;
             // User-controlled strings via textContent only (BL-4.17 discipline):
             row.querySelector('.vid-angle').textContent = v.angle || 'Video';
@@ -144,7 +148,7 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
             const player = row.querySelector('video');
             getDownloadURL(storageRef(storage, v.path))
                 .then(url => { player.src = url; })
-                .catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'Video file unavailable.', style: 'color:#ef4444;' })); });
+                .catch(() => { player.replaceWith(Object.assign(document.createElement('p'), { textContent: 'This video could not be opened. Check your connection and reopen the library.', style: 'color:var(--danger);' })); });
             row.querySelectorAll('.vid-rate').forEach(b => b.addEventListener('click', () => {
                 player.playbackRate = parseFloat(b.getAttribute('data-rate'));
                 row.querySelectorAll('.vid-rate').forEach(x => x.style.fontWeight = '400');
@@ -167,14 +171,14 @@ export async function renderVideoLibrary(uid, container, { canDelete = false } =
                     showToast('Video deleted 🗑️');
                 } catch (e) {
                     console.error('[Videos] delete failed:', e);
-                    showToast('Could not delete video.');
+                    showToast('Could not delete the video. Check your connection, then try Delete again.');
                 }
             });
             container.appendChild(row);
         }
     } catch (e) {
         console.error('[Videos] library load failed:', e);
-        container.innerHTML = '<p style="color:#ef4444;">Could not load videos.</p>';
+        container.innerHTML = '<p style="color:var(--danger);">Could not load videos. Check your connection, then reload when you are not playing a round.</p>';
     }
 }
 
@@ -263,9 +267,26 @@ function bindAnnotations(row, player, v) {
             showToast('Annotations saved ✏️');
         } catch (e) {
             console.error('[Videos] annotation save failed:', e);
-            showToast('Could not save annotations.');
+            showToast('Could not save your drawn lines. Keep this video open and try Save again.');
         }
     });
+}
+
+function analysisErrorCopy(error, video) {
+    if (error?.code === 'functions/failed-precondition' && video.bytes > 19 * 1024 * 1024) {
+        return 'This clip is too large for AI analysis (19 MB maximum). Trim it, then upload the smaller clip and request analysis.';
+    }
+    // Codes only: callable messages can contain arbitrary service diagnostics.
+    const messages = {
+        'functions/unauthenticated': 'Sign in again, then reopen this video to request analysis.',
+        'functions/permission-denied': 'Your account cannot analyse this video. Ask its owner or an admin to check your access.',
+        'functions/not-found': 'This video could not be found. Refresh the video library and check whether it is still there.',
+        'functions/resource-exhausted': 'Your daily AI limit has been reached. Request another analysis after midnight Brisbane time, when the allowance resets.',
+        'functions/failed-precondition': 'This video does not meet the analysis requirements. Check its size (about 19 MB maximum); if it is already smaller, ask an admin to check the video record.',
+        'functions/invalid-argument': 'The analysis request was not accepted. Refresh the video library and reopen the video.'
+    };
+    return Object.hasOwn(messages, error?.code) ? messages[error.code]
+        : 'Analysis could not be confirmed. Refresh the video library and check for a saved result before requesting another analysis.';
 }
 
 /**
@@ -295,7 +316,7 @@ function bindAiAnalysis(row, v) {
             render(res.data || {});
         } catch (e) {
             console.error('[Videos] AI analysis failed:', e);
-            out.textContent = e.message || 'Analysis failed. Slow-mo clips under ~19 MB work best.';
+            out.textContent = analysisErrorCopy(e, v);
         } finally {
             btn.disabled = false;
         }
@@ -368,7 +389,7 @@ function initCompare() {
             stage.classList.remove('hidden');
         } catch (e) {
             console.error('[Compare] load failed:', e);
-            showToast('Could not load one of the videos.');
+            showToast('Could not load one of the videos. Check your connection, then choose the videos again.');
         }
     });
 
@@ -437,7 +458,7 @@ export function initVideos() {
             refreshQuotaLine();
         } catch (e) {
             console.error('[Videos] upload failed:', e);
-            if (status) status.textContent = e.message || 'Upload failed.';
+            if (status) status.textContent = userErrorMessage(e, 'Could not upload this video. Check your connection, then choose Upload video again.');
         } finally {
             btn.disabled = false;
         }

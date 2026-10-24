@@ -202,6 +202,7 @@ export function initPractice() {
                 // client-minted id makes a retry idempotent instead of adding
                 // a duplicate drill.
                 const ref = doc(collection(db, "practice_rounds"));
+                const savingUid = AppState.currentUser.uid;
                 setDoc(ref, {
                     uid: AppState.currentUser.uid,
                     playerName: safePlayerName,
@@ -210,13 +211,18 @@ export function initPractice() {
                     score: scoreVal,
                     data: dataPayload,
                     date: finalDate
-                }).catch(err => console.error("Cloud Save Fail (practice):", err));
+                }).then(() => {
+                    if (AppState.currentUser?.uid === savingUid) showToast("Practice session synced ✅");
+                }).catch(err => {
+                    console.error("Cloud Save Fail (practice):", err);
+                    if (AppState.currentUser?.uid === savingUid) {
+                        showToast("Practice sync not confirmed. Check History before logging this session again.");
+                    }
+                });
 
-                // E37: a toast, not a pop-up to dismiss. The live listener
-                // already receives the new session, so no re-subscribe.
-                showToast((typeof navigator !== 'undefined' && navigator.onLine === false)
-                    ? "Practice session saved on this phone — it syncs when you're online."
-                    : "Practice session saved ✅");
+                // The write stays non-blocking offline, but enqueueing does
+                // not prove durable device storage or a server acknowledgement.
+                showToast("Practice save requested — sync not confirmed yet. Check History before entering it again.");
 
                 // Reset form
                 UI.logPracticeForm.reset();
@@ -229,7 +235,7 @@ export function initPractice() {
 
             } catch (err) {
                 console.error("Error logging practice: ", err);
-                alert("Failed to save practice record.");
+                alert("Practice save could not be confirmed. Check History before logging this session again.");
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Save Practice Session';
@@ -456,7 +462,7 @@ function renderPracticeDashboard() {
     const viewDrillId = UI.insightsDrillSelect ? UI.insightsDrillSelect.value : null;
 
     if (!AppState.currentPracticeRounds.length) {
-        UI.practiceDashboardResults.innerHTML = '<p class="empty-text">No practice records found.</p>';
+        UI.practiceDashboardResults.innerHTML = '<p class="empty-text">No practice sessions recorded yet. Choose a drill on Practice, then save a session.</p>';
         return;
     }
 
@@ -468,7 +474,7 @@ function renderPracticeDashboard() {
     const filteredRecords = AppState.currentPracticeRounds.filter(r => r.drillId === viewDrillId);
 
     if (!filteredRecords.length) {
-        UI.practiceDashboardResults.innerHTML = `<p class="empty-text">No records logged for <strong>${DRILL_TEMPLATES[viewDrillId].name}</strong> yet.</p>`;
+        UI.practiceDashboardResults.innerHTML = `<p class="empty-text">No records logged for <strong>${DRILL_TEMPLATES[viewDrillId].name}</strong> yet. Choose this drill on Practice, then save a session.</p>`;
         return;
     }
 

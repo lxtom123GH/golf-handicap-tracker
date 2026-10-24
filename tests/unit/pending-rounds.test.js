@@ -125,7 +125,7 @@ describe('approving a card', () => {
 
     it('refuses a card that is not yours, without writing anything', async () => {
         await expect(approve(pending({ playerUid: MARKER })))
-            .rejects.toThrow(/not yours/i);
+            .rejects.toThrow('That card belongs to another player. Choose a card addressed to you.');
         expect(setDocMock).not.toHaveBeenCalled();
         expect(updateDocMock).not.toHaveBeenCalled();
     });

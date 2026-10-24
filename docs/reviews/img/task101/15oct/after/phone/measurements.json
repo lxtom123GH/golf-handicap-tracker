@@ -1,0 +1,28 @@
+{
+  "title": {
+    "left": 16,
+    "right": 248.984375,
+    "top": 16.03125,
+    "bottom": 45.96875
+  },
+  "ring": {
+    "left": 16,
+    "right": 396,
+    "top": 56,
+    "bottom": 100
+  },
+  "svg": {
+    "left": 16,
+    "right": 60,
+    "top": 56,
+    "bottom": 100
+  },
+  "accuracy": {
+    "left": 16,
+    "right": 60,
+    "top": 56,
+    "bottom": 100
+  },
+  "accuracyText": "±6",
+  "text": "No map for this hole yet - pick the club and result"
+}

@@ -1,5 +1,6 @@
 import { AppState, mutateList } from '../state.js';
-import { fairwayFromLie, derivedGir } from '../play-mode.js';
+import { fairwayFromLie, derivedGir, readPlayMode, physicalHoleFor } from '../play-mode.js';
+import { quickLogWanted as quickLogWantedFor } from '../quick-log.js';
 import { UI } from '../ui.js';
 import { renderBagButtons, shortClubLabel } from './card-render.js';
 import { showUndoCard, dismissUndoCard } from './undo-card.js';
@@ -8,16 +9,19 @@ import { collection, doc, setDoc, updateDoc, deleteDoc, getDocs, query, where, l
 import { courseSlugFor, loadCourseOverlay, mountHoleOverlay, curveCarryM } from "../hole-overlay.js";
 import { loadHole, getLastGpsFix, onGpsFix, isGpsWatchActive, collectGpsBiasSample } from "../oncourse.js";
 import { COURSE_DATA } from "../course-data.js";
-// S4: toFrame converts the GPS fix into the mounted overlay's hole frame;
+import { appendImageryNotice } from "../imagery-notice.js";
+// S4: toFrame converts the GPS fix into the hole's metric frame;
 // S10: fromFrame is its inverse — a dragged marker back to lat/lon.
-import { toFrame, fromFrame } from "../geo.js";
+import { toFrame, fromFrame, makeFrame } from "../geo.js";
 // S7: pure ghost selection (tee shots + same shot number, current round excluded).
 import { selectGhostShots } from "./ghost-lines.js";
 // S10: the hold-still capture policy (pure) gates what chains onto shots.
 import { createCapture, GPS_POLICY } from "../gps-capture.js";
 // S1 Part A geometry: derive startLine/shape/missPattern from the swipes.
 import { classifyCurve, missPatternFrom } from "../shot-shape.js";
+import { classifyCaptureRole, expectedStartXY } from "../shot-start.js";
 import { shotEntryVisibility } from "../shot-entry.js";
+import { trackWrite } from "../diagnostics/recorder.js";
 // S11: the step line, button labels and captions are pure functions of the shot.
 import { wizardStepText, shotButtons, modeCaption, trackButtonLabel, loggedToast, undoCardText } from "../wizard-flow.js";
 
@@ -35,6 +39,10 @@ if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.
 // ([{x, y}] metres in the hole frame — Firestore rejects nested arrays) plus
 // lineFrame {origin, bearing, courseSlug, physicalHole}.
 let _lineCtl = null;
+// Which round/course/hole _lineCtl was mounted for: the controller outlives the
+// wizard, so a capture on the next hole must not use the last hole's frame.
+let _lineCtlHoleKey = null;
+const _holeKey = () => `${AppState.activeRoundId}|${AppState.currentRoundCourseName}|${AppState.currentHole}`;
 // Owner 2026-10-05: the Map first view follows live GPS (unsubscribe fn).
 let _liveFollowOff = null;
 // Codex P2 (pass 3): when the GPS watch last stopped. The cached fix lives
@@ -369,6 +377,7 @@ async function syncShotLineOverlay() {
     const physical = teeData.physicalHoles?.[AppState.currentHole - 1] || AppState.currentHole;
     const hole = course?.holes?.[physical] || null;
     _overlayHole = hole; // S12 A3: cached so the bag row can measure d
+    document.getElementById('oncourse-wizard')?.classList.toggle('map-unavailable', !hole);
     // S12 B1: the draw-mode chrome follows the mount.
     document.getElementById('btn-line-draw')?.classList.toggle('hidden', _drawMode || !hole);
     document.getElementById('btn-line-done')?.classList.toggle('hidden', !_drawMode);
@@ -387,8 +396,8 @@ async function syncShotLineOverlay() {
     // full-screen — drop back to the normal wizard rather than dock the
     // club row and Log over nothing.
     if (!hole && _drawMode) applyDrawModeChrome(false);
+    refreshWizardFlow(); // The fallback caption follows the resolved hole, not the saved preference.
     if (!hole) return;
-    const d = AppState.currentShotData;
     // S3: the plan for this hole — ONE getDoc per hole per round (no
     // listener), cached by planId for the session. Offline the persistent
     // cache serves it; if the read fails, no plan and no error shown.
@@ -414,6 +423,8 @@ async function syncShotLineOverlay() {
         planLine = planCache.get(pid);
     }
     if (seq !== _mountSeq) return; // D31: superseded while the plan loaded
+    // A capture may have replaced the shot while the plan was loading.
+    const d = AppState.currentShotData;
     if (planLine && planLine.length >= 2) {
         d.planId = pid; // the shot records which plan it was scored against
     } else {
@@ -466,10 +477,12 @@ async function syncShotLineOverlay() {
             if (e.target.closest('#btn-line-use-plan')) {
                 const planLine = planCache.get(planIdFor(slug, physical));
                 if (planLine && _lineCtl) {
+                    const d = { ...AppState.currentShotData };
                     _lineCtl.setCurves({ intended: planLine });
                     d.lineIntended = toObjs(planLine);
                     const f = _lineCtl.frame;
                     d.lineFrame = { origin: { lat: f.origin[0], lon: f.origin[1] }, bearing: f.bearing, courseSlug: slug, physicalHole: physical };
+                    AppState.currentShotData = d;
                     setLineMode('intended');
                     lineReadout();
                 }
@@ -487,6 +500,8 @@ async function syncShotLineOverlay() {
         link.rel = 'noopener';
         link.textContent = 'Licence';
         attr.appendChild(link);
+        // Queensland imagery: licence, source and required no-warranty notice.
+        appendImageryNotice(attr, list);
     }
     const startMode = d.lineIntended && !d.lineActual && !d.flightUnseen ? 'actual' : 'intended';
     // S12 A2: ONE start point per shot, chosen here in priority order —
@@ -507,11 +522,14 @@ async function syncShotLineOverlay() {
         focus: { startXY: shotStart, shotNumber: d.shotNumber },
         // S12 A2: the anchor every curve starts from; green when measured.
         startXY: shotStart,
-        startMeasured: !!d.startXY,
+        startMeasured: !!d.startXY && d.gpsCapture?.role !== 'finish',
         // S12 C: opt-in auto-rotate — the shot view's up is anchor → green.
         // Map first (owner 2026-10-05, "like a GPS map"): target-up is the
         // default there unless the golfer turned Rotate map off in Settings.
         autoRotate: !!AppState.rotateMap || (mapFirstWanted() && _drawMode && rotateMapNotRefused()),
+        // Map-first captures use the light outline style, with a thin fairway
+        // edge over the aerial instead of the opaque fill.
+        featureStyle: mapFirstWanted() ? 'outline' : 'solid',
         // S3: the coach/self plan under the player's curves.
         plan: planLine,
         // S6 Part 1: the shipped aerial image under the base (Keperra holes
@@ -535,6 +553,9 @@ async function syncShotLineOverlay() {
         deflectArmed: () => _deflectArmed,
         onDeflectPlaced: () => setDeflectArmed(false),
         onChange: ({ mode, points, frame, curves, anchorChanged }) => {
+            // GPS capture replaces the shot record without remounting the map.
+            // Read the live record so later strokes retain the captured position.
+            const d = { ...AppState.currentShotData };
             // S12 B1: Undo reverts to whatever this mode held before the stroke.
             if (!anchorChanged) {
                 _curveUndo.push({
@@ -551,9 +572,11 @@ async function syncShotLineOverlay() {
             d.lineActualDeflectAt = curves.deflectAt ?? null;
             d.lineFrame = { origin: { lat: frame.origin[0], lon: frame.origin[1] }, bearing: frame.bearing, courseSlug: slug, physicalHole: physical };
             if (d.lineActual) applyDerivedShape(d);
+            AppState.currentShotData = d;
             lineReadout();
         },
     });
+    _lineCtlHoleKey = _holeKey();
     _lineCtl.state ??= {};
     _lineCtl.state.ghosts = ghosts;
     _lineCtl.state.ghostMode = ghostMode;
@@ -663,8 +686,12 @@ function platformOf() {
 // S10: a one-shot reason the readout shows when the capture refuses —
 // module-local, never persisted on the shot.
 let _gpsReadoutNote = null;
+let _captureEpoch = 0;
+let _pendingCapture = null;
 
 function _teardownCapture() {
+    ++_captureEpoch;
+    _pendingCapture = null;
     if (!_captureCtl) return;
     if (_captureCtl.unsub) _captureCtl.unsub();
     if (_captureCtl.tick) clearInterval(_captureCtl.tick);
@@ -688,17 +715,69 @@ function _setRing(pct, accuracyM) {
     if (label) label.textContent = accuracyM != null ? `±${Math.round(accuracyM)}` : '';
 }
 
+/** Geometry belongs to the hole, not to the asynchronously mounted canvas. */
+async function _resolveCapturedPositions(d) {
+    const epoch = _captureEpoch;
+    const key = _holeKey();
+    if (_lineCtl?.frame && _lineCtlHoleKey === key) {
+        _applyCapturedPositions(d, _lineCtl.frame, _overlayHole);
+        return;
+    }
+    const slug = courseSlugFor(AppState.currentRoundCourseName);
+    const teeData = COURSE_DATA[AppState.currentRoundCourseName]?.[AppState.currentRoundTee] || {};
+    const physical = physicalHoleFor(teeData, AppState.currentHole);
+    const course = slug ? await loadCourseOverlay(slug) : null;
+    if (epoch !== _captureEpoch || key !== _holeKey()) return;
+    const hole = course?.holes?.[physical];
+    const frame = hole ? makeFrame([hole.tee.lat, hole.tee.lon],
+        [hole.green.centre.lat, hole.green.centre.lon]) : null;
+    _applyCapturedPositions(d, frame, hole);
+}
+
 /** S4 chain + S10 metadata, from a capture decision. */
-function _applyCapturedPositions(d) {
-    const shotData = AppState.currentShotData;
-    if (!shotData) return;
+function _applyCapturedPositions(d, frame, hole) {
+    if (!AppState.currentShotData) return;
+    // The AppState proxy observes reference changes, so build a new shot
+    // record and publish it after applying the capture result.
+    const shotData = { ...AppState.currentShotData };
     const fix = d.fix;
-    if (fix) {
+    // A distant accepted fix may represent this shot's finish.
+    // A fix far from where this shot should start (tee / previous finish) is
+    // where THIS shot finished - see shot-start.js. Unmapped holes retain
+    // the geographic fix when no frame or expected start is available.
+    let role = 'start';
+    let expected = null;
+    if (fix && frame) {
+        const prev = (AppState.currentHoleShots || []).filter(s => s.id !== shotData.id && s.hole === AppState.currentHole).slice(-1)[0] || null;
+        expected = expectedStartXY({ shotNumber: shotData.shotNumber, prevShot: prev });
+        const teeVertices = (hole?.features?.features || [])
+            .filter(f => f.properties?.golf === 'tee')
+            .flatMap(f => {
+                const g = f.geometry;
+                if (g?.type === 'Point') return [g.coordinates];
+                if (g?.type === 'Polygon') return g.coordinates.flat();
+                if (g?.type === 'MultiPolygon') return g.coordinates.flat(2);
+                return [];
+            });
+        role = classifyCaptureRole({ shotNumber: shotData.shotNumber,
+            fixXY: toFrame(frame, [fix.lat, fix.lon]), expectedStartXY: expected,
+            teeXY: teeVertices.map(([lon, lat]) => toFrame(frame, [lat, lon])) });
+    }
+    const r1 = (v) => Math.round(v * 10) / 10;
+    if (role === 'finish') {
+        const [x, y] = toFrame(frame, [fix.lat, fix.lon]);
+        delete shotData.startPos;
+        shotData.startXY = { x: r1(expected[0]), y: r1(expected[1]) };
+        shotData.finishPos = { lat: fix.lat, lon: fix.lon, accuracyM: Math.round(fix.accuracyM), at: fix.at };
+        shotData.finishXY = { x: r1(x), y: r1(y) };
+        _gpsReadoutNote = (shotData.shotNumber === 1 ? 'Start: tee' : 'Start: last shot') + ' · GPS = where this shot finished';
+        if (shotData.lineActual) applyDerivedShape(shotData);
+    } else if (fix) {
         shotData.startPos = { lat: fix.lat, lon: fix.lon, accuracyM: Math.round(fix.accuracyM), at: fix.at };
         // startXY (hole-frame metres) rides on the shot when a frame exists —
         // S4's field. The MARKER itself is geographic and survives a slow mount.
-        if (_lineCtl?.frame) {
-            const [x, y] = toFrame(_lineCtl.frame, [fix.lat, fix.lon]);
+        if (frame) {
+            const [x, y] = toFrame(frame, [fix.lat, fix.lon]);
             shotData.startXY = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
         }
     } else {
@@ -711,12 +790,14 @@ function _applyCapturedPositions(d) {
         fixCount: d.fixCount,
         elapsedMs: Math.round(d.elapsedMs),
         platform: platformOf(),
+        role,
     };
 
     // S4: the previous shot of this hole gets this fix as its measured finish
     // (only when it has none — a re-opened shot keeps its own). Fire-and-forget
     // write with .catch (F-11); the local array mutates through mutateList (D-03).
-    if (fix) {
+    // Not for a 'finish' fix: that point is THIS shot's finish, not the last one's.
+    if (fix && role === 'start') {
         const shots = AppState.currentHoleShots || [];
         const prev = shots[shots.length - 1];
         if (prev && prev.id && !prev.finishPos) {
@@ -753,7 +834,7 @@ function _applyCapturedPositions(d) {
 
     // S10: nudge an already-mounted overlay to draw the marker now (the
     // geographic marker also draws itself on every later mount).
-    if (fix && _lineCtl) {
+    if (fix && _lineCtl && _lineCtlHoleKey === _holeKey() && role === 'start') {
         _lineCtl.setStartMarker({
             lat: fix.lat, lon: fix.lon,
             quality: d.state === 'lowConfidence' ? 'lowConfidence' : 'accepted',
@@ -767,6 +848,7 @@ function _applyCapturedPositions(d) {
     if (fix && !_lineCtl && d.state === 'lowConfidence') {
         _gpsReadoutNote = 'GPS is rough (±' + Math.round(fix.accuracyM) + ' m) — no map to correct it on';
     }
+    AppState.currentShotData = shotData;
     refreshShotWizard();
 }
 
@@ -802,7 +884,7 @@ function _beginCapture() {
         if (ring2) ring2.classList.add('hidden');
         if (d.state === 'accepted' || d.state === 'lowConfidence') {
             _gpsReadoutNote = null;
-            _applyCapturedPositions(d);
+            _pendingCapture = _resolveCapturedPositions(d);
         } else if (d.state === 'preciseOff') {
             _gpsReadoutNote = 'Precise Location is off — Settings › Privacy › Location Services › Safari Websites';
         } else {
@@ -850,7 +932,8 @@ function flowState() {
 export function refreshWizardFlow() {
     const s = flowState();
     const step = document.getElementById('wizard-step');
-    if (step) step.textContent = wizardStepText(s);
+    if (step) step.textContent = wizardStepText({ ...s,
+        hasMap: !document.getElementById('oncourse-wizard')?.classList.contains('map-unavailable') });
     const btns = shotButtons(s);
     const plan = document.getElementById('btn-save-plan');
     const log = document.getElementById('btn-save-shot-final');
@@ -909,39 +992,54 @@ export function saveShotPlan() {
     showToast(`Plan saved · hit the shot, then Track My Shot`);
 }
 
-export function startNewShotInput(forcedShotNum = null) {
-    // Glass chips PR 2: opening the next shot retires the last one's Undo —
-    // undoing shot N under shot N+1's wizard would renumber the hole.
-    dismissUndoCard();
-    // S11: a plan saved for this hole reopens at step 2 instead of starting
-    // a new shot — the golfer comes back to draw what happened.
-    if (!forcedShotNum) {
-        const pending = pendingPlannedShot();
-        if (pending) { loadExistingShotData(pending.id, { mapFirst: mapFirstWanted(), playDefaults: true }); return; }
-    }
-    const shotNum = forcedShotNum || (AppState.currentHoleShots?.length || 0) + 1;
+/**
+ * The fields every NEW shot starts with — the wizard's (startNewShotInput)
+ * and one-tap logging's (quickLogShot), so both save the same document.
+ */
+function newShotData(shotNum) {
     // BL-DEC-01: snapshot the live GPS distance to the green centre at the
     // moment the shot is logged (fresh fixes only). Distance-bucketed
     // dispersion + Tiger-5 "bogey inside 150" both hang off this field.
     const fix = getLastGpsFix();
     // S10: positions now come from the hold-still capture, not a single fix —
     // the wizard opens immediately and the position resolves in the background.
-    AppState.currentShotData = {
+    const d = {
         hole: AppState.currentHole,
         shotNumber: shotNum,
         roundId: AppState.activeRoundId,
         timestamp: new Date().toISOString(),
         ...(fix && Number.isFinite(fix.distM) ? { distanceToPinM: fix.distM } : {})
     };
-    resetCurveUndo(); // D29: a new shot starts with an empty line history
     // Owner 2026-10-06 (Play mode): the club picked on the map's club strip
     // and the Routine chip pre-fill this shot — only the shot they were set
     // for (same round, hole and shot number); every field stays editable.
+    // One-tap logging: a Plan line drawn on the play map rides
+    // along too, so opening the wizard (Track) keeps it.
     const pre = AppState.nextShotDefaults;
     if (pre && pre.roundId === AppState.activeRoundId && pre.hole === AppState.currentHole && pre.shotNumber === shotNum) {
-        if (pre.club) AppState.currentShotData.club = pre.club;
-        if (pre.routinePre) AppState.currentShotData.routines = { pre: pre.routinePre };
+        if (pre.club) d.club = pre.club;
+        if (pre.routinePre) d.routines = { pre: pre.routinePre };
+        if (pre.plan?.lineIntended?.length >= 2 && pre.plan.lineFrame) {
+            d.lineIntended = pre.plan.lineIntended.map(p => ({ ...p }));
+            d.lineFrame = { ...pre.plan.lineFrame };
+        }
     }
+    return d;
+}
+
+export function startNewShotInput(forcedShotNum = null) {
+    // Opening the next shot retires the last shot's Undo —
+    // undoing shot N under shot N+1's wizard would renumber the hole.
+    dismissUndoCard();
+    // A plan saved for this hole reopens at step 2 instead of starting
+    // a new shot — the golfer comes back to draw what happened.
+    if (!forcedShotNum) {
+        const pending = pendingPlannedShot();
+        if (pending) { loadExistingShotData(pending.id, { mapFirst: mapFirstWanted(), playDefaults: true }); return; }
+    }
+    const shotNum = forcedShotNum || (AppState.currentHoleShots?.length || 0) + 1;
+    AppState.currentShotData = newShotData(shotNum);
+    resetCurveUndo(); // D29: a new shot starts with an empty line history
 
     _beginCapture();
 
@@ -990,6 +1088,7 @@ export function loadExistingShotData(shotId, { mapFirst = false, playDefaults = 
     dismissUndoCard();
     const existing = AppState.currentHoleShots.find(s => s.id === shotId);
     if (existing) {
+        _teardownCapture();
         AppState.currentShotData = { ...existing };
         resetCurveUndo(); // D29: this shot's Undo never reaches another shot's line
         // Codex P2 (2026-10-06): the map's club strip / Routine chip also
@@ -1184,6 +1283,7 @@ export function setWizardActive(isActive) {
     if (isActive) {
         document.body.classList.add('active-wizard-mode');
     } else {
+        _teardownCapture();
         document.body.classList.remove('active-wizard-mode');
         // Map first (Codex P3): Log, Save plan and Cancel all close through
         // here — draw mode, .map-first and the body class all reset, so the
@@ -1193,8 +1293,17 @@ export function setWizardActive(isActive) {
     }
 }
 
-export async function saveShotData() {
+/**
+ * Save the open shot. `quiet` (one-tap logging): no Undo card or toast —
+ * the play map's own Undo chip and hint line say it, and the card would sit
+ * over the map's chips. Everything else is identical.
+ */
+export async function saveShotData({ quiet = false } = {}) {
     if (!AppState.currentUser) return;
+    const epoch = _captureEpoch;
+    const key = _holeKey();
+    if (_pendingCapture) await _pendingCapture;
+    if (epoch !== _captureEpoch || key !== _holeKey() || !AppState.currentUser) return;
     // Owner feedback 2026-07-05: the app let multiple putts be marked Holed on
     // one hole — physically impossible. Guard NEW shots once a hole-out exists.
     if (!AppState.currentShotData.id
@@ -1229,9 +1338,12 @@ export async function saveShotData() {
     if (!payload.timestamp) payload.timestamp = new Date().toISOString();
     // Glass chips PR 2: what Undo must reverse for a NEW shot (null = no card).
     let undoInfo = null;
+    // One-tap logging: what was saved, for its Undo chip (null on refusal).
+    let savedId = null;
     try {
         if (AppState.currentShotData.id) {
             const shotId = AppState.currentShotData.id;
+            savedId = shotId;
             const idx = AppState.currentHoleShots.findIndex(s => s.id === shotId);
             const before = idx !== -1 ? AppState.currentHoleShots[idx] : null;
             // D30: the shot list changes through mutateList (D-03), so an
@@ -1291,6 +1403,7 @@ export async function saveShotData() {
             // doc(collection(...)) mints the id client-side, so the local record
             // is complete immediately and the write replays on reconnect.
             const shotRef = doc(collection(db, "shots"));
+            savedId = shotRef.id;
             mutateList('currentHoleShots', (list) => { list.push({ ...payload, id: shotRef.id }); });
             undoInfo = { shotId: shotRef.id, hole: AppState.currentHole, putt: false, girSet: false };
             const p = AppState.liveRoundGroups.find(x => x.uid === AppState.currentUser.uid);
@@ -1339,13 +1452,15 @@ export async function saveShotData() {
 
                 loadHole();
             }
-            setDoc(shotRef, payload).catch(e => console.error("Shot failed to sync:", e));
+            trackWrite('shot', setDoc(shotRef, payload)).catch(e => console.error("Shot failed to sync:", e));
         }
         const holed = payload.puttControl === 'Holed';
         // Glass chips PR 2: a new, non-holed shot gets the 6 s Undo card.
         // Edits, logged plans and hole-outs (which auto-advance the hole)
         // keep the plain toast — there is nothing safe to undo in one tap.
-        if (undoInfo && !holed) {
+        if (quiet) {
+            dismissUndoCard();
+        } else if (undoInfo && !holed) {
             const carry = curveCarryM(toPairs(payload.lineActual));
             showUndoCard(undoCardText({
                 shotNumber: payload.shotNumber,
@@ -1374,9 +1489,11 @@ export async function saveShotData() {
             const nextBtn = document.getElementById('btn-oc-next-hole');
             if (nextBtn) setTimeout(() => nextBtn.click(), 600);
         }
+        return { shotId: savedId, undo: undoInfo, shotNumber: payload.shotNumber, holed };
     } catch (e) {
         showToast("Error saving shot.");
     }
+    return null;
 }
 
 /**
@@ -1467,6 +1584,142 @@ export function undoLoggedShot(u) {
     }
     removeShot(shot, u);
     showToast(`Shot ${u.shotNumber} undone`);
+}
+
+// ---- One-tap logging on the Map-first play map --------------------------
+// The play map's Plan / Actual / Undo chips log a shot without the wizard.
+// The shot is built like startNewShotInput builds one (newShotData) and is
+// saved by saveShotData — the wizard's own save path, so the document, the
+// stroke/putt/FW/GIR bookkeeping and the Undo card are the same.
+
+/** One-tap logging is on for this round (src/quick-log.js decides). */
+export function quickLogWanted() {
+    let playMode = 'on';
+    try { playMode = readPlayMode(window.localStorage); } catch { /* storage blocked: the default */ }
+    return quickLogWantedFor({
+        shotEntry: shotEntryVisibility(AppState.shotEntry).pref,
+        playMode,
+        trackingMode: AppState.currentTrackingMode,
+        courseSlug: courseSlugFor(AppState.currentRoundCourseName),
+    });
+}
+
+/**
+ * One-tap logging is on AND this hole has a map, so the play map really
+ * mounts and owns the shot. A mapped course can still have unmapped holes
+ * (and the file can fail to load offline): there the round screen and the
+ * shot wizard are used, so callers that skip the wizard for one-tap logging
+ * must ask this, not quickLogWanted().
+ */
+export async function quickLogReady() {
+    if (!quickLogWanted()) return false;
+    const name = AppState.currentRoundCourseName;
+    const course = await loadCourseOverlay(courseSlugFor(name));
+    const teeData = COURSE_DATA[name]?.[AppState.currentRoundTee] || {};
+    return !!course?.holes?.[physicalHoleFor(teeData, AppState.currentHole)];
+}
+
+const r1 = (v) => Math.round(v * 10) / 10;
+
+/**
+ * Log the next shot from the play map. actual/intended are [x, y] pairs in
+ * the hole frame; `finishFix` (a GPS fix) marks a one-tap Actual: the fix is
+ * where THIS shot finished, the start stays at startXY (tee / last finish).
+ * Returns saveShotData's {shotId, undo, shotNumber} or null.
+ */
+export async function quickLogShot({ actual, intended = null, frame, slug, physical, club = null, startXY = null, greenXY = null, finishFix = null } = {}) {
+    if (!AppState.currentUser || !AppState.activeRoundId || !frame) return null;
+    if (!Array.isArray(actual) || actual.length < 2) return null;
+    // An open wizard owns AppState.currentShotData: never write under it.
+    if (document.body.classList.contains('active-wizard-mode')) return null;
+    dismissUndoCard();
+    // A plan saved from the wizard for this hole is the shot being logged.
+    const pending = pendingPlannedShot();
+    const d = pending ? { ...pending } : newShotData((AppState.currentHoleShots?.length || 0) + 1);
+    if (club) d.club = club;
+    if (Array.isArray(intended) && intended.length >= 2) d.lineIntended = toObjs(intended);
+    d.lineActual = toObjs(actual);
+    d.lineFrame = { origin: { lat: frame.origin[0], lon: frame.origin[1] }, bearing: frame.bearing, courseSlug: slug, physicalHole: physical };
+    // The distance this shot was played from: the start, not the
+    // GPS; the GPS marks the finish position.
+    if (Array.isArray(startXY) && Array.isArray(greenXY)) {
+        d.distanceToPinM = Math.round(Math.hypot(greenXY[0] - startXY[0], greenXY[1] - startXY[1]));
+    }
+    if (finishFix) {
+        // Same fields as a hold-still fix classified as this shot's finish.
+        const end = actual[actual.length - 1];
+        if (Array.isArray(startXY)) d.startXY = { x: r1(startXY[0]), y: r1(startXY[1]) };
+        d.finishPos = { lat: finishFix.lat, lon: finishFix.lon, accuracyM: Math.round(finishFix.accuracyM), at: finishFix.at };
+        d.finishXY = { x: r1(end[0]), y: r1(end[1]) };
+        d.gpsCapture = {
+            state: 'accepted', accuracyM: Math.round(finishFix.accuracyM),
+            fixCount: { usable: 1, ignored: 0 }, elapsedMs: 0, platform: platformOf(), role: 'finish',
+        };
+    }
+    applyDerivedShape(d);
+    resetCurveUndo();
+    AppState.currentShotData = d;
+    return saveShotData({ quiet: true });
+}
+
+/** Write a patch to a logged shot (local first, then Firestore, never awaited). */
+function patchLoggedShot(shotId, patch) {
+    mutateList('currentHoleShots', (list) => {
+        const i = list.findIndex(s => s.id === shotId);
+        if (i !== -1) list[i] = { ...list[i], ...patch };
+    });
+    updateDoc(doc(db, 'shots', shotId), patch)
+        .catch(e => console.warn('[quick] shot patch not acked (offline or denied):', e?.code || e));
+}
+
+const NUDGE_FIELDS = ['lineActual', 'finishXY', 'finishPos', 'gpsCapture', 'derived', 'startLine', 'shape', 'missPattern'];
+
+/**
+ * The nudge window after a one-tap Actual: the golfer dragged the line to
+ * where the ball really is. Moves the finish (a deliberate placement: ±3 m,
+ * marked adjusted, as a dragged start marker is). Returns the fields as they
+ * were, for Undo; null if the shot is gone.
+ */
+export function quickNudgeShot(shotId, actual, frame) {
+    const shot = (AppState.currentHoleShots || []).find(s => s.id === shotId);
+    if (!shot || !Array.isArray(actual) || actual.length < 2) return null;
+    const end = actual[actual.length - 1];
+    const next = { ...shot, lineActual: toObjs(actual), finishXY: { x: r1(end[0]), y: r1(end[1]) } };
+    if (shot.finishPos && frame) {
+        const [lat, lon] = fromFrame(frame, end);
+        next.finishPos = { ...shot.finishPos, lat, lon, accuracyM: 3 };
+    }
+    if (shot.gpsCapture) next.gpsCapture = { ...shot.gpsCapture, accuracyM: 3, adjusted: true };
+    applyDerivedShape(next);
+    const prev = {};
+    const patch = {};
+    for (const k of NUDGE_FIELDS) {
+        if (next[k] === undefined) continue;
+        prev[k] = shot[k] === undefined ? null : shot[k];
+        patch[k] = next[k];
+    }
+    patchLoggedShot(shotId, patch);
+    return prev;
+}
+
+/**
+ * The play map's Undo chip, one entry from src/quick-log.js's stack: a
+ * logged shot comes off exactly as the Undo card takes it off; a nudge puts
+ * the line back. A plan never left the phone, so there is nothing to undo here.
+ */
+export function quickUndo(entry) {
+    if (!entry || !AppState.currentUser) return;
+    if (entry.kind === 'nudge') {
+        if ((AppState.currentHoleShots || []).some(s => s.id === entry.shotId)) patchLoggedShot(entry.shotId, entry.prev || {});
+        return;
+    }
+    if (entry.kind !== 'shot') return;
+    if (entry.undo) { undoLoggedShot({ ...entry.undo, shotNumber: entry.shotNumber ?? entry.undo.shotNumber }); return; }
+    // A logged wizard plan (no undo record): take the shot off the hole.
+    const shot = (AppState.currentHoleShots || []).find(s => s.id === entry.shotId);
+    if (!shot) { showToast('That shot can no longer be undone here — edit it from the hole review'); return; }
+    removeShot(shot);
+    showToast(`Shot ${shot.shotNumber} undone`);
 }
 
 export async function deleteShotData() {

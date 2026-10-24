@@ -20,6 +20,11 @@ import {
     registerAndVerifySignup,
 } from './helpers/emulator.js';
 
+// This spec covers map-and-grids controls; map-first behavior is covered separately.
+test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => { if (!localStorage.getItem('golf.shotEntry')) localStorage.setItem('golf.shotEntry', 'both'); });
+});
+
 const PASSWORD = 'e2e-password-1';
 const PREVIEW = `http://localhost:${process.env.VITE_PREVIEW_PORT || 4300}`;
 const FS_PORT = FIRESTORE_PORT;
