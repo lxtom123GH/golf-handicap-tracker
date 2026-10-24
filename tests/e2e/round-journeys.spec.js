@@ -47,6 +47,8 @@ async function startSimpleNine(page, course) {
     await page.locator('#btn-round-9').click();
     await page.locator('#oc-course-select').selectOption({ label: course });
     await page.locator('#oc-tee-select').selectOption('Blue (Men)');
+    // PR #17: an automatic Daily Handicap needs an explicit category (GA Jan 2026 §3H p11).
+    await page.locator('#oc-handicap-category').selectOption('men');
     await page.locator('#btn-oc-start').click();
     await expect(page.locator('#oncourse-hub')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('#oc-hole-display')).toHaveText('Hole 1');
@@ -104,13 +106,15 @@ test('Simple nine-hole round is saved once and its differential appears in histo
     expect(saved.notCounting).toBe(false);
     expect(saved.holeScores.map(hole => hole.gross)).toEqual(WEST_SCORES);
 
-    // With the seeded starting index of 18, the nine-hole WHS differential is
-    // (47 - 35) × 113 / 131 + (0.52 × 18 + 1.2) = 20.9.
+    // Synthetic Australian component regression, not published-example acceptance
+    // evidence: (47 - 35) × 113 / 131 = 10.35… → 10.4. A single nine stays
+    // pending its partner (GA Jan 2026 §5F(vii) p23); no unplayed nine is invented.
     await page.locator('.tab-btn[data-target="tab-whs"]').click();
     const row = page.locator('#history-tbody tr').filter({ hasText: WEST_COURSE });
     await expect(row).toHaveCount(1, { timeout: 15_000 });
+    await expect(row).toContainText('Pending another nine');
     await expect(row.locator('td').nth(2)).toContainText('47');
-    await expect(row.locator('td').nth(3)).toContainText('20.9');
+    await expect(row.locator('td').nth(3)).toContainText('10.4');
 });
 
 test('Simple nine-hole round keeps offline strokes and syncs one complete round after reconnect', async ({ page, context }) => {
