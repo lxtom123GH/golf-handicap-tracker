@@ -28,7 +28,7 @@ export function renderIndexExplainer(index, details, rounds) {
     const parts = [];
     parts.push(`Your index of <strong>${escapeHtml(String(index))}</strong> is the average of your best `
         + `<strong>${details.scoresUsed}</strong> score differential${details.scoresUsed === 1 ? '' : 's'} `
-        + `from your last <strong>${details.of}</strong> counting round${details.of === 1 ? '' : 's'}`
+        + `from your last <strong>${details.of}</strong> completed 18-hole score${details.of === 1 ? '' : 's'}`
         + (details.adj ? `, with the small-record adjustment of <strong>${details.adj}</strong>` : '') + '.');
 
     if (details.lowHI != null) {
@@ -43,6 +43,7 @@ export function renderIndexExplainer(index, details, rounds) {
     } else if (details.of < 20) {
         parts.push(`Caps start once you have 20 scores (${20 - details.of} to go).`);
     }
+    if (details.pendingNines) parts.push('A nine-hole score is pending another nine and is not included yet.');
     parts.push(`The rounds marked <strong>*</strong> in the table below are the ones counting right now.`);
 
     el.innerHTML = parts.join(' ');

@@ -44,12 +44,12 @@ describe('cold-start preview', () => {
         expect(html).not.toContain('0 of 3 rounds logged');
     });
 
-    it('labels index and trend progress as counting rounds', () => {
+    it('labels index holes and completed-score trend progress', () => {
         const rounds = [round(), round({ notCounting: true })];
 
         // The index needs 54 holes (WHS), not three rounds: one 18 is 18 of 54.
         expect(coldStartPreview(rounds, 'index')).toContain('18 of 54 counting holes');
-        expect(coldStartPreview(rounds, 'trend')).toContain('1 of 3 counting rounds');
+        expect(coldStartPreview(rounds, 'trend')).toContain('1 of 3 completed 18-hole scores');
     });
 
     it('leaves a neutral placeholder in static HTML until JavaScript has data', () => {

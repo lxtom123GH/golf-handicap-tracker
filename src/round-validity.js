@@ -35,6 +35,9 @@ export function appExcludedReason(round) {
     const stored = typeof round.notCountingReason === 'string' ? round.notCountingReason.trim() : '';
     if (stored) {
         if (/stroke index/i.test(stored)) return 'this tee has no stroke index, so the score isn’t capped';
+        if (/No Daily Handicap is available/i.test(stored)) {
+            return 'played without a confirmed Daily Handicap, so the score isn’t capped';
+        }
         if (/Handicap Index isn.t established/i.test(stored)) {
             return 'played before you had an index, so the score isn’t capped';
         }

@@ -14,7 +14,8 @@
     "test:e2e": "node scripts/run-e2e.mjs",
     "ux:harness": "node scripts/run-e2e-isolated.mjs --config=playwright.ux.config.js --workers=1 --retries=0 --reporter=line",
     "test": "vitest run tests/unit tests/oncourse.test.js",
-    "dev:emu": "node scripts/dev-ux-emulators.mjs"
+    "dev:emu": "node scripts/dev-ux-emulators.mjs",
+    "test:acceptance": "vitest run tests/acceptance --pool=threads --maxWorkers=2"
   },
   "keywords": [],
   "author": "",

@@ -63,6 +63,7 @@ async function boot() {
     AppState.handicapIndex = 18.0;
     const sel = document.getElementById('player-select');
     sel.innerHTML = '<option value="u1">Alex</option>';
+    document.getElementById('entry-handicap-category').value = 'men';
     bindWHSForm();
     return { UI, AppState };
 }

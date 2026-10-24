@@ -1,0 +1,50 @@
+[
+  {
+    "name": "pending-first-nine",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "width": 375
+  },
+  {
+    "name": "three-completed-pairs",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "width": 375
+  },
+  {
+    "name": "pending-seventh-nine",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "width": 375
+  },
+  {
+    "name": "mens-daily-handicap",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "width": 375
+  },
+  {
+    "name": "womens-daily-handicap",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "width": 375
+  },
+  {
+    "name": "manual-conversion-category",
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "width": 375
+  }
+]
