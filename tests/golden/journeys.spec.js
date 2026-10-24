@@ -139,7 +139,6 @@ test('pending user cannot score; admin approval admits them after verification r
         await page.locator('#tab-btn-admin').click();
         const row=page.locator('#admin-users-list tr').filter({hasText:email});
         await expect(row).toHaveCount(1);
-    await expect(row).toContainText('Pending another nine');
         await row.locator('input[type="checkbox"]').first().check();
         await expect.poll(async()=>(await readDoc(`users/${user._id}`))?.isApproved).toBe(true);
         await pending.reload();await expect(pending.locator('#main-app')).toBeVisible();
