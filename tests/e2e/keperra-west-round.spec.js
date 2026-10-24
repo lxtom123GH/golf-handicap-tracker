@@ -102,6 +102,8 @@ test('Sunday: 9 holes Keperra West (19-27) — mapping, F/M/B, scoring, reload, 
     const tees = await page.locator('#oc-tee-select option').evaluateAll((os) => os.map((o) => o.value).filter(Boolean));
     expect(tees).toEqual(expect.arrayContaining(['Blue (Men)', 'White (Men)']));
     await page.locator('#oc-tee-select').selectOption(TEE);
+    // PR #17 CI triage (Claude), issuecomment-6167035331: explicit category.
+    await page.locator('#oc-handicap-category').selectOption('men');
     const teeData = COURSE_DATA[COURSE][TEE];
     expect(teeData.physicalHoles).toEqual([19, 20, 21, 22, 23, 24, 25, 26, 27]);
     expect(teeData.pars).toEqual(PARS);
@@ -250,6 +252,8 @@ test('Sunday: 9 holes Keperra West (19-27) — mapping, F/M/B, scoring, reload, 
     expect(saved.holeScores.map((h) => h.h)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     const diff = roundDifferential(saved, INDEX);
     expect(saved.adjustedGross).toBe(47);
-    expect(diff).toBe(20.9); // varied/index fixture; original no-index fixture is 15.5 in the unit test
+    // Synthetic component calculation: (AGS47 - CR35) * 113 / SR131 = 10.351…
+    // This is one played nine, pending its partner; no expected unplayed nine.
+    expect(diff).toBe(10.4);
     console.log('saved round:', JSON.stringify({ ags: saved.adjustedGross, stableford: saved.totalStableford, diff }));
 });
