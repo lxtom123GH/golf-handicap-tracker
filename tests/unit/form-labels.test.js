@@ -31,7 +31,7 @@ describe('static form label associations (not a runtime axe substitute)', () => 
     it('checks a non-empty inventory of every static form control', () => {
         expect(controls.length).toBeGreaterThanOrEqual(105);
         expect(controls.filter(control => !labelText(control)).map(control => control.id)).toEqual([]);
-    }, 15_000);
+    });
 
     it('uses valid, non-empty references for explicit labels', () => {
         const labels = [...doc.querySelectorAll('label[for]')];

@@ -303,6 +303,11 @@ body {
     box-shadow: 0 0 0 3px rgba(26, 88, 41, 0.1);
 }
 
+/* Keep guest entry out of iOS small-text focus zoom while pinch zoom is enabled. */
+#oc-guest-name {
+    font-size: 1rem;
+}
+
 .form-group small {
     color: var(--text-muted);
     font-size: 0.75rem;

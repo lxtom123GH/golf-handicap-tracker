@@ -1,0 +1,51 @@
+npm run test:unit
+ Test Files  172 passed (172)
+      Tests  1650 passed (1650)
+   Duration  64.93s (transform 3.36s, setup 3.27s, import 40.24s, tests 70.48s, environment 108.96s)
+npm run build
+✓ 116 modules transformed.
+✓ built in 9.27s
+E2E_PORT_BASE=41000 node scripts/run-e2e-isolated.mjs tests/e2e/whs-record.spec.js tests/e2e/rendered-a11y.spec.js --reporter=list
+[axe] sign-in: []
+[axe] home: []
+[axe] history: []
+[axe] on-course round start: []
+[axe] on-course detailed toggle: []
+[axe] settings: []
+[axe] scorecard: []
+[axe] moderate findings: []
+  ok  1 [phone] › tests\e2e\rendered-a11y.spec.js:31:1 › axe: sign-in, home, history, round start, scorecard and settings (25.4s)
+  ok  2 [phone] › tests\e2e\whs-record.spec.js:67:1 › the scoring record shows Date, Course, Score and Diff, aligned, on a phone (7.0s)
+  ok  3 [phone] › tests\e2e\whs-record.spec.js:143:1 › an app-excluded round says why in a readable note, on screen, behind the ⋯ (11.3s)
+  ok  4 [phone] › tests\e2e\whs-record.spec.js:180:1 › a single short-named round keeps its menu on screen (11.3s)
+  ok  5 [phone] › tests\e2e\whs-record.spec.js:224:1 › every row of a three-round record keeps a tall menu on screen (12.1s)
+  ok  6 [phone] › tests\e2e\whs-record.spec.js:274:1 › a logged round whose ratings fail the check offers no Include (7.3s)
+[axe] sign-in: []
+[axe] home: []
+[axe] history: []
+[axe] on-course round start: []
+[axe] on-course detailed toggle: []
+[axe] settings: []
+[axe] scorecard: []
+[axe] moderate findings: []
+  ok  7 [iphone-se] › tests\e2e\rendered-a11y.spec.js:31:1 › axe: sign-in, home, history, round start, scorecard and settings (24.0s)
+  ok  8 [iphone-se] › tests\e2e\whs-record.spec.js:67:1 › the scoring record shows Date, Course, Score and Diff, aligned, on a phone (9.0s)
+  ok  9 [iphone-se] › tests\e2e\whs-record.spec.js:143:1 › an app-excluded round says why in a readable note, on screen, behind the ⋯ (11.0s)
+  ok 10 [iphone-se] › tests\e2e\whs-record.spec.js:180:1 › a single short-named round keeps its menu on screen (13.7s)
+  ok 11 [iphone-se] › tests\e2e\whs-record.spec.js:224:1 › every row of a three-round record keeps a tall menu on screen (11.6s)
+  ok 12 [iphone-se] › tests\e2e\whs-record.spec.js:274:1 › a logged round whose ratings fail the check offers no Include (8.1s)
+[axe] sign-in: []
+[axe] home: []
+[axe] history: []
+[axe] on-course round start: []
+[axe] on-course detailed toggle: []
+[axe] settings: []
+[axe] scorecard: []
+[axe] moderate findings: []
+  ok 13 [desktop] › tests\e2e\rendered-a11y.spec.js:31:1 › axe: sign-in, home, history, round start, scorecard and settings (21.5s)
+  ok 14 [desktop] › tests\e2e\whs-record.spec.js:67:1 › the scoring record shows Date, Course, Score and Diff, aligned, on a phone (6.1s)
+  ok 15 [desktop] › tests\e2e\whs-record.spec.js:143:1 › an app-excluded round says why in a readable note, on screen, behind the ⋯ (5.9s)
+  ok 16 [desktop] › tests\e2e\whs-record.spec.js:180:1 › a single short-named round keeps its menu on screen (7.4s)
+  ok 17 [desktop] › tests\e2e\whs-record.spec.js:224:1 › every row of a three-round record keeps a tall menu on screen (7.2s)
+  ok 18 [desktop] › tests\e2e\whs-record.spec.js:274:1 › a logged round whose ratings fail the check offers no Include (5.4s)
+  18 passed (4.1m)
