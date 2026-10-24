@@ -44,7 +44,8 @@ The old expected-nine export is retained as a null-returning compatibility stub 
 
 ## Test provenance
 
-- `ga-rounding.test.js` retains the published positive/plus rounding examples from §§3B/3E, with synthetic neutral-slope adapters clearly labelled.
+- `tests/acceptance/ga-published-examples.test.js` contains only published numerical rounding inputs/outputs, each grouped with the source URL and printed page/section. Run `npm run test:acceptance`.
+- `tests/unit/ga-rounding.test.js` contains synthetic arithmetic adapters and index fixtures. These are unit regressions, not acceptance evidence.
 - `ga-method.test.js` initially failed all6 cases on main, then passed all6 after correction. These pairing/category cases are independently calculated rule-derived synthetic fixtures. The guide does not supply a full numerical pair-card example for every edge case; no invented example is described as published.
 - `ga-pairing.test.js` covers odd/even records, exclusion, invalid values, independent component inputs, pre-pair rounding,19/20-score expiry boundaries, deletion, chronology and immutable originals.
 - Category tests cover missing/explicit choices, no serialization, per-player separation and stale async preview responses.
@@ -67,3 +68,36 @@ The pending018 copy branch removes unsupported official-record claims; its UI wo
 - `git diff --check` and standard credential-pattern checks passed. These are targeted scans, not a guarantee that every security concern is eliminated.
 
 No full-app accessibility or outdoor certification is claimed. Full-page screenshots show the existing fixed navigation at its viewport-relative location, and existing copy/accessibility debt remains assigned to the independent task018/013 branches.
+
+## 24 October owner ruling and rework
+
+Report: PR #17, **OWNER RULING (Alex, 24 Oct 2026)**
+(https://github.com/lxtom123GH/golf-handicap-tracker/pull/17#issuecomment-6382473588).
+Acceptance evidence uses published examples only. The dedicated acceptance suite
+exercises the published rounding inputs directly; it does not invent course
+ratings, paired scorecards, or index records. Synthetic browser journeys and unit
+fixtures remain engineering regression coverage only.
+
+Report: PR #17, **CODEX-VERDICT: MERGE AFTER FIXES**, findings P2/P3
+(https://github.com/lxtom123GH/golf-handicap-tracker/pull/17#issuecomment-6146051522).
+Automatic previews are distinguished from manual input so Start recalculates for
+the selected category during a pending refresh. Genuine overrides, including
+zero, survive preview completion. Practice history retains its ten-row query
+bound; complete WHS records remain available for pairing.
+
+Report: PR #17, **CI triage (Claude)**
+(https://github.com/lxtom123GH/golf-handicap-tracker/pull/17#issuecomment-6167035331).
+Keperra explicitly selects category and checks saved handicap, Stableford, AGS,
+and component differential. Cold-start checks completed pairs before unlocking.
+
+### Needs Alex
+
+Official web searches on 24 October located the January 2026 GA guide's rounding
+examples (§3B p9, §3H pp11–12), pairing rule (§5F pp22–23), and factor formula
+(§3H p11). No published numerical paired-card or current consistency-factor
+worked example was located. Those calculations have synthetic unit coverage,
+not acceptance evidence. Recommendation: supply an official worked example
+before claiming acceptance coverage for these areas; retain the stated gap.
+Historical USGA expected-nine examples and pre-factor GA examples do not establish
+current Australian acceptance. `whs-official-examples.test.js` is legacy unit
+coverage only, including synthetic adapters; it is outside the acceptance suite.

@@ -1,3 +1,4 @@
+// Synthetic emulator regression journey; NOT published-example acceptance evidence.
 import { test, expect } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

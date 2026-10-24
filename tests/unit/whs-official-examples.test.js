@@ -9,7 +9,7 @@ vi.mock('../../src/firebase-config.js', () => ({ db: {}, auth: {} }));
 vi.mock('../../src/ui.js', () => ({ UI: {} }));
 vi.mock('chart.js/auto', () => ({ default: vi.fn() }));
 
-// Official numerical examples only. These are synthetic adapters for published
+// Legacy unit regressions, NOT acceptance evidence under the 24 Oct ruling. These are synthetic adapters for published
 // DIFFERENTIALS, not invented official course ratings or real player records.
 // With slope=113 and rating=72, the production formula reproduces the given SD.
 const roundsFromDiffs = ds => ds.map((diff, i) => ({
@@ -39,7 +39,7 @@ const twentyAt = diff => roundsFromDiffs(Array(20).fill(diff));
 // A single matching example does not establish 0.52*HI+1.2 as the official
 // expected-score algorithm. Missing-HI doubling also remains unverified.
 // PCC is intentionally not exercised or changed. src/ is untouched.
-describe('Official worked examples — limited conformance, not certification', () => {
+describe('Legacy rule regressions and synthetic adapters (unit only)', () => {
   it('A: the USGA expected-nine example is deliberately not the Australian method', () => {
     expect(expectedNineDifferential(14)).toBeNull();
   });
