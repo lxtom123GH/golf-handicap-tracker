@@ -377,7 +377,7 @@ export function bindCoachDashboard() {
             document.getElementById('coach-view-hi').textContent = await fetchAthleteIndex(athlete.uid) ?? '--';
         }
 
-        const pracSnap = await getDocs(query(collection(db, 'practice_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc')));
+        const pracSnap = await getDocs(query(collection(db, 'practice_rounds'), where('uid', '==', athlete.uid), orderBy('date', 'desc'), limit(10)));
         const tbodyPrac = document.getElementById('coach-practice-tbody');
         if (tbodyPrac) {
             tbodyPrac.innerHTML = '';
