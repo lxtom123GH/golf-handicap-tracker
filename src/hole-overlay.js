@@ -48,6 +48,15 @@ export async function loadCourseOverlay(slug) {
         .then(r => (r.ok ? r.json() : null))
         .catch(() => null)
         .then(data => {
+            // A hole without a usable frame follows the existing no-map path.
+            // Both the renderer and GPS capture need these four coordinates;
+            // letting a partial hole through can reject the pending shot save.
+            const holes = Object.entries(data?.holes || {});
+            const usable = holes.filter(([, hole]) => [
+                hole?.tee?.lat, hole?.tee?.lon,
+                hole?.green?.centre?.lat, hole?.green?.centre?.lon,
+            ].every(Number.isFinite));
+            if (usable.length !== holes.length) data = { ...data, holes: Object.fromEntries(usable) };
             if (!data && cache.get(slug) === p) cache.delete(slug);
             return data;
         });
