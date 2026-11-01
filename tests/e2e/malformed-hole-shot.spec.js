@@ -12,7 +12,28 @@ test('a malformed mapped hole still logs a GPS shot and advances to shot 2', asy
     delete course.holes[1].tee;
     await page.route('**/courses/ashgrove.json', route => route.fulfill({ json: course }));
     await page.addInitScript(() => localStorage.setItem('golf.shotEntry', 'both'));
-    await page.context().setGeolocation({ latitude: lat, longitude: lon, accuracy: 30 });
+    // Test-owned geolocation emits no implicit samples or native timestamps.
+    await page.addInitScript(() => {
+        const watches = new Map();
+        let nextId = 1;
+        const calls = [];
+        Object.defineProperty(navigator, 'geolocation', { configurable: true, value: {
+            watchPosition(success) { const id = nextId++; watches.set(id, success); return id; },
+            clearWatch(id) { watches.delete(id); },
+            getCurrentPosition() { throw new Error('Unexpected one-shot GPS request'); },
+        } });
+        window.__gpsFixture = {
+            counts: () => ({ watches: watches.size, delivered: calls.length }),
+            emit(latitude, longitude, accuracy) {
+                if (watches.size !== 1) throw new Error('Expected one GPS watcher');
+                const timestamp = Date.now();
+                const position = { coords: { latitude, longitude, accuracy,
+                    altitude: null, altitudeAccuracy: null, heading: null, speed: 0 }, timestamp };
+                for (const callback of watches.values()) { callback(position); calls.push(position); }
+                return timestamp;
+            },
+        };
+    });
     const email = throwawayEmail('malformed-hole');
     await page.goto('/');
     await page.locator('#btn-register').click();
@@ -29,8 +50,35 @@ test('a malformed mapped hole still logs a GPS shot and advances to shot 2', asy
     await page.locator('#btn-oc-start').click();
     await expect(page.locator('#oncourse-wizard')).toBeVisible();
     await expect(page.locator('#gps-lock-ring')).toBeVisible();
-    await page.context().setGeolocation({ latitude: lat + 0.00001, longitude: lon, accuracy: 3 });
+    // Keep browser timers real: Start Round awaits Firestore before opening
+    // the wizard. Deliver both test-owned callbacks in one browser task, so
+    // no timer or runner round trip can interleave the 30 m and 3 m samples.
+    const captureSamples = await page.evaluate(({ lat, lon }) => {
+        const fixture = window.__gpsFixture;
+        const before = fixture.counts();
+        if (before.watches !== 1 || before.delivered !== 0) {
+            throw new Error('GPS fixture must begin with one watcher and no samples');
+        }
+        const ring = document.getElementById('gps-lock-ring');
+        if (!ring || ring.classList.contains('hidden')) {
+            throw new Error('GPS capture window closed before fixture delivery');
+        }
+        const firstAt = fixture.emit(lat, lon, 30);
+        const firstAccuracy = ring.querySelector('.gps-lock-acc')?.textContent;
+        const secondAt = fixture.emit(lat + 0.00001, lon, 3);
+        const secondAccuracy = ring.querySelector('.gps-lock-acc')?.textContent;
+        return { before, after: fixture.counts(), firstAt, secondAt,
+            accuracies: [firstAccuracy, secondAccuracy] };
+    }, { lat, lon });
+    expect(captureSamples.before).toEqual({ watches: 1, delivered: 0 });
+    expect(captureSamples.after).toEqual({ watches: 1, delivered: 2 });
+    expect(captureSamples.accuracies).toEqual(['±30', '±3']);
+    await testInfo.attach('gps-fixture-samples', {
+        body: JSON.stringify(captureSamples), contentType: 'application/json',
+    });
+    // Production's natural four-second final-decision timer remains unmodified.
     await expect(page.locator('#gps-lock-ring')).toBeHidden();
+    expect(await page.evaluate(() => window.__gpsFixture.counts())).toEqual({ watches: 1, delivered: 2 });
     await page.locator('#bag-buttons-grid button').first().click();
     await page.locator('#btn-save-shot-final').click();
     await expect(page.getByRole('status').filter({ hasText: /Shot 1 logged/ }).first()).toBeVisible();
@@ -41,7 +89,14 @@ test('a malformed mapped hole still logs a GPS shot and advances to shot 2', asy
     const [shot] = stored.currentHoleShots;
     expect(stored.liveRoundGroups[0].scores[1]).toBe(1);
     expect(shot).toMatchObject({ hole: 1, shotNumber: 1,
-        startPos: { lat: lat + 0.00001, lon, accuracyM: 3 }, gpsCapture: { role: 'start', state: 'accepted' } });
+        startPos: { accuracyM: 3 }, gpsCapture: {
+            role: 'start', state: 'accepted', fixCount: { usable: 2, ignored: 0 },
+        } });
+    // Independent unit-sphere weighted mean of the two pinned fixture points.
+    expect(lat).toBe(-27.4454585);
+    expect(lon).toBe(152.9601132);
+    expect(shot.startPos.lat).toBeCloseTo(-27.445448599009907, 11);
+    expect(shot.startPos.lon).toBeCloseTo(152.9601132, 11);
     expect(shot.startXY).toBeUndefined();
     await expect.poll(() => readDoc(`shots/${shot.id}`)).toMatchObject({
         hole: 1, shotNumber: 1, startPos: shot.startPos, gpsCapture: shot.gpsCapture,
