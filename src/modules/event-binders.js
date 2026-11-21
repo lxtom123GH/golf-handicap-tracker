@@ -13,6 +13,7 @@ import { courseSlugFor, loadCourseOverlay } from '../hole-overlay.js';
 import { isGuestId } from '../guests.js';
 import { recordSetup } from '../last-setup.js';
 import { applyRememberedWakeLock } from '../wakelock.js';
+import { confirmRoundStart } from '../round-snapshot.js';
 
 /**
  * "Add guest" — a golfer with no account, whose card still builds a handicap.
@@ -728,13 +729,16 @@ export function bindStartRound() {
             // a round without you. Both paths now use the same rule, with one
             // exception kept from before: a coach or admin who picked another
             // ACCOUNT (a student) and tapped Start records that player's round.
+            const ownerUid = AppState.currentUser?.uid;
+            if (!ownerUid) return;
+            const initialGroups = AppState.liveRoundGroups;
             const sel = UI.ocPlayerSelect && UI.ocPlayerSelect.options[UI.ocPlayerSelect.selectedIndex];
-            const pickedAccount = AppState.liveRoundGroups.length === 0 && sel && sel.value
-                && sel.value !== AppState.currentUser?.uid && !isGuestId(sel.value);
-            AppState.liveRoundGroups = pickedAccount
+            const pickedAccount = initialGroups.length === 0 && sel && sel.value
+                && sel.value !== ownerUid && !isGuestId(sel.value);
+            const players = pickedAccount
                 ? [{ uid: sel.value, name: sel.text, scores: {}, compStats: {}, simpleStats: {} }]
-                : withSelfIncluded(AppState.liveRoundGroups);
-            if (AppState.liveRoundGroups.length === 0) {
+                : withSelfIncluded(initialGroups);
+            if (players.length === 0) {
                 alert("Please add at least one player to track.");
                 return;
             }
@@ -771,7 +775,7 @@ export function bindStartRound() {
             // that can never resolve.
             const sideGameSel = document.getElementById('oc-side-game');
             const sideGame = sideGameSel ? sideGameSel.value : '';
-            if ((sideGame === 'matchplay' || sideGame === 'nassau') && AppState.liveRoundGroups.length !== 2) {
+            if ((sideGame === 'matchplay' || sideGame === 'nassau') && players.length !== 2) {
                 alert("Match Play and Nassau need exactly 2 players in the group.");
                 return;
             }
@@ -784,7 +788,7 @@ export function bindStartRound() {
 
             // Resolve every player before changing round state. A missing or
             // failed lookup remains null: unknown is gross-only, never scratch.
-            for (const p of AppState.liveRoundGroups) {
+            for (const p of players) {
                 const hi = await ocModule.getPlayerHandicap(p.uid);
                 let dailyHandicap = calculateDailyHandicap(
                     hi, slope || 113, rating || 72, totalPar, roundHoles,
@@ -803,29 +807,37 @@ export function bindStartRound() {
                 resolvedPlayers.push({ uid: p.uid, handicapIndex: hi, dailyHandicap });
             }
 
+            // Re-read the slot after the last await. Another tab may have
+            // started a round while the handicap lookups were in flight.
+            if (AppState.currentUser?.uid !== ownerUid) return;
+            const roundId = `round_${Date.now()}`;
+            if (!confirmRoundStart(roundId)) return;
+
+            // Keep roster edits made while handicaps were being resolved.
+            if (AppState.liveRoundGroups === initialGroups) AppState.liveRoundGroups = players;
             // Resolve ONCE and persist with the round (BL-UX-08): the save path
             // must never depend on the tee <select>, which resets on reload.
             AppState.currentRoundTee = teeName;
             AppState.currentRoundRatings = { rating, slope, par: totalPar, counting };
             AppState.currentSideGame = sideGame || null;
 
-            const compId = UI.ocLinkComp ? UI.ocLinkComp.value : null;
+            const compId = UI.ocLinkComp?.value || null;
+            AppState.currentLiveCompId = compId;
+            let rules = [];
             if (compId) {
-                AppState.currentLiveCompId = compId;
-                const selectedOpt = UI.ocLinkComp.options[UI.ocLinkComp.selectedIndex];
                 try {
-                    AppState.currentLiveCompRules = JSON.parse(selectedOpt.getAttribute('data-rules') || "[]");
-                } catch (e) { }
-            } else {
-                AppState.currentLiveCompRules = [];
+                    const option = UI.ocLinkComp.selectedOptions[0];
+                    const parsed = JSON.parse(option.getAttribute('data-rules') || '[]');
+                    if (Array.isArray(parsed)) rules = parsed;
+                } catch { /* use an empty rules list */ }
             }
+            AppState.currentLiveCompRules = rules;
 
             AppState.currentRoundDate = (dateInput && dateInput.value) ? dateInput.value : localToday();
 
             AppState.currentRoundHoles = roundHoles;
             AppState.currentRoundStartHole = startHole;
             AppState.currentHole = startHole;
-            AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
 
             // F-2: the holes the Daily Handicap is computed for ARE the round's
@@ -844,6 +856,10 @@ export function bindStartRound() {
                     };
                 }
             });
+
+            // Assign the ID last. The Proxy persists the complete first snapshot here.
+            AppState.roundOwnerUid = ownerUid;
+            AppState.activeRoundId = roundId;
 
             // Owner 2026-10-05 (quick start): remember this setup for the
             // Play again card and next round's defaults.

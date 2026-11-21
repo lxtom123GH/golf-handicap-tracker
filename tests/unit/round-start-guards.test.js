@@ -193,6 +193,7 @@ describe('Start Round with nobody added yet', () => {
         dropdownShowing('student-uid', 'Student');
         await bindStartRound()();
         expect(mocks.appState.liveRoundGroups.map(p => p.uid)).toEqual(['student-uid']);
+        expect(mocks.appState.roundOwnerUid).toBe('host-uid');
     });
 
     it('asks for a player when you removed yourself and nobody else is in', async () => {
@@ -208,6 +209,138 @@ describe('Start Round with nobody added yet', () => {
         expect(mocks.appState.liveRoundGroups).toEqual([]);
         expect(globalThis.alert).toHaveBeenCalledWith('Please add at least one player to track.');
         expect(mocks.oncourse.resolveRoundRatings).not.toHaveBeenCalled();
+    });
+});
+
+// Round ownership on restore: Start Round records who is scoring, drops a
+// competition link left over from an earlier round, and never replaces a
+// different live round saved on this phone without asking.
+describe('Start Round and the round already saved on this phone', () => {
+    const KEY = 'golf_round_state';
+    const other = JSON.stringify({
+        activeRoundId: 'round_other', roundOwnerUid: 'someone-else',
+        currentRoundCourseName: 'Keperra', currentHole: 7, liveRoundGroups: [],
+    });
+
+    beforeEach(() => {
+        mocks.appState.activeRoundId = null;
+        mocks.appState.roundOwnerUid = null;
+        mocks.appState.currentLiveCompId = null;
+        mocks.appState.currentLiveCompRules = [];
+        globalThis.confirm = vi.fn(() => true);
+    });
+
+    it('records the signed-in scorer as the round owner, even when they are not playing', async () => {
+        mocks.appState.liveRoundGroups = [group('student-uid', 'Student')];
+        mocks.appState.roundSelfOptOut = true;
+        try {
+            await bindStartRound()();
+        } finally {
+            mocks.appState.roundSelfOptOut = false;
+        }
+        expect(mocks.appState.liveRoundGroups.map(p => p.uid)).toEqual(['student-uid']);
+        expect(mocks.appState.activeRoundId).toMatch(/^round_\d+$/);
+        expect(mocks.appState.roundOwnerUid).toBe('host-uid');
+    });
+
+    it('drops a stale competition link when no competition is selected', async () => {
+        mocks.appState.currentLiveCompId = 'comp-old';
+        mocks.appState.currentLiveCompRules = [{ name: 'Birdie', pts: 2 }];
+        mocks.ui.ocLinkComp = { value: '' }; // "No Competition Linked"
+        await bindStartRound()();
+        expect(mocks.appState.activeRoundId).toMatch(/^round_\d+$/);
+        expect(mocks.appState.currentLiveCompId).toBeNull();
+        expect(mocks.appState.currentLiveCompRules).toEqual([]);
+    });
+
+    it('links the selected competition and its rules', async () => {
+        const sel = document.createElement('select');
+        sel.innerHTML = `<option value="">No Competition Linked</option>
+            <option value="comp-1" data-rules='[{"name":"Birdie","pts":2}]'>Summer Cup</option>`;
+        sel.value = 'comp-1';
+        mocks.ui.ocLinkComp = sel;
+        await bindStartRound()();
+        expect(mocks.appState.currentLiveCompId).toBe('comp-1');
+        expect(mocks.appState.currentLiveCompRules).toEqual([{ name: 'Birdie', pts: 2 }]);
+    });
+
+    it('asks before replacing a different live round, and leaves it alone on No', async () => {
+        localStorage.setItem(KEY, other);
+        globalThis.confirm = vi.fn(() => false);
+        await bindStartRound()();
+        expect(globalThis.confirm).toHaveBeenCalledTimes(1);
+        expect(globalThis.confirm.mock.calls[0][0]).toMatch(/replace/i);
+        expect(mocks.appState.activeRoundId).toBeNull();
+        expect(mocks.appState.roundOwnerUid).toBeNull();
+        expect(document.body.classList.contains('round-active')).toBe(false);
+        expect(localStorage.getItem(KEY)).toBe(other);
+    });
+
+    it('checks the disk after asynchronous handicap lookups, before committing the new round', async () => {
+        mocks.oncourse.getPlayerHandicap.mockImplementationOnce(async () => {
+            localStorage.setItem(KEY, other);
+            return 10;
+        });
+        globalThis.confirm = vi.fn(() => false);
+        await bindStartRound()();
+        expect(globalThis.confirm).toHaveBeenCalledOnce();
+        expect(mocks.appState.activeRoundId).toBeNull();
+        expect(localStorage.getItem(KEY)).toBe(other);
+    });
+
+    it('cannot start an ownerless round when the signed-in account changes during setup', async () => {
+        mocks.oncourse.getPlayerHandicap.mockImplementationOnce(async () => {
+            mocks.appState.currentUser = null;
+            return 10;
+        });
+        await bindStartRound()();
+        expect(mocks.appState.activeRoundId).toBeNull();
+    });
+
+    it('asks even when the round being replaced was restored in memory', async () => {
+        mocks.appState.activeRoundId = 'round_other';
+        localStorage.setItem(KEY, other);
+        globalThis.confirm = vi.fn(() => false);
+        await bindStartRound()();
+        expect(globalThis.confirm).toHaveBeenCalledOnce();
+        expect(mocks.appState.activeRoundId).toBe('round_other');
+        expect(localStorage.getItem(KEY)).toBe(other);
+    });
+
+    it('starts the round once the golfer says Yes', async () => {
+        localStorage.setItem(KEY, other);
+        await bindStartRound()();
+        expect(globalThis.confirm).toHaveBeenCalledTimes(1);
+        expect(mocks.appState.activeRoundId).toMatch(/^round_\d+$/);
+        expect(mocks.appState.roundOwnerUid).toBe('host-uid');
+    });
+
+    it('preserves an unreadable snapshot when replacement is declined', async () => {
+        localStorage.setItem(KEY, '{broken');
+        globalThis.confirm = vi.fn(() => false);
+        await bindStartRound()();
+        expect(globalThis.confirm).toHaveBeenCalledOnce();
+        expect(mocks.appState.activeRoundId).toBeNull();
+        expect(localStorage.getItem(KEY)).toBe('{broken');
+    });
+
+    it('does not ask when no other round is saved', async () => {
+        await bindStartRound()();
+        expect(globalThis.confirm).not.toHaveBeenCalled();
+        expect(mocks.appState.activeRoundId).toMatch(/^round_\d+$/);
+    });
+
+    it('does not ask about a refused start (the saved round is not being replaced)', async () => {
+        localStorage.setItem(KEY, other);
+        mocks.appState.liveRoundGroups = [];
+        mocks.appState.roundSelfOptOut = true;
+        try {
+            await bindStartRound()();
+        } finally {
+            mocks.appState.roundSelfOptOut = false;
+        }
+        expect(globalThis.alert).toHaveBeenCalledWith('Please add at least one player to track.');
+        expect(globalThis.confirm).not.toHaveBeenCalled();
     });
 });
 

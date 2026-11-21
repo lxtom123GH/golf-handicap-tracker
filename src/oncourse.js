@@ -209,6 +209,7 @@ export function endRoundCleanup() {
     AppState.currentHoleShots = [];
     _lastLoadedHole = null;
     AppState.activeRoundId = null;
+    AppState.roundOwnerUid = null;
     AppState.currentRoundDate = null;
 
     // v6.7.0 FIX: Reset ALL round-scoped state to prevent stale data leaking
@@ -343,7 +344,7 @@ export function loadHole() {
         // every score tap, and clearing unconditionally wiped the hole's shot
         // list mid-hole — shot numbers restarted at 1 and the auto-GIR/putt
         // logic lost its inputs. Clear only when the hole actually changes.
-        if (AppState.currentUser && _lastLoadedHole !== AppState.currentHole) {
+        if (AppState.currentUser && _lastLoadedHole !== null && _lastLoadedHole !== AppState.currentHole) {
             AppState.currentHoleShots = [];
         }
         _lastLoadedHole = AppState.currentHole;

@@ -59,6 +59,8 @@ function startRound() {
         <button id="btn-oc-next-hole"></button><button id="btn-oc-track-shot"></button>
         <div id="hole-jumper-container"></div>`;
     document.body.className = '';
+    // End the previous test's round before setup fields can auto-save it again.
+    AppState.activeRoundId = null;
     localStorage.clear();
     AppState.currentUser = { uid: 'u1' };
     AppState.currentCoursePars = [4, 4, 3, 4, 5, 4, 3, 5, 4];
