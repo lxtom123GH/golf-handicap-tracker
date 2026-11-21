@@ -23,3 +23,29 @@ export function restoreDecision(snap, uid) {
     const listed = Array.isArray(snap.liveRoundGroups) && snap.liveRoundGroups.some(p => p?.uid === uid);
     return listed ? 'present' : 'foreign';
 }
+
+// A confirmation covers one new round and the specific slot it will replace.
+// Keep it across quota retries, then retire it on the first successful write.
+let replacement = null;
+
+export function confirmRoundStart(newId) {
+    const saved = readRoundSnapshot();
+    if (saved === undefined || saved?.activeRoundId) {
+        if (!confirm("Starting a new round will replace the saved round on this device. Continue?")) return false;
+        replacement = { newId, oldId: saved?.activeRoundId };
+    } else {
+        replacement = null;
+    }
+    return true;
+}
+
+export function canSaveRound(roundId) {
+    const saved = readRoundSnapshot();
+    if (saved !== undefined && (!saved?.activeRoundId || saved.activeRoundId === roundId)) return true;
+    return replacement?.newId === roundId && replacement.oldId === saved?.activeRoundId;
+}
+
+export function writeRoundSnapshot(roundId, payload) {
+    localStorage.setItem(GOLF_APP_STATE_KEY, payload);
+    if (replacement?.newId === roundId) replacement = null;
+}

@@ -5,7 +5,7 @@
 import { AppState } from './state.js';
 import { loadHole, resumeGpsIfWasOn } from './oncourse.js';
 import { releaseRecorderStorage } from './diagnostics/recorder.js';
-import { GOLF_APP_STATE_KEY, readRoundSnapshot, restoreDecision } from './round-snapshot.js';
+import { GOLF_APP_STATE_KEY, readRoundSnapshot, restoreDecision, canSaveRound, writeRoundSnapshot } from './round-snapshot.js';
 
 // Fields we want to persist (Round specific)
 const PERSIST_FIELDS = [
@@ -153,14 +153,10 @@ export function markRoundBackupUnsynced(key) {
  * Save current round state to localStorage
  */
 export function saveRoundState() {
-    if (!AppState.activeRoundId) {
-        // If no round is active, we might want to clear it? 
-        // User says "Clear ONLY when End Round / Save Options is clicked"
-        // But if they just reloaded and it was null, we shouldn't overwrite a previous session?
-        // Actually, if activeRoundId is null, it means there's NO active round IN MEMORY.
-        // We should only save if activeRoundId is NOT null.
-        return;
-    }
+    const roundId = AppState.activeRoundId;
+    // A background tab can still receive stateChange or pagehide after the
+    // golfer confirmed a replacement elsewhere.
+    if (!roundId || !canSaveRound(roundId)) return;
 
     const stateToSave = {};
     PERSIST_FIELDS.forEach(field => {
@@ -173,21 +169,21 @@ export function saveRoundState() {
     // stale end-of-round backups (the things filling the quota) and retry once.
     const payload = JSON.stringify(stateToSave);
     try {
-        localStorage.setItem(GOLF_APP_STATE_KEY, payload);
+        writeRoundSnapshot(roundId, payload);
     } catch (e) {
         console.warn("[Persistence] Round state write failed; pruning backups and retrying.", e);
         // The flight recorder's small fallback copy is given up first, before
         // any round backup is pruned. It only exists when IndexedDB failed.
         if (releaseRecorderStorage()) {
             try {
-                localStorage.setItem(GOLF_APP_STATE_KEY, payload);
+                writeRoundSnapshot(roundId, payload);
                 console.log("[Persistence] Round state saved after releasing diagnostics storage.");
                 return;
             } catch { /* still full: prune backups below */ }
         }
         pruneRoundBackups(0);
         try {
-            localStorage.setItem(GOLF_APP_STATE_KEY, payload);
+            writeRoundSnapshot(roundId, payload);
         } catch (e2) {
             console.error("[Persistence] Round state STILL not saved — device storage is full.", e2);
             alert("Your phone's storage is full, so this round can no longer be saved automatically. Finish and save the round, or free up space.");
@@ -306,7 +302,7 @@ window.addEventListener('stateChange', (e) => {
         if (applyingSnapshot) return;
         if (property === 'activeRoundId' && !newValue) {
             // Round ended
-            clearRoundState();
+            if (readRoundSnapshot()?.activeRoundId === e.detail.oldValue) clearRoundState();
         } else if (AppState.activeRoundId) {
             // Only save if an active round is ongoing
             saveRoundState();
