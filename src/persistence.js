@@ -5,8 +5,7 @@
 import { AppState } from './state.js';
 import { loadHole, resumeGpsIfWasOn } from './oncourse.js';
 import { releaseRecorderStorage } from './diagnostics/recorder.js';
-
-const GOLF_APP_STATE_KEY = 'golf_round_state';
+import { GOLF_APP_STATE_KEY, readRoundSnapshot, restoreDecision } from './round-snapshot.js';
 
 // Fields we want to persist (Round specific)
 const PERSIST_FIELDS = [
@@ -24,6 +23,7 @@ const PERSIST_FIELDS = [
     'currentLiveCompId',
     'currentLiveCompRules',
     'currentHoleShots',
+    'roundOwnerUid',
     'activeRoundId',
     'currentRoundDate',
     'myBag',
@@ -197,30 +197,24 @@ export function saveRoundState() {
     console.log("[Persistence] Round state saved to localStorage.");
 }
 
-/**
- * Load round state from localStorage into AppState
- */
-export function loadRoundState() {
-    const saved = localStorage.getItem(GOLF_APP_STATE_KEY);
-    if (!saved) return false;
+// Hydration and memory-only teardown both trigger the stateChange listener.
+// Neither operation should write a partial round or erase the snapshot.
+let applyingSnapshot = false;
+const roundDefaults = PERSIST_FIELDS.map(field => [field, structuredClone(AppState[field])]);
 
+export function loadRoundState(uid = AppState.currentUser?.uid) {
+    const saved = readRoundSnapshot();
+    if (restoreDecision(saved, uid) !== 'present') return false;
+
+    applyingSnapshot = true;
     try {
-        const parsed = JSON.parse(saved);
-        if (!parsed.activeRoundId) return false;
-
-        // Apply fields to AppState
-        PERSIST_FIELDS.forEach(field => {
-            if (parsed[field] !== undefined) {
-                AppState[field] = parsed[field];
-            }
-        });
-
-        console.log("[Persistence] Round state restored from localStorage.");
-        return true;
-    } catch (e) {
-        console.error("[Persistence] Error loading state:", e);
-        return false;
+        for (const field of PERSIST_FIELDS) {
+            if (Object.hasOwn(saved, field)) AppState[field] = saved[field];
+        }
+    } finally {
+        applyingSnapshot = false;
     }
+    return true;
 }
 
 /**
@@ -231,72 +225,43 @@ export function clearRoundState() {
     console.log("[Persistence] Round state cleared from localStorage.");
 }
 
-// F-15: set while a hydrated round is being dropped from MEMORY only. The
-// stateChange listener treats a null activeRoundId as "round ended" and wipes
-// localStorage, which is right when the player ended the round and wrong when
-// we are merely declining to show someone else's.
-let _forgettingInMemory = false;
-
-/**
- * Drop a hydrated round from AppState without touching the localStorage
- * snapshot, so the signed-in user sees no round and cannot start one on top of
- * it, while the rightful owner's copy survives on disk.
- * @returns {void}
- */
+// F-15: preserve the disk copy if presentation rejects a round in memory.
 export function forgetRoundInMemory() {
-    _forgettingInMemory = true;
+    applyingSnapshot = true;
     try {
-        AppState.activeRoundId = null;
-        AppState.liveRoundGroups = [];
-        AppState.currentHoleShots = [];
-        AppState.currentHole = 1;
-        AppState.currentRoundStartHole = 1;
+        for (const [field, value] of roundDefaults) AppState[field] = structuredClone(value);
     } finally {
-        _forgettingInMemory = false;
+        applyingSnapshot = false;
     }
 }
 
 /**
- * Boot-time hydration ONLY (BL-UX-11). Round state is restored into AppState
- * before Firestore listeners attach (FP-04 semantics unchanged), but the
- * full-screen round-active PRESENTATION is deferred to presentRestoredRound(),
- * called from the auth callback's approved path — previously the round UI
- * (z-index 500) rendered over the auth/pending gate, so an unapproved or
- * different user landed inside the previous player's round.
+ * The approved auth callback bootstraps routing before round listeners and
+ * tab selection. Presentation runs after the navigation handlers are bound.
  */
 export function initializeAppRouting() {
     const hasActiveRound = loadRoundState();
     if (hasActiveRound) {
-        console.log("[Persistence] Active round hydrated; presentation deferred until an approved session confirms ownership (BL-UX-11).");
+        console.log("[Persistence] Active round hydrated; presentation deferred until the approved session is confirmed (BL-UX-11).");
     }
 }
 
 /**
  * Present the restored round — invoked only once auth has confirmed an
- * APPROVED session. If the persisted round doesn't belong to this uid
- * (shared device), the stale state is cleared instead of being shown.
+ * APPROVED session. loadRoundState() already hydrates nothing for another
+ * uid; this checks again rather than rely on that, and a round in memory
+ * that is not this uid's is dropped from memory, never from disk.
  * @param {string} uid - The authenticated, approved user's uid.
  */
 export function presentRestoredRound(uid) {
     if (!AppState.activeRoundId) return;
 
-    const owns = Array.isArray(AppState.liveRoundGroups)
-        && AppState.liveRoundGroups.some(p => p && p.uid === uid);
-    if (!owns) {
-        // F-15: DECLINE to present, never erase. This used to clear
-        // liveRoundGroups and null activeRoundId, which the stateChange
-        // listener turned into localStorage.removeItem — an unrecoverable
-        // delete of a round in progress. "I'm not sure this round is yours"
-        // is an ambiguous answer (a guest-built group, or an anonymous→Google
-        // uid change, both produce it) and the safe reading of an ambiguous
-        // answer is to hide the round, so the rightful owner's next sign-in
-        // still finds it on disk.
-        console.warn("[Persistence] Persisted round does not list this uid — hiding it, leaving the snapshot intact (BL-UX-11, F-15).");
+    if (restoreDecision(AppState, uid) !== 'present') {
         forgetRoundInMemory();
         return;
     }
 
-    console.log("[Persistence] Ownership confirmed — routing to On-Course Hub.");
+    console.log("[Persistence] Scorer confirmed — routing to On-Course Hub.");
     document.body.classList.add('round-active');
     const setupScreen = document.getElementById('oncourse-setup');
     const hubScreen = document.getElementById('oncourse-hub');
@@ -338,10 +303,7 @@ window.addEventListener('stateChange', (e) => {
 
     // Auto-save when round fields change
     if (PERSIST_FIELDS.includes(property)) {
-        if (_forgettingInMemory) {
-            // F-15: memory-only teardown — the snapshot on disk is not ours to delete.
-            return;
-        }
+        if (applyingSnapshot) return;
         if (property === 'activeRoundId' && !newValue) {
             // Round ended
             clearRoundState();

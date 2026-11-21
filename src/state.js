@@ -46,6 +46,8 @@ const initialState = {
     currentLiveCompRules: [],
     currentHoleShots: [],
     activeRoundId: null,
+    // Scorer who started the round, even if they are tracking someone else.
+    roundOwnerUid: null,
     currentRoundDate: null,
     playerClubs: null,
     // Owner 2026-10-06 (Play mode): { roundId, hole, shotNumber, club,

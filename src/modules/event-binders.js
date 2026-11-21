@@ -825,6 +825,7 @@ export function bindStartRound() {
             AppState.currentRoundHoles = roundHoles;
             AppState.currentRoundStartHole = startHole;
             AppState.currentHole = startHole;
+            AppState.roundOwnerUid = AppState.currentUser.uid;
             AppState.activeRoundId = `round_${Date.now()}`;
             AppState.currentHoleShots = [];
 
